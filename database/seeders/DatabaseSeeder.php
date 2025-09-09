@@ -136,8 +136,13 @@ class DatabaseSeeder extends Seeder
             // Create 2-5 library visits per student
             $visitCount = rand(2, 5);
             for ($i = 0; $i < $visitCount; $i++) {
+                // Use existing librarians for scanned_by
+                $randomLibrarian = collect([$librarianStudents, $previousLibrarians])->flatten()->random();
+                $librarianRecord = Librarian::where('user_id', $randomLibrarian->id)->first();
+
                 LibrarySession::factory()->completed()->create([
                     'user_id' => $student->id,
+                    'scanned_by' => $librarianRecord ? $librarianRecord->id : null,
                 ]);
             }
         }
@@ -145,8 +150,12 @@ class DatabaseSeeder extends Seeder
         // Create some users currently in the library
         $currentlyInLibrary = $students->random(8);
         foreach ($currentlyInLibrary as $student) {
+            // Use current active librarians for scanning
+            $activeLibrarian = Librarian::where('user_id', $librarianStudents->random()->id)->first();
+
             LibrarySession::factory()->active()->create([
                 'user_id' => $student->id,
+                'scanned_by' => $activeLibrarian ? $activeLibrarian->id : null,
             ]);
         }
 

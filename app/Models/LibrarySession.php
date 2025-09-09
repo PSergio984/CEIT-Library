@@ -32,6 +32,12 @@ class LibrarySession extends Model
         return $this->belongsTo(User::class);
     }
 
+    // Relationship with librarian who scanned
+    public function scannedByLibrarian()
+    {
+        return $this->belongsTo(Librarian::class, 'scanned_by');
+    }
+
     // Calculate duration when time_out is set
     public function calculateDuration()
     {

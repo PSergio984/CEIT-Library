@@ -17,7 +17,7 @@ return new class extends Migration
             $table->timestamp('time_in')->nullable();
             $table->timestamp('time_out')->nullable();
             $table->enum('status', ['active', 'completed'])->default('active');
-            $table->string('scanned_by')->nullable(); // staff member who scanned
+            $table->foreignId('scanned_by')->nullable()->constrained('librarians')->onDelete('set null'); // Librarian who scanned
             $table->integer('duration_minutes')->nullable(); // calculated field
             $table->timestamps();
 

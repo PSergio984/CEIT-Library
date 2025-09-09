@@ -5,6 +5,7 @@ namespace Database\Factories;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\LibrarySession;
 use App\Models\User;
+use App\Models\Librarian;
 use Carbon\Carbon;
 
 /**
@@ -24,20 +25,12 @@ class LibrarySessionFactory extends Factory
 
         $status = $timeOut ? 'completed' : 'active';
 
-        $librarians = [
-            'Juan Dela Cruz',
-            'Maria Santos',
-            'Jose Rodriguez',
-            'Ana Garcia',
-            'Pedro Martinez'
-        ];
-
         return [
             'user_id' => User::factory(),
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,
-            'scanned_by' => $this->faker->randomElement($librarians),
+            'scanned_by' => Librarian::factory(), // Now references actual librarian record
             'duration_minutes' => $timeIn && $timeOut ? Carbon::parse($timeIn)->diffInMinutes($timeOut) : null,
         ];
     }
