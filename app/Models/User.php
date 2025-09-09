@@ -45,4 +45,66 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    // Relationship with librarian duties
+    public function librarianDuty()
+    {
+        return $this->hasOne(Librarian::class);
+    }
+
+    // Check if user has active librarian privileges
+    public function isLibrarian()
+    {
+        return $this->librarianDuty()
+                   ->where('status', 'active')
+                   ->where('expires_at', '>', now())
+                   ->exists();
+    }
+
+    // Get active librarian record
+    public function getActiveLibrarianDuty()
+    {
+        return $this->librarianDuty()
+                   ->where('status', 'active')
+                   ->where('expires_at', '>', now())
+                   ->first();
+    }
+
+    // Check if user has specific librarian permission
+    public function hasLibrarianPermission($permission)
+    {
+        $librarian = $this->getActiveLibrarianDuty();
+        return $librarian && $librarian->hasPermission($permission);
+    }
+
+    // Relationships for library usage tracking
+    public function librarySessions()
+    {
+        return $this->hasMany(LibrarySession::class);
+    }
+
+    public function thesisSessions()
+    {
+        return $this->hasMany(ThesisSession::class);
+    }
+
+    public function violations()
+    {
+        return $this->hasMany(UserViolation::class);
+    }
+
+    public function creditScore()
+    {
+        return $this->hasOne(CreditScore::class);
+    }
+
+    // Check if user is currently in the library
+    public function isInLibrary()
+    {
+        return $this->librarySessions()
+                   ->where('status', 'active')
+                   ->whereNotNull('time_in')
+                   ->whereNull('time_out')
+                   ->exists();
+    }
 }

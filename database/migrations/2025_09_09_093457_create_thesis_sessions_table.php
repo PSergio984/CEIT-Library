@@ -25,10 +25,14 @@ return new class extends Migration
             $table->timestamps();
 
             // Add indexes for better performance
-            $table->index(['user_id', 'status']);
-            $table->index(['thesis_id', 'status']);
-            $table->index('expires_at');
-            $table->index('session_token');
+            $table->index(['user_id', 'status']); // For user session queries
+            $table->index(['thesis_id', 'status']); // For thesis availability checks
+            $table->index('expires_at'); // For cleanup of expired sessions
+            $table->index('session_token'); // For QR code scanning and session lookup
+            $table->index(['status', 'time_in']); // For active session monitoring
+            $table->index(['user_id', 'time_in', 'time_out']); // For user session history
+            $table->index(['thesis_id', 'time_in']); // For thesis usage analytics
+            $table->index(['status', 'expires_at']); // For expired session cleanup jobs
         });
     }
 

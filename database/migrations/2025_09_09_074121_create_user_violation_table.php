@@ -19,6 +19,13 @@ return new class extends Migration
             $table->enum('Severity', ['Minor', 'Major', 'Critical']);
             $table->text('remarks')->nullable();
             $table->timestamps();
+
+            // Add indexes for better performance
+            $table->index(['user_id', 'date_occurred']); // For user violation history queries
+            $table->index(['violation_id', 'date_occurred']); // For violation type reporting
+            $table->index('Severity'); // For filtering by severity level
+            $table->index(['user_id', 'Severity']); // For user-specific severity queries
+            $table->index('date_occurred'); // For date-based reporting
         });
     }
 

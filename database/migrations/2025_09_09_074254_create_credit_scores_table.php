@@ -16,6 +16,11 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->integer('score')->default(75);
             $table->timestamps();
+
+            // Add indexes for better performance
+            $table->unique('user_id'); // Ensure one score per user and fast user lookups
+            $table->index('score'); // For score-based filtering and ranking
+            $table->index(['score', 'updated_at']); // For recent score changes reporting
         });
     }
 

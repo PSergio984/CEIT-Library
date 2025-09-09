@@ -17,6 +17,10 @@ return new class extends Migration
             $table->text('description');
             $table->integer('penalty_score');
             $table->timestamps();
+
+            // Add indexes for better performance
+            $table->index('penalty_score'); // For filtering by severity/penalty
+            $table->index('name'); // For quick violation lookup by name
         });
     }
 

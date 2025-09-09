@@ -25,6 +25,13 @@ return new class extends Migration
             $table->string('dean');
             $table->enum('status', ['Available','Reserved', 'Unavailable'])->default('Available');
             $table->timestamps();
+
+            // Add indexes for better performance
+            $table->index('status'); // For filtering available theses
+            $table->index('department'); // For department-based searches
+            $table->index(['status', 'department']); // Composite index for status + department filtering
+            $table->index('research_project_adviser'); // For searching by adviser
+            $table->fullText(['title', 'research_project_adviser']); // Full-text search on title and adviser
         });
     }
 
