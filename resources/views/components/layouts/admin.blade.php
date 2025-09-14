@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -41,7 +43,7 @@
                     {{-- BRAND --}}
                     <div class="ml-5 pt-5 flex items-center justify-between">
                         <div>test</div>
-                        <x-mary-theme-toggle class="btn btn-circle btn-ghost btn-xs pr-3" />
+                        <x-mary-theme-toggle/>
                     </div>
 
 
@@ -54,7 +56,14 @@
 
                             <x-mary-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">
                                 <x-slot:actions>
-                                    <x-mary-button icon="o-power" class="btn-circle btn-ghost btn-xs" tooltip-left="logoff" no-wire-navigate link="/logout" />
+                                    <form method="POST" action="{{ route('logout') }}">
+                                        @csrf
+                                        <x-mary-button
+                                            icon="o-power"
+                                            class="btn-circle btn-ghost btn-xs"
+                                            tooltip-left="Logoff"
+                                            type="submit" />
+                                    </form>
                                 </x-slot:actions>
                             </x-mary-list-item>
 
@@ -79,5 +88,6 @@
 
     {{-- Toast --}}
     <x-mary-toast />
+    @livewireScripts
 </body>
 </html>

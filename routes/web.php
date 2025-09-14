@@ -7,6 +7,7 @@ use App\Livewire\CreateThesis;
 use App\Livewire\EditThesis;
 use App\Livewire\Pages\ShowThesis;
 use App\Livewire\Pages\ThesisIndex;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
@@ -33,5 +34,12 @@ Route::middleware(['auth', 'can:admin-access', 'verified'])
 Route::view('profile', 'profile')
     ->middleware(['auth'])
     ->name('profile');
+
+Route::post('/logout', function () {
+    Auth::logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+    return redirect('/');
+})->name('logout');
 
 require __DIR__.'/auth.php';
