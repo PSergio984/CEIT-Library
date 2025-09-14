@@ -12,7 +12,7 @@ class Thesis extends Model
     protected $fillable = [
         'catalog_code',
         'title',
-        'copies',
+        'year',
         'research_project_adviser',
         'department',
         'member1',
@@ -20,42 +20,34 @@ class Thesis extends Model
         'member3',
         'member4',
         'dean',
-        'status',
     ];
 
-    // Relationship with thesis sessions
-    public function sessions()
+    protected $casts = [
+        'year' => 'integer',
+    ];
+
+    // Relationship with thesis copies
+    public function copies()
     {
-        return $this->hasMany(ThesisSession::class);
+        return $this->hasMany(ThesisCopy::class);
     }
 
-    // Get active/ongoing sessions for this thesis
-    public function activeSessions()
+    // Get available copies count
+    public function getAvailableCopiesCountAttribute()
     {
-        return $this->sessions()->where('status', 'started');
+        return $this->copies()->where('status', 'Available')->count();
     }
 
-    // Check if thesis is currently being read
-    public function isBeingRead()
+    // Get total copies count
+    public function getTotalCopiesCountAttribute()
     {
-        return $this->activeSessions()->exists();
+        return $this->copies()->count();
     }
 
-    // Check if thesis is available for reading
-    public function isAvailable()
+    // Check if thesis has available copies
+    public function hasAvailableCopies()
     {
-        return $this->status === 'Available' && !$this->isBeingRead();
-    }
-
-    // Get all members as an array
-    public function getMembers()
-    {
-        return array_filter([
-            $this->member1,
-            $this->member2,
-            $this->member3,
-            $this->member4,
-        ]);
+        return $this->available_copies_count > 0;
     }
 
     // Scope for searching theses

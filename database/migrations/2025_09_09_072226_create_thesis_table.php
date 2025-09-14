@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('catalog_code')->unique();
             $table->string('title');
-            $table->unsignedInteger('copies')->default(1);
+            $table->year('year');
             $table->string('research_project_adviser');
             $table->string('department');
             $table->string('member1');
@@ -23,13 +23,10 @@ return new class extends Migration
             $table->string('member3');
             $table->string('member4');
             $table->string('dean');
-            $table->enum('status', ['Available','Reserved', 'Unavailable'])->default('Available');
             $table->timestamps();
 
             // Add indexes for better performance
-            $table->index('status'); // For filtering available theses
             $table->index('department'); // For department-based searches
-            $table->index(['status', 'department']); // Composite index for status + department filtering
             $table->index('research_project_adviser'); // For searching by adviser
             $table->fullText(['title', 'research_project_adviser']); // Full-text search on title and adviser
         });

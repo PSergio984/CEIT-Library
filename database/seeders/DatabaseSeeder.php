@@ -10,6 +10,7 @@ use App\Models\CreditScore;
 use App\Models\ThesisSession;
 use App\Models\LibrarySession;
 use App\Models\Librarian;
+use App\Models\ThesisCopy;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -52,7 +53,31 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create theses
-        Thesis::factory(30)->create();
+        $theses = Thesis::factory(30)->create();
+
+        // Create copies for each thesis
+        $theses->each(function ($thesis) {
+            // Random number of copies per thesis (1-4 copies)
+            $copyCount = fake()->numberBetween(1, 4);
+
+            for ($i = 1; $i <= $copyCount; $i++) {
+                ThesisCopy::factory()->create([
+                    'thesis_id' => $thesis->id,
+                    'copy_number' => $i,
+                    'status' => fake()->randomElement(['Available', 'Reserved', 'Unavailable']),
+                ]);
+            }
+        });
+
+        // Ensure we have some available copies for testing
+        $availableTheses = $theses->take(10);
+        $availableTheses->each(function ($thesis) {
+            // Make sure at least one copy is available
+            $firstCopy = $thesis->copies()->first();
+            if ($firstCopy) {
+                $firstCopy->update(['status' => 'Available']);
+            }
+        });
 
         // Create credit scores for all users (including admin)
         $allUsers = User::all();
@@ -103,7 +128,6 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create thesis sessions (reading history)
-        $theses = Thesis::all();
         $studentsWithSessions = $students->random(20);
 
         foreach ($studentsWithSessions as $student) {
@@ -120,14 +144,25 @@ class DatabaseSeeder extends Seeder
         // Create some active thesis sessions
         $activeReaders = $students->random(5);
         foreach ($activeReaders as $student) {
-            $availableThesis = $theses->where('status', 'Available')->random();
-            ThesisSession::factory()->active()->create([
-                'user_id' => $student->id,
-                'thesis_id' => $availableThesis->id,
-            ]);
+            // Find theses that have available copies
+            $thesesWithAvailableCopies = $theses->filter(function ($thesis) {
+                return $thesis->copies()->where('status', 'Available')->exists();
+            });
 
-            // Mark thesis as reserved
-            $availableThesis->update(['status' => 'Reserved']);
+            if ($thesesWithAvailableCopies->isNotEmpty()) {
+                $availableThesis = $thesesWithAvailableCopies->random();
+                $availableCopy = $availableThesis->copies()->where('status', 'Available')->first();
+
+                ThesisSession::factory()->active()->create([
+                    'user_id' => $student->id,
+                    'thesis_id' => $availableThesis->id,
+                ]);
+
+                // Mark the copy as reserved
+                if ($availableCopy) {
+                    $availableCopy->update(['status' => 'Reserved']);
+                }
+            }
         }
 
         // Create library entrance/exit sessions
