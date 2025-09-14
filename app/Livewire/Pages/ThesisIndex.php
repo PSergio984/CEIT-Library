@@ -26,7 +26,9 @@ class ThesisIndex extends Component
             ['key' => 'year', 'label' => 'Year'],
             ['key' => 'research_project_adviser', 'label' => 'Adviser'],
             ['key' => 'department', 'label' => 'Department'],
-            ['key' => 'status', 'label' => 'Status'],
+            ['key' => 'total_copies', 'label' => 'Total Copies'],
+            ['key' => 'available_copies', 'label' => 'Available'],
+            ['key' => 'status_display', 'label' => 'Status'],
         ];
     }
 
@@ -34,8 +36,33 @@ class ThesisIndex extends Component
     public function theses()
     {
         return Thesis::query()
+            ->with(['copies' => function($query) {
+                $query->select('thesis_id', 'status');
+            }])
+            ->withCount([
+                'copies as total_copies',
+                'copies as available_copies' => function($query) {
+                    $query->where('status', 'Available');
+                }
+            ])
             ->orderBy(...array_values($this->sortBy))
-            ->paginate($this->perPage, pageName: 'theses-index');
+            ->paginate($this->perPage, pageName: 'theses-index')
+            ->through(function ($thesis) {
+                // Add computed status display
+                $thesis->status_display = $this->getStatusDisplay($thesis);
+                return $thesis;
+            });
+    }
+
+    private function getStatusDisplay($thesis)
+    {
+        if ($thesis->available_copies > 0) {
+            return "Available ({$thesis->available_copies}/{$thesis->total_copies})";
+        } elseif ($thesis->total_copies > 0) {
+            return "All Reserved ({$thesis->total_copies} copies)";
+        } else {
+            return "No Copies";
+        }
     }
 
     public function render()

@@ -22,6 +22,7 @@
                                       :sort-by="$sortBy"
                                       :per-page="$perPage"
                                       :per-page-values="[5, 10, 25, 50]"
+                                       link="/thesis/{id}"
                                       class="w-full [&_td]:text-gray-900 [&_th]:text-gray-900 [&_tbody_tr]:text-gray-900 [&_tbody_tr:hover]:bg-white [&_tbody_tr:hover]:text-gray-900"
                         >
                         </x-mary-table>
