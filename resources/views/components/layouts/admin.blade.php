@@ -1,5 +1,3 @@
-
-
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
@@ -12,12 +10,13 @@
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
         @livewireStyles
+  </script>
     </head>
-    <body class="min-h-screen font-sans antialiased bg-base-200 ">
+    <body class="min-h-screen font-sans antialiased bg-base-100 ">
 
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
@@ -38,7 +37,7 @@
         <div class="flex">
             {{-- SIDEBAR --}}
             <div>
-                <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
+                <x-slot:sidebar drawer="main-drawer" collapsible  class="bg-base-100 lg:bg-inherit">
 
                     {{-- BRAND --}}
                     <div class="ml-5 pt-5 flex items-center justify-between">
@@ -88,6 +87,6 @@
 
     {{-- Toast --}}
     <x-mary-toast />
-    @livewireScripts
 </body>
+
 </html>
