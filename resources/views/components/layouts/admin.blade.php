@@ -61,18 +61,9 @@
                             <x-mary-menu-separator />
                         @endif
 
-                        <x-mary-menu-sub title="Thesis" icon="o-user">
-                            <x-mary-menu-sub title="Settings" icon="o-cog-6-tooth">
-                            <x-mary-menu-item title="Profile" icon="o-user" link="####" />
-                        </x-mary-menu-sub>
-                            <x-mary-menu-item title="Thesis List" icon="o-user" link="/admin/thesis" />
-                        </x-mary-menu-sub>
+                        <x-mary-menu-item title="Thesis List" icon="o-book-open" link="/admin/thesis" />
+                        <x-mary-menu-item title="User List" icon="o-user" link="/testlink"/>
 
-                        <x-mary-menu-item title="Test Link" icon="o-user" link="/testlink"/>
-
-                        <x-mary-menu-sub title="Settings" icon="o-cog-6-tooth">
-                            <x-mary-menu-item title="Profile" icon="o-user" link="####" />
-                        </x-mary-menu-sub>
                     </x-mary-menu>
                 </x-slot:sidebar>
             </div>
