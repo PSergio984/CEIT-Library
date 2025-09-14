@@ -10,10 +10,6 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     {{ __("You're logged in!") }}
-                    <div class="qrcode mb-4">
-                        <img src="{{ $qrImageUrl }}" alt="QR Code" width="300" height="300">
-                    </div>
-                    <a href="{{ $qrImageUrl }}" download="qrcode.png" class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Download QR Code</a>
                 </div>
             </div>
         </div>
