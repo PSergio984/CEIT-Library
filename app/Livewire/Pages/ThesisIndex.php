@@ -37,23 +37,23 @@ class ThesisIndex extends Component
     }
 
    #[Computed]
-public function theses()
-{
+    public function theses()
+    {
 
-    $query = Thesis::query()
-        ->with(['copies' => function($query) {
-            $query->select('thesis_id', 'status');
-        }])
-        ->withCount([
-            'copies as total_copies',
-            'copies as available_copies' => function($query) {
-                $query->where('status', 'Available');
-            }
-        ])
-        ->orderBy(...array_values($this->sortBy));
+        $query = Thesis::query()
+            ->with(['copies' => function($query) {
+                $query->select('thesis_id', 'status');
+            }])
+            ->withCount([
+                'copies as total_copies',
+                'copies as available_copies' => function($query) {
+                    $query->where('status', 'Available');
+                }
+            ])
+            ->orderBy(...array_values($this->sortBy));
 
-    return $query->paginate($this->perPage, pageName: 'theses-index');
-}
+        return $query->paginate($this->perPage, pageName: 'theses-index');
+    }
 
     public function render()
     {
