@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
+use Illuminate\Support\Facades\Hash;
 
 class PasswordConfirmationTest extends TestCase
 {
@@ -24,7 +25,9 @@ class PasswordConfirmationTest extends TestCase
 
     public function test_password_can_be_confirmed(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'password' => Hash::make('password')
+        ]);
 
         $this->actingAs($user);
 
@@ -33,14 +36,18 @@ class PasswordConfirmationTest extends TestCase
 
         $component->call('confirmPassword');
 
-        $component
-            ->assertRedirect('/dashboard')
-            ->assertHasNoErrors();
+        // First check if there are any errors that might prevent redirect
+        $component->assertHasNoErrors();
+
+        // Then check for redirect
+        $component->assertRedirect('/dashboard');
     }
 
     public function test_password_is_not_confirmed_with_invalid_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'password' => Hash::make('password')
+        ]);
 
         $this->actingAs($user);
 

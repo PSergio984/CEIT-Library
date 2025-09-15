@@ -15,7 +15,7 @@ class ThesisIndex extends Component
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
     public array $headers = [];
-          public int $perPage = 10; // default value
+    public int $perPage = 10;
 
     public function updatingPerPage(): void
     {
@@ -52,12 +52,8 @@ public function theses()
         ])
         ->orderBy(...array_values($this->sortBy));
 
-    // reactive pagination
     return $query->paginate($this->perPage, pageName: 'theses-index');
 }
-
-
-
 
     public function render()
     {

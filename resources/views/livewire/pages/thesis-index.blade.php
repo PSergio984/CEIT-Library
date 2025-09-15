@@ -28,8 +28,6 @@
                         header-class="text-base-content"
                         class="w-full"
                     />
-
-
                     </div>
                 </div>
             </div>
