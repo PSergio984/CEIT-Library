@@ -17,7 +17,7 @@
     <body class="font-sans antialiased">
         <div class="min-h-screen bg-base-200 flex flex-col">
             <livewire:layout.navigation />
-
+            <x-mary-toast />
            <!-- Page Heading -->
             @if (isset($header))
                 <header class="bg-base-100 shadow">
