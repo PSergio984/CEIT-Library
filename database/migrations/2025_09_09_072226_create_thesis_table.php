@@ -15,13 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('catalog_code')->unique();
             $table->string('title');
-            $table->year('year');
+            $table->year('publication_year');
             $table->string('research_project_adviser');
             $table->string('department');
-            $table->string('member1');
-            $table->string('member2');
-            $table->string('member3');
-            $table->string('member4');
             $table->string('dean');
             $table->timestamps();
 

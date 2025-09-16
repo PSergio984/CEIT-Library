@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\ThesisSession;
 use App\Models\User;
 use App\Models\Thesis;
+use App\Models\ThesisCopy;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -34,6 +35,9 @@ class ThesisSessionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'thesis_id' => Thesis::factory(),
+            'thesis_copy_id' => function (array $attributes) {
+                return ThesisCopy::where('thesis_id', $attributes['thesis_id'])->inRandomOrder()->first()->id;
+            },
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,

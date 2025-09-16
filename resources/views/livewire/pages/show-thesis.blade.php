@@ -32,10 +32,11 @@
                     <div class="mb-6">
                         <h4 class="font-semibold mb-2">Members</h4>
                         <ul class="list-disc ml-6">
-                            <li>{{ $thesis->member1 }}</li>
-                            <li>{{ $thesis->member2 }}</li>
-                            <li>{{ $thesis->member3 }}</li>
-                            <li>{{ $thesis->member4 }}</li>
+                            @forelse($thesis->authors as $author)
+                                <li>{{ $author->name }}</li>
+                            @empty
+                                <li>No authors listed.</li>
+                            @endforelse
                         </ul>
                     </div>
                     <div class="mb-6">

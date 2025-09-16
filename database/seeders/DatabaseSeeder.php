@@ -22,8 +22,9 @@ class DatabaseSeeder extends Seeder
     {
         // Create admin users
         $admin = User::factory()->create([
-            'name' => 'PLV Admin',
-            'email' => 'admin@plv.edu.ph',
+            'name' => 'Eric Manabat',
+            'email' => 'eric.manabatseam@gmail.com',
+            'is_admin' => true,
         ]);
 
         $libraryManager = User::factory()->create([

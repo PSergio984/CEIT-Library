@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('thesis_id')->constrained()->onDelete('cascade');
+            $table->foreignId('thesis_copy_id')->constrained('thesis_copies')->onDelete('cascade');
             $table->timestamp('time_in')->nullable();
             $table->timestamp('time_out')->nullable();
             $table->enum('status', ['requested', 'started', 'completed', 'expired', 'cancelled'])->default('requested');

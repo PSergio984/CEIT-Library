@@ -12,13 +12,9 @@ class Thesis extends Model
     protected $fillable = [
         'catalog_code',
         'title',
-        'year',
+        'publication_year',
         'research_project_adviser',
         'department',
-        'member1',
-        'member2',
-        'member3',
-        'member4',
         'dean',
     ];
 
@@ -70,5 +66,11 @@ class Thesis extends Model
     public function scopeAvailable($query)
     {
         return $query->where('status', 'Available');
+    }
+
+    // Many-to-many relationship with authors
+    public function authors()
+    {
+        return $this->belongsToMany(Author::class, 'thesis_authors');
     }
 }

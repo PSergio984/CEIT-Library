@@ -14,7 +14,6 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
 
         @livewireStyles
-  </script>
     </head>
     <body class="min-h-screen font-sans antialiased bg-base-100 ">
 
@@ -71,6 +70,9 @@
 
                         <x-mary-menu-item title="Thesis List" icon="o-book-open" link="/admin/thesis" />
                         <x-mary-menu-item title="User List" icon="o-user" link="/testlink"/>
+                        <x-mary-menu-item title="Librarian List" icon="o-user" link="/testlink"/>
+                        <x-mary-menu-item title="Violation List" icon="o-user" link="/testlink"/>
+                        <x-mary-menu-item title="List" icon="o-user" link="/testlink"/>
 
                     </x-mary-menu>
                 </x-slot:sidebar>

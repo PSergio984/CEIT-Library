@@ -14,6 +14,7 @@ class ThesisSession extends Model
     protected $fillable = [
         'user_id',
         'thesis_id',
+        'thesis_copy_id',
         'time_in',
         'time_out',
         'status',
@@ -39,6 +40,12 @@ class ThesisSession extends Model
     public function thesis()
     {
         return $this->belongsTo(Thesis::class);
+    }
+
+    // Relationship with thesis copy
+    public function thesisCopy()
+    {
+        return $this->belongsTo(ThesisCopy::class);
     }
 
     // Generate unique session token for QR code
