@@ -83,9 +83,9 @@ class User extends Authenticatable
         return $this->hasMany(LibrarySession::class);
     }
 
-    public function thesisSessions()
+    public function AcademicPaperSessions()
     {
-        return $this->hasMany(ThesisSession::class);
+        return $this->hasMany(AcademicPaperSession::class);
     }
 
     public function violations()

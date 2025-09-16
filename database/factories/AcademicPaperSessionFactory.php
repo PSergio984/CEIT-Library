@@ -3,17 +3,17 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\ThesisSession;
+use App\Models\AcademicPaperSession;
 use App\Models\User;
-use App\Models\Thesis;
-use App\Models\ThesisCopy;
+use App\Models\AcademicPaper;
+use App\Models\AcademicPaperCopy;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ThesisSession>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AcademicPaperSession>
  */
-class ThesisSessionFactory extends Factory
+class AcademicPaperSessionFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -23,7 +23,7 @@ class ThesisSessionFactory extends Factory
     public function definition(): array
     {
         $timeIn = $this->faker->dateTimeBetween('-3 months', 'now');
-        $timeOut = $this->faker->optional(0.8)->dateTimeBetween($timeIn, Carbon::parse($timeIn)->addHours(4));
+        $timeOut = $this->faker->optional(0.8)->dateTimeBetween($timeIn, \Carbon\Carbon::parse($timeIn)->addHours(4));
 
         $status = 'requested';
         if ($timeIn && $timeOut) {
@@ -33,23 +33,21 @@ class ThesisSessionFactory extends Factory
         }
 
         return [
-            'user_id' => User::factory(),
-            'thesis_id' => Thesis::factory(),
-            'thesis_copy_id' => function (array $attributes) {
-                return ThesisCopy::where('thesis_id', $attributes['thesis_id'])->inRandomOrder()->first()->id;
-            },
+            'user_id' => null, // Always pass explicitly in seeder
+            'academic_paper_id' => null, // Always pass explicitly in seeder
+            'academic_paper_copy_id' => null, // Always pass explicitly in seeder
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,
-            'expires_at' => Carbon::parse($timeIn)->addHours(6), // 6 hours to read
-            'session_token' => Str::random(64),
+            'expires_at' => \Carbon\Carbon::parse($timeIn)->addHours(6),
+            'session_token' => \Illuminate\Support\Str::random(64),
             'notes' => $this->faker->optional(0.3)->sentence(),
-            'duration_minutes' => $timeIn && $timeOut ? Carbon::parse($timeIn)->diffInMinutes($timeOut) : null,
+            'duration_minutes' => $timeIn && $timeOut ? \Carbon\Carbon::parse($timeIn)->diffInMinutes($timeOut) : null,
         ];
     }
 
     /**
-     * Create an active thesis session
+     * Create an active academic paper session
      */
     public function active()
     {
@@ -66,7 +64,7 @@ class ThesisSessionFactory extends Factory
     }
 
     /**
-     * Create a completed thesis session
+     * Create a completed academic paper session
      */
     public function completed()
     {

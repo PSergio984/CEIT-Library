@@ -1,7 +1,7 @@
 <div class="bg-base text-base-content">
     <x-slot name="header">
         <h2 class="font-semibold text-xl leading-tight">
-            {{ __('Thesis Details') }}
+            {{ __('Academic Paper Details') }}
         </h2>
     </x-slot>
 
@@ -10,29 +10,29 @@
             <div class="bg-base overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-base">
                     <div class="mb-6">
-                        <h3 class="text-lg font-bold mb-2">{{ $thesis->title }}</h3>
+                        <h3 class="text-lg font-bold mb-2">{{ $academicPaper->title }}</h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <span class="font-semibold">Catalog Code:</span> {{ $thesis->catalog_code }}
+                                <span class="font-semibold">Catalog Code:</span> {{ $academicPaper->catalog_code }}
                             </div>
                             <div>
-                                <span class="font-semibold">Year:</span> {{ $thesis->year }}
+                                <span class="font-semibold">Year:</span> {{ $academicPaper->publication_year }}
                             </div>
                             <div>
-                                <span class="font-semibold">Department:</span> {{ $thesis->department }}
+                                <span class="font-semibold">Department:</span> {{ $academicPaper->department }}
                             </div>
                             <div>
-                                <span class="font-semibold">Adviser:</span> {{ $thesis->research_project_adviser }}
+                                <span class="font-semibold">Adviser:</span> {{ $academicPaper->research_project_adviser }}
                             </div>
                             <div>
-                                <span class="font-semibold">Dean:</span> {{ $thesis->dean }}
+                                <span class="font-semibold">Dean:</span> {{ $academicPaper->dean }}
                             </div>
                         </div>
                     </div>
                     <div class="mb-6">
                         <h4 class="font-semibold mb-2">Members</h4>
                         <ul class="list-disc ml-6">
-                            @forelse($thesis->authors as $author)
+                            @forelse($academicPaper->authors as $author)
                                 <li>{{ $author->name }}</li>
                             @empty
                                 <li>No authors listed.</li>
@@ -42,8 +42,8 @@
                     <div class="mb-6">
                         <h4 class="font-semibold mb-2">Copies</h4>
                         <div>
-                            <span class="font-semibold">Total Copies:</span> {{ $thesis->copies->count() }}<br>
-                            <span class="font-semibold">Available Copies:</span> {{ $thesis->copies->where('status', 'Available')->count() }}
+                            <span class="font-semibold">Total Copies:</span> {{ $academicPaper->copies->count() }}<br>
+                            <span class="font-semibold">Available Copies:</span> {{ $academicPaper->copies->where('status', 'Available')->count() }}
                         </div>
                         <div class="w-full mt-4">
                             <x-mary-table

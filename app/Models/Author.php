@@ -12,10 +12,4 @@ class Author extends Model
     protected $fillable = [
         'name',
     ];
-
-    public function theses()
-    {
-        return $this->belongsToMany(Thesis::class, 'thesis_authors');
-    }
 }
-

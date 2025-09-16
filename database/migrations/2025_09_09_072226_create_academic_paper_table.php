@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('theses', function (Blueprint $table) {
+        Schema::create('academic_papers', function (Blueprint $table) {
             $table->id();
             $table->string('catalog_code')->unique();
             $table->string('title');
             $table->year('publication_year');
+            $table->string('paper_type'); // New column for type of academic paper
             $table->string('research_project_adviser');
             $table->string('department');
             $table->string('dean');
@@ -33,6 +34,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('theses');
+        Schema::dropIfExists('academic_papers');
     }
 };

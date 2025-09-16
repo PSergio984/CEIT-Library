@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class ThesisSession extends Model
+class AcademicPaperSession extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'thesis_id',
-        'thesis_copy_id',
+        'academic_paper_id',
+        'academic_paper_copy_id',
         'time_in',
         'time_out',
         'status',
@@ -36,16 +36,16 @@ class ThesisSession extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relationship with thesis
-    public function thesis()
+    // Relationship with academic paper
+    public function academicPaper()
     {
-        return $this->belongsTo(Thesis::class);
+        return $this->belongsTo(AcademicPaper::class);
     }
 
-    // Relationship with thesis copy
-    public function thesisCopy()
+    // Relationship with academic paper copy
+    public function academicPaperCopy()
     {
-        return $this->belongsTo(ThesisCopy::class);
+        return $this->belongsTo(AcademicPaperCopy::class);
     }
 
     // Generate unique session token for QR code
@@ -58,18 +58,18 @@ class ThesisSession extends Model
         return $token;
     }
 
-    // Start the thesis reading session
+    // Start the academic paper reading session
     public function startSession()
     {
         $this->time_in = Carbon::now();
         $this->status = 'started';
         $this->save();
 
-        // Update thesis status to Reserved
-        $this->thesis->update(['status' => 'Reserved']);
+        // Update academic paper status to Reserved
+        $this->academicPaper->update(['status' => 'Reserved']);
     }
 
-    // Complete the thesis reading session
+    // Complete the academic paper reading session
     public function completeSession()
     {
         $this->time_out = Carbon::now();
@@ -77,8 +77,8 @@ class ThesisSession extends Model
         $this->calculateDuration();
         $this->save();
 
-        // Update thesis status back to Available
-        $this->thesis->update(['status' => 'Available']);
+        // Update academic paper status back to Available
+        $this->academicPaper->update(['status' => 'Available']);
     }
 
     // Calculate duration when session is completed
@@ -109,11 +109,11 @@ class ThesisSession extends Model
         return static::where('session_token', $token)->first();
     }
 
-    // Get active session for a user and thesis
-    public static function getActiveSession($userId, $thesisId)
+    // Get active session for a user and academic paper
+    public static function getActiveSession($userId, $academicPaperId)
     {
         return static::where('user_id', $userId)
-                    ->where('thesis_id', $thesisId)
+                    ->where('academic_paper_id', $academicPaperId)
                     ->where('status', 'started')
                     ->first();
     }

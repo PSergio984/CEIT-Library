@@ -3,14 +3,14 @@
 namespace Database\Seeders;
 
 use App\Models\User;
-use App\Models\Thesis;
+use App\Models\AcademicPaper;
 use App\Models\Violation;
 use App\Models\UserViolation;
 use App\Models\CreditScore;
-use App\Models\ThesisSession;
+use App\Models\AcademicPaperSession;
 use App\Models\LibrarySession;
 use App\Models\Librarian;
-use App\Models\ThesisCopy;
+use App\Models\AcademicPaperCopy;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -22,9 +22,10 @@ class DatabaseSeeder extends Seeder
     {
         // Create admin users
         $admin = User::factory()->create([
-            'name' => 'Eric Manabat',
-            'email' => 'eric.manabatseam@gmail.com',
+            'name' => 'Janrel Motovlogs',
+            'email' => 'admin@gmail.com',
             'is_admin' => true,
+            'password' => bcrypt('Pwd@12345'),
         ]);
 
         $libraryManager = User::factory()->create([
@@ -53,17 +54,32 @@ class DatabaseSeeder extends Seeder
             Violation::create($violation);
         }
 
-        // Create theses
-        $theses = Thesis::factory(30)->create();
+        // Create academic papers
+        $academicPapers = AcademicPaper::factory(30)->create();
 
-        // Create copies for each thesis
-        $theses->each(function ($thesis) {
-            // Random number of copies per thesis (1-4 copies)
+        // Create authors
+        $authors = \App\Models\Author::factory(20)->create();
+
+        // Seed the academic_paper_authors pivot table
+        $now = now();
+        foreach ($academicPapers as $paper) {
+            // Attach 1-3 random authors to each paper with timestamps
+            $randomAuthors = $authors->random(rand(1, 3))->pluck('id')->toArray();
+            $attachData = [];
+            foreach ($randomAuthors as $authorId) {
+                $attachData[$authorId] = ['created_at' => $now, 'updated_at' => $now];
+            }
+            $paper->authors()->attach($attachData);
+        }
+
+        // Create copies for each academic paper
+        $academicPapers->each(function ($academicPaper) {
+            // Random number of copies per academic paper (1-4 copies)
             $copyCount = fake()->numberBetween(1, 4);
 
             for ($i = 1; $i <= $copyCount; $i++) {
-                ThesisCopy::factory()->create([
-                    'thesis_id' => $thesis->id,
+                AcademicPaperCopy::factory()->create([
+                    'academic_paper_id' => $academicPaper->id,
                     'copy_number' => $i,
                     'status' => fake()->randomElement(['Available', 'Reserved', 'Unavailable']),
                 ]);
@@ -71,10 +87,10 @@ class DatabaseSeeder extends Seeder
         });
 
         // Ensure we have some available copies for testing
-        $availableTheses = $theses->take(10);
-        $availableTheses->each(function ($thesis) {
+        $availableAcademicPapers = $academicPapers->take(10);
+        $availableAcademicPapers->each(function ($academicPaper) {
             // Make sure at least one copy is available
-            $firstCopy = $thesis->copies()->first();
+            $firstCopy = $academicPaper->copies()->first();
             if ($firstCopy) {
                 $firstCopy->update(['status' => 'Available']);
             }
@@ -128,39 +144,44 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
-        // Create thesis sessions (reading history)
+        // Create academic paper sessions (reading history)
         $studentsWithSessions = $students->random(20);
 
         foreach ($studentsWithSessions as $student) {
-            $randomTheses = $theses->random(rand(1, 4));
+            $randomAcademicPapers = $academicPapers->random(rand(1, 4));
 
-            foreach ($randomTheses as $thesis) {
-                ThesisSession::factory()->completed()->create([
-                    'user_id' => $student->id,
-                    'thesis_id' => $thesis->id,
-                ]);
+            foreach ($randomAcademicPapers as $academicPaper) {
+                $copy = $academicPaper->copies()->inRandomOrder()->first();
+                if ($copy) {
+                    AcademicPaperSession::factory()->completed()->create([
+                        'user_id' => $student->id,
+                        'academic_paper_id' => $academicPaper->id,
+                        'academic_paper_copy_id' => $copy->id,
+                    ]);
+                }
             }
         }
 
-        // Create some active thesis sessions
+        // Create some active academic paper sessions
         $activeReaders = $students->random(5);
         foreach ($activeReaders as $student) {
             // Find theses that have available copies
-            $thesesWithAvailableCopies = $theses->filter(function ($thesis) {
-                return $thesis->copies()->where('status', 'Available')->exists();
+            $academicPapersWithAvailableCopies = $academicPapers->filter(function ($academicPaper) {
+                return $academicPaper->copies()->where('status', 'Available')->exists();
             });
 
-            if ($thesesWithAvailableCopies->isNotEmpty()) {
-                $availableThesis = $thesesWithAvailableCopies->random();
-                $availableCopy = $availableThesis->copies()->where('status', 'Available')->first();
+            if ($academicPapersWithAvailableCopies->isNotEmpty()) {
+                $availableAcademicPaper = $academicPapersWithAvailableCopies->random();
+                $availableCopy = $availableAcademicPaper->copies()->where('status', 'Available')->first();
 
-                ThesisSession::factory()->active()->create([
-                    'user_id' => $student->id,
-                    'thesis_id' => $availableThesis->id,
-                ]);
-
-                // Mark the copy as reserved
                 if ($availableCopy) {
+                    AcademicPaperSession::factory()->active()->create([
+                        'user_id' => $student->id,
+                        'academic_paper_id' => $availableAcademicPaper->id,
+                        'academic_paper_copy_id' => $availableCopy->id,
+                    ]);
+
+                    // Mark the copy as reserved
                     $availableCopy->update(['status' => 'Reserved']);
                 }
             }
@@ -198,10 +219,10 @@ class DatabaseSeeder extends Seeder
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
         $this->command->info('- 52 users (2 admin, 50 students)');
-        $this->command->info('- 30 theses');
+        $this->command->info('- 30 academic papers');
         $this->command->info('- 10 violation types');
         $this->command->info('- 3 active librarians on duty');
-        $this->command->info('- 5 active thesis reading sessions');
+        $this->command->info('- 5 active academic paper reading sessions');
         $this->command->info('- 8 students currently in library');
         $this->command->info('- Sample violations, credit scores, and session history');
     }

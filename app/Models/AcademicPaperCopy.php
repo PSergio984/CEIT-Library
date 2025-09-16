@@ -5,12 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ThesisCopy extends Model
+class AcademicPaperCopy extends Model
 {
     use HasFactory;
 
     protected $fillable = [
-        'thesis_id',
+        'academic_paper_id',
         'copy_number',
         'status',
     ];
@@ -20,11 +20,11 @@ class ThesisCopy extends Model
     ];
 
     /**
-     * Get the thesis that owns this copy
+     * Get the academic paper that owns this copy
      */
-    public function thesis()
+    public function academicPaper()
     {
-        return $this->belongsTo(Thesis::class);
+        return $this->belongsTo(AcademicPaper::class);
     }
 
     /**
@@ -49,21 +49,5 @@ class ThesisCopy extends Model
     public function isUnavailable()
     {
         return $this->status === 'Unavailable';
-    }
-
-    /**
-     * Scope for available copies only
-     */
-    public function scopeAvailable($query)
-    {
-        return $query->where('status', 'Available');
-    }
-
-    /**
-     * Scope for reserved copies only
-     */
-    public function scopeReserved($query)
-    {
-        return $query->where('status', 'Reserved');
     }
 }

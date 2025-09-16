@@ -11,14 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('thesis_copies', function (Blueprint $table) {
+        Schema::create('academic_paper_copies', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('thesis_id')->constrained()->onDelete('cascade');
+            $table->foreignId('academic_paper_id')->constrained('academic_papers')->onDelete('cascade');
             $table->unsignedInteger('copy_number'); // e.g., 1, 2, 3
             $table->enum('status', ['Available', 'Reserved', 'Unavailable'])->default('Available');
             $table->timestamps();
 
-            $table->unique(['thesis_id', 'copy_number']); // prevent duplicate copy numbers
+            $table->unique(['academic_paper_id', 'copy_number']); // prevent duplicate copy numbers
             $table->index('status'); // for quick availability lookup
         });
     }
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('thesis_copies');
+        Schema::dropIfExists('academic_paper_copies');
     }
 };

@@ -68,7 +68,7 @@
                             <x-mary-menu-separator />
                         @endif
 
-                        <x-mary-menu-item title="Thesis List" icon="o-book-open" link="/admin/thesis" />
+                        <x-mary-menu-item title="Academic Paper List" icon="o-book-open" link="/admin/academic-papers" />
                         <x-mary-menu-item title="User List" icon="o-user" link="/testlink"/>
                         <x-mary-menu-item title="Librarian List" icon="o-user" link="/testlink"/>
                         <x-mary-menu-item title="Violation List" icon="o-user" link="/testlink"/>

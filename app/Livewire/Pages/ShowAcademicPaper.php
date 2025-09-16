@@ -2,12 +2,12 @@
 
 namespace App\Livewire\Pages;
 
-use App\Models\Thesis;
+use App\Models\AcademicPaper;
 use Livewire\Component;
 use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 
-class ShowThesis extends Component
+class ShowAcademicPaper extends Component
 {
     use WithPagination;
 
@@ -21,17 +21,17 @@ class ShowThesis extends Component
         ['key' => 'action', 'label' => 'Action'],
     ];
 
-    public Thesis $thesis;
+    public AcademicPaper $academicPaper;
 
-    public function mount(Thesis $thesis)
+    public function mount(AcademicPaper $academicPaper)
     {
-        $this->thesis = $thesis;
+        $this->academicPaper = $academicPaper;
     }
 
     #[Computed]
     public function rows(): array
     {
-        $copies = $this->thesis->copies()
+        $copies = $this->academicPaper->copies()
             ->orderBy(...array_values($this->sortBy))
             ->get();
 
@@ -47,6 +47,6 @@ class ShowThesis extends Component
     }
     public function render()
     {
-        return view('livewire.pages.show-thesis');
+        return view('livewire.pages.show-academic-paper');
     }
 }

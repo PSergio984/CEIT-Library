@@ -37,8 +37,8 @@ new class extends Component
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                         {{ __('Dashboard') }}
                     </x-nav-link>
-                    <x-nav-link :href="route('thesis.index')" :active="request()->routeIs('thesis.index')" wire:navigate>
-                        {{ __('Thesis') }}
+                    <x-nav-link :href="route('academic-paper.index')" :active="request()->routeIs('academic-paper.index')" wire:navigate>
+                        {{ __('Academic Paper') }}
                     </x-nav-link>
                     <x-mary-theme-toggle/>
                 </div>
@@ -102,8 +102,8 @@ new class extends Component
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" wire:navigate>
                 {{ __('Dashboard') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link :href="route('thesis.index')" :active="request()->routeIs('thesis.index')" wire:navigate>
-                {{ __('Thesis') }}
+            <x-responsive-nav-link :href="route('academic-paper.index')" :active="request()->routeIs('academic-paper.index')" wire:navigate>
+                {{ __('Academic Paper') }}
             </x-responsive-nav-link>
         </div>
 

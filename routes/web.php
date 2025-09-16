@@ -1,12 +1,12 @@
 <?php
 
 use App\Livewire\AdminDashboard;
-use App\Livewire\AdminShowThesis;
-use App\Livewire\AdminThesisIndex;
-use App\Livewire\CreateThesis;
-use App\Livewire\EditThesis;
-use App\Livewire\Pages\ShowThesis;
-use App\Livewire\Pages\ThesisIndex;
+use App\Livewire\AdminShowAcademicPaper;
+use App\Livewire\AdminAcademicPaperIndex;
+use App\Livewire\CreateAcademicPaper;
+use App\Livewire\EditAcademicPaper;
+use App\Livewire\Pages\ShowAcademicPaper;
+use App\Livewire\Pages\AcademicPaperIndex;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -15,8 +15,8 @@ Route::view('/', 'welcome');
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::get('/thesis', ThesisIndex::class)->name('thesis.index');
-    Route::get('/thesis/{thesis}', ShowThesis::class)->name('thesis.show');
+    Route::get('/academic-papers', AcademicPaperIndex::class)->name('academic-paper.index');
+    Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)->name('academic-paper.show');
 });
 
 // Admin routes
@@ -25,10 +25,10 @@ Route::middleware(['auth', 'can:admin-access', 'verified'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
-        Route::get('/thesis', AdminThesisIndex::class)->name('thesis.index');
-        Route::get('/thesis/create', CreateThesis::class)->name('thesis.create');
-        Route::get('/thesis/{thesis}', AdminShowThesis::class)->name('thesis.show');
-        Route::get('/thesis/{thesis}/edit', EditThesis::class)->name('thesis.edit');
+        Route::get('/academic-papers', AdminAcademicPaperIndex::class)->name('academic-paper.index');
+        Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
+        Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)->name('academic-paper.show');
+        Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
     });
 
 Route::view('profile', 'profile')

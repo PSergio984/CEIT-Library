@@ -6,10 +6,10 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Thesis;
+use App\Models\AcademicPaper;
 
-#[Title('Thesis List')]
-class ThesisIndex extends Component
+#[Title('Academic Paper List')]
+class AcademicPaperIndex extends Component
 {
     use WithPagination;
 
@@ -28,7 +28,7 @@ class ThesisIndex extends Component
             ['key' => 'id', 'label' => '#'],
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
             ['key' => 'title', 'label' => 'Title'],
-            ['key' => 'year', 'label' => 'Year'],
+            ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'research_project_adviser', 'label' => 'Adviser'],
             ['key' => 'department', 'label' => 'Department'],
             ['key' => 'total_copies', 'label' => 'Total Copies'],
@@ -37,12 +37,12 @@ class ThesisIndex extends Component
     }
 
    #[Computed]
-    public function theses()
+    public function academicPapers()
     {
 
-        $query = Thesis::query()
+        $query = AcademicPaper::query()
             ->with(['copies' => function($query) {
-                $query->select('thesis_id', 'status');
+                $query->select('academic_paper_id', 'status');
             }])
             ->withCount([
                 'copies as total_copies',
@@ -52,11 +52,11 @@ class ThesisIndex extends Component
             ])
             ->orderBy(...array_values($this->sortBy));
 
-        return $query->paginate($this->perPage, pageName: 'theses-index');
+        return $query->paginate($this->perPage, pageName: 'academic-papers-index');
     }
 
     public function render()
     {
-        return view('livewire.pages.thesis-index');
+        return view('livewire.pages.academic-paper-index');
     }
 }

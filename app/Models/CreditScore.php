@@ -46,10 +46,10 @@ class CreditScore extends Model
         return $this->score >= 10; // Minimum score required
     }
 
-    // Check if user can borrow thesis
-    public function canBorrowThesis()
+    // Check if user can borrow academic paper
+    public function canBorrowAcademicPaper()
     {
-        return $this->score >= 30; // Higher requirement for thesis access
+        return $this->score >= 30; // Higher requirement for academic paper access
     }
 
     // Get or create credit score for a user

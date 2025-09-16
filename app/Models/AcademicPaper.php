@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Thesis extends Model
+class AcademicPaper extends Model
 {
     use HasFactory;
 
@@ -13,19 +13,20 @@ class Thesis extends Model
         'catalog_code',
         'title',
         'publication_year',
+        'paper_type',
         'research_project_adviser',
         'department',
         'dean',
     ];
 
     protected $casts = [
-        'year' => 'integer',
+        'publication_year' => 'integer',
     ];
 
-    // Relationship with thesis copies
+    // Relationship with academic paper copies
     public function copies()
     {
-        return $this->hasMany(ThesisCopy::class);
+        return $this->hasMany(AcademicPaperCopy::class);
     }
 
     // Get available copies count
@@ -40,13 +41,13 @@ class Thesis extends Model
         return $this->copies()->count();
     }
 
-    // Check if thesis has available copies
+    // Check if academic paper has available copies
     public function hasAvailableCopies()
     {
         return $this->available_copies_count > 0;
     }
 
-    // Scope for searching theses
+    // Scope for searching academic papers
     public function scopeSearch($query, $search)
     {
         return $query->where(function ($q) use ($search) {
@@ -62,15 +63,9 @@ class Thesis extends Model
         return $query->where('department', $department);
     }
 
-    // Scope for available theses only
-    public function scopeAvailable($query)
-    {
-        return $query->where('status', 'Available');
-    }
-
     // Many-to-many relationship with authors
     public function authors()
     {
-        return $this->belongsToMany(Author::class, 'thesis_authors');
+        return $this->belongsToMany(Author::class, 'academic_paper_authors')->withTimestamps();
     }
 }
