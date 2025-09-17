@@ -41,10 +41,10 @@
                         >
                             @scope('actions', $row)
                             <div class="flex items-center gap-4 justify-center">
-                                <x-mary-button icon="o-trash" wire:click="deleteAcademicPaper({{ $row->id }})" wire:confirm="Are you sure you want to delete this article?" class="btn-ghost btn-sm"/>
-                                <a href="/academic-papers/{{ $row->id }}" wire:navigate>
-                                    <x-mary-button icon="o-eye" class="btn-ghost btn-sm"/>
+                                 <a href="/admin/academic-papers/{{ $row->id }}" wire:navigate>
+                                    <x-mary-button icon="o-pencil-square" class="btn-ghost btn-sm"/>
                                 </a>
+                                <x-mary-button icon="o-trash" wire:click="deleteAcademicPaper({{ $row->id }})" wire:confirm="Are you sure you want to delete this article?" class="btn-ghost btn-sm"/>
                             </div>
                             @endscope
 

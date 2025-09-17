@@ -26,7 +26,7 @@ return new class extends Migration
             $table->index(['status', 'expires_at']); // For finding active/expired accounts
             $table->index('expires_at'); // For cleanup jobs and expiry checks
             $table->index(['status', 'last_login_at']); // For activity monitoring
-            $table->index('created_by'); // For tracking which admin created accounts
+            $table->index('created_by'); // For tracking which Admin created accounts
         });
     }
 

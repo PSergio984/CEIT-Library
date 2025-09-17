@@ -1,12 +1,12 @@
 <?php
 
-use App\Livewire\AdminDashboard;
-use App\Livewire\AdminShowAcademicPaper;
-use App\Livewire\AdminAcademicPaperIndex;
-use App\Livewire\CreateAcademicPaper;
-use App\Livewire\EditAcademicPaper;
-use App\Livewire\Pages\ShowAcademicPaper;
-use App\Livewire\Pages\AcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminDashboard;
+use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
+use App\Livewire\Pages\Admin\CreateAcademicPaper;
+use App\Livewire\Pages\Admin\EditAcademicPaper;
+use App\Livewire\Pages\student\AcademicPaperIndex;
+use App\Livewire\Pages\student\ShowAcademicPaper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -20,7 +20,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Admin routes
-Route::middleware(['auth', 'can:admin-access', 'verified'])
+Route::middleware(['auth', 'can:Admin-access', 'verified'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {

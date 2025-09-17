@@ -30,7 +30,7 @@ class Librarian extends Model
         return $this->belongsTo(User::class);
     }
 
-    // Relationship with the admin who created this librarian duty
+    // Relationship with the Admin who created this librarian duty
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

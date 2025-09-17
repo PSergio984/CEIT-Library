@@ -70,8 +70,8 @@
 
                         <x-mary-menu-item title="Academic Paper List" icon="o-book-open" link="/admin/academic-papers" />
                         <x-mary-menu-item title="User List" icon="o-user" link="/testlink"/>
-                        <x-mary-menu-item title="Librarian List" icon="o-user" link="/testlink"/>
-                        <x-mary-menu-item title="Violation List" icon="o-user" link="/testlink"/>
+                        <x-mary-menu-item title="Librarian List" icon="o-building-library" link="/testlink"/>
+                        <x-mary-menu-item title="Violation List" icon="o-shield-exclamation" link="/testlink"/>
                         <x-mary-menu-item title="List" icon="o-user" link="/testlink"/>
 
                     </x-mary-menu>

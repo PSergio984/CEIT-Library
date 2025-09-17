@@ -1,12 +1,12 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Pages\Admin;
 
 
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.admin')]
+#[Layout('components.layouts.Admin')]
 class AdminComponent extends Component
 {
 

@@ -1,17 +1,18 @@
 <?php
 
-namespace App\Livewire;
+namespace App\Livewire\Pages\student;
 
 use App\Models\AcademicPaper;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Mary\Traits\Toast;
 
-class AdminAcademicPaperIndex extends AdminComponent
+#[Title('Academic Paper List')]
+class AcademicPaperIndex extends Component
 {
-      use WithPagination;
-      use Toast;
+    use WithPagination;
+
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
     public array $headers = [];
     public int $perPage = 10;
@@ -54,18 +55,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         return $query->paginate($this->perPage, pageName: 'academic-papers-index');
     }
 
-    public function deleteAcademicPaper($id)
-    {
-        $academicPaper = AcademicPaper::find($id);
-        if ($academicPaper) {
-            $academicPaper->delete();
-             $this->warning("$academicPaper->title deleted", 'Good bye!');
-        } else {
-            $this->warning("$academicPaper->title Not Found", 'Error!');
-        }
-    }
     public function render()
     {
-        return view('livewire.admin-academic-paper-index');
+        return view('livewire.pages.student.academic-paper-index');
     }
 }

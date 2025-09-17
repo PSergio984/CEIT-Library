@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Livewire\Pages;
+namespace App\Livewire\Pages\student;
 
 use App\Models\AcademicPaper;
-use Livewire\Component;
 use Livewire\Attributes\Computed;
+use Livewire\Component;
 use Livewire\WithPagination;
 
 class ShowAcademicPaper extends Component
@@ -47,6 +47,6 @@ class ShowAcademicPaper extends Component
     }
     public function render()
     {
-        return view('livewire.pages.show-academic-paper');
+        return view('livewire.pages.student.show-academic-paper');
     }
 }

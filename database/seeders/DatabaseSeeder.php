@@ -20,10 +20,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create admin users
+        // Create Admin users
         $admin = User::factory()->create([
             'name' => 'Janrel Motovlogs',
-            'email' => 'admin@gmail.com',
+            'email' => 'Admin@gmail.com',
             'is_admin' => true,
             'password' => bcrypt('Pwd@12345'),
         ]);
@@ -96,7 +96,7 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        // Create credit scores for all users (including admin)
+        // Create credit scores for all users (including Admin)
         $allUsers = User::all();
         foreach ($allUsers as $user) {
             CreditScore::factory()->create(['user_id' => $user->id]);
@@ -218,7 +218,7 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
-        $this->command->info('- 52 users (2 admin, 50 students)');
+        $this->command->info('- 52 users (2 Admin, 50 students)');
         $this->command->info('- 30 academic papers');
         $this->command->info('- 10 violation types');
         $this->command->info('- 3 active librarians on duty');
