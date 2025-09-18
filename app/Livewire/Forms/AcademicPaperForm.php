@@ -3,16 +3,16 @@
 namespace App\Livewire\Forms;
 
 use App\Models\AcademicPaper;
-use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class AcademicPaperForm extends Form
 {
-    public ?AcademicPaper $academicPaper;
-    #[Locked]
+    public AcademicPaper $academicPaper;
+    #[Validate('required')]
     public int $id;
-    public ?string $catalog_code = null;
+    #[Validate('required')]
+    public string $catalog_code;
     #[Validate('required')]
     public string $title;
     #[Validate('required')]
@@ -25,8 +25,6 @@ class AcademicPaperForm extends Form
     public string $department;
     #[Validate('required')]
     public string $dean;
-
-
 
     public function setAcademicPaper(AcademicPaper $academicPaper)
     {
