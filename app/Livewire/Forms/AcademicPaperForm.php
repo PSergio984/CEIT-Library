@@ -12,7 +12,7 @@ class AcademicPaperForm extends Form
     #[Validate('required')]
     public int $id;
     #[Validate('required')]
-    public string $catalog_code;
+    public ?string $catalog_code=null;
     #[Validate('required')]
     public string $title;
     #[Validate('required')]
