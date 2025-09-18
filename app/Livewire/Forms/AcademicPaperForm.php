@@ -9,9 +9,8 @@ use Livewire\Form;
 class AcademicPaperForm extends Form
 {
     public AcademicPaper $academicPaper;
-    #[Validate('required')]
+
     public int $id;
-    #[Validate('required')]
     public ?string $catalog_code=null;
     #[Validate('required')]
     public string $title;
@@ -42,7 +41,7 @@ class AcademicPaperForm extends Form
     public function store()
     {
         $this->validate();
-        $paper = AcademicPaper::create([
+        AcademicPaper::create([
             'title' => $this->title,
             'publication_year' => $this->publication_year,
             'paper_type' => $this->paper_type,
@@ -50,8 +49,6 @@ class AcademicPaperForm extends Form
             'department' => $this->department,
             'dean' => $this->dean,
         ]);
-        $this->setAcademicPaper($paper);
-        return $paper;
     }
 
     public function update()
