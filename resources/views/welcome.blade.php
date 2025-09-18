@@ -23,12 +23,12 @@
 
         <!-- Header -->
         <header class="flex justify-between items-center px-10 py-4 z-20 relative" style="background-color: #273F4F;">
-            <div class="flex items-center text-white text-2xl font-bold">
+            <a href="/" class="flex items-center text-white text-2xl font-bold hover:opacity-80 transition">
                 <div class="w-12 h-12">
                     <img src="{{ asset('images/ceit-logo.png') }}" alt="Description of image">
                 </div>
-                <span>CEIT Library</span>
-            </div>
+                <span class="ml-2">CEIT Library</span>
+            </a>
             <div>
                 @if (Route::has('login'))
                     <livewire:welcome.navigation />

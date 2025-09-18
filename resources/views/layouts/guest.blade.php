@@ -14,17 +14,34 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="font-sans text-gray-900 antialiased">
-        <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
+    <body class="min-h-screen bg-cover bg-center font-sans relative" style="background-image: url('{{ asset('images/plvbg.jpg') }}');">
+        <!-- Blue Overlay for opacity effect -->
+        <div class="absolute inset-0 bg-[#273F4F]/80 z-0"></div>
+        <!-- Header (fixed at the top, like welcome.blade.php) -->
+        <header class="flex justify-between items-center px-10 py-4 z-30 relative w-full" style="background-color: #273F4F;">
+            <a href="/" class="flex items-center text-white text-2xl font-bold hover:opacity-80 transition">
+                <div class="w-12 h-12">
+                    <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo">
+                </div>
+                <span class="ml-2">CEIT Library</span>
+            </a>
             <div>
-                <a href="/" wire:navigate>
-                    <x-application-logo class="w-20 h-20 fill-current text-gray-500" />
-                </a>
+                @if (Route::has('login'))
+                    <livewire:welcome.navigation />
+                @endif
             </div>
-
-            <div class="w-full sm:max-w-md mt-6 px-6 py-4 bg-white shadow-md overflow-hidden sm:rounded-lg">
-                {{ $slot }}
+        </header>
+        <div class="flex items-center justify-center min-h-screen relative z-10">
+            <div class="relative w-full max-w-lg mx-auto">
+                <!-- Card background layer for dark header effect -->
+                <div class="absolute inset-0 bg-[#273F4F] rounded-t-2xl" style="height: 110px; z-index: 0;"></div>
+                <div class="relative z-10">
+                    {{ $slot }}
+                </div>
             </div>
         </div>
+        <style>
+            /* Remove floating elements and overlays from previous design */
+        </style>
     </body>
 </html>
