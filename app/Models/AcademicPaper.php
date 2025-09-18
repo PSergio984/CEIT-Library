@@ -68,4 +68,19 @@ class AcademicPaper extends Model
     {
         return $this->belongsToMany(Author::class, 'academic_paper_authors')->withTimestamps();
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($paper) {
+            if (empty($paper->catalog_code)) {
+                do {
+                    // Example: CAT-YYYYMMDD-XXXX (customize as needed)
+                    $code = 'CAT-' . date('Ymd') . '-' . strtoupper(uniqid());
+                } while (self::where('catalog_code', $code)->exists());
+                $paper->catalog_code = $code;
+            }
+        });
+    }
 }
