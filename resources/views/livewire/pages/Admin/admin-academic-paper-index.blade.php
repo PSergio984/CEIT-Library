@@ -17,7 +17,7 @@
                             </a>
                         </div>
                         <div class="flex gap-2 items-center">
-                         <x-mary-input label="Search Title Here" wire:model="search" placeholder="Search Title Here" inline icon="o-magnifying-glass" />
+                         <x-mary-input label="Search Title Here" wire:model.live.debounce="search" placeholder="Search Title Here" inline icon="o-magnifying-glass" />
                         </div>
                     </div>
 
