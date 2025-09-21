@@ -39,9 +39,12 @@
                 <x-slot:sidebar drawer="main-drawer" collapsible  class="bg-base-100 lg:bg-inherit">
 
                     {{-- BRAND --}}
-                    <div class="ml-5 pt-5 flex items-center justify-between">
-                        <div>test</div>
-                        <x-mary-theme-toggle/>
+                    <div class="ml-4 pt-5 flex items-center justify-between">
+                        <img src="{{ Vite::asset('public/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
+                        <div class="flex-1 flex items-center justify-between transition-all duration-300" x-show="!collapsed">
+                            <div>CEIT Library</div>
+                            <x-mary-theme-toggle/>
+                        </div>
                     </div>
 
 
@@ -69,10 +72,11 @@
                         @endif
 
                         <x-mary-menu-item title="Academic Paper List" icon="o-book-open" link="/admin/academic-papers" />
+                        <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/testlink" />
                         <x-mary-menu-item title="User List" icon="o-user" link="/testlink"/>
-                        <x-mary-menu-item title="Librarian List" icon="o-building-library" link="/testlink"/>
-                        <x-mary-menu-item title="Violation List" icon="o-shield-exclamation" link="/testlink"/>
-                        <x-mary-menu-item title="List" icon="o-user" link="/testlink"/>
+                        <x-mary-menu-item title="Attendance" icon="o-user-group" link="/"/>
+                        <x-mary-menu-item title="Librarian Logs" icon="o-building-library" link="/testlink"/>
+                        <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/testlink"/>
 
                     </x-mary-menu>
                 </x-slot:sidebar>
