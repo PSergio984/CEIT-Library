@@ -24,6 +24,33 @@ class AcademicPaperForm extends Form
     public string $department;
     #[Validate('required')]
     public string $dean;
+     public array $type_choices = [
+        ['id' => 'Thesis', 'name' => 'Thesis'],
+        ['id' => 'Capstone', 'name' => 'Capstone'],
+        ['id' => 'Feasib', 'name' => 'Feasib'],
+        ['id' => 'Research', 'name' => 'Research'],
+        ['id' => 'Practicum', 'name' => 'Practicum'],
+        ['id' => 'Report', 'name' => 'Report'],
+    ];
+     public array $department_choices = [
+        ['id' => 'CPE', 'name' => 'Computer Engineering'],
+        ['id' => 'CS', 'name' => 'Computer Science'],
+        ['id' => 'IT', 'name' => 'Information Technology'],
+        ['id' => 'IS', 'name' => 'Information Systems'],
+        ['id' => 'Other', 'name' => 'Other'],
+    ];
+
+    public array $year_choices = [];
+
+    public function populateYearChoices()
+    {
+        $currentYear = date('Y');
+        $years = [];
+        for ($y = $currentYear; $y >= 2002; $y--) {
+            $years[] = ['id' => $y, 'name' => $y];
+        }
+        $this->year_choices = $years;
+    }
 
     public function setAcademicPaper(AcademicPaper $academicPaper)
     {

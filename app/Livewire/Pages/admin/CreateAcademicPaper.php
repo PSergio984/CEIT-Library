@@ -9,7 +9,6 @@ class CreateAcademicPaper extends AdminComponent
 {
     use Toast;
    public AcademicPaperForm $form;
-
      public function save()
     {
         //returns the created academic paper
@@ -21,6 +20,10 @@ class CreateAcademicPaper extends AdminComponent
             'Academic Paper Created Successfully!',
             redirectTo: "/admin/academic-papers"
         );
+    }
+    public function mount()
+    {
+        $this->form->populateYearChoices();
     }
     public function render()
     {
