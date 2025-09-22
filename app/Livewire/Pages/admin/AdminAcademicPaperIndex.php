@@ -30,6 +30,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
+            ['key' => 'paper_type', 'label' => 'Paper Type'],
             ['key' => 'research_project_adviser', 'label' => 'Adviser'],
             ['key' => 'department', 'label' => 'Department'],
             ['key' => 'total_copies', 'label' => 'Total Copies'],

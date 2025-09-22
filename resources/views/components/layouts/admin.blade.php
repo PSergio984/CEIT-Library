@@ -71,11 +71,18 @@
                             <x-mary-menu-separator />
                         @endif
 
-                        <x-mary-menu-item title="Academic Paper List" icon="o-book-open" link="/admin/academic-papers" />
+                        <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
+                        <x-mary-menu-sub title="Academic Paper List" icon="o-book-open">
+                            <x-mary-menu-item title="College of Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
+                            <x-mary-menu-item title="College of Civil Engineering" icon="o-building-office" link="/admin/academic-papers/civil" />
+                            <x-mary-menu-item title="College of Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/electrical" />
+                        </x-mary-menu-sub>
                         <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/testlink" />
-                        <x-mary-menu-item title="User List" icon="o-user" link="/testlink"/>
+                        <x-mary-menu-sub title="Users List" icon="o-user">
+                            <x-mary-menu-item title="Students" icon="o-academic-cap" link="#students" />
+                            <x-mary-menu-item title="Librarian" icon="o-building-library" link="#librarians" />
+                        </x-mary-menu-sub>
                         <x-mary-menu-item title="Attendance" icon="o-user-group" link="/"/>
-                        <x-mary-menu-item title="Librarian Logs" icon="o-building-library" link="/testlink"/>
                         <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/testlink"/>
 
                     </x-mary-menu>
