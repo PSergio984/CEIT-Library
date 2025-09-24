@@ -7,6 +7,42 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $academic_paper_id
+ * @property int $inventory_id
+ * @property \Illuminate\Support\Carbon|null $time_in
+ * @property \Illuminate\Support\Carbon|null $time_out
+ * @property string $status
+ * @property \Illuminate\Support\Carbon $expires_at
+ * @property string $session_token
+ * @property string|null $notes
+ * @property int|null $duration_minutes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\AcademicPaper $academicPaper
+ * @property-read \App\Models\Inventory $inventory
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\BorrowTransactionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereAcademicPaperId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereDurationMinutes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereInventoryId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereSessionToken($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereTimeIn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereTimeOut($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereUserId($value)
+ * @mixin \Eloquent
+ */
 class BorrowTransaction extends Model
 {
     use HasFactory;

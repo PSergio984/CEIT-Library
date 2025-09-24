@@ -6,6 +6,33 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property \Illuminate\Support\Carbon|null $time_in
+ * @property \Illuminate\Support\Carbon|null $time_out
+ * @property string $status
+ * @property int|null $scanned_by
+ * @property int|null $duration_minutes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Librarian|null $scannedByLibrarian
+ * @property-read \App\Models\User $user
+ * @method static \Database\Factories\AttendanceFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereDurationMinutes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereScannedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereTimeIn($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereTimeOut($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereUserId($value)
+ * @mixin \Eloquent
+ */
 class Attendance extends Model
 {
     use HasFactory;

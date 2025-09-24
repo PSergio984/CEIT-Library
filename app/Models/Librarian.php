@@ -6,6 +6,34 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $status
+ * @property \Illuminate\Support\Carbon $expires_at
+ * @property int|null $created_by
+ * @property \Illuminate\Support\Carbon|null $last_login_at
+ * @property string|null $shift_notes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User|null $createdBy
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian active()
+ * @method static \Database\Factories\LibrarianFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereCreatedBy($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereExpiresAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereLastLoginAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereShiftNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUserId($value)
+ * @mixin \Eloquent
+ */
 class Librarian extends Model
 {
     use HasFactory;

@@ -6,6 +6,34 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property int $violation_id
+ * @property \Illuminate\Support\Carbon $date_occurred
+ * @property string $severity
+ * @property string|null $remarks
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\User $user
+ * @property-read \App\Models\Violation $violation
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction byDateRange($startDate = null, $endDate = null)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction bySeverity($severity)
+ * @method static \Database\Factories\ViolationTransactionFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction recent($days = 30)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereDateOccurred($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereRemarks($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereSeverity($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationId($value)
+ * @mixin \Eloquent
+ */
 class ViolationTransaction extends Model
 {
     use HasFactory;

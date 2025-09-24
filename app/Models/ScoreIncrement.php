@@ -5,6 +5,31 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $user_id
+ * @property string $name
+ * @property string|null $description
+ * @property int $score_value
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read mixed $status
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement byScoreRange($minScore = null, $maxScore = null)
+ * @method static \Database\Factories\ScoreIncrementFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement goodStanding()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereScoreValue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUserId($value)
+ * @mixin \Eloquent
+ */
 class ScoreIncrement extends Model
 {
     use HasFactory;
