@@ -26,7 +26,7 @@ class AcademicPaper extends Model
     // Relationship with academic paper copies
     public function copies()
     {
-        return $this->hasMany(AcademicPaperCopy::class);
+        return $this->hasMany(Inventory::class);
     }
 
     // Get available copies count

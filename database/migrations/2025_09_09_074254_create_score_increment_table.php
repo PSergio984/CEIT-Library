@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('credit_scores', function (Blueprint $table) {
+        Schema::create('score_increments', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->integer('score')->default(75);
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->integer('score_value')->default(0);
             $table->timestamps();
 
             // Add indexes for better performance
             $table->unique('user_id'); // Ensure one score per user and fast user lookups
-            $table->index('score'); // For score-based filtering and ranking
-            $table->index(['score', 'updated_at']); // For recent score changes reporting
+            $table->index('score_value'); // For score-based filtering and ranking
+            $table->index(['score_value', 'updated_at']); // For recent score changes reporting
         });
     }
 
@@ -29,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('credit_scores');
+        Schema::dropIfExists('score_increments');
     }
 };

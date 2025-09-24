@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
-class LibrarySession extends Model
+class Attendance extends Model
 {
     use HasFactory;
 

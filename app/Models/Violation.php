@@ -18,7 +18,7 @@ class Violation extends Model
     // Relationship with user violations
     public function userViolations()
     {
-        return $this->hasMany(UserViolation::class);
+        return $this->hasMany(ViolationTransaction::class);
     }
 
     // Get users who have this violation

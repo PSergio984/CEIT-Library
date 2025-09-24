@@ -3,13 +3,13 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\CreditScore;
+use App\Models\ScoreIncrement;
 use App\Models\User;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CreditScore>
+ * @extends Factory<\App\Models\ScoreIncrement>
  */
-class CreditScoreFactory extends Factory
+class ScoreIncrementFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -20,7 +20,9 @@ class CreditScoreFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'score' => $this->faker->numberBetween(10, 75), // Realistic score range considering violations
+            'name' => $this->faker->word(),
+            'description' => $this->faker->optional()->sentence(),
+            'score_value' => $this->faker->numberBetween(50, 100), // Realistic score range considering violations
         ];
     }
 
@@ -30,7 +32,7 @@ class CreditScoreFactory extends Factory
     public function excellent()
     {
         return $this->state(fn (array $attributes) => [
-            'score' => $this->faker->numberBetween(70, 75),
+            'score_value' => $this->faker->numberBetween(70, 75),
         ]);
     }
 
@@ -40,7 +42,7 @@ class CreditScoreFactory extends Factory
     public function good()
     {
         return $this->state(fn (array $attributes) => [
-            'score' => $this->faker->numberBetween(50, 69),
+            'score_value' => $this->faker->numberBetween(50, 69),
         ]);
     }
 
@@ -50,7 +52,7 @@ class CreditScoreFactory extends Factory
     public function poor()
     {
         return $this->state(fn (array $attributes) => [
-            'score' => $this->faker->numberBetween(10, 29),
+            'score_value' => $this->faker->numberBetween(10, 29),
         ]);
     }
 }

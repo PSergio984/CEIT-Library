@@ -5,13 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CreditScore extends Model
+class ScoreIncrement extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
-        'score',
+        'name',
+        'description',
+        'score_value',
     ];
 
     // Relationship with user
@@ -23,33 +25,33 @@ class CreditScore extends Model
     // Update score based on violations
     public function updateScore()
     {
-        $totalPenalty = UserViolation::getUserTotalPenalty($this->user_id);
-        $this->score = max(0, 75 - $totalPenalty); // Minimum score is 0
+        $totalPenalty = ViolationTransaction::getUserTotalPenalty($this->user_id);
+        $this->score_value = max(0, 75 - $totalPenalty); // Minimum score is 0
         $this->save();
 
-        return $this->score;
+        return $this->score_value;
     }
 
     // Get credit score status
     public function getStatusAttribute()
     {
-        if ($this->score >= 70) return 'Excellent';
-        if ($this->score >= 50) return 'Good';
-        if ($this->score >= 30) return 'Fair';
-        if ($this->score >= 10) return 'Poor';
+        if ($this->score_value >= 70) return 'Excellent';
+        if ($this->score_value >= 50) return 'Good';
+        if ($this->score_value >= 30) return 'Fair';
+        if ($this->score_value >= 10) return 'Poor';
         return 'Critical';
     }
 
     // Check if user can access library services
     public function canAccessLibrary()
     {
-        return $this->score >= 10; // Minimum score required
+        return $this->score_value >= 10; // Minimum score required
     }
 
     // Check if user can borrow academic paper
     public function canBorrowAcademicPaper()
     {
-        return $this->score >= 30; // Higher requirement for academic paper access
+        return $this->score_value >= 30; // Higher requirement for academic paper access
     }
 
     // Get or create credit score for a user
@@ -57,7 +59,7 @@ class CreditScore extends Model
     {
         return static::firstOrCreate(
             ['user_id' => $userId],
-            ['score' => 75] // Default starting score
+            ['score_value' => 75] // Default starting score
         );
     }
 
@@ -65,10 +67,10 @@ class CreditScore extends Model
     public function scopeByScoreRange($query, $minScore = null, $maxScore = null)
     {
         if ($minScore !== null) {
-            $query->where('score', '>=', $minScore);
+            $query->where('score_value', '>=', $minScore);
         }
         if ($maxScore !== null) {
-            $query->where('score', '<=', $maxScore);
+            $query->where('score_value', '<=', $maxScore);
         }
         return $query;
     }
@@ -76,6 +78,6 @@ class CreditScore extends Model
     // Scope for users with good standing
     public function scopeGoodStanding($query)
     {
-        return $query->where('score', '>=', 30);
+        return $query->where('score_value', '>=', 30);
     }
 }

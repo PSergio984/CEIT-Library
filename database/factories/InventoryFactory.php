@@ -2,12 +2,12 @@
 
 namespace Database\Factories;
 
-use App\Models\AcademicPaperCopy;
+use App\Models\Inventory;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-class AcademicPaperCopyFactory extends Factory
+class InventoryFactory extends Factory
 {
-    protected $model = AcademicPaperCopy::class;
+    protected $model = Inventory::class;
 
     public function definition()
     {

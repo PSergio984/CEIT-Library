@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('academic_paper_sessions', function (Blueprint $table) {
+        Schema::create('borrow_transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('academic_paper_id')->constrained('academic_papers')->onDelete('cascade');
-            $table->foreignId('academic_paper_copy_id')->constrained('academic_paper_copies')->onDelete('cascade');
+            $table->foreignId('inventory_id')->constrained('inventories')->onDelete('cascade');
             $table->timestamp('time_in')->nullable();
             $table->timestamp('time_out')->nullable();
             $table->enum('status', ['requested', 'started', 'completed', 'expired', 'cancelled'])->default('requested');
@@ -42,6 +42,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('academic_paper_sessions');
+        Schema::dropIfExists('borrow_transactions');
     }
 };

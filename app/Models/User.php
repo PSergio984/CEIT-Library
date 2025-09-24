@@ -18,7 +18,9 @@ class User extends Authenticatable
      * @var list<string>
      */
     protected $fillable = [
-        'name',
+        'student_no',
+        'first_name',
+        'last_name',
         'email',
         'password',
     ];
@@ -80,22 +82,22 @@ class User extends Authenticatable
     // Relationships for library usage tracking
     public function librarySessions()
     {
-        return $this->hasMany(LibrarySession::class);
+        return $this->hasMany(Attendance::class);
     }
 
-    public function AcademicPaperSessions()
+    public function borrowTransactions()
     {
-        return $this->hasMany(AcademicPaperSession::class);
+        return $this->hasMany(BorrowTransaction::class);
     }
 
     public function violations()
     {
-        return $this->hasMany(UserViolation::class);
+        return $this->hasMany(ViolationTransaction::class);
     }
 
     public function creditScore()
     {
-        return $this->hasOne(CreditScore::class);
+        return $this->hasOne(ScoreIncrement::class);
     }
 
     // Check if user is currently in the library

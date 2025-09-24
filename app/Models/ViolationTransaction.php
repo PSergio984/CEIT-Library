@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
-class UserViolation extends Model
+class ViolationTransaction extends Model
 {
     use HasFactory;
 
@@ -14,7 +14,7 @@ class UserViolation extends Model
         'user_id',
         'violation_id',
         'date_occurred',
-        'Severity',
+        'severity',
         'remarks',
     ];
 
@@ -46,15 +46,15 @@ class UserViolation extends Model
     // Get total penalty score for a user
     public static function getUserTotalPenalty($userId)
     {
-        return static::join('violations', 'user_violations.violation_id', '=', 'violations.id')
-                    ->where('user_violations.user_id', $userId)
+        return static::join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
+                    ->where('violation_transactions.user_id', $userId)
                     ->sum('violations.penalty_score');
     }
 
     // Scope for filtering by severity
     public function scopeBySeverity($query, $severity)
     {
-        return $query->where('Severity', $severity);
+        return $query->where('severity', $severity);
     }
 
     // Scope for filtering by date range

@@ -3,15 +3,15 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\LibrarySession;
+use App\Models\Attendance;
 use App\Models\User;
 use App\Models\Librarian;
 use Carbon\Carbon;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\LibrarySession>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Attendance>
  */
-class LibrarySessionFactory extends Factory
+class AttendanceFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -30,13 +30,13 @@ class LibrarySessionFactory extends Factory
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,
-            'scanned_by' => Librarian::factory(), // Now references actual librarian record
+            'scanned_by' => Librarian::factory(),
             'duration_minutes' => $timeIn && $timeOut ? Carbon::parse($timeIn)->diffInMinutes($timeOut) : null,
         ];
     }
 
     /**
-     * Create an active library session (user currently in library)
+     * Create an active attendance (user currently in library)
      */
     public function active()
     {

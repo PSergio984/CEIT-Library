@@ -5,12 +5,12 @@ namespace Database\Seeders;
 use App\Models\User;
 use App\Models\AcademicPaper;
 use App\Models\Violation;
-use App\Models\UserViolation;
-use App\Models\CreditScore;
-use App\Models\AcademicPaperSession;
-use App\Models\LibrarySession;
+use App\Models\ViolationTransaction;
+use App\Models\ScoreIncrement;
+use App\Models\Attendance;
 use App\Models\Librarian;
-use App\Models\AcademicPaperCopy;
+use App\Models\Inventory;
+use App\Models\BorrowTransaction;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -22,14 +22,16 @@ class DatabaseSeeder extends Seeder
     {
         // Create Admin users
         $admin = User::factory()->create([
-            'name' => 'Janrel Motovlogs',
+            'first_name' => 'Janrel',
+            'last_name' => 'Motovlogs',
             'email' => 'Admin@gmail.com',
             'is_admin' => true,
             'password' => bcrypt('Pwd@12345'),
         ]);
 
         $libraryManager = User::factory()->create([
-            'name' => 'Library Manager',
+            'first_name' => 'Library',
+            'last_name' => 'Manager',
             'email' => 'library.manager@plv.edu.ph',
         ]);
 
@@ -78,7 +80,7 @@ class DatabaseSeeder extends Seeder
             $copyCount = fake()->numberBetween(1, 4);
 
             for ($i = 1; $i <= $copyCount; $i++) {
-                AcademicPaperCopy::factory()->create([
+                Inventory::factory()->create([
                     'academic_paper_id' => $academicPaper->id,
                     'copy_number' => $i,
                     'status' => fake()->randomElement(['Available', 'Reserved', 'Unavailable']),
@@ -99,7 +101,7 @@ class DatabaseSeeder extends Seeder
         // Create credit scores for all users (including Admin)
         $allUsers = User::all();
         foreach ($allUsers as $user) {
-            CreditScore::factory()->create(['user_id' => $user->id]);
+            ScoreIncrement::factory()->create(['user_id' => $user->id]);
         }
 
         // Create some user violations for random students
@@ -112,14 +114,14 @@ class DatabaseSeeder extends Seeder
             $randomViolations = $violations->random($violationCount);
 
             foreach ($randomViolations as $violation) {
-                UserViolation::factory()->create([
+                ViolationTransaction::factory()->create([
                     'user_id' => $student->id,
                     'violation_id' => $violation->id,
                 ]);
             }
 
             // Update credit score based on violations
-            $creditScore = CreditScore::where('user_id', $student->id)->first();
+            $creditScore = ScoreIncrement::where('user_id', $student->id)->first();
             if ($creditScore) {
                 $creditScore->updateScore();
             }
@@ -153,10 +155,10 @@ class DatabaseSeeder extends Seeder
             foreach ($randomAcademicPapers as $academicPaper) {
                 $copy = $academicPaper->copies()->inRandomOrder()->first();
                 if ($copy) {
-                    AcademicPaperSession::factory()->completed()->create([
+                    BorrowTransaction::factory()->completed()->create([
                         'user_id' => $student->id,
                         'academic_paper_id' => $academicPaper->id,
-                        'academic_paper_copy_id' => $copy->id,
+                        'inventory_id' => $copy->id,
                     ]);
                 }
             }
@@ -175,10 +177,10 @@ class DatabaseSeeder extends Seeder
                 $availableCopy = $availableAcademicPaper->copies()->where('status', 'Available')->first();
 
                 if ($availableCopy) {
-                    AcademicPaperSession::factory()->active()->create([
+                    BorrowTransaction::factory()->active()->create([
                         'user_id' => $student->id,
                         'academic_paper_id' => $availableAcademicPaper->id,
-                        'academic_paper_copy_id' => $availableCopy->id,
+                        'inventory_id' => $availableCopy->id,
                     ]);
 
                     // Mark the copy as reserved
@@ -197,7 +199,7 @@ class DatabaseSeeder extends Seeder
                 $randomLibrarian = collect([$librarianStudents, $previousLibrarians])->flatten()->random();
                 $librarianRecord = Librarian::where('user_id', $randomLibrarian->id)->first();
 
-                LibrarySession::factory()->completed()->create([
+                Attendance::factory()->completed()->create([
                     'user_id' => $student->id,
                     'scanned_by' => $librarianRecord ? $librarianRecord->id : null,
                 ]);
@@ -210,7 +212,7 @@ class DatabaseSeeder extends Seeder
             // Use current active librarians for scanning
             $activeLibrarian = Librarian::where('user_id', $librarianStudents->random()->id)->first();
 
-            LibrarySession::factory()->active()->create([
+            Attendance::factory()->active()->create([
                 'user_id' => $student->id,
                 'scanned_by' => $activeLibrarian ? $activeLibrarian->id : null,
             ]);
@@ -222,8 +224,9 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 30 academic papers');
         $this->command->info('- 10 violation types');
         $this->command->info('- 3 active librarians on duty');
-        $this->command->info('- 5 active academic paper reading sessions');
+        $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
+
         $this->command->info('- Sample violations, credit scores, and session history');
     }
 }

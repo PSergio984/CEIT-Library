@@ -7,14 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class AcademicPaperSession extends Model
+class BorrowTransaction extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'user_id',
         'academic_paper_id',
-        'academic_paper_copy_id',
+        'inventory_id',
         'time_in',
         'time_out',
         'status',
@@ -42,10 +42,10 @@ class AcademicPaperSession extends Model
         return $this->belongsTo(AcademicPaper::class);
     }
 
-    // Relationship with academic paper copy
-    public function academicPaperCopy()
+    // Relationship with inventory copy
+    public function inventory()
     {
-        return $this->belongsTo(AcademicPaperCopy::class);
+        return $this->belongsTo(Inventory::class);
     }
 
     // Generate unique session token for QR code

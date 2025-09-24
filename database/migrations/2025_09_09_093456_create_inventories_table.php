@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('academic_paper_copies', function (Blueprint $table) {
+        Schema::create('inventories', function (Blueprint $table) {
             $table->id();
             $table->foreignId('academic_paper_id')->constrained('academic_papers')->onDelete('cascade');
             $table->unsignedInteger('copy_number'); // e.g., 1, 2, 3
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('academic_paper_copies');
+        Schema::dropIfExists('inventories');
     }
 };

@@ -3,17 +3,17 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\AcademicPaperSession;
+use App\Models\BorrowTransaction;
 use App\Models\User;
 use App\Models\AcademicPaper;
-use App\Models\AcademicPaperCopy;
+use App\Models\Inventory;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AcademicPaperSession>
+ * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BorrowTransaction>
  */
-class AcademicPaperSessionFactory extends Factory
+class BorrowTransactionFactory extends Factory
 {
     /**
      * Define the model's default state.
@@ -35,7 +35,7 @@ class AcademicPaperSessionFactory extends Factory
         return [
             'user_id' => null, // Always pass explicitly in seeder
             'academic_paper_id' => null, // Always pass explicitly in seeder
-            'academic_paper_copy_id' => null, // Always pass explicitly in seeder
+            'inventory_id' => null, // Always pass explicitly in seeder
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,
