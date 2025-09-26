@@ -21,6 +21,10 @@ return new class extends Migration
             $table->unsignedInteger('credit_score')->default(100);
             $table->string('password');
             $table->boolean('is_admin')->default(false);
+            $table->enum('account_status', ['active', 'suspended'])->default('active');
+            $table->string('iid_path')->nullable();
+            $table->timestamp('approved_at')->nullable();
+            $table->foreignId('approved_by')->nullable()->constrained('librarians');
             $table->rememberToken();
             $table->timestamps();
         });

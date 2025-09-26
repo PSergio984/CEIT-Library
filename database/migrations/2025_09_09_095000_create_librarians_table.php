@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('librarians', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Reference to the student's account
+            $table->integer('batch_no'); // Duty batch number
             $table->enum('status', ['active', 'inactive', 'expired'])->default('active');
             $table->timestamp('expires_at'); // Account expires within the day
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null'); // Admin who created this account
