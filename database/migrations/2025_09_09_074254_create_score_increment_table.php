@@ -19,8 +19,6 @@ return new class extends Migration
             $table->integer('score_value')->default(0);
             $table->timestamps();
 
-            // Add indexes for better performance
-            $table->unique('user_id'); // Ensure one score per user and fast user lookups
             $table->index('score_value'); // For score-based filtering and ranking
             $table->index(['score_value', 'updated_at']); // For recent score changes reporting
         });
