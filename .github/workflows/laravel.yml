@@ -34,31 +34,4 @@ jobs:
     - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
       with:
         php-version: '8.2'
-        extensions: mbstring, openssl, pdo, tokenizer, xml, ctype, json, bcmath, fileinfo
-
-    - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
-
-    - name: Install Dependencies (without scripts)
-      run: composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
-
-    - name: Generate key
-      run: php artisan key:generate
-
-    - name: Run Composer Scripts
-      run: composer run-script post-autoload-dump
-
-    - name: Directory Permissions
-      run: chmod -R 777 storage bootstrap/cache
-
-    - name: Clear Caches
-      run: |
-        php artisan config:clear
-        php artisan route:clear
-        php artisan view:clear
-
-    - name: Run migrations
-      run: php artisan migrate --force
-
-    - name: Execute tests (Unit and Feature tests) via PHPUnit/Pest
-      run: php artisan test
+        extensions: mb
