@@ -36,7 +36,7 @@
         <div class="flex">
             {{-- SIDEBAR --}}
             <div>
-                <x-slot:sidebar drawer="main-drawer" collapsible  class="bg-base-100 lg:bg-inherit">
+                <x-slot:sidebar drawer="main-drawer" collapsible  class="bg-base-300">
 
                     {{-- BRAND --}}
                     <div class="ml-4 pt-5 flex items-center justify-between">
@@ -73,24 +73,27 @@
 
                         <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
                         <x-mary-menu-sub title="Academic Paper List" icon="o-book-open">
-                            <x-mary-menu-item title="College of Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
-                            <x-mary-menu-item title="College of Civil Engineering" icon="o-building-office" link="/admin/academic-papers/civil" />
-                            <x-mary-menu-item title="College of Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/electrical" />
+                            <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
+                            <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/admin/academic-papers/civil-engineering" />
+                            <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/electrical-engineering" />
                         </x-mary-menu-sub>
-                        <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/testlink" />
+                        <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/transactions" />
                         <x-mary-menu-sub title="Users List" icon="o-user">
-                            <x-mary-menu-item title="Students" icon="o-academic-cap" link="#students" />
-                            <x-mary-menu-item title="Librarian" icon="o-building-library" link="#librarians" />
+                        <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
+                        <x-mary-menu-sub title="Librarian" icon="o-building-library">
+                            <x-mary-menu-item title="Current" icon="o-user" link="/admin/librarians" />
+                            <x-mary-menu-item title="Assigning" icon="o-user-plus" link="/admin/librarians/assign" />
                         </x-mary-menu-sub>
-                        <x-mary-menu-item title="Attendance" icon="o-user-group" link="/"/>
-                        <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/testlink"/>
+                    </x-mary-menu-sub>
+                        <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance"/>
+                        <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs"/>
 
                     </x-mary-menu>
                 </x-slot:sidebar>
             </div>
 
             {{-- The `$slot` goes here --}}
-            <div class="flex-1">
+            <div class="flex-1 bg-base-100">
                 <x-slot:content>
                     {{ $slot }}
                 </x-slot:content>

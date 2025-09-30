@@ -13,17 +13,17 @@
         <!-- Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-cover bg-center font-sans relative" style="background-image: url('{{ asset('images/plvbg.jpg') }}');">
+    <body class="min-h-screen bg-base-100 font-sans relative">
         <!-- Blue Overlay for opacity effect -->
-        <div class="absolute inset-0 bg-[#273F4F]/80 z-0"></div>
+        <div class="absolute inset-0 bg-primary/80 z-0"></div>
         <!-- Floating Elements -->
-        <div class="absolute bg-white/10 rounded-full w-20 h-20 top-1/5 left-1/12 animate-float1 z-10"></div>
-        <div class="absolute bg-white/10 rounded-full w-16 h-16 top-3/4 right-1/6 animate-float2 z-10"></div>
-        <div class="absolute bg-white/10 rounded-full w-10 h-10 bottom-1/5 left-1/5 animate-float3 z-10"></div>
+        <div class="absolute bg-base-100/10 rounded-full w-20 h-20 top-1/5 left-1/12 animate-float1 z-10"></div>
+        <div class="absolute bg-base-100/10 rounded-full w-16 h-16 top-3/4 right-1/6 animate-float2 z-10"></div>
+        <div class="absolute bg-base-100/10 rounded-full w-10 h-10 bottom-1/5 left-1/5 animate-float3 z-10"></div>
 
         <!-- Header -->
-        <header class="flex justify-between items-center px-10 py-4 z-20 relative" style="background-color: #273F4F;">
-            <a href="/" class="flex items-center text-white text-2xl font-bold hover:opacity-80 transition">
+        <header class="flex justify-between items-center px-10 py-4 z-20 relative bg-primary">
+            <a href="/" class="flex items-center text-base-content text-2xl font-bold hover:opacity-80 transition">
                 <div class="w-12 h-12">
                     <img src="{{ asset('images/ceit-logo.png') }}" alt="Description of image">
                 </div>
@@ -38,12 +38,12 @@
 
         <!-- Main Content -->
         <main class="flex flex-col items-center justify-center min-h-[70vh] text-center relative z-20">
-            <div class="bg-[#FE7743]/50 p-10 rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
-                <h1 class="text-gray-900 text-4xl md:text-5xl font-bold mb-8 drop-shadow">CEIT Library Management System</h1>
+            <div class="bg-base-100/50 p-10 rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
+                <h1 class="text-base-content text-4xl md:text-5xl font-bold mb-8 drop-shadow">CEIT Library Management System</h1>
                 <div class="mx-auto mb-8 w-48 h-48 flex items-center justify-center rounded-full ">
                     <img src="{{ asset('images/ceit-logo.png') }}" alt="Description of image" class="drop-shadow-xl w-40 h-40 object-contain">
                 </div>
-                <p class="text-gray-900 text-lg md:text-xl mb-8 font-light drop-shadow">
+                <p class="text-base-content text-lg md:text-xl mb-8 font-light drop-shadow">
                     PLV eLib is a digital library system that makes searching<br>
                     and borrowing theses faster, easier, and more secure.
                 </p>
