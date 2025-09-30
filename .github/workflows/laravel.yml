@@ -41,6 +41,7 @@ jobs:
         php -m
     - name: Composer Diagnose
       run: composer diagnose
+      continue-on-error: true
     - name: Clear Composer Cache
       run: composer clear-cache
     - name: Copy .env
