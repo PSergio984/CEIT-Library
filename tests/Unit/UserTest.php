@@ -2,6 +2,9 @@
 
 namespace Tests\Unit;
 
+use App\Models\AcademicPaper;
+use App\Models\Inventory;
+use App\Models\Violation;
 use Tests\TestCase;
 use App\Models\User;
 use App\Models\Librarian;
@@ -141,14 +144,36 @@ class UserTest extends TestCase
      *
      * @return void
      */
-    public function test_user_has_borrow_transactions_relationship()
+    public function test_user_can_have_multiple_borrow_transactions()
     {
         $user = User::factory()->create();
 
-        $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasMany::class,
-            $user->borrowTransactions()
-        );
+        // Create the necessary related records first
+        $academicPaper1 = AcademicPaper::factory()->create();
+        $academicPaper2 = AcademicPaper::factory()->create();
+
+        $inventory1 = Inventory::factory()->create(['academic_paper_id' => $academicPaper1->id]);
+        $inventory2 = Inventory::factory()->create(['academic_paper_id' => $academicPaper2->id]);
+
+        BorrowTransaction::create([
+            'user_id' => $user->id,
+            'academic_paper_id' => $academicPaper1->id,
+            'inventory_id' => $inventory1->id,
+            'borrowed_at' => Carbon::now()->subDays(5),
+            'expires_at' => Carbon::now()->addDays(9),
+            'due_at' => Carbon::now()->addDays(14),
+        ]);
+
+        BorrowTransaction::create([
+            'user_id' => $user->id,
+            'academic_paper_id' => $academicPaper2->id,
+            'inventory_id' => $inventory2->id,
+            'borrowed_at' => Carbon::now()->subDays(3),
+            'expires_at' => Carbon::now()->addDays(11),
+            'due_at' => Carbon::now()->addDays(15),
+        ]);
+
+        $this->assertCount(2, $user->borrowTransactions);
     }
 
     /**
@@ -189,10 +214,11 @@ class UserTest extends TestCase
     public function test_is_librarian_returns_true_for_active_librarian()
     {
         $user = User::factory()->create();
-        
+
         // Create active librarian duty with future expiry date
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250001',
             'status' => 'active',
             'expires_at' => Carbon::now()->addDays(30),
         ]);
@@ -208,10 +234,11 @@ class UserTest extends TestCase
     public function test_is_librarian_returns_false_for_inactive_librarian()
     {
         $user = User::factory()->create();
-        
+
         // Create inactive librarian duty
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250002',
             'status' => 'inactive',
             'expires_at' => Carbon::now()->addDays(30),
         ]);
@@ -227,10 +254,11 @@ class UserTest extends TestCase
     public function test_is_librarian_returns_false_for_expired_librarian()
     {
         $user = User::factory()->create();
-        
+
         // Create active librarian duty with past expiry date
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250003',
             'status' => 'active',
             'expires_at' => Carbon::now()->subDays(1),
         ]);
@@ -258,17 +286,18 @@ class UserTest extends TestCase
     public function test_is_librarian_returns_false_when_expires_at_is_now()
     {
         Carbon::setTestNow(Carbon::parse('2024-01-01 12:00:00'));
-        
+
         $user = User::factory()->create();
-        
+
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250004',
             'status' => 'active',
             'expires_at' => Carbon::now(),
         ]);
 
         $this->assertFalse($user->isLibrarian());
-        
+
         Carbon::setTestNow(); // Reset
     }
 
@@ -280,9 +309,10 @@ class UserTest extends TestCase
     public function test_get_active_librarian_duty_returns_active_record()
     {
         $user = User::factory()->create();
-        
+
         $librarian = Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250005',
             'status' => 'active',
             'expires_at' => Carbon::now()->addDays(30),
         ]);
@@ -302,9 +332,10 @@ class UserTest extends TestCase
     public function test_get_active_librarian_duty_returns_null_for_inactive()
     {
         $user = User::factory()->create();
-        
+
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250006',
             'status' => 'inactive',
             'expires_at' => Carbon::now()->addDays(30),
         ]);
@@ -322,9 +353,10 @@ class UserTest extends TestCase
     public function test_get_active_librarian_duty_returns_null_for_expired()
     {
         $user = User::factory()->create();
-        
+
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250007',
             'status' => 'active',
             'expires_at' => Carbon::now()->subDays(1),
         ]);
@@ -356,7 +388,7 @@ class UserTest extends TestCase
     public function test_has_librarian_permission_returns_true_when_permitted()
     {
         $user = User::factory()->create();
-        
+
         $librarian = \Mockery::mock(Librarian::class);
         $librarian->shouldReceive('hasPermission')
             ->with('manage_books')
@@ -377,7 +409,7 @@ class UserTest extends TestCase
     public function test_has_librarian_permission_returns_false_when_not_permitted()
     {
         $user = User::factory()->create();
-        
+
         $librarian = \Mockery::mock(Librarian::class);
         $librarian->shouldReceive('hasPermission')
             ->with('manage_books')
@@ -410,7 +442,7 @@ class UserTest extends TestCase
     public function test_is_in_library_returns_true_for_active_session()
     {
         $user = User::factory()->create();
-        
+
         Attendance::create([
             'user_id' => $user->id,
             'status' => 'active',
@@ -429,7 +461,7 @@ class UserTest extends TestCase
     public function test_is_in_library_returns_false_when_checked_out()
     {
         $user = User::factory()->create();
-        
+
         Attendance::create([
             'user_id' => $user->id,
             'status' => 'active',
@@ -446,18 +478,22 @@ class UserTest extends TestCase
      * @return void
      */
     public function test_is_in_library_returns_false_for_inactive_session()
-    {
-        $user = User::factory()->create();
-        
-        Attendance::create([
-            'user_id' => $user->id,
-            'status' => 'inactive',
-            'time_in' => Carbon::now()->subHours(2),
-            'time_out' => null,
-        ]);
+{
+    // 1. Create a user
+    $user = User::factory()->create();
 
-        $this->assertFalse($user->isInLibrary());
-    }
+    // 2. Create a *completed* attendance record for that user
+    // An inactive session is one that has a 'time_out' value.
+    Attendance::create([
+        'user_id' => $user->id,
+        'status' => 'completed', // Use a valid status for a finished session
+        'time_in' => Carbon::now()->subHours(2),
+        'time_out' => Carbon::now()->subHour(), // The presence of a time_out indicates the session is inactive
+    ]);
+
+    // 3. Assert that the user is NOT currently in the library
+    $this->assertFalse($user->isInLibrary());
+}
 
     /**
      * Test isInLibrary returns false when time_in is null.
@@ -467,7 +503,7 @@ class UserTest extends TestCase
     public function test_is_in_library_returns_false_when_time_in_is_null()
     {
         $user = User::factory()->create();
-        
+
         Attendance::create([
             'user_id' => $user->id,
             'status' => 'active',
@@ -498,7 +534,7 @@ class UserTest extends TestCase
     public function test_user_can_have_multiple_library_sessions()
     {
         $user = User::factory()->create();
-        
+
         Attendance::create([
             'user_id' => $user->id,
             'status' => 'active',
@@ -517,32 +553,6 @@ class UserTest extends TestCase
     }
 
     /**
-     * Test user can have multiple borrow transactions.
-     *
-     * @return void
-     */
-    public function test_user_can_have_multiple_borrow_transactions()
-    {
-        $user = User::factory()->create();
-        
-        BorrowTransaction::create([
-            'user_id' => $user->id,
-            'book_id' => 1,
-            'borrowed_at' => Carbon::now()->subDays(5),
-            'due_at' => Carbon::now()->addDays(9),
-        ]);
-
-        BorrowTransaction::create([
-            'user_id' => $user->id,
-            'book_id' => 2,
-            'borrowed_at' => Carbon::now()->subDays(3),
-            'due_at' => Carbon::now()->addDays(11),
-        ]);
-
-        $this->assertCount(2, $user->borrowTransactions);
-    }
-
-    /**
      * Test user can have multiple violations.
      *
      * @return void
@@ -550,19 +560,27 @@ class UserTest extends TestCase
     public function test_user_can_have_multiple_violations()
     {
         $user = User::factory()->create();
-        
+
+        // Create a violation record first (assuming you have a Violation model)
+        $violation1 = Violation::factory()->create();
+        $violation2 = Violation::factory()->create();
+
         ViolationTransaction::create([
             'user_id' => $user->id,
+            'violation_id' => $violation1->id,
             'violation_type' => 'late_return',
             'penalty' => 50,
             'created_at' => Carbon::now()->subDays(10),
+            'date_occurred' => Carbon::now()->subDays(10),
         ]);
 
         ViolationTransaction::create([
             'user_id' => $user->id,
+            'violation_id' => $violation2->id,
             'violation_type' => 'damaged_book',
             'penalty' => 200,
             'created_at' => Carbon::now()->subDays(5),
+            'date_occurred' => Carbon::now()->subDays(5),
         ]);
 
         $this->assertCount(2, $user->violations);
@@ -651,7 +669,7 @@ class UserTest extends TestCase
     public function test_user_model_uses_notifiable_trait()
     {
         $user = User::factory()->create();
-        
+
         $this->assertTrue(method_exists($user, 'notify'));
         $this->assertTrue(method_exists($user, 'notifications'));
     }
@@ -683,10 +701,11 @@ class UserTest extends TestCase
     public function test_is_librarian_handles_edge_case_with_multiple_duties()
     {
         $user = User::factory()->create();
-        
+
         // Create one expired duty
         Librarian::create([
             'user_id' => $user->id,
+            'batch_no' => '20250008',
             'status' => 'active',
             'expires_at' => Carbon::now()->subDays(5),
         ]);
@@ -703,7 +722,7 @@ class UserTest extends TestCase
     public function test_is_in_library_returns_true_with_one_active_among_multiple()
     {
         $user = User::factory()->create();
-        
+
         // Old completed session
         Attendance::create([
             'user_id' => $user->id,

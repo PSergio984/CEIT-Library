@@ -24,7 +24,7 @@ return new class extends Migration
             $table->enum('account_status', ['active', 'suspended'])->default('active');
             $table->string('id_path')->nullable();
             $table->timestamp('approved_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('librarians');
+            $table->unsignedBigInteger('approved_by')->nullable(); // Remove constraint for now
             $table->rememberToken();
             $table->timestamps();
         });

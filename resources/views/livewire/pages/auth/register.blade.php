@@ -13,15 +13,13 @@ new #[Layout('layouts.guest')] class extends Component
 {
     use WithFileUploads;
 
-    public string $firstName = '';
-    public string $lastName = '';
-    public string $studentNo = '';
+    public string $first_name = '';
+    public string $last_name = '';
+    public string $student_no = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
-    public $idImg;
-    public $idPath;
-
+    public $id_img;
 
     /**
      * Handle an incoming registration request.
@@ -29,17 +27,17 @@ new #[Layout('layouts.guest')] class extends Component
     public function register(): void
     {
         $validated = $this->validate([
-            'firstName' => ['required', 'string', 'max:255'],
-            'lastName' => ['required', 'string', 'max:255'],
-            'studentNo' => ['required', 'string', 'max:7'],
+            'first_name' => ['required', 'string', 'max:255'],
+            'last_name' => ['required', 'string', 'max:255'],
+            'student_no' => ['required', 'string', 'max:7'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:50', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-            'idImg' => ['required', 'image', 'max:4096'],
+            'id_img' => ['required', 'image', 'max:4096'],
         ]);
 
-        // Store the file using $this->idImg and get the path
-        if ($this->idImg) {
-            $validated['id_path'] = $this->idImg->storePublicly('id_images', ['disk' => 'public']);
+        // Store the file using $this->id_img and get the path
+        if ($this->id_img) {
+            $validated['id_path'] = $this->id_img->storePublicly('id_images', ['disk' => 'public']);
         }
 
         $validated['password'] = Hash::make($validated['password']);
@@ -74,38 +72,38 @@ new #[Layout('layouts.guest')] class extends Component
             <!-- First Name -->
             <div class="mb-1">
                 <x-mary-input
-                    wire:model="firstName"
+                    wire:model="first_name"
                     placeholder="Enter your first name"
                     icon="o-user"
                     clearable
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
                     icon-class="!text-gray-700"
-                    error-field="firstName" />
+                    error-field="first_name" />
             </div>
 
             <!-- Last Name -->
             <div class="mb-1">
                 <x-mary-input
-                    wire:model="lastName"
+                    wire:model="last_name"
                     placeholder="Enter your last name"
                     icon="o-user"
                     clearable
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
                     icon-class="!text-gray-700"
-                    error-field="lastName" />
+                    error-field="last_name" />
             </div>
 
             <!-- Student Number -->
             <div class="mb-1">
                 <x-mary-input
-                    wire:model="studentNo"
+                    wire:model="student_no"
                     placeholder="Enter your student number"
                     icon="o-identification"
                     clearable
                     maxlength="7"
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
                     icon-class="!text-gray-700"
-                    error-field="studentNo" />
+                    error-field="student_no" />
             </div>
 
             <!-- Email Address -->
@@ -148,7 +146,7 @@ new #[Layout('layouts.guest')] class extends Component
             <!-- ID Image Upload -->
             <div class="mb-2">
                 <x-mary-file
-                    wire:model="idImg"
+                    wire:model="id_img"
                     hint="Upload your ID image, only image files are allowed."
                     accept="image/png, image/jpeg"
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 file:!bg-[#D9D9D9] file:!text-black file:!border-gray-400 file:!rounded-md"
@@ -156,15 +154,15 @@ new #[Layout('layouts.guest')] class extends Component
                     label-class="!text-black"
                     hint-class="!text-black" />
 
-                @if($idImg && method_exists($idImg, 'temporaryUrl'))
-                    <img src="{{ $idImg->temporaryUrl() }}" alt="Preview"
+                @if($id_img && method_exists($id_img, 'temporaryUrl'))
+                    <img src="{{ $id_img->temporaryUrl() }}" alt="Preview"
                          class="w-1/2 h-32 object-cover m-2 rounded-lg">
                 @endif
             </div>
 
             <div class="flex items-center justify-between">
                 <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                   href="{{ route('login') }}">
+                   href="{{ route('login') }}" wire:navigate>
                     {{ __('Already registered?') }}
                 </a>
 

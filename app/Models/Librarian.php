@@ -40,6 +40,7 @@ class Librarian extends Model
 
     protected $fillable = [
         'user_id',
+        'batch_no',
         'status',
         'expires_at',
         'created_by',
