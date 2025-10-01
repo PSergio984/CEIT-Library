@@ -6,14 +6,22 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
+use Livewire\WithFileUploads;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')] class extends Component
 {
-    public string $name = '';
+    use WithFileUploads;
+
+    public string $firstName = '';
+    public string $lastName = '';
+    public string $studentNo = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public $idImg;
+    public $idPath;
+
 
     /**
      * Handle an incoming registration request.
@@ -21,10 +29,18 @@ new #[Layout('layouts.guest')] class extends Component
     public function register(): void
     {
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'firstName' => ['required', 'string', 'max:255'],
+            'lastName' => ['required', 'string', 'max:255'],
+            'studentNo' => ['required', 'string', 'max:7'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:50', 'unique:'.User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            'idImg' => ['required', 'image', 'max:4096'],
         ]);
+
+        // Store the file using $this->idImg and get the path
+        if ($this->idImg) {
+            $validated['id_path'] = $this->idImg->storePublicly('id_images', ['disk' => 'public']);
+        }
 
         $validated['password'] = Hash::make($validated['password']);
 
@@ -49,53 +65,116 @@ new #[Layout('layouts.guest')] class extends Component
     </div>
     <!-- Card Body -->
     <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-14 shadow-2xl -mt-8 relative z-10">
-        <form wire:submit="register">
-            <!-- Name -->
-            <div>
-                <x-input-label for="name" :value="__('Name')" />
-                <x-text-input wire:model="name" id="name" class="block mt-1 w-full" type="text" name="name" required autofocus autocomplete="name" />
-                <x-input-error :messages="$errors->get('name')" class="mt-2" />
+        <!-- Title -->
+        <h2 class="text-2xl font-semibold text-gray-800 text-center mb-8">Create your account</h2>
+
+        <x-mary-form wire:submit="register">
+            <x-mary-errors title="Oops!" description="Please, fix them." icon="o-face-frown" />
+
+            <!-- First Name -->
+            <div class="mb-1">
+                <x-mary-input
+                    wire:model="firstName"
+                    placeholder="Enter your first name"
+                    icon="o-user"
+                    clearable
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
+                    icon-class="!text-gray-700"
+                    error-field="firstName" />
+            </div>
+
+            <!-- Last Name -->
+            <div class="mb-1">
+                <x-mary-input
+                    wire:model="lastName"
+                    placeholder="Enter your last name"
+                    icon="o-user"
+                    clearable
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
+                    icon-class="!text-gray-700"
+                    error-field="lastName" />
+            </div>
+
+            <!-- Student Number -->
+            <div class="mb-1">
+                <x-mary-input
+                    wire:model="studentNo"
+                    placeholder="Enter your student number"
+                    icon="o-identification"
+                    clearable
+                    maxlength="7"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
+                    icon-class="!text-gray-700"
+                    error-field="studentNo" />
             </div>
 
             <!-- Email Address -->
-            <div class="mt-4">
-                <x-input-label for="email" :value="__('Email')" />
-                <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autocomplete="username" />
-                <x-input-error :messages="$errors->get('email')" class="mt-2" />
+            <div class="mb-2">
+                <x-mary-input
+                    wire:model="email"
+                    placeholder="Enter your email address"
+                    icon="o-envelope"
+                    clearable
+                    type="email"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
+                    icon-class="!text-gray-700"
+                    error-field="email" />
             </div>
 
             <!-- Password -->
-            <div class="mt-4">
-                <x-input-label for="password" :value="__('Password')" />
-
-                <x-text-input wire:model="password" id="password" class="block mt-1 w-full"
-                                type="password"
-                                name="password"
-                                required autocomplete="new-password" />
-
-                <x-input-error :messages="$errors->get('password')" class="mt-2" />
+            <div class="mb-2">
+                <x-mary-password
+                    wire:model="password"
+                    placeholder="Create a password"
+                    required
+                    autocomplete="new-password"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
+                    icon-class="!text-gray-700"
+                    error-field="password" />
             </div>
 
             <!-- Confirm Password -->
-            <div class="mt-4">
-                <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-                <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
-                                type="password"
-                                name="password_confirmation" required autocomplete="new-password" />
-
-                <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+            <div class="mb-2">
+                <x-mary-password
+                    wire:model="password_confirmation"
+                    placeholder="Confirm your password"
+                    required
+                    autocomplete="new-password"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600"
+                    icon-class="!text-gray-700"
+                    error-field="password_confirmation" />
             </div>
 
-            <div class="flex items-center justify-end mt-4">
-                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}" wire:navigate>
+            <!-- ID Image Upload -->
+            <div class="mb-2">
+                <x-mary-file
+                    wire:model="idImg"
+                    hint="Upload your ID image, only image files are allowed."
+                    accept="image/png, image/jpeg"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 file:!bg-[#D9D9D9] file:!text-black file:!border-gray-400 file:!rounded-md"
+                    icon-class="!text-gray-700"
+                    label-class="!text-black"
+                    hint-class="!text-black" />
+
+                @if($idImg && method_exists($idImg, 'temporaryUrl'))
+                    <img src="{{ $idImg->temporaryUrl() }}" alt="Preview"
+                         class="w-1/2 h-32 object-cover m-2 rounded-lg">
+                @endif
+            </div>
+
+            <div class="flex items-center justify-between">
+                <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                   href="{{ route('login') }}">
                     {{ __('Already registered?') }}
                 </a>
 
-                <x-primary-button class="ms-4">
-                    {{ __('Register') }}
-                </x-primary-button>
+                <x-mary-button
+                    label="Register"
+                    class="bg-slate-700 hover:bg-slate-800 text-white px-8 py-2 rounded-lg"
+                    type="submit"
+                    spinner="register"
+                    icon="o-user-plus" />
             </div>
-        </form>
+        </x-mary-form>
     </div>
 </div>
