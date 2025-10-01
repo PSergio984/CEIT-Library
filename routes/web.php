@@ -5,8 +5,8 @@ use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
-use App\Livewire\Pages\student\AcademicPaperIndex;
-use App\Livewire\Pages\student\ShowAcademicPaper;
+use App\Livewire\Pages\Student\AcademicPaperIndex;
+use App\Livewire\Pages\Student\ShowAcademicPaper;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 

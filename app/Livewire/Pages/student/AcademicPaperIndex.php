@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Pages\student;
+namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
 use Livewire\Attributes\Computed;
