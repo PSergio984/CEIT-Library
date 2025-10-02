@@ -24,10 +24,12 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'student_no' => $this->faker->unique()->numerify('20########'),
+            // Student number format: NN-NNNN (e.g., 20-3001)
+            'student_no' => $this->faker->regexify('[0-9]{2}-[0-9]{4}'),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
-            'email' => $this->faker->unique()->safeEmail(),
+            // Email must end with @plv.edu.ph for validation compatibility
+            'email' => $this->faker->unique()->userName . '@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make(fake()->password(8, 12)), // Generate random password between 8-12 characters
             'remember_token' => Str::random(10),

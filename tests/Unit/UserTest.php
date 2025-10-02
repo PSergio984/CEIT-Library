@@ -3,18 +3,17 @@
 namespace Tests\Unit;
 
 use App\Models\AcademicPaper;
-use App\Models\Inventory;
-use App\Models\Violation;
-use Tests\TestCase;
-use App\Models\User;
-use App\Models\Librarian;
 use App\Models\Attendance;
 use App\Models\BorrowTransaction;
+use App\Models\Inventory;
+use App\Models\Librarian;
+use App\Models\User;
+use App\Models\Violation;
 use App\Models\ViolationTransaction;
-use App\Models\ScoreIncrement;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
-use Carbon\Carbon;
+use Tests\TestCase;
 
 class UserTest extends TestCase
 {
@@ -28,14 +27,14 @@ class UserTest extends TestCase
     public function test_user_can_be_created_with_factory()
     {
         $user = User::factory()->create([
-            'student_no' => '2024001',
+            'student_no' => '23-9999',
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => '[email protected]',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'student_no' => '2024001',
+            'student_no' => '23-9999',
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => '[email protected]',
@@ -387,7 +386,6 @@ class UserTest extends TestCase
      */
     public function test_has_librarian_permission_returns_true_when_permitted()
     {
-        $createdUser = User::factory()->create();
 
         $mockLibrarian = \Mockery::mock(Librarian::class);
         $mockLibrarian->shouldReceive('hasPermission')
@@ -408,7 +406,6 @@ class UserTest extends TestCase
      */
     public function test_has_librarian_permission_returns_false_when_not_permitted()
     {
-        $createdUser = User::factory()->create();
 
         $mockLibrarian = \Mockery::mock(Librarian::class);
         $mockLibrarian->shouldReceive('hasPermission')
@@ -642,13 +639,16 @@ class UserTest extends TestCase
 
         $originalUpdatedAt = $user->updated_at;
 
-        // Wait a moment to ensure time difference
-        sleep(1);
+        // Simulate time difference using Carbon
+        \Carbon\Carbon::setTestNow(\Carbon\Carbon::now()->addSecond());
 
         $user->first_name = 'Jane';
         $user->save();
 
         $this->assertNotEquals($originalUpdatedAt, $user->fresh()->updated_at);
+
+        // Reset Carbon test time
+        \Carbon\Carbon::setTestNow();
     }
 
     /**
@@ -682,7 +682,7 @@ class UserTest extends TestCase
     public function test_user_can_be_created_with_minimum_fields()
     {
         $user = User::factory()->create([
-            'student_no' => '2024999',
+            'student_no' => '23-9999',
             'first_name' => 'Test',
             'last_name' => 'User',
             'email' => '[email protected]',
@@ -690,7 +690,7 @@ class UserTest extends TestCase
         ]);
 
         $this->assertInstanceOf(User::class, $user);
-        $this->assertEquals('2024999', $user->student_no);
+        $this->assertEquals('23-9999', $user->student_no);
     }
 
     /**
