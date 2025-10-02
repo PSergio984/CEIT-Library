@@ -21,7 +21,7 @@ class LibrarianFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'batch_no' => $this->generateBatchNumber(),
+            'batch_no' => null, // Set to null initially, will update after creation
             'status' => $this->faker->randomElement(['active', 'inactive', 'expired']),
             'expires_at' => Carbon::today()->endOfDay(), // Expires at end of day
             'created_by' => User::factory(),
@@ -31,28 +31,15 @@ class LibrarianFactory extends Factory
     }
 
     /**
-     * Generate sequential batch number
+     * Configure the factory.
      */
-    private function generateBatchNumber(): string
+    public function configure()
     {
-        $year = date('Y');
-
-        // Get the highest existing batch number for current year
-        $lastBatch = Librarian::where('batch_no', 'like', $year . '%')
-                              ->orderBy('batch_no', 'desc')
-                              ->first();
-
-        if ($lastBatch) {
-            // Extract the sequential number and increment
-            $lastNumber = (int) substr($lastBatch->batch_no, -4);
-            $nextNumber = $lastNumber + 1;
-        } else {
-            // Start with 1 if no previous batch exists
-            $nextNumber = 1;
-        }
-
-        // Return format: YYYY0001, YYYY0002, etc.
-        return $year . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $this->afterCreating(function (Librarian $librarian) {
+            $year = date('Y');
+            $librarian->batch_no = $year . str_pad($librarian->id, 4, '0', STR_PAD_LEFT);
+            $librarian->save();
+        });
     }
 
     /**

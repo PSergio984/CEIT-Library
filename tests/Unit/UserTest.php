@@ -387,18 +387,18 @@ class UserTest extends TestCase
      */
     public function test_has_librarian_permission_returns_true_when_permitted()
     {
-        $user = User::factory()->create();
+        $createdUser = User::factory()->create();
 
-        $librarian = \Mockery::mock(Librarian::class);
-        $librarian->shouldReceive('hasPermission')
+        $mockLibrarian = \Mockery::mock(Librarian::class);
+        $mockLibrarian->shouldReceive('hasPermission')
             ->with('manage_books')
             ->andReturn(true);
 
-        $user = \Mockery::mock(User::class)->makePartial();
-        $user->shouldReceive('getActiveLibrarianDuty')
-            ->andReturn($librarian);
+        $mockUser = \Mockery::mock(User::class)->makePartial();
+        $mockUser->shouldReceive('getActiveLibrarianDuty')
+            ->andReturn($mockLibrarian);
 
-        $this->assertTrue($user->hasLibrarianPermission('manage_books'));
+        $this->assertTrue($mockUser->hasLibrarianPermission('manage_books'));
     }
 
     /**
@@ -408,18 +408,18 @@ class UserTest extends TestCase
      */
     public function test_has_librarian_permission_returns_false_when_not_permitted()
     {
-        $user = User::factory()->create();
+        $createdUser = User::factory()->create();
 
-        $librarian = \Mockery::mock(Librarian::class);
-        $librarian->shouldReceive('hasPermission')
+        $mockLibrarian = \Mockery::mock(Librarian::class);
+        $mockLibrarian->shouldReceive('hasPermission')
             ->with('manage_books')
             ->andReturn(false);
 
-        $user = \Mockery::mock(User::class)->makePartial();
-        $user->shouldReceive('getActiveLibrarianDuty')
-            ->andReturn($librarian);
+        $mockUser = \Mockery::mock(User::class)->makePartial();
+        $mockUser->shouldReceive('getActiveLibrarianDuty')
+            ->andReturn($mockLibrarian);
 
-        $this->assertFalse($user->hasLibrarianPermission('manage_books'));
+        $this->assertFalse($mockUser->hasLibrarianPermission('manage_books'));
     }
 
     /**
