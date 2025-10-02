@@ -9,7 +9,9 @@ use Tests\TestCase;
 
 class RegistrationTest extends TestCase
 {
-    use RefreshDatabase; // This ensures database is reset between tests
+    use RefreshDatabase;
+
+    // This ensures the database is reset between tests
 
     protected function setUp(): void
     {
