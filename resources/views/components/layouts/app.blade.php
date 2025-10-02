@@ -68,7 +68,7 @@
                     <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/academic-papers/ee" />
                 </x-mary-menu-sub>
 
-                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rules" />
+                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rule-and-regulation" />
                 <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />
                 <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
                 <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" />

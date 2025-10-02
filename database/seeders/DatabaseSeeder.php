@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\RuleHeader;
 use App\Models\User;
 use App\Models\AcademicPaper;
 use App\Models\Violation;
@@ -11,6 +12,7 @@ use App\Models\Attendance;
 use App\Models\Librarian;
 use App\Models\Inventory;
 use App\Models\BorrowTransaction;
+use App\Models\RuleRegulation;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -223,6 +225,28 @@ class DatabaseSeeder extends Seeder
                 'user_id' => $student->id,
                 'scanned_by' => $activeLibrarian ? $activeLibrarian->id : null,
             ]);
+        }
+
+        $rulesHeaders = [
+            ['order' => 1, 'roman' => 'I', 'title' => 'General Provisions'],
+            ['order' => 2, 'roman' => 'II', 'title' => 'Library Hours'],
+            ['order' => 3, 'roman' => 'III', 'title' => 'Library Users'],
+            ['order' => 4, 'roman' => 'IV', 'title' => 'Borrowing and Returning'],
+        ];
+
+        foreach ($rulesHeaders as $rulesHeader) {
+            $header = RuleHeader::create([
+                'title' => $rulesHeader['roman'] . '. ' . $rulesHeader['title'],
+                'order' => $rulesHeader['order'],
+            ]);
+
+            // Create 3-5 rules for each header
+            for ($i = 1; $i <= rand(3, 5); $i++) {
+                RuleRegulation::factory()->create([
+                    'rule_header_id' => $header->id,
+                    'order' => $i,
+                ]);
+            }
         }
 
         $this->command->info('PLV eLib database seeded successfully!');
