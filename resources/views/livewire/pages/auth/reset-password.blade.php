@@ -69,37 +69,42 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
-    <form wire:submit="resetPassword">
-        <!-- Email Address -->
-        <div>
-            <x-input-label for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
-            <x-input-error :messages="$errors->get('email')" class="mt-2" />
+    <!-- Main Content Card -->
+<div class="relative w-9/12 max-w-2xl mx-auto">
+    <!-- Card Header with curve and logo -->
+    <div class="relative z-20">
+        <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
+            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo"
+                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
+            </div>
         </div>
-
-        <!-- Password -->
-        <div class="mt-4">
-            <x-input-label for="password" :value="__('Password')" />
-            <x-text-input wire:model="password" id="password" class="block mt-1 w-full" type="password" name="password" required autocomplete="new-password" />
-            <x-input-error :messages="$errors->get('password')" class="mt-2" />
-        </div>
-
-        <!-- Confirm Password -->
-        <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm Password')" />
-
-            <x-text-input wire:model="password_confirmation" id="password_confirmation" class="block mt-1 w-full"
-                          type="password"
-                          name="password_confirmation" required autocomplete="new-password" />
-
-            <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-        </div>
-
-        <div class="flex items-center justify-end mt-4">
-            <x-primary-button>
-                {{ __('Reset Password') }}
-            </x-primary-button>
-        </div>
-    </form>
+    </div>
+    <!-- Card Body -->
+    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
+        <h2 class="text-2xl font-bold text-[#273F4F] text-center mb-8">Reset your password</h2>
+        <form wire:submit="resetPassword" class="space-y-7">
+            <div>
+                <x-text-input wire:model="password" id="password" name="password" type="password"
+                              placeholder="New Password"
+                              class="block w-full px-4 py-3 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
+                              autocomplete="new-password"/>
+                <x-input-error :messages="$errors->get('password')" class="mt-2"/>
+            </div>
+            <div>
+                <x-text-input wire:model="password_confirmation" id="password_confirmation" name="password_confirmation"
+                              type="password"
+                              placeholder="Confirm Password"
+                              class="block w-full px-4 py-3 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
+                              autocomplete="new-password"/>
+                <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2"/>
+            </div>
+            <div class="flex flex-col items-center mt-6">
+                <button type="submit"
+                        class="w-full bg-[#273F4F] text-white font-bold rounded-lg py-4 text-lg shadow-md hover:bg-[#1d2c38] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#273F4F] focus:ring-offset-2">
+                    {{ __('Reset Password') }}
+                </button>
+            </div>
+        </form>
+    </div>
 </div>

@@ -98,7 +98,6 @@ new #[Layout('layouts.guest')] class extends Component
                     label="Login"
                     class="bg-[#273F4F] hover:bg-[#1e2f3a] text-white px-6 py-3 text-sm sm:text-base rounded-lg w-1/2 font-semibold"
                     type="submit"
-                    spinner="Logging in..."
                 />
             </div>
 

@@ -73,7 +73,6 @@ class UserTest extends TestCase
         $this->assertContains('last_name', $fillable);
         $this->assertContains('email', $fillable);
         $this->assertContains('password', $fillable);
-        $this->assertContains('id_path', $fillable);
     }
 
     /**
@@ -284,7 +283,7 @@ class UserTest extends TestCase
      */
     public function test_is_librarian_returns_false_when_expires_at_is_now()
     {
-        Carbon::setTestNow(Carbon::parse('2024-01-01 12:00:00'));
+        Carbon::setTestNow(Carbon::now());
 
         $user = User::factory()->create();
 

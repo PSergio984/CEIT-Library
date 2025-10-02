@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Librarian;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Librarian>
@@ -33,7 +33,7 @@ class LibrarianFactory extends Factory
     /**
      * Configure the factory.
      */
-    public function configure()
+    public function configure(): static
     {
         return $this->afterCreating(function (Librarian $librarian) {
             $year = date('Y');

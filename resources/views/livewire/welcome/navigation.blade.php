@@ -6,7 +6,9 @@
         >
             Dashboard
         </a>
-    @else
+    @endauth
+
+    @guest
         <a
             href="{{ route('login') }}"
             class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white flex items-center gap-1 sm:gap-2"
@@ -26,5 +28,5 @@
                 <span class="sm:hidden">Register</span>
             </a>
         @endif
-    @endauth
+    @endguest
 </nav>
