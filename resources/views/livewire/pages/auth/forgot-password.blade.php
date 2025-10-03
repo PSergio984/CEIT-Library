@@ -54,7 +54,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
 
-        <form wire:submit="sendPasswordResetLink">
+        <x-mary-form wire:submit="sendPasswordResetLink">
             <!-- Email Address -->
             <div>
                 <x-text-input wire:model="email" id="email" name="email" type="email"
@@ -69,16 +69,11 @@ new #[Layout('layouts.guest')] class extends Component
                                    :status="session('status')"/>
 
             <div class="flex flex-col items-center mt-6">
-                <button type="submit"
-                        class="w-full bg-[#273F4F] text-white font-bold rounded-lg py-3 text-base sm:text-lg shadow-md hover:bg-[#1d2c38] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#273F4F] focus:ring-offset-2">
+                <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="sendPasswordResetLink"
+                                  class="w-full">
                     {{ __('Email Password Reset Link') }}
-                </button>
-                <div class="mt-6 text-center text-gray-700 text-base sm:text-lg">
-                    {{ __('Didn\'t get the email?') }}
-                    <a href="#"
-                       class="font-bold underline text-[#273F4F] hover:text-[#1d2c38]">{{ __('Resend here') }}</a>
-                </div>
+                </x-primary-button>
             </div>
-        </form>
+        </x-mary-form>
     </div>
 </div>

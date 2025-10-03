@@ -38,8 +38,8 @@ new #[Layout('layouts.guest')] class extends Component
     <!-- Card Body -->
     <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
         <!-- Title -->
-        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] text-center mb-4 sm:mb-6 md:mb-8">Login
-            your account</h2>
+        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] text-center mb-4 sm:mb-6 md:mb-8">Log in
+            to your account</h2>
         <!-- Session Status -->
         <x-auth-session-status class="mb-4" :status="session('status')" />
 
@@ -93,12 +93,10 @@ new #[Layout('layouts.guest')] class extends Component
             </div>
 
             <!-- Login Button -->
-            <div class="mb-4">
-                <x-mary-button
-                    label="Login"
-                    class="bg-[#273F4F] hover:bg-[#1e2f3a] text-white px-6 py-3 text-sm sm:text-base rounded-lg w-1/2 font-semibold"
-                    type="submit"
-                />
+            <div class="mb-4 flex justify-center">
+                <x-primary-button class="w-full sm:w-2/3 md:w-1/2" wire:target="login">
+                    {{ __('Log in') }}
+                </x-primary-button>
             </div>
 
             <!-- Register Link -->

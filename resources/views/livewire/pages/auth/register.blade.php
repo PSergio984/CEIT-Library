@@ -41,26 +41,25 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div class="relative w-full max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-2xl mx-auto">
+<div class="relative w-full max-w-2xl mx-auto">
     <!-- Card Header with curve and logo -->
     <div class="relative z-20">
-        <div class="bg-[#273F4F] h-16 sm:h-20 md:h-24 rounded-b-xl sm:rounded-b-2xl flex items-center justify-center overflow-hidden">
-            <div class="absolute left-1/2 top-12 sm:top-16 md:top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
+        <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
+            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
                 <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo"
-                     class="w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full border-2 sm:border-3 md:border-4 border-[#D9D9D9] bg-white shadow-lg object-contain">
+                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
             </div>
         </div>
     </div>
     <!-- Card Body -->
-    <div class="bg-[#D9D9D9] rounded-b-xl sm:rounded-b-2xl pt-12 sm:pt-16 md:pt-20 pb-8 sm:pb-10 md:pb-12 px-4 sm:px-8 md:px-10 lg:px-14 shadow-2xl -mt-4 sm:-mt-6 md:-mt-8 relative z-10">
+    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
         <!-- Title -->
         <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] text-center mb-4 sm:mb-6 md:mb-8">Create
             your account</h2>
-
         <x-mary-form wire:submit="register">
             <x-mary-errors title="Oops!" description="Please, fix them." icon="o-face-frown" />
             <!-- First Name -->
-            <div class="mb-1 sm:mb-2">
+            <div class="mb-4">
                 <x-mary-input
                     wire:model="first_name"
                     placeholder="Enter your first name"
@@ -70,9 +69,8 @@ new #[Layout('layouts.guest')] class extends Component
                     icon-class="!text-gray-700"
                     error-field="first_name" />
             </div>
-
             <!-- Last Name -->
-            <div class="mb-1 sm:mb-2">
+            <div class="mb-4">
                 <x-mary-input
                     wire:model="last_name"
                     placeholder="Enter your last name"
@@ -82,9 +80,8 @@ new #[Layout('layouts.guest')] class extends Component
                     icon-class="!text-gray-700"
                     error-field="last_name" />
             </div>
-
             <!-- Student Number -->
-            <div class="mb-1 sm:mb-2">
+            <div class="mb-4">
                 <x-mary-input
                     wire:model="student_no"
                     placeholder="Enter your student number"
@@ -95,9 +92,8 @@ new #[Layout('layouts.guest')] class extends Component
                     icon-class="!text-gray-700"
                     error-field="student_no" />
             </div>
-
             <!-- Email Address -->
-            <div class="mb-1 sm:mb-2">
+            <div class="mb-4">
                 <x-mary-input
                     wire:model="email"
                     placeholder="Enter your email address"
@@ -108,9 +104,8 @@ new #[Layout('layouts.guest')] class extends Component
                     icon-class="!text-gray-700"
                     error-field="email" />
             </div>
-
             <!-- Password -->
-            <div class="mb-1 sm:mb-2">
+            <div class="mb-4">
                 <x-mary-password
                     wire:model="password"
                     placeholder="Create a password"
@@ -120,9 +115,8 @@ new #[Layout('layouts.guest')] class extends Component
                     icon-class="!text-gray-700"
                     error-field="password" />
             </div>
-
             <!-- Confirm Password -->
-            <div class="mb-2 sm:mb-3">
+            <div class="mb-4">
                 <x-mary-password
                     wire:model="password_confirmation"
                     placeholder="Confirm your password"
@@ -132,19 +126,15 @@ new #[Layout('layouts.guest')] class extends Component
                     icon-class="!text-gray-700"
                     error-field="password_confirmation" />
             </div>
-
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-                <a class="underline text-xs sm:text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 order-2 sm:order-1"
+                <a class="underline text-xs sm:text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                    href="{{ route('login') }}" wire:navigate>
                     {{ __('Already registered?') }}
                 </a>
-
-                <x-mary-button
-                    label="Register"
-                    class="bg-slate-700 hover:bg-slate-800 text-white px-4 sm:px-6 md:px-8 py-2 text-sm sm:text-base rounded-lg order-1 sm:order-2 w-full sm:w-auto"
-                    type="submit"
-                    spinner="register"
-                    icon="o-user-plus" />
+                <x-primary-button class="sm:ml-auto order-1 sm:order-2 w-full sm:w-auto" wire:target="register"
+                                  icon="o-user-plus">
+                    {{ __('Register') }}
+                </x-primary-button>
             </div>
         </x-mary-form>
     </div>

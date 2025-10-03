@@ -48,12 +48,12 @@
                 </p>
                 <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center w-full max-w-md sm:max-w-none">
                     <a href="{{ route('register') }}" class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
-                        <x-feathericon-user-plus class="w-3 h-3 sm:w-4 sm:h-4" />
-                        REGISTER
+
+                    REGISTER
                     </a>
                     <a href="{{ route('login') }}" class="border-2 border-slate-700 text-slate-700 hover:bg-slate-700 hover:text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
-                        <x-gmdi-login-r class="w-3 h-3 sm:w-4 sm:h-4" />
-                        LOGIN
+
+                    LOGIN
                     </a>
                 </div>
             </div>
