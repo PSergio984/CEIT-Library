@@ -28,7 +28,7 @@ class RegistrationTest extends TestCase
             ->set('first_name', '')
             ->set('last_name', 'User')
             ->set('student_no', '20-3001')
-            ->set('email', 'janrelParente@plv.edu.ph')
+            ->set('email', 'janrelparente@plv.edu.ph')
             ->set('password', 'password123')
             ->set('password_confirmation', 'password123')
             ->call('register');
