@@ -35,24 +35,37 @@ new #[Layout('layouts.guest')] class extends Component
     }
 }; ?>
 
-<div>
-    <div class="mb-4 text-sm text-gray-600">
-        {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
-    </div>
-
-    @if (session('status') == 'verification-link-sent')
-        <div class="mb-4 font-medium text-sm text-green-600">
-            {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+    <!-- Main Content Card -->
+<div class="relative w-9/12 max-w-2xl mx-auto">
+    <!-- Card Header with curve and logo -->
+    <div class="relative z-20">
+        <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
+            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
+                <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo"
+                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
+            </div>
         </div>
-    @endif
-
-    <div class="mt-4 flex items-center justify-between">
-        <x-primary-button wire:click="sendVerification">
-            {{ __('Resend Verification Email') }}
-        </x-primary-button>
-
-        <button wire:click="logout" type="submit" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            {{ __('Log Out') }}
-        </button>
+    </div>
+    <!-- Card Body -->
+    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
+        <div class="mb-4 text-sm sm:text-base md:text-lg text-gray-700">
+            {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+        </div>
+        @if (session('status') == 'verification-link-sent')
+            <div class="mb-4 font-medium text-sm sm:text-base text-green-600">
+                {{ __('A new verification link has been sent to the email address you provided during registration.') }}
+            </div>
+        @endif
+        <div class="mt-4 flex flex-col items-center gap-4">
+            <x-primary-button wire:click="sendVerification"
+                              class="w-3/4 !bg-[#273F4F] !text-white !border-none !hover:bg-[#1d2c38] flex items-center justify-center px-4 py-3 normal-case">
+                <span
+                    class="text-center text-sm sm:text-base leading-tight break-words">{{ __('Resend verification email') }}</span>
+            </x-primary-button>
+            <button wire:click="logout" type="submit"
+                    class="underline text-sm sm:text-base text-gray-700 hover:text-gray-900 rounded-md font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#273F4F]">
+                {{ __('Log Out') }}
+            </button>
+        </div>
     </div>
 </div>

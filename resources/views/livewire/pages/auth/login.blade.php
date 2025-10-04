@@ -27,51 +27,88 @@ new #[Layout('layouts.guest')] class extends Component
 <div class="relative w-full max-w-2xl mx-auto">
     <!-- Card Header with curve and logo -->
     <div class="relative z-20">
-        <div class="bg-[#273F4F] h-24 rounded-b-2xl flex items-center justify-center overflow-hidden">
+        <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
             <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <img src="{{ asset('images/ceit-logo.png') }}" alt="Description of image" class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
+                <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo"
+                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
             </div>
         </div>
-        <!-- More aggressive bottom curve -->
-        <div class="w-full h-20 bg-[#273F4F] rounded-b-[200px] -mt-10"></div>
     </div>
+
     <!-- Card Body -->
-    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-14 shadow-2xl -mt-8 relative z-10">
+    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
+        <!-- Title -->
+        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] text-center mb-4 sm:mb-6 md:mb-8">Log in
+            to your account</h2>
         <!-- Session Status -->
         <x-auth-session-status class="mb-4" :status="session('status')" />
-        <form wire:submit="login">
+
+        <x-mary-form wire:submit="login">
+            <x-mary-errors title="Oops!" description="Please, fix them." icon="o-face-frown"/>
+
+
             <!-- Email Address -->
-            <div>
-                <x-input-label for="email" :value="__('Email')" />
-                <x-text-input wire:model="form.email" id="email" class="block mt-1 w-full" type="email" name="email" required autofocus autocomplete="username" />
-                <x-input-error :messages="$errors->get('form.email')" class="mt-2" />
+            <div class="mb-4">
+                <x-mary-input
+                    wire:model="form.email"
+                    placeholder="Email"
+                    icon="o-envelope"
+                    clearable
+                    type="email"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
+                    icon-class="!text-gray-700"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    error-field="form.email"/>
             </div>
+
             <!-- Password -->
-            <div class="mt-4">
-                <x-input-label for="password" :value="__('Password')" />
-                <x-text-input wire:model="form.password" id="password" class="block mt-1 w-full"
-                                type="password"
-                                name="password"
-                                required autocomplete="current-password" />
-                <x-input-error :messages="$errors->get('form.password')" class="mt-2" />
+            <div class="mb-4">
+                <x-mary-password
+                    wire:model="form.password"
+                    placeholder="Password"
+                    required
+                    autocomplete="current-password"
+                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
+                    icon-class="!text-gray-700"
+                    error-field="form.password"/>
             </div>
+
             <!-- Remember Me -->
-            <div class="block mt-4">
+            <div class="flex items-center justify-between mb-6">
                 <label for="remember" class="inline-flex items-center">
-                    <input wire:model="form.remember" id="remember" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" name="remember">
+                    <input wire:model="form.remember" id="remember" type="checkbox"
+                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                           name="remember">
                     <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
                 </label>
-            </div>
-            <div class="flex items-center justify-end mt-4">
+
                 @if (Route::has('password.request'))
-                    <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('password.request') }}" wire:navigate>
-                        {{ __('Forgot your password?') }}
+                    <a class="text-sm text-[#273F4F] hover:text-[#1e2f3a] underline font-medium"
+                       href="{{ route('password.request') }}" wire:navigate>
+                        Forgot your password?
                     </a>
                 @endif
-                <x-primary-button class="ms-3">
+            </div>
+
+            <!-- Login Button -->
+            <div class="mb-4 flex justify-center">
+                <x-primary-button class="w-full sm:w-2/3 md:w-1/2" wire:target="login">
                     {{ __('Log in') }}
                 </x-primary-button>
             </div>
-        </form>
+
+            <!-- Register Link -->
+            <div class="text-center">
+                <p class="text-sm text-gray-600">
+                    Don't have an account?
+                    <a href="{{ route('register') }}" class="text-[#273F4F] hover:text-[#1e2f3a] underline font-medium"
+                       wire:navigate>
+                        Register
+                    </a>
+                </p>
+            </div>
+        </x-mary-form>
     </div>
 </div>

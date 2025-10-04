@@ -14,34 +14,31 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-base-100 font-sans relative">
-        <!-- Blue Overlay for opacity effect -->
-        <div class="absolute inset-0 bg-primary/80 z-0"></div>
-        <!-- Header (fixed at the top, like welcome.blade.php) -->
-        <header class="flex justify-between items-center px-10 py-4 z-30 relative w-full bg-primary">
-            <a href="/" class="flex items-center text-base-content text-2xl font-bold hover:opacity-80 transition">
-                <div class="w-12 h-12">
-                    <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo">
+    <body class="min-h-screen font-sans relative" style="background-image: url('{{ asset('images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+        <!-- Dark Blue Overlay for opacity effect -->
+        <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
+
+   <!-- Header -->
+        <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative" style="background-color: #273F4F;">
+            <a href="/" class="flex items-center text-white text-lg sm:text-xl md:text-2xl font-bold hover:opacity-80 transition">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">
+                    <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
                 </div>
-                <span class="ml-2">CEIT Library</span>
+                <span class="ml-1 sm:ml-2 hidden sm:inline">CEIT Library</span>
+                <span class="ml-1 sm:ml-2 sm:hidden">CEIT</span>
             </a>
-            <div>
+            <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
                 @if (Route::has('login'))
                     <livewire:welcome.navigation />
                 @endif
             </div>
         </header>
-        <div class="flex items-center justify-center min-h-screen relative z-10">
-            <div class="relative w-full max-w-lg mx-auto">
-                <!-- Card background layer for dark header effect -->
-                <div class="absolute inset-0 bg-primary rounded-t-2xl" style="height: 110px; z-index: 0;"></div>
-                <div class="relative z-10">
-                    {{ $slot }}
-                </div>
+
+        <!-- Main Content -->
+        <main class="flex items-center justify-center min-h-[calc(100vh-80px)] sm:min-h-[calc(100vh-88px)] md:min-h-[calc(100vh-96px)] text-center relative z-20 py-4 sm:py-6 md:py-8 lg:py-12 px-4 sm:px-6 md:px-8">
+            <div class="bg-white/50 p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-2xl xl:max-w-4xl min-h-[400px] sm:min-h-[450px] md:min-h-[500px] lg:min-h-[550px] flex flex-col items-center justify-center mx-auto">
+                {{ $slot }}
             </div>
-        </div>
-        <style>
-            /* Remove floating elements and overlays from previous design */
-        </style>
+        </main>
     </body>
 </html>

@@ -42,7 +42,7 @@
                         <img src="{{ Vite::asset('public/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
                         <div class="flex-1 flex items-center justify-between transition-all duration-300" x-show="!collapsed">
                             <div>CEIT Library</div>
-                            <x-mary-theme-toggle/>
+                            <x-mary-theme-toggle darkTheme="fancychad" lightTheme="light"/>
                         </div>
                     </div>
 

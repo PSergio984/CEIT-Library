@@ -1,17 +1,46 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
+@plugin "daisyui";
 
-
-/**
-    The lines above are intact.
-    The lines below were added by maryUI installer.
-*/
+@plugin "daisyui/theme" {
+    name: "fancychad";
+    default: true;
+    prefersdark: true;
+    color-scheme: "dark";
+    --color-base-100: oklch(13% 0.028 261.692);
+    --color-base-200: oklch(21% 0.034 264.665);
+    --color-base-300: oklch(27% 0.033 256.848);
+    --color-base-content: oklch(96% 0.003 264.542);
+    --color-primary: oklch(69% 0.17 162.48);
+    --color-primary-content: oklch(97% 0.021 166.113);
+    --color-secondary: oklch(70% 0.213 47.604);
+    --color-secondary-content: oklch(98% 0.016 73.684);
+    --color-accent: oklch(0% 0 0);
+    --color-accent-content: oklch(100% 0 0);
+    --color-neutral: oklch(13% 0.028 261.692);
+    --color-neutral-content: oklch(98% 0.002 247.839);
+    --color-info: oklch(60% 0.126 221.723);
+    --color-info-content: oklch(98% 0.019 200.873);
+    --color-success: oklch(60% 0.118 184.704);
+    --color-success-content: oklch(98% 0.014 180.72);
+    --color-warning: oklch(66% 0.179 58.318);
+    --color-warning-content: oklch(98% 0.022 95.277);
+    --color-error: oklch(57% 0.245 27.325);
+    --color-error-content: oklch(97% 0.013 17.38);
+    --radius-selector: 2rem;
+    --radius-field: 0.5rem;
+    --radius-box: 1rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 1;
+    --noise: 0;
+}
 
 /** daisyUI */
+/* daisyUI plugin with themes */
 @plugin "daisyui" {
-    themes: light --default, dark --prefersdark;
+    themes: ["light", "fancychad"];
 }
 
 /* maryUI */
@@ -20,11 +49,7 @@
 /* Theme toggle */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/**
-* Paginator - Traditional style
-* Because Laravel defaults does not match well the design of daisyUI.
-*/
-
+/* maryUI custom styles */
 .mary-table-pagination span[aria-current="page"] > span {
     @apply bg-primary text-base-100
 }

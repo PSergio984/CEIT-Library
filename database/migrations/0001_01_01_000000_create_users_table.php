@@ -22,9 +22,6 @@ return new class extends Migration
             $table->string('password');
             $table->boolean('is_admin')->default(false);
             $table->enum('account_status', ['active', 'suspended'])->default('active');
-            $table->string('id_path')->nullable();
-            $table->timestamp('approved_at')->nullable();
-            $table->foreignId('approved_by')->nullable()->constrained('librarians');
             $table->rememberToken();
             $table->timestamps();
         });

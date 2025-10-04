@@ -38,40 +38,49 @@ new class extends Component
     }
 }; ?>
 
-<section>
-    <header>
-        <h2 class="text-lg font-medium text-gray-900">
+<section class="max-w-xl mx-auto bg-[#D9D9D9] rounded-2xl shadow-2xl p-10">
+    <header class="mb-8">
+        <h2 class="text-2xl font-bold text-[#273F4F] text-center">
             {{ __('Update Password') }}
         </h2>
-
-        <p class="mt-1 text-sm text-gray-600">
+        <p class="mt-2 text-lg text-gray-700 text-center">
             {{ __('Ensure your account is using a long, random password to stay secure.') }}
         </p>
     </header>
 
-    <form wire:submit="updatePassword" class="mt-6 space-y-6">
+    <form wire:submit="updatePassword" class="space-y-7">
         <div>
-            <x-input-label for="update_password_current_password" :value="__('Current Password')" />
-            <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password" type="password" class="mt-1 block w-full" autocomplete="current-password" />
+            <x-text-input wire:model="current_password" id="update_password_current_password" name="current_password"
+                          type="password"
+                          placeholder="Current Password"
+                          class="block w-full px-4 py-3 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
+                          autocomplete="current-password"/>
             <x-input-error :messages="$errors->get('current_password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password" :value="__('New Password')" />
-            <x-text-input wire:model="password" id="update_password_password" name="password" type="password" class="mt-1 block w-full" autocomplete="new-password" />
+            <x-text-input wire:model="password" id="update_password_password" name="password" type="password"
+                          placeholder="New Password"
+                          class="block w-full px-4 py-3 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
+                          autocomplete="new-password"/>
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
 
         <div>
-            <x-input-label for="update_password_password_confirmation" :value="__('Confirm Password')" />
-            <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation" name="password_confirmation" type="password" class="mt-1 block w-full" autocomplete="new-password" />
+            <x-text-input wire:model="password_confirmation" id="update_password_password_confirmation"
+                          name="password_confirmation" type="password"
+                          placeholder="Confirm Password"
+                          class="block w-full px-4 py-3 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
+                          autocomplete="new-password"/>
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
-        <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            <x-action-message class="me-3" on="password-updated">
+        <div class="flex flex-col items-center gap-4 mt-6">
+            <button type="submit"
+                    class="w-full bg-[#273F4F] text-white font-bold rounded-lg py-4 text-lg shadow-md hover:bg-[#1d2c38] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#273F4F] focus:ring-offset-2">
+                {{ __('Save') }}
+            </button>
+            <x-action-message class="me-3 text-green-600 text-base font-semibold" on="password-updated">
                 {{ __('Saved.') }}
             </x-action-message>
         </div>

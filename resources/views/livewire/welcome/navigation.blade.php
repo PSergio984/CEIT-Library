@@ -2,25 +2,33 @@
     @auth
         <a
             href="{{ url('/dashboard') }}"
-            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+            wire:navigate
+            class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white"
         >
             Dashboard
         </a>
-    @else
+    @endauth
+
+    @guest
         <a
             href="{{ route('login') }}"
-            class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+            wire:navigate
+            class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white flex items-center gap-1 sm:gap-2"
         >
-            Log in
+
+        <span class="hidden sm:inline">Log in</span>
+            <span class="sm:hidden">Login</span>
         </a>
 
         @if (Route::has('register'))
             <a
                 href="{{ route('register') }}"
-                class="rounded-md px-3 py-2 text-black ring-1 ring-transparent transition hover:text-black/70 focus:outline-none focus-visible:ring-[#FF2D20] dark:text-white dark:hover:text-white/80 dark:focus-visible:ring-white"
+                wire:navigate
+                class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white flex items-center gap-1 sm:gap-2"
             >
-                Register
+                <span class="hidden sm:inline">Register</span>
+                <span class="sm:hidden">Register</span>
             </a>
         @endif
-    @endauth
+    @endguest
 </nav>

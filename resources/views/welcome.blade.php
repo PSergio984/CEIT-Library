@@ -4,7 +4,7 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>Laravel</title>
+        <title>Welcome</title>
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -13,23 +13,20 @@
         <!-- Styles -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen bg-base-100 font-sans relative">
-        <!-- Blue Overlay for opacity effect -->
-        <div class="absolute inset-0 bg-primary/80 z-0"></div>
-        <!-- Floating Elements -->
-        <div class="absolute bg-base-100/10 rounded-full w-20 h-20 top-1/5 left-1/12 animate-float1 z-10"></div>
-        <div class="absolute bg-base-100/10 rounded-full w-16 h-16 top-3/4 right-1/6 animate-float2 z-10"></div>
-        <div class="absolute bg-base-100/10 rounded-full w-10 h-10 bottom-1/5 left-1/5 animate-float3 z-10"></div>
+    <body class="min-h-screen font-sans relative" style="background-image: url('{{ asset('images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+        <!-- Dark Blue Overlay for opacity effect -->
+        <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
 
         <!-- Header -->
-        <header class="flex justify-between items-center px-10 py-4 z-20 relative bg-primary">
-            <a href="/" class="flex items-center text-base-content text-2xl font-bold hover:opacity-80 transition">
-                <div class="w-12 h-12">
-                    <img src="{{ asset('images/ceit-logo.png') }}" alt="Description of image">
+        <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative" style="background-color: #273F4F;">
+            <a href="/" class="flex items-center text-white text-lg sm:text-xl md:text-2xl font-bold hover:opacity-80 transition">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">
+                    <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
                 </div>
-                <span class="ml-2">CEIT Library</span>
+                <span class="ml-1 sm:ml-2 hidden sm:inline">CEIT Library</span>
+                <span class="ml-1 sm:ml-2 sm:hidden">CEIT</span>
             </a>
-            <div>
+            <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
                 @if (Route::has('login'))
                     <livewire:welcome.navigation />
                 @endif
@@ -37,29 +34,40 @@
         </header>
 
         <!-- Main Content -->
-        <main class="flex flex-col items-center justify-center min-h-[70vh] text-center relative z-20">
-            <div class="bg-base-100/50 p-10 rounded-2xl shadow-2xl max-w-2xl w-full mx-4">
-                <h1 class="text-base-content text-4xl md:text-5xl font-bold mb-8 drop-shadow">CEIT Library Management System</h1>
-                <div class="mx-auto mb-8 w-48 h-48 flex items-center justify-center rounded-full ">
-                    <img src="{{ asset('images/ceit-logo.png') }}" alt="Description of image" class="drop-shadow-xl w-40 h-40 object-contain">
+        <main class="flex items-center justify-center min-h-[70vh] text-center relative z-20 my-8 sm:my-12 md:my-16 lg:my-20 px-4 sm:px-6 md:px-8">
+            <div class="bg-white/50 p-4 sm:p-6 md:p-8 lg:p-12 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-7xl flex flex-col items-center justify-center mx-auto">
+                <h1 class="text-gray-800 text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold mb-4 sm:mb-6 md:mb-8 text-center leading-tight">
+                    CEIT Library Management System
+                </h1>
+                <div class="mx-auto mb-4 sm:mb-6 md:mb-8 w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-64 lg:h-64 xl:w-72 xl:h-72 flex items-center justify-center">
+                    <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain drop-shadow-xl mx-auto">
                 </div>
-                <p class="text-base-content text-lg md:text-xl mb-8 font-light drop-shadow">
-                    PLV eLib is a digital library system that makes searching<br>
-                    and borrowing theses faster, easier, and more secure.
+                <p class="text-gray-700 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl mb-6 sm:mb-8 md:mb-10 lg:mb-12 font-medium leading-relaxed text-center px-2 sm:px-4 md:px-6">
+                    PLV eLib is a digital library system that makes searching<br class="hidden md:block">
+                    <span class="md:hidden"> </span>and borrowing theses faster, easier, and more secure.
                 </p>
+                @guest
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center w-full max-w-md sm:max-w-none">
+                    <a href="{{ route('register') }}" wire:navigate
+                       class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
+                        REGISTER
+                    </a>
+                    <a href="{{ route('login') }}" wire:navigate
+                       class="border-2 border-slate-700 text-slate-700 hover:bg-slate-700 hover:text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
+                        LOGIN
+                    </a>
+                </div>
+                @endguest
+                @auth
+                    <div class="flex justify-center items-center w-full max-w-md sm:max-w-none">
+                        <a href="{{ route('dashboard') }}" wire:navigate
+                           class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
+                            GO TO DASHBOARD
+                        </a>
+                    </div>
+                @endauth
             </div>
         </main>
 
-
-
-        <!-- Floating Animation Keyframes -->
-        <style>
-            @keyframes float1 { 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-20px) rotate(180deg);} }
-            @keyframes float2 { 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-15px) rotate(180deg);} }
-            @keyframes float3 { 0%,100%{transform:translateY(0) rotate(0deg);} 50%{transform:translateY(-10px) rotate(180deg);} }
-            .animate-float1 { animation: float1 6s ease-in-out infinite; }
-            .animate-float2 { animation: float2 7s ease-in-out infinite; }
-            .animate-float3 { animation: float3 8s ease-in-out infinite; }
-        </style>
     </body>
 </html>
