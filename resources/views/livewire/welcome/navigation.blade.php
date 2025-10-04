@@ -2,6 +2,7 @@
     @auth
         <a
             href="{{ url('/dashboard') }}"
+            wire:navigate
             class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white"
         >
             Dashboard
@@ -11,6 +12,7 @@
     @guest
         <a
             href="{{ route('login') }}"
+            wire:navigate
             class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white flex items-center gap-1 sm:gap-2"
         >
 
@@ -21,6 +23,7 @@
         @if (Route::has('register'))
             <a
                 href="{{ route('register') }}"
+                wire:navigate
                 class="rounded-md px-2 py-2 sm:px-3 text-white text-sm sm:text-base ring-1 ring-transparent transition hover:text-white/80 focus:outline-none focus-visible:ring-white flex items-center gap-1 sm:gap-2"
             >
                 <span class="hidden sm:inline">Register</span>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Mail\Welcome;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
@@ -27,13 +28,16 @@ new #[Layout('layouts.guest')] class extends Component
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
             'student_no' => ['required', 'string', 'size:7', 'regex:/^\d{2}-\d{4}$/', 'unique:' . User::class],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:' . User::class, 'regex:/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/'], // Email must end with plv.edu.ph
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:' . User::class, 'regex:/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/'],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
 
         event(new Registered($user = User::create($validated)));
+
+        // Send welcome email for testing
+        Mail::to($user->email)->queue(new Welcome());
 
         Auth::login($user);
 
