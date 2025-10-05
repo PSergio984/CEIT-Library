@@ -3,13 +3,13 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class ProfileTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase; // Using custom test database creation
 
     public function test_profile_page_is_displayed(): void
     {
@@ -87,7 +87,7 @@ class ProfileTest extends TestCase
         }
     }
 
-     public function test_user_can_delete_their_account(): void
+    public function test_user_can_delete_their_account(): void
     {
         $password = fake()->password(8, 12);
         $user = User::factory()->create([
@@ -131,6 +131,4 @@ class ProfileTest extends TestCase
             $this->markTestSkipped('Volt component profile.delete-user-form not found 2');
         }
     }
-
-
 }
