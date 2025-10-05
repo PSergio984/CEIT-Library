@@ -11,13 +11,11 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
-// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class UserTest extends TestCase
 {
-    // use RefreshDatabase; // Using custom test database creation
 
     /**
      * Test user can be created with factory.

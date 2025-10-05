@@ -118,7 +118,28 @@ trait CreatesTestDatabase
             });
         }
 
-        // Create attendances table
+        // Create librarians table (must be created before attendances due to foreign key)
+        if (!Schema::hasTable('librarians')) {
+            Schema::create('librarians', function ($table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('batch_no')->nullable(); // Changed to string to match migration
+                $table->enum('status', ['active', 'inactive', 'expired'])->default('active');
+                $table->timestamp('expires_at');
+                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->timestamp('last_login_at')->nullable();
+                $table->string('shift_notes')->nullable();
+                $table->timestamps();
+
+                $table->unique('user_id');
+                $table->index(['status', 'expires_at']);
+                $table->index('expires_at');
+                $table->index(['status', 'last_login_at']);
+                $table->index('created_by');
+            });
+        }
+
+        // Create attendances table (after librarians due to foreign key constraint)
         if (!Schema::hasTable('attendances')) {
             Schema::create('attendances', function ($table) {
                 $table->id();
@@ -138,27 +159,6 @@ trait CreatesTestDatabase
                 $table->index('scanned_by');
                 $table->index(['time_in', 'status']);
                 $table->index(['user_id', 'status', 'time_in']);
-            });
-        }
-
-        // Create librarians table
-        if (!Schema::hasTable('librarians')) {
-            Schema::create('librarians', function ($table) {
-                $table->id();
-                $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                $table->integer('batch_no')->nullable();
-                $table->enum('status', ['active', 'inactive', 'expired'])->default('active');
-                $table->timestamp('expires_at');
-                $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
-                $table->timestamp('last_login_at')->nullable();
-                $table->string('shift_notes')->nullable();
-                $table->timestamps();
-
-                $table->unique('user_id');
-                $table->index(['status', 'expires_at']);
-                $table->index('expires_at');
-                $table->index(['status', 'last_login_at']);
-                $table->index('created_by');
             });
         }
 

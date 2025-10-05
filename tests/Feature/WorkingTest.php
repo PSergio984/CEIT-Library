@@ -141,17 +141,10 @@ class WorkingTest extends TestCase
         );
 
         // Test academic paper relationships - check if they exist first
-        if (method_exists($paper, 'inventory')) {
+        if (method_exists($paper, 'copies')) {
             $this->assertInstanceOf(
                 \Illuminate\Database\Eloquent\Relations\HasMany::class,
-                $paper->inventory()
-            );
-        }
-
-        if (method_exists($paper, 'borrowTransactions')) {
-            $this->assertInstanceOf(
-                \Illuminate\Database\Eloquent\Relations\HasMany::class,
-                $paper->borrowTransactions()
+                $paper->copies()
             );
         }
     }

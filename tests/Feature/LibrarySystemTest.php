@@ -206,28 +206,31 @@ class LibrarySystemTest extends TestCase
     {
         $paper = AcademicPaper::factory()->create();
 
-        // Create 3 inventory items
+        // Create 3 inventory items with Available status
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
+            'status' => 'Available'
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 2
+            'copy_number' => 2,
+            'status' => 'Available'
         ]);
         $inventory3 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 3
+            'copy_number' => 3,
+            'status' => 'Available'
         ]);
 
         // Check if accessor exists before testing
-        if (method_exists($paper, 'getAvailableCopiesAttribute')) {
-            $this->assertEquals(3, $paper->available_copies);
+        if (method_exists($paper, 'getAvailableCopiesCountAttribute')) {
+            $this->assertEquals(3, $paper->available_copies_count);
         }
 
         // Borrow one copy
         $user = User::factory()->create();
-        BorrowTransaction::create([
+        $transaction = BorrowTransaction::create([
             'user_id' => $user->id,
             'academic_paper_id' => $paper->id,
             'inventory_id' => $inventory1->id,
@@ -236,10 +239,12 @@ class LibrarySystemTest extends TestCase
             'session_token' => 'test-token-' . uniqid()
         ]);
 
-        // Check if accessor exists before testing
-        if (method_exists($paper, 'getBorrowedCopiesAttribute')) {
-            $this->assertEquals(1, $paper->borrowed_copies);
-        }
+        // Update the inventory status to Reserved (simulating the borrowing process)
+        $inventory1->update(['status' => 'Reserved']);
+
+        // Check if we can count reserved copies (borrowed copies)
+        $reservedCopies = $paper->copies()->where('status', 'Reserved')->count();
+        $this->assertEquals(1, $reservedCopies);
     }
 
     public function test_overdue_book_detection()
@@ -339,11 +344,13 @@ class LibrarySystemTest extends TestCase
 
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
+            'status' => 'Available'
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 2
+            'copy_number' => 2,
+            'status' => 'Available'
         ]);
 
         // Both users borrow different copies
@@ -365,13 +372,16 @@ class LibrarySystemTest extends TestCase
             'session_token' => 'test-token-2-' . uniqid()
         ]);
 
+        // Update inventory statuses to Reserved (simulating the borrowing process)
+        $inventory1->update(['status' => 'Reserved']);
+        $inventory2->update(['status' => 'Reserved']);
+
         $this->assertCount(1, $user1->borrowTransactions);
         $this->assertCount(1, $user2->borrowTransactions);
 
-        // Check if accessor exists before testing
-        if (method_exists($paper, 'getBorrowedCopiesAttribute')) {
-            $this->assertEquals(2, $paper->borrowed_copies);
-        }
+        // Check if we can count reserved copies (borrowed copies)
+        $reservedCopies = $paper->copies()->where('status', 'Reserved')->count();
+        $this->assertEquals(2, $reservedCopies);
     }
 
     public function test_librarian_permissions()

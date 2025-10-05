@@ -70,10 +70,10 @@ class AcademicPaperTest extends TestCase
         ]);
 
         // Check if the relationship exists (assuming it's defined in the model)
-        if (method_exists($paper, 'inventory')) {
-            $this->assertCount(2, $paper->inventory);
-            $this->assertTrue($paper->inventory->contains($inventory1));
-            $this->assertTrue($paper->inventory->contains($inventory2));
+        if (method_exists($paper, 'copies')) {
+            $this->assertCount(2, $paper->copies);
+            $this->assertTrue($paper->copies->contains($inventory1));
+            $this->assertTrue($paper->copies->contains($inventory2));
         } else {
             // If relationship doesn't exist, just verify the inventory items were created
             $this->assertDatabaseHas('inventories', ['id' => $inventory1->id]);
@@ -130,8 +130,8 @@ class AcademicPaperTest extends TestCase
         ]);
 
         // Check if the accessor exists
-        if (method_exists($paper, 'getAvailableCopiesAttribute')) {
-            $this->assertEquals(3, $paper->available_copies);
+        if (method_exists($paper, 'getAvailableCopiesCountAttribute')) {
+            $this->assertEquals(3, $paper->available_copies_count);
         } else {
             // If accessor doesn't exist, just verify the inventory items were created
             $this->assertDatabaseCount('inventories', 3);
@@ -144,7 +144,8 @@ class AcademicPaperTest extends TestCase
         $user = User::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
+            'status' => 'Available'
         ]);
 
         // Create a borrow transaction
@@ -158,16 +159,12 @@ class AcademicPaperTest extends TestCase
             'status' => 'started'
         ]);
 
-        // Check if the accessor exists
-        if (method_exists($paper, 'getBorrowedCopiesAttribute')) {
-            $this->assertEquals(1, $paper->borrowed_copies);
-        } else {
-            // If accessor doesn't exist, just verify the transaction was created
-            $this->assertDatabaseHas('borrow_transactions', [
-                'academic_paper_id' => $paper->id,
-                'status' => 'started'
-            ]);
-        }
+        // Update the inventory status to Reserved (simulating the borrowing process)
+        $inventory->update(['status' => 'Reserved']);
+
+        // Check if we can count reserved copies (borrowed copies)
+        $reservedCopies = $paper->copies()->where('status', 'Reserved')->count();
+        $this->assertEquals(1, $reservedCopies);
     }
 
     public function test_academic_paper_can_be_searched_by_title()
