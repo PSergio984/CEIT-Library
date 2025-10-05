@@ -3,6 +3,7 @@
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
+use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
 use App\Livewire\Pages\Student\AcademicPaperIndex;
@@ -29,6 +30,7 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
         Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
         Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)->name('academic-paper.show');
         Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
+        Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');
     });
 
 Route::view('profile', 'profile')
