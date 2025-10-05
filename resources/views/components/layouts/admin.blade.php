@@ -15,94 +15,117 @@
 
         @livewireStyles
     </head>
-    <body class="min-h-screen font-sans antialiased bg-base-100 ">
+    <body class="min-h-screen font-sans antialiased bg-base-100">
 
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <div class="ml-5 pt-5">App</div>
+            <label for="main-drawer" class="cursor-pointer">
+                <x-mary-icon name="o-bars-3" class="w-6 h-6" />
+            </label>
         </x-slot:brand>
         <x-slot:actions>
             <div class="flex items-center gap-2">
-                <label for="main-drawer" class="lg:hidden">
-                    <x-heroicon-s-home-modern />
-                </label>
+                <x-mary-theme-toggle darkTheme="fancychad" lightTheme="light" class="btn-sm" />
 
+                {{-- Mobile Profile Dropdown --}}
+                @auth
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <button class="inline-flex items-center px-2 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-base-content bg-base-100 hover:bg-base-200 focus:outline-none transition ease-in-out duration-150">
+                            <x-mary-icon name="o-user-circle" class="w-6 h-6" />
+                        </button>
+                    </x-slot>
+                    <x-slot name="content">
+                        <div class="px-4 py-2 border-b border-base-300 bg-base-200">
+                            <div class="font-medium text-sm text-base-content">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+                            <div class="text-xs text-base-content/70">{{ auth()->user()->email }}</div>
+                        </div>
+                        <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-base-200">
+                            {{ __('Profile') }}
+                        </x-dropdown-link>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="w-full text-start">
+                                <x-dropdown-link class="hover:bg-base-200">
+                                    {{ __('Log Out') }}
+                                </x-dropdown-link>
+                            </button>
+                        </form>
+                    </x-slot>
+                </x-dropdown>
+                @endauth
             </div>
         </x-slot:actions>
     </x-mary-nav>
+
     {{-- MAIN --}}
     <x-mary-main full-width>
-        <div class="flex">
-            {{-- SIDEBAR --}}
-            <div>
-                <x-slot:sidebar drawer="main-drawer" collapsible  class="bg-base-300">
+        {{-- SIDEBAR --}}
+        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-200 border-r border-base-300">
 
-                    {{-- BRAND --}}
-                    <div class="ml-4 pt-5 flex items-center justify-between">
-                        <img src="{{ Vite::asset('public/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
-                        <div class="flex-1 flex items-center justify-between transition-all duration-300" x-show="!collapsed">
-                            <div>CEIT Library</div>
-                            <x-mary-theme-toggle/>
+            {{-- BRAND --}}
+            <div class="px-4 py-3 flex items-center gap-3">
+                <div class="flex-shrink-0">
+                    <img src="{{ Vite::asset('public/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
+                </div>
+                <div class="overflow-hidden transition-all duration-300 w-full" x-show="!collapsed">
+                    <div class="font-bold text-lg text-base-content whitespace-nowrap">CEIT Library</div>
+                </div>
+            </div>
+
+            <x-mary-menu-separator />
+
+            {{-- MENU --}}
+            <x-mary-menu activate-by-route>
+
+                <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
+
+                <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
+                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
+                    <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/admin/academic-papers/civil-engineering" />
+                    <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/electrical-engineering" />
+                </x-mary-menu-sub>
+
+                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/transactions" />
+
+                <x-mary-menu-sub title="Users" icon="o-users">
+                    <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
+                    <x-mary-menu-sub title="Librarians" icon="o-building-library">
+                        <x-mary-menu-item title="Current" icon="o-user" link="/admin/librarians" />
+                        <x-mary-menu-item title="Assign New" icon="o-user-plus" link="/admin/librarians/assign" />
+                    </x-mary-menu-sub>
+                </x-mary-menu-sub>
+
+                <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance"/>
+                <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs"/>
+
+            </x-mary-menu>
+
+        </x-slot:sidebar>
+
+        {{-- CONTENT --}}
+        <x-slot:content>
+            {{-- Desktop Navigation --}}
+            <div class="hidden lg:block">
+                <nav class="bg-base-100 border-b border-base-300">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-end items-center h-16 gap-2">
+                            <x-mary-theme-toggle darkTheme="fancychad" lightTheme="light" class="btn-sm" />
+                            <livewire:layout.navigation />
                         </div>
                     </div>
-
-
-                    {{-- MENU --}}
-                    <x-mary-menu activate-by-route>
-
-                        {{-- User --}}
-                        @if($user = auth()->user())
-                            <x-mary-menu-separator />
-
-                            <x-mary-list-item :item="$user" value="name" sub-value="email" no-separator no-hover class="-mx-2 !-my-2 rounded">
-                                <x-slot:actions>
-                                    <form method="POST" action="{{ route('logout') }}">
-                                        @csrf
-                                        <x-mary-button
-                                            icon="o-power"
-                                            class="btn-circle btn-ghost btn-xs"
-                                            tooltip-left="Logoff"
-                                            type="submit" />
-                                    </form>
-                                </x-slot:actions>
-                            </x-mary-list-item>
-
-                            <x-mary-menu-separator />
-                        @endif
-
-                        <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
-                        <x-mary-menu-sub title="Academic Paper List" icon="o-book-open">
-                            <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
-                            <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/admin/academic-papers/civil-engineering" />
-                            <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/electrical-engineering" />
-                        </x-mary-menu-sub>
-                        <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/transactions" />
-                        <x-mary-menu-sub title="Users List" icon="o-user">
-                        <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
-                        <x-mary-menu-sub title="Librarian" icon="o-building-library">
-                            <x-mary-menu-item title="Current" icon="o-user" link="/admin/librarians" />
-                            <x-mary-menu-item title="Assigning" icon="o-user-plus" link="/admin/librarians/assign" />
-                        </x-mary-menu-sub>
-                    </x-mary-menu-sub>
-                        <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance"/>
-                        <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs"/>
-
-                    </x-mary-menu>
-                </x-slot:sidebar>
+                </nav>
             </div>
+            {{ $slot }}
+        </x-slot:content>
 
-            {{-- The `$slot` goes here --}}
-            <div class="flex-1 bg-base-100">
-                <x-slot:content>
-                    {{ $slot }}
-                </x-slot:content>
-            </div>
-        </div>
     </x-mary-main>
 
     {{-- Toast --}}
     <x-mary-toast />
+
+    @livewireScripts
 </body>
 
 </html>
