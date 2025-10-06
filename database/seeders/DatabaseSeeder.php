@@ -228,25 +228,20 @@ class DatabaseSeeder extends Seeder
         }
 
         $rulesHeaders = [
-            ['order' => 1, 'roman' => 'I', 'title' => 'General Provisions'],
-            ['order' => 2, 'roman' => 'II', 'title' => 'Library Hours'],
-            ['order' => 3, 'roman' => 'III', 'title' => 'Library Users'],
-            ['order' => 4, 'roman' => 'IV', 'title' => 'Borrowing and Returning'],
+            ['title' => 'I.General Information', 'order' => 1],
+            ['title' => 'II.Duties and Responsibilities', 'order' => 2],
+            ['title' => 'III.Study Room Rules and Regulations', 'order' => 3],
         ];
 
-        foreach ($rulesHeaders as $rulesHeader) {
-            $header = RuleHeader::create([
-                'title' => $rulesHeader['roman'] . '. ' . $rulesHeader['title'],
-                'order' => $rulesHeader['order'],
-            ]);
-
+        foreach ($rulesHeaders as $headerData) {
+            $header = RuleHeader::create($headerData);
             // Create 3-5 rules for each header
             for ($i = 1; $i <= rand(3, 5); $i++) {
                 RuleRegulation::factory()->create([
                     'rule_header_id' => $header->id,
-                    'order' => $i,
                 ]);
             }
+
         }
 
         $this->command->info('PLV eLib database seeded successfully!');

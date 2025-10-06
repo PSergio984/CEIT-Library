@@ -21,4 +21,13 @@ class RuleHeaderFactory extends Factory
             'order' => $this->faker->unique()->numberBetween(1, 100),
         ];
     }
+
+    public function predefined(): array
+    {
+        return [
+            ['title' => 'General Information', 'order' => 1],
+            ['title' => 'Duties and Responsibilities', 'order' => 2],
+            ['title' => 'Study Room Rules and Regulations', 'order' => 3],
+        ];
+    }
 }

@@ -14,7 +14,7 @@ class RuleHeader extends Model
 
     protected $fillable = ['title', 'order'];
 
-    public function rules(): HasMany
+    public function ruleRegulations(): HasMany
     {
         // A header has many rules, sorted by their own order
         return $this->hasMany(RuleRegulation::class)->orderBy('order');
