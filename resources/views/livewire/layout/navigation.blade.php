@@ -20,7 +20,7 @@ new class extends Component
     }
 }; ?>
 
-<nav x-data="{ open: false }" class="bg-base-100 border-b border-base-300">
+<nav x-data="{ open: false }" class="bg-background border-b border-border">
     <!-- Primary Navigation Menu -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-16">
@@ -32,23 +32,25 @@ new class extends Component
             <div class="flex items-center ms-6">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-3 border border-transparent text-sm leading-4 font-medium rounded-md text-base-content bg-base-100 hover:bg-base-200 focus:outline-none transition ease-in-out duration-150">
+                        <button
+                            class="inline-flex items-center px-3 py-3 border border-transparent text-sm leading-4 font-medium rounded-md text-foreground bg-background hover:bg-muted focus:outline-none transition ease-in-out duration-150">
                             <x-mary-icon name="o-user-circle" class="w-8 h-8 sm:w-9 sm:h-9" />
                         </button>
                     </x-slot>
 
                     <x-slot name="content">
-                        <div class="px-4 py-2 border-b border-base-300 bg-base-200">
-                            <div class="font-medium text-sm text-base-content">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
-                            <div class="text-xs text-base-content/70">{{ auth()->user()->email }}</div>
+                        <div class="px-4 py-2 border-b border-border bg-muted">
+                            <div
+                                class="font-medium text-sm text-foreground">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+                            <div class="text-xs text-muted-foreground">{{ auth()->user()->email }}</div>
                         </div>
-                        <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-base-200">
+                        <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-muted">
                             {{ __('Profile') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
                         <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link class="hover:bg-base-200">
+                            <x-dropdown-link class="hover:bg-muted">
                                 {{ __('Log Out') }}
                             </x-dropdown-link>
                         </button>
