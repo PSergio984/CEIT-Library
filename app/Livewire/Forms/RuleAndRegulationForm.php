@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\RuleRegulation;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -18,15 +19,19 @@ class RuleAndRegulationForm extends Form
     {
         $this->validate();
 
-        // Get the last order for this specific header
-        $lastOrder = RuleRegulation::where('rule_header_id', $this->rule_header_id)->max('order') ?? 0;
+        DB::transaction(function () {
+            $lastOrder = RuleRegulation::where('rule_header_id', $this->rule_header_id)
+                ->lockForUpdate()
+                ->max('order') ?? 0;
 
-        RuleRegulation::create([
-            'rule_header_id' => $this->rule_header_id,
-            'content' => $this->content,
-            'order' => $lastOrder + 1,
-        ]);
+            RuleRegulation::create([
+                'rule_header_id' => $this->rule_header_id,
+                'content'        => $this->content,
+                'order'          => $lastOrder + 1,
+            ]);
+        });
     }
+
     public function update(int $id): void
     {
         $this->validate();
@@ -34,7 +39,7 @@ class RuleAndRegulationForm extends Form
         $rule = RuleRegulation::findOrFail($id);
         $rule->update([
             'rule_header_id' => $this->rule_header_id,
-            'content' => $this->content,
+            'content'        => $this->content,
         ]);
     }
 }
