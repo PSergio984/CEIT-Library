@@ -1,3 +1,3 @@
 <div>
-    This is transaction page for students
+    This is the transaction page
 </div>
