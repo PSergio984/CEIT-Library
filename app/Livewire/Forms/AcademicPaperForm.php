@@ -8,23 +8,23 @@ use Livewire\Form;
 
 class AcademicPaperForm extends Form
 {
-    public AcademicPaper $academicPaper;
+    public ?AcademicPaper $academicPaper = null;
 
-    public int $id;
-    public ?string $catalog_code=null;
+    public ?int $id = null;
+    public ?string $catalog_code = null;
     #[Validate('required')]
-    public string $title;
+    public string $title = '';
     #[Validate('required')]
-    public int $publication_year;
+    public ?int $publication_year;
     #[Validate('required')]
-    public string $paper_type;
+    public string $paper_type = '';
     #[Validate('required')]
-    public string $research_project_adviser;
+    public string $research_project_adviser = '';
     #[Validate('required')]
-    public string $department;
+    public string $department = '';
     #[Validate('required')]
-    public string $dean;
-     public array $type_choices = [
+    public string $dean = '';
+    public array $type_choices = [
         ['id' => 'Thesis', 'name' => 'Thesis'],
         ['id' => 'Capstone', 'name' => 'Capstone'],
         ['id' => 'Feasib', 'name' => 'Feasib'],
@@ -32,12 +32,11 @@ class AcademicPaperForm extends Form
         ['id' => 'Practicum', 'name' => 'Practicum'],
         ['id' => 'Report', 'name' => 'Report'],
     ];
-     public array $department_choices = [
-        ['id' => 'CPE', 'name' => 'Computer Engineering'],
-        ['id' => 'CS', 'name' => 'Computer Science'],
-        ['id' => 'IT', 'name' => 'Information Technology'],
-        ['id' => 'IS', 'name' => 'Information Systems'],
-        ['id' => 'Other', 'name' => 'Other'],
+    public array $department_choices = [
+        ['id' => 'Civil Engineering', 'name' => 'Civil Engineering'],
+        ['id' => 'Information Technology', 'name' => 'Information Technology'],
+        ['id' => 'Electrical Engineering', 'name' => 'Electrical Engineering'],
+
     ];
 
     public array $year_choices = [];
@@ -85,7 +84,7 @@ class AcademicPaperForm extends Form
         }
 
         $this->validate();
-        $this->academicPaper->update($this->only(['title', 'publication_year','paper_type', 'research_project_adviser','department','dean']));
+        $this->academicPaper->update($this->only(['title', 'publication_year', 'paper_type', 'research_project_adviser', 'department', 'dean']));
         $this->setAcademicPaper($this->academicPaper->refresh());
         return $this->academicPaper;
     }
