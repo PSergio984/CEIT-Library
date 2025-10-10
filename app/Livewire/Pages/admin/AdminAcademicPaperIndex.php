@@ -27,7 +27,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public function updatingPerPage(): void
     {
-        $this->resetPage('theses-index');
+        $this->resetPage('academic-papers-index');
     }
 
     public ?string $dept = null;
@@ -77,7 +77,9 @@ class AdminAcademicPaperIndex extends AdminComponent
             ->when($this->search, function ($query) {
                 $search = '%' . $this->search . '%';
                 $query->where(function ($q) use ($search) {
-                    $q->where('title', 'like', $search);
+                    $q->where('title', 'like', $search)
+                        ->orWhere('research_project_adviser', 'like', $search)
+                        ->orWhere('catalog_code', 'like', $search);
                 });
             })
             ->withCount([
@@ -109,7 +111,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $academicPaper->delete();
             $this->warning("$academicPaper->title deleted", 'Good bye!');
         } else {
-            $this->warning("$academicPaper->title Not Found", 'Error!');
+            $this->warning("Academic paper not found", 'Error!');
         }
     }
 

@@ -291,8 +291,8 @@ class AttendanceTest extends TestCase
         ]);
 
         // Check if the relationship exists
-        if (method_exists($user, 'attendances')) {
-            $totalHours = $user->attendances()
+        if (method_exists($user, 'librarySessions')) {
+            $totalHours = $user->librarySessions()
                 ->where('status', 'completed')
                 ->get()
                 ->sum(function ($attendance) {

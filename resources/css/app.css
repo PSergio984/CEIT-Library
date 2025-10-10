@@ -192,9 +192,9 @@
 /* daisyUI plugin with themes */
 @plugin "daisyui" {
     themes:
-        [ "light",
-        "ceit",
-        "ceit-light"];
+        light,
+        ceit --default,
+        ceit-light;
 }
 
 /* maryUI */

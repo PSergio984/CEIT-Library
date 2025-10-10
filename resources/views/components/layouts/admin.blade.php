@@ -95,12 +95,10 @@
 
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/transactions" />
 
-                <x-mary-menu-sub title="Users" icon="o-users">
-                    <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
-                    <x-mary-menu-sub title="Librarians" icon="o-building-library">
-                        <x-mary-menu-item title="Current" icon="o-user" link="/admin/librarians" />
-                        <x-mary-menu-item title="Assign New" icon="o-user-plus" link="/admin/librarians/assign" />
-                    </x-mary-menu-sub>
+                <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
+                <x-mary-menu-sub title="Librarians" icon="o-building-library">
+                    <x-mary-menu-item title="Current" icon="o-user" link="/admin/librarians" />
+                    <x-mary-menu-item title="Assign New" icon="o-user-plus" link="/admin/librarians/assign" />
                 </x-mary-menu-sub>
 
                 <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance"/>

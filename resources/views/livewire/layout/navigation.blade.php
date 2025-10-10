@@ -30,32 +30,38 @@ new class extends Component
 
             <!-- Settings Dropdown - Desktop Only -->
             <div class="flex items-center ms-6">
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button
-                            class="inline-flex items-center px-3 py-3 border border-transparent text-sm leading-4 font-medium rounded-md text-foreground bg-background hover:bg-muted focus:outline-none transition ease-in-out duration-150">
-                            <x-mary-icon name="o-user-circle" class="w-8 h-8 sm:w-9 sm:h-9" />
-                        </button>
-                    </x-slot>
+                @auth
+                    <x-dropdown align="right" width="48">
+                        <x-slot name="trigger">
+                            <button
+                                class="inline-flex items-center px-3 py-3 border border-transparent text-sm leading-4 font-medium rounded-md text-foreground bg-background hover:bg-muted focus:outline-none transition ease-in-out duration-150">
+                                <x-mary-icon name="o-user-circle" class="w-8 h-8 sm:w-9 sm:h-9" />
+                            </button>
+                        </x-slot>
 
-                    <x-slot name="content">
-                        <div class="px-4 py-2 border-b border-border bg-muted">
-                            <div
-                                class="font-medium text-sm text-foreground">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
-                            <div class="text-xs text-muted-foreground">{{ auth()->user()->email }}</div>
-                        </div>
-                        <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-muted">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-
-                        <!-- Authentication -->
-                        <button wire:click="logout" class="w-full text-start">
-                            <x-dropdown-link class="hover:bg-muted">
-                                {{ __('Log Out') }}
+                        <x-slot name="content">
+                            <div class="px-4 py-2 border-b border-border bg-muted">
+                                <div
+                                    class="font-medium text-sm text-foreground">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+                                <div class="text-xs text-muted-foreground">{{ auth()->user()->email }}</div>
+                            </div>
+                            <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-muted">
+                                {{ __('Profile') }}
                             </x-dropdown-link>
-                        </button>
-                    </x-slot>
-                </x-dropdown>
+
+                            <!-- Authentication -->
+                            <button wire:click="logout" class="w-full text-start">
+                                <x-dropdown-link class="hover:bg-muted">
+                                    {{ __('Log Out') }}
+                                </x-dropdown-link>
+                            </button>
+                        </x-slot>
+                    </x-dropdown>
+                @else
+                    <a href="{{ route('login') }}" class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-foreground bg-background hover:bg-muted focus:outline-none transition ease-in-out duration-150">
+                        {{ __('Login') }}
+                    </a>
+                @endauth
             </div>
         </div>
     </div>

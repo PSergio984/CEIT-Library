@@ -15,7 +15,7 @@ class AcademicPaperForm extends Form
     #[Validate('required')]
     public string $title = '';
     #[Validate('required')]
-    public ?int $publication_year;
+    public ?int $publication_year = null;
     #[Validate('required')]
     public string $paper_type = '';
     #[Validate('required')]
