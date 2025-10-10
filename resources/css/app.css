@@ -215,6 +215,7 @@
     --color-muted-foreground: var(--muted-foreground);
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
+    --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
     --color-chart-1: var(--chart-1);
@@ -293,24 +294,29 @@
 }
 
 /* MaryUI Button Component Colors - Using CSS variables */
-[data-theme="ceit"]
-    .btn:not(.btn-primary):not(.btn-secondary):not(.btn-accent):hover {
-    background-color: var(--color-muted);
-    color: var(--color-foreground);
+[data-theme="ceit"] .btn {
+    outline: none !important;
+    border: 0px !important;
+    border-width: 0px !important;
+    transition: transform 150ms ease;
 }
 
-[data-theme="ceit-light"]
-    .btn:not(.btn-primary):not(.btn-secondary):not(.btn-accent):hover {
-    background-color: var(--color-muted);
-    color: var(--color-foreground);
+[data-theme="ceit"] .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
 }
 
-/* MaryUI Input Component Colors - Using CSS variables */
-[data-theme="ceit"] .input:not([class*="!input-error"]),
-[data-theme="ceit"] .select:not([class*="!select-error"]),
-[data-theme="ceit"] .toggle:not([class*="!checkbox-error"]) {
-    border-color: var(--color-primary);
-    outline-color: var(--color-primary);
+[data-theme="ceit-light"] .btn {
+    outline: none !important;
+    border: 0px !important;
+    border-width: 0px !important;
+    transition:
+        transform 150ms ease,
+        box-shadow 150ms ease;
+}
+
+[data-theme="ceit-light"] .btn:hover {
+    transform: translateY(-2px);
 }
 
 [data-theme="ceit"] .checkbox:checked,
@@ -319,17 +325,39 @@
     color: var(--color-primary);
 }
 
-[data-theme="ceit-light"] .input:not([class*="!input-error"]),
-[data-theme="ceit-light"] .select:not([class*="!select-error"]),
-[data-theme="ceit-light"] .toggle:not([class*="!checkbox-error"]) {
-    border-color: var(--color-primary);
-    outline-color: var(--color-primary);
-}
-
 [data-theme="ceit-light"] .checkbox:checked,
 [data-theme="ceit-light"] .toggle:checked,
 [data-theme="ceit-light"] .radio:checked {
     color: var(--color-primary);
+}
+
+/* MaryUI Input Component Colors - Using CSS variables */
+[data-theme="ceit"] .input:not([class*="!input-error"]),
+[data-theme="ceit"] .select:not([class*="!select-error"]),
+[data-theme="ceit"] .toggle:not([class*="!checkbox-error"]) {
+    border: 2px solid var(--color-border);
+    outline-color: var(--color-primary);
+}
+
+[data-theme="ceit"] .input:focus,
+[data-theme="ceit"] .select:focus,
+[data-theme="ceit"] .toggle:focus {
+    border: 2px solid var(--color-primary);
+    outline-color: var(--color-primary);
+}
+
+[data-theme="ceit-light"] .input:not([class*="!input-error"]),
+[data-theme="ceit-light"] .select:not([class*="!select-error"]),
+[data-theme="ceit-light"] .toggle:not([class*="!checkbox-error"]) {
+    border: 1px solid var(--color-border);
+    outline-color: var(--color-primary);
+}
+
+[data-theme="ceit-light"] .input:focus,
+[data-theme="ceit-light"] .select:focus,
+[data-theme="ceit-light"] .toggle:focus {
+    border: 2px solid var(--color-primary);
+    outline-color: var(--color-primary);
 }
 
 /* MaryUI Card Component Colors */
@@ -422,7 +450,6 @@
 [data-theme="ceit-light"] [class*="mary-"] {
     @apply bg-background text-foreground;
 }
-
 /* MaryUI top-level menu item default background transparent */
 [data-theme="ceit"] .mary-menu-item,
 [data-theme="ceit"] .mary-menu-item > *,
@@ -620,7 +647,7 @@
     border-collapse: separate;
     border-spacing: 0;
     border-radius: var(--radius-box);
-    border: 1px solid var(--color-border);
+    border: 2px solid var(--color-border);
     overflow: hidden;
 }
 
@@ -629,32 +656,39 @@
     background-color: var(--color-card);
 }
 
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .table thead th {
+/* Table Header */
+[data-theme="ceit"] .table thead th {
     padding: 1rem;
     font-weight: 600;
     color: var(--color-foreground);
-    border-bottom: 1px solid var(--color-border);
+    border: none;
+    border-bottom: 2px solid var(--color-border);
+}
+
+[data-theme="ceit-light"] .table thead th {
+    padding: 1rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    border: none;
+    border-bottom: 2px solid var(--color-border);
 }
 
 /* Table Body Rows */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .table tbody tr {
-    transition: background-color 150ms ease;
-}
-
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .table tbody tr:hover {
+[data-theme="ceit"] .table tbody tr:hover,
+[data-theme="ceit-light"] .table tbody tr:hover {
     background-color: var(--color-muted) !important;
 }
 
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .table tbody td {
+[data-theme="ceit"] .table tbody td {
     padding: 1rem;
     color: var(--color-foreground);
-    border-bottom: 1px solid var(--color-border);
+    border: none;
+    border-bottom: 2px solid var(--color-border);
 }
 
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .table
-    tbody
-    tr:last-child
-    td {
-    border-bottom: none;
+[data-theme="ceit-light"] .table tbody td {
+    padding: 1rem;
+    color: var(--color-foreground);
+    border: none;
+    border-bottom: 2px solid var(--color-border);
 }

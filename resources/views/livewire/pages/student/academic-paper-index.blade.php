@@ -23,7 +23,6 @@
                         :sort-by="$sortBy"
                         per-page="perPage"
                         :per-page-values="[5, 10, 25, 50]"
-                        link="/academic-papers/{id}"
                         row-class="text-base-content hover:bg-base-200 hover:text-base-content"
                         header-class="text-base-content"
                         class="w-full"

@@ -5,10 +5,12 @@ namespace App\Livewire\Pages\Admin;
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
+#[Title('Academic Paper List')]
 class AdminAcademicPaperIndex extends AdminComponent
 {
     use WithPagination;
@@ -45,8 +47,6 @@ class AdminAcademicPaperIndex extends AdminComponent
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'paper_type', 'label' => 'Paper Type'],
-            ['key' => 'research_project_adviser', 'label' => 'Adviser'],
-            ['key' => 'department', 'label' => 'Department'],
             ['key' => 'total_copies', 'label' => 'Total Copies'],
             ['key' => 'available_copies', 'label' => 'Available'],
         ];

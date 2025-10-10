@@ -15,8 +15,10 @@ Route::view('/', 'welcome');
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::view('/dashboard', 'dashboard')->name('dashboard');
-    Route::get('/academic-papers', AcademicPaperIndex::class)->name('academic-paper.index');
     Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)->name('academic-paper.show');
+    Route::get('/academic-papers/{dept?}', AcademicPaperIndex::class)
+        ->where('dept', 'it|ce|ee')
+        ->name('academic-paper.index');
 });
 
 // Admin routes

@@ -8,8 +8,9 @@ use Mary\Traits\Toast;
 class CreateAcademicPaper extends AdminComponent
 {
     use Toast;
-   public AcademicPaperForm $form;
-     public function save()
+    public AcademicPaperForm $form;
+
+    public function save()
     {
         //returns the created academic paper
         $this->form->store();
@@ -21,10 +22,12 @@ class CreateAcademicPaper extends AdminComponent
             redirectTo: "/admin/academic-papers"
         );
     }
+
     public function mount()
     {
         $this->form->populateYearChoices();
     }
+
     public function render()
     {
         return view('livewire.pages.Admin.create-academic-paper');
