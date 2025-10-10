@@ -18,6 +18,10 @@ class AcademicPaperIndex extends Component
     public int $perPage = 10;
     public ?string $dept = null;
 
+    // Modal properties
+    public bool $showModal = false;
+    public ?AcademicPaper $selectedPaper = null;
+
     public function updatingPerPage(): void
     {
         $this->resetPage('theses-index');
@@ -32,8 +36,7 @@ class AcademicPaperIndex extends Component
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
-            ['key' => 'total_copies', 'label' => 'Total Copies'],
-            ['key' => 'available_copies', 'label' => 'Available'],
+            ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
         ];
     }
 
@@ -57,20 +60,52 @@ class AcademicPaperIndex extends Component
                 $q->where('department', $value);
             })
             ->withCount([
-                'copies as total_copies',
                 'copies as available_copies' => function ($query) {
                     $query->where('status', 'Available');
                 }
-            ])
-            ->orderBy(...array_values($this->sortBy));
+            ]);
 
-        return $query->paginate($this->perPage, pageName: 'academic-papers-index');
+        // Handle sorting - if sorting by status, sort by available_copies instead
+        if ($this->sortBy['column'] === 'status') {
+            $query->orderBy('available_copies', $this->sortBy['direction']);
+        } else {
+            $query->orderBy(...array_values($this->sortBy));
+        }
+
+        $paginated = $query->paginate($this->perPage, pageName: 'academic-papers-index');
+
+        // Transform items to include status as a direct property
+        $paginated->getCollection()->transform(function ($paper) {
+            $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
+            return $paper;
+        });
+
+        return $paginated;
     }
 
     // Reset pagination when dept changes
     public function updatedDept(): void
     {
         $this->resetPage('academic-papers-index');
+    }
+
+    public function showPaperDetails(AcademicPaper $academicPaper): void
+    {
+        $this->selectedPaper = $academicPaper->load('authors', 'copies');
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->selectedPaper = null;
+    }
+
+    public function requestQr($copyId): void
+    {
+        // TODO: Implement QR code request functionality
+        // This could generate a QR code for the specific copy
+        // or redirect to a QR generation page
     }
 
     public function render()
