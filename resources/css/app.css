@@ -476,52 +476,22 @@
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu > li > *:focus {
     background-color: var(--color-sidebar-accent) !important;
     color: var(--color-sidebar-accent-foreground) !important;
-    transition:
-        background-color 150ms ease,
-        color 150ms ease !important;
 }
 
-/* Active menu item colors */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li > *.active,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    li
-    > *[aria-current="page"],
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li.active > *,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    li[aria-current="page"]
-    > *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li.active,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    li[aria-current="page"],
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-item.active,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu-item[aria-current="page"] {
-    background-color: var(--color-sidebar-primary) !important;
-    color: var(--color-sidebar-primary-foreground) !important;
-}
+
 
 /* Defaults: text color & no backgrounds */
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li > *,
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li > * * {
     background-color: transparent;
     color: var(--color-sidebar-foreground);
-    transition: none !important;
 }
 
-/* Remove default backgrounds on list items */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-item {
-    background-color: transparent;
-    transition: none !important;
-}
+
 
 /* Disable transitions globally inside menu */
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu,
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu * {
-    transition: none !important;
 }
 
 /* Submenu container */
@@ -553,7 +523,6 @@
     box-shadow: none !important;
     border: 0 !important;
     outline: 0 !important;
-    transition: none !important;
 }
 
 /* Submenu hover */
@@ -563,8 +532,8 @@
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li > *:hover *,
 :is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li > *:hover *,
 :is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub li > *:hover * {
-    background-color: var(--color-muted) !important;
-    color: var(--color-sidebar-accent-foreground) !important;
+    background-color: transparent !important;
+    font-weight: 700 !important;
 }
 
 /* Submenu active */
@@ -691,4 +660,8 @@
     color: var(--color-foreground);
     border: none;
     border-bottom: 2px solid var(--color-border);
+}
+
+.sidebar-bg {
+    background-color: var(--sidebar) !important;
 }

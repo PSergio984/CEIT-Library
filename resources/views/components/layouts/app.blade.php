@@ -67,7 +67,7 @@
     {{-- MAIN --}}
     <x-mary-main full-width class="flex-1 flex flex-col">
         {{-- SIDEBAR --}}
-        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-sidebar border-r border-sidebar-border">
+        <x-slot:sidebar drawer="main-drawer" collapsible class="sidebar-bg border-r border-sidebar-border">
 
             {{-- BRAND --}}
             <div class="px-4 py-3 flex items-center gap-3">
@@ -114,7 +114,7 @@
                         </div>
                     </nav>
                 </div>
-                
+
                 <div class="flex-1">
                     {{ $slot }}
                 </div>

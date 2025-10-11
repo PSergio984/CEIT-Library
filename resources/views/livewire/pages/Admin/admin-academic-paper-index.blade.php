@@ -49,8 +49,10 @@
                         >
                             @scope('actions', $row)
                             <div class="flex items-center gap-4 justify-center">
-                                <x-mary-button icon="o-pencil-square" wire:click="edit({{ $row->id }})" class="btn-ghost btn-sm"/>
-                                <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $row->id }})" class="btn-ghost btn-sm"/>
+                                <x-mary-button icon="o-pencil-square" wire:click="edit({{ $row->id }})"
+                                               class="btn-ghost btn-sm" tooltip="Edit"/>
+                                <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $row->id }})"
+                                               class="btn-ghost btn-sm" tooltip="Delete"/>
                             </div>
                             @endscope
 
