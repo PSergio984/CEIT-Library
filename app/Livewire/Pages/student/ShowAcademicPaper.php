@@ -13,7 +13,7 @@ class ShowAcademicPaper extends Component
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc',];
     public int $perPage = 2;
-    public bool $showModal = false;
+    public bool $isModalOpen = false;
 
     public array $headers = [
         ['key' => 'id', 'label' => 'Copy Id'],
@@ -25,24 +25,27 @@ class ShowAcademicPaper extends Component
 
     public function mount(AcademicPaper $academicPaper = null)
     {
-        $this->academicPaper = $academicPaper;
+        if ($academicPaper) {
+            $this->academicPaper = $academicPaper->load('authors', 'copies');
+            $this->isModalOpen = true;
+        }
     }
 
-    public function showModal(AcademicPaper $academicPaper): void
+    public function openModal(AcademicPaper $academicPaper): void
     {
         $this->academicPaper = $academicPaper->load('authors', 'copies');
-        $this->showModal = true;
+        $this->isModalOpen = true;
     }
 
     public function closeModal(): void
     {
-        $this->showModal = false;
+        $this->isModalOpen = false;
         $this->academicPaper = null;
     }
 
-    public function updatedShowModal(): void
+    public function updatedIsModalOpen(): void
     {
-        if (!$this->showModal) {
+        if (!$this->isModalOpen) {
             $this->academicPaper = null;
         }
     }
@@ -66,17 +69,9 @@ class ShowAcademicPaper extends Component
         })->toArray();
     }
 
-    public function requestQr($id)
-    {
-    }
+    public function requestQr($_id) {}
     public function render()
     {
-        // Only render the view if we have an academic paper selected
-        if ($this->academicPaper) {
-            return view('livewire.pages.student.show-academic-paper');
-        }
-
-        // Return empty view if no paper selected
         return view('livewire.pages.student.show-academic-paper');
     }
 }

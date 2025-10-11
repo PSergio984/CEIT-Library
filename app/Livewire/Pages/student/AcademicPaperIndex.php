@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
+use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -24,7 +25,7 @@ class AcademicPaperIndex extends Component
 
     public function updatingPerPage(): void
     {
-        $this->resetPage('theses-index');
+        $this->resetPage('academic-papers-index');
     }
 
     public function mount(?string $dept = null)
@@ -106,6 +107,21 @@ class AcademicPaperIndex extends Component
         // TODO: Implement QR code request functionality
         // This could generate a QR code for the specific copy
         // or redirect to a QR generation page
+    }
+
+    #[Computed]
+    public function departmentIcon(): string
+    {
+        if (!$this->selectedPaper || !$this->selectedPaper->department) {
+            return '';
+        }
+
+        return match ($this->selectedPaper->department) {
+            'Civil Engineering' => Vite::asset('public/images/aces.png'),
+            'Electrical Engineering' => Vite::asset('public/images/ees.png'),
+            'Information Technology' => Vite::asset('public/images/vits.png'),
+            default => '',
+        };
     }
 
     public function render()

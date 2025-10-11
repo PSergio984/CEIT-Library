@@ -2,6 +2,7 @@
 
 /* daisyUI */
 @plugin "daisyui" {
+    /* biome-ignore lint/unknownProperty: daisyUI themes property */
     themes:
         light --default,
         dark --prefersdark;

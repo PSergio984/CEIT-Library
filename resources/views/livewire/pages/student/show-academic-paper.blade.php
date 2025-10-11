@@ -1,13 +1,13 @@
 <!-- Modal for Academic Paper Details -->
-<x-mary-modal wire:model="showModal" title="" box-class="max-w-6xl w-full">
-    @if($selectedPaper)
+<x-mary-modal wire:model="isModalOpen" title="" box-class="max-w-6xl w-full">
+    @if($academicPaper)
         <div class="space-y-6">
             <!-- Title Section -->
             <div class="flex items-start justify-between">
-                <h3 class="text-xl font-bold pr-8 flex-1">{{ $selectedPaper->title }}</h3>
+                <h3 class="text-xl font-bold pr-8 flex-1">{{ $academicPaper->title }}</h3>
                 <div class="text-right text-sm">
-                    <div class="font-semibold">{{ $selectedPaper->publication_year }}</div>
-                    <div class="text-xs">{{ $selectedPaper->catalog_code }}</div>
+                    <div class="font-semibold">{{ $academicPaper->publication_year }}</div>
+                    <div class="text-xs">{{ $academicPaper->catalog_code }}</div>
                 </div>
             </div>
 
@@ -15,11 +15,11 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-3">
                     <div>
-                        <span class="font-semibold">Department:</span> {{ $selectedPaper->department }}
+                        <span class="font-semibold">Department:</span> {{ $academicPaper->department }}
                     </div>
                     <div>
                         <span class="font-semibold">Members:</span>
-                        @forelse($selectedPaper->authors as $author)
+                        @forelse($academicPaper->authors as $author)
                             {{ $author->name }}@if(!$loop->last)
                                 ,
                             @endif
@@ -31,23 +31,23 @@
 
                 <div class="space-y-3">
                     <div>
-                        <span class="font-semibold">Adviser:</span> {{ $selectedPaper->research_project_adviser }}
+                        <span class="font-semibold">Adviser:</span> {{ $academicPaper->research_project_adviser }}
                     </div>
                     <div>
-                        <span class="font-semibold">Year:</span> {{ $selectedPaper->publication_year }}
+                        <span class="font-semibold">Year:</span> {{ $academicPaper->publication_year }}
                     </div>
                     <div>
-                        <span class="font-semibold">Total Copies:</span> {{ $selectedPaper->copies->count() }}
+                        <span class="font-semibold">Total Copies:</span> {{ $academicPaper->copies->count() }}
                     </div>
                     <div>
                         <span
-                            class="font-semibold">Available Copies:</span> {{ $selectedPaper->copies->where('status', 'Available')->count() }}
+                            class="font-semibold">Available Copies:</span> {{ $academicPaper->copies->where('status', 'Available')->count() }}
                     </div>
                 </div>
             </div>
 
             <!-- Copies Table -->
-            @if($selectedPaper->copies->count() > 0)
+            @if($academicPaper->copies->count() > 0)
                 <div class="overflow-x-auto">
                     <table class="table table-sm w-full">
                         <thead>
@@ -58,7 +58,7 @@
                         </tr>
                         </thead>
                         <tbody>
-                        @foreach($selectedPaper->copies as $copy)
+                        @foreach($academicPaper->copies as $copy)
                             <tr>
                                 <td>{{ $copy->id }}</td>
                                 <td>

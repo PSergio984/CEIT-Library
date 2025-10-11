@@ -100,11 +100,11 @@ class AttendanceTest extends TestCase
             'status' => 'active'
         ]);
 
-        // Check if the accessor exists
-        if (method_exists($attendance, 'getIsActiveAttribute')) {
-            $this->assertTrue($attendance->is_active);
+        // Check if the isActive method exists
+        if (method_exists($attendance, 'isActive')) {
+            $this->assertTrue($attendance->isActive());
         } else {
-            // If accessor doesn't exist, just verify the attendance was created with active status
+            // If method doesn't exist, just verify the attendance was created with active status
             $this->assertEquals('active', $attendance->status);
         }
     }
@@ -120,11 +120,11 @@ class AttendanceTest extends TestCase
             'status' => 'completed'
         ]);
 
-        // Check if the accessor exists
-        if (method_exists($attendance, 'getIsActiveAttribute')) {
-            $this->assertFalse($attendance->is_active);
+        // Check if the isActive method exists
+        if (method_exists($attendance, 'isActive')) {
+            $this->assertFalse($attendance->isActive());
         } else {
-            // If accessor doesn't exist, just verify the attendance was created with completed status
+            // If method doesn't exist, just verify the attendance was created with completed status
             $this->assertEquals('completed', $attendance->status);
         }
     }
@@ -204,11 +204,11 @@ class AttendanceTest extends TestCase
             'status' => 'active'
         ]);
 
-        // Check if the accessor exists
-        if (method_exists($attendance, 'getIsActiveAttribute')) {
-            $this->assertTrue($attendance->is_active);
+        // Check if the isActive method exists
+        if (method_exists($attendance, 'isActive')) {
+            $this->assertTrue($attendance->isActive());
         } else {
-            // If accessor doesn't exist, just verify the attendance was created
+            // If method doesn't exist, just verify the attendance was created
             $this->assertEquals('active', $attendance->status);
         }
         $this->assertNull($attendance->time_out);
@@ -296,7 +296,10 @@ class AttendanceTest extends TestCase
                 ->where('status', 'completed')
                 ->get()
                 ->sum(function ($attendance) {
-                    return $attendance->time_in->diffInHours($attendance->time_out);
+                    if ($attendance->time_in && $attendance->time_out) {
+                        return $attendance->time_in->diffInHours($attendance->time_out);
+                    }
+                    return 0;
                 });
 
             $this->assertEquals(4, $totalHours); // 2 + 2 = 4 hours total
