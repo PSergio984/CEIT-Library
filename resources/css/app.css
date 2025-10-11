@@ -35,7 +35,6 @@
     --border: 1px;
     --depth: 1;
     --noise: 0;
-
     --background: oklch(0.1467 0.0041 49.3141);
     --foreground: oklch(0.9848 0 0);
     --card: oklch(0.1706 0.0059 48.3581);
@@ -128,7 +127,6 @@
     --border: 1px;
     --depth: 1;
     --noise: 0;
-
     --background: oklch(0.9848 0 0);
     --foreground: oklch(0.1467 0.0041 49.3141);
     --card: oklch(1 0 0);
@@ -188,8 +186,6 @@
     --spacing: 0.25rem;
 }
 
-/** daisyUI */
-/* daisyUI plugin with themes */
 @plugin "daisyui" {
     themes:
         light,
@@ -197,13 +193,10 @@
         ceit-light;
 }
 
-/* maryUI */
 @source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
 
-/* Theme toggle */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Custom theme variables for Tailwind utilities */
 @theme inline {
     --color-background: var(--background);
     --color-foreground: var(--foreground);
@@ -231,16 +224,13 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
-
     --font-sans: var(--font-sans);
     --font-mono: var(--font-mono);
     --font-serif: var(--font-serif);
-
     --radius-sm: calc(var(--radius) - 4px);
     --radius-md: calc(var(--radius) - 2px);
     --radius-lg: var(--radius);
     --radius-xl: calc(var(--radius) + 4px);
-
     --shadow-2xs: var(--shadow-2xs);
     --shadow-xs: var(--shadow-xs);
     --shadow-sm: var(--shadow-sm);
@@ -251,7 +241,11 @@
     --shadow-2xl: var(--shadow-2xl);
 }
 
-/* maryUI custom styles */
+/* ===================================
+   MaryUI Component Customizations
+   =================================== */
+
+/* Pagination */
 .mary-table-pagination span[aria-current="page"] > span {
     @apply bg-primary text-base-100;
 }
@@ -260,333 +254,245 @@
     @apply cursor-pointer;
 }
 
-/* MaryUI Table Component Colors - Using CSS variables */
-[data-theme="ceit"] .table th {
-    background-color: var(--color-sidebar);
-    color: var(--color-sidebar-foreground);
-    border-color: var(--color-sidebar-border);
+/* Shared theme styles */
+:is([data-theme="ceit"], [data-theme="ceit-light"]) {
+    /* Tables */
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: var(--radius-box);
+        border: 2px solid var(--color-border);
+        overflow: hidden;
+    }
+
+    .table thead {
+        background-color: var(--color-card);
+    }
+
+    .table thead th {
+        padding: 1rem;
+        font-weight: 600;
+        color: var(--color-foreground);
+        border: none;
+        border-bottom: 2px solid var(--color-border);
+    }
+
+    .table tbody td {
+        padding: 1rem;
+        color: var(--color-foreground);
+        border: none;
+        border-bottom: 2px solid var(--color-border);
+    }
+
+    .table tbody tr:hover,
+    .table tbody tr:hover:nth-child(even) {
+        background-color: var(--color-muted) !important;
+    }
+
+    /* Buttons */
+    .btn {
+        outline: none !important;
+        border: 0 !important;
+        border-width: 0 !important;
+        transition:
+            transform 150ms ease,
+            box-shadow 150ms ease;
+    }
+
+    .btn:hover {
+        transform: translateY(-2px);
+    }
+
+    /* Form Controls */
+    .checkbox:checked,
+    .toggle:checked,
+    .radio:checked {
+        color: var(--color-primary);
+    }
+
+    .input:not([class*="!input-error"]),
+    .select:not([class*="!select-error"]),
+    .toggle:not([class*="!checkbox-error"]) {
+        outline-color: var(--color-primary);
+    }
+
+    .input:focus,
+    .select:focus,
+    .toggle:focus {
+        border: 2px solid var(--color-primary);
+        outline-color: var(--color-primary);
+    }
+
+    /* MaryUI Components */
+    .mary-card {
+        @apply bg-card text-card-foreground border-sidebar-border;
+    }
+
+    .mary-modal {
+        @apply bg-background text-foreground border-sidebar-border;
+    }
+
+    .mary-dropdown-content {
+        @apply bg-popover text-popover-foreground border-sidebar-border;
+    }
+
+    .mary-select select {
+        @apply bg-background text-foreground border-sidebar-border;
+    }
+
+    .mary-checkbox input,
+    .mary-radio input {
+        @apply text-primary;
+    }
+
+    .mary-badge {
+        @apply bg-muted text-muted-foreground;
+    }
+
+    .mary-alert {
+        @apply bg-background text-foreground border-sidebar-border;
+    }
+
+    .mary-pagination button {
+        @apply bg-background text-foreground border-sidebar-border hover:bg-muted;
+    }
+
+    .mary-pagination span[aria-current="page"] {
+        @apply text-primary-content;
+    }
+
+    [class*="mary-"] {
+        @apply bg-background text-foreground;
+    }
+
+    /* Menu Base */
+    .mary-menu-item,
+    .mary-menu-item > *,
+    .menu > li > a,
+    .menu > li > button {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        outline: 0 !important;
+    }
+
+    .menu li > *,
+    .menu li > * * {
+        background-color: transparent;
+        color: var(--color-sidebar-foreground);
+    }
+
+    .menu > li > *:hover,
+    .menu > li > *:focus {
+        background-color: var(--color-sidebar-accent) !important;
+        color: var(--color-sidebar-accent-foreground) !important;
+    }
+
+    /* Submenu */
+    .menu li ul,
+    .menu-sub,
+    ul.menu-sub {
+        background-color: var(--color-sidebar) !important;
+        padding-left: 1rem;
+        border-left: 1px solid var(--color-sidebar-border);
+        margin-left: 1rem;
+    }
+
+    .menu li ul::before,
+    .menu-sub::before,
+    ul.menu-sub::before,
+    .menu li ul li::before,
+    .menu-sub li::before,
+    ul.menu-sub li::before,
+    .menu li ul li::after,
+    .menu-sub li::after,
+    ul.menu-sub li::after {
+        display: none !important;
+        content: none !important;
+    }
+
+    .menu li ul li,
+    .menu-sub li,
+    ul.menu-sub li {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        border-left: 0 !important;
+        outline: 0 !important;
+        position: relative;
+    }
+
+    .menu li ul li > *,
+    .menu-sub li > *,
+    ul.menu-sub li > *,
+    .menu li ul li > * *,
+    .menu-sub li > * *,
+    ul.menu-sub li > * * {
+        background-color: transparent !important;
+        color: var(--color-sidebar-foreground) !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        border-left: 0 !important;
+        outline: 0 !important;
+    }
+
+    .menu li ul li > *:hover,
+    .menu-sub li > *:hover,
+    ul.menu-sub li > *:hover,
+    .menu li ul li > *:hover *,
+    .menu-sub li > *:hover *,
+    ul.menu-sub li > *:hover * {
+        background-color: transparent !important;
+        font-weight: 700 !important;
+    }
+
+    .menu li ul li > *.active,
+    .menu li ul li > *[aria-current="page"],
+    .menu-sub li > *.active,
+    .menu-sub li > *[aria-current="page"] {
+        background-color: var(--color-sidebar-primary) !important;
+        color: var(--color-sidebar-primary-foreground) !important;
+    }
+
+    .menu > li:has(ul) > *:hover,
+    .menu > li:has(ul) > *.active,
+    .menu > li:has(ul) > *[aria-current="page"] {
+        background-color: var(--color-sidebar-primary) !important;
+        color: var(--color-sidebar-primary-foreground) !important;
+    }
+
+    .menu li > details > summary,
+    details[open] > summary,
+    .menu .menu-dropdown-toggle {
+        background-color: transparent !important;
+        box-shadow: none !important;
+        border: 0 !important;
+        outline: 0 !important;
+    }
 }
 
-[data-theme="ceit"] .table td {
-    color: var(--color-foreground);
-    border-color: var(--color-sidebar-border);
-}
-
-[data-theme="ceit"] .table tbody tr:hover,
-[data-theme="ceit"] .table tbody tr:hover:nth-child(even) {
-    background-color: var(--color-muted);
-}
-
-[data-theme="ceit-light"] .table th {
-    background-color: var(--color-sidebar);
-    color: var(--color-sidebar-foreground);
-    border-color: var(--color-sidebar-border);
-}
-
-[data-theme="ceit-light"] .table td {
-    color: var(--color-foreground);
-    border-color: var(--color-sidebar-border);
-}
-
-[data-theme="ceit-light"] .table tbody tr:hover,
-[data-theme="ceit-light"] .table tbody tr:hover:nth-child(even) {
-    background-color: var(--color-muted);
-}
-
-/* MaryUI Button Component Colors - Using CSS variables */
-[data-theme="ceit"] .btn {
-    outline: none !important;
-    border: 0px !important;
-    border-width: 0px !important;
-    transition: transform 150ms ease;
-}
-
+/* Theme-specific overrides */
 [data-theme="ceit"] .btn:hover {
-    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
 }
 
-[data-theme="ceit-light"] .btn {
-    outline: none !important;
-    border: 0px !important;
-    border-width: 0px !important;
-    transition:
-        transform 150ms ease,
-        box-shadow 150ms ease;
-}
-
-[data-theme="ceit-light"] .btn:hover {
-    transform: translateY(-2px);
-}
-
-[data-theme="ceit"] .checkbox:checked,
-[data-theme="ceit"] .toggle:checked,
-[data-theme="ceit"] .radio:checked {
-    color: var(--color-primary);
-}
-
-[data-theme="ceit-light"] .checkbox:checked,
-[data-theme="ceit-light"] .toggle:checked,
-[data-theme="ceit-light"] .radio:checked {
-    color: var(--color-primary);
-}
-
-/* MaryUI Input Component Colors - Using CSS variables */
 [data-theme="ceit"] .input:not([class*="!input-error"]),
 [data-theme="ceit"] .select:not([class*="!select-error"]),
 [data-theme="ceit"] .toggle:not([class*="!checkbox-error"]) {
     border: 2px solid var(--color-border);
-    outline-color: var(--color-primary);
-}
-
-[data-theme="ceit"] .input:focus,
-[data-theme="ceit"] .select:focus,
-[data-theme="ceit"] .toggle:focus {
-    border: 2px solid var(--color-primary);
-    outline-color: var(--color-primary);
 }
 
 [data-theme="ceit-light"] .input:not([class*="!input-error"]),
 [data-theme="ceit-light"] .select:not([class*="!select-error"]),
 [data-theme="ceit-light"] .toggle:not([class*="!checkbox-error"]) {
     border: 1px solid var(--color-border);
-    outline-color: var(--color-primary);
-}
-
-[data-theme="ceit-light"] .input:focus,
-[data-theme="ceit-light"] .select:focus,
-[data-theme="ceit-light"] .toggle:focus {
-    border: 2px solid var(--color-primary);
-    outline-color: var(--color-primary);
-}
-
-/* MaryUI Card Component Colors */
-[data-theme="ceit"] .mary-card {
-    @apply bg-card text-card-foreground border-sidebar-border;
-}
-
-[data-theme="ceit-light"] .mary-card {
-    @apply bg-card text-card-foreground border-sidebar-border;
-}
-
-/* MaryUI Modal Component Colors */
-[data-theme="ceit"] .mary-modal {
-    @apply bg-background text-foreground border-sidebar-border;
-}
-
-[data-theme="ceit-light"] .mary-modal {
-    @apply bg-background text-foreground border-sidebar-border;
-}
-
-/* MaryUI Dropdown Component Colors */
-[data-theme="ceit"] .mary-dropdown-content {
-    @apply bg-popover text-popover-foreground border-sidebar-border;
-}
-
-[data-theme="ceit-light"] .mary-dropdown-content {
-    @apply bg-popover text-popover-foreground border-sidebar-border;
-}
-
-/* MaryUI Select Component Colors */
-[data-theme="ceit"] .mary-select select {
-    @apply bg-background text-foreground border-sidebar-border;
-}
-
-[data-theme="ceit-light"] .mary-select select {
-    @apply bg-background text-foreground border-sidebar-border;
-}
-
-/* MaryUI Checkbox and Radio Component Colors */
-[data-theme="ceit"] .mary-checkbox input,
-[data-theme="ceit"] .mary-radio input {
-    @apply text-primary;
-}
-
-[data-theme="ceit-light"] .mary-checkbox input,
-[data-theme="ceit-light"] .mary-radio input {
-    @apply text-primary;
-}
-
-/* MaryUI Badge Component Colors */
-[data-theme="ceit"] .mary-badge {
-    @apply bg-muted text-muted-foreground;
-}
-
-[data-theme="ceit-light"] .mary-badge {
-    @apply bg-muted text-muted-foreground;
-}
-
-/* MaryUI Alert Component Colors */
-[data-theme="ceit"] .mary-alert {
-    @apply bg-background text-foreground border-sidebar-border;
-}
-
-[data-theme="ceit-light"] .mary-alert {
-    @apply bg-background text-foreground border-sidebar-border;
-}
-
-/* MaryUI Pagination Component Colors */
-[data-theme="ceit"] .mary-pagination button {
-    @apply bg-background text-foreground border-sidebar-border hover:bg-muted;
 }
 
 [data-theme="ceit"] .mary-pagination span[aria-current="page"] {
-    @apply bg-primary text-primary-content;
+    @apply bg-primary;
 }
 
-[data-theme="ceit-light"] .mary-pagination button {
-    @apply bg-background text-foreground border-sidebar-border hover:bg-muted;
-}
-
-[data-theme="ceit-light"] .mary-pagination span[aria-current="page"] {
-    @apply text-primary-content;
-}
-
-/* General MaryUI Component Background and Text Colors */
-[data-theme="ceit"] [class*="mary-"] {
-    @apply bg-background text-foreground;
-}
-
-[data-theme="ceit-light"] [class*="mary-"] {
-    @apply bg-background text-foreground;
-}
-/* MaryUI top-level menu item default background transparent */
-[data-theme="ceit"] .mary-menu-item,
-[data-theme="ceit"] .mary-menu-item > *,
-[data-theme="ceit"] .menu > li > a,
-[data-theme="ceit"] .menu > li > button {
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-}
-
-[data-theme="ceit-light"] .mary-menu-item,
-[data-theme="ceit-light"] .mary-menu-item > *,
-[data-theme="ceit-light"] .menu > li > a,
-[data-theme="ceit-light"] .menu > li > button {
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-}
-
-/* Sidebar menu (consolidated for ceit and ceit-light) */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu > li > *:hover,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu > li > *:focus {
-    background-color: var(--color-sidebar-accent) !important;
-    color: var(--color-sidebar-accent-foreground) !important;
-}
-
-
-
-/* Defaults: text color & no backgrounds */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li > *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li > * * {
-    background-color: transparent;
-    color: var(--color-sidebar-foreground);
-}
-
-
-
-/* Disable transitions globally inside menu */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu * {
-}
-
-/* Submenu container */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub {
-    background-color: var(--color-sidebar) !important;
-}
-
-/* Submenu list items default */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub li {
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-}
-
-/* Submenu item content default */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li > *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li > *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub li > *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li > * *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li > * *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub li > * * {
-    background-color: transparent !important;
-    color: var(--color-sidebar-foreground) !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-}
-
-/* Submenu hover */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li > *:hover,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li > *:hover,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub li > *:hover,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li > *:hover *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li > *:hover *,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) ul.menu-sub li > *:hover * {
-    background-color: transparent !important;
-    font-weight: 700 !important;
-}
-
-/* Submenu active */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu li ul li > *.active,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    li
-    ul
-    li
-    > *[aria-current="page"],
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .menu-sub li > *.active,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu-sub
-    li
-    > *[aria-current="page"] {
-    background-color: var(--color-sidebar-primary) !important;
-    color: var(--color-sidebar-primary-foreground) !important;
-}
-
-/* Parent item with submenu (only when its trigger is hovered/active) */
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    > li:has(ul)
-    > *:hover,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    > li:has(ul)
-    > *.active,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    > li:has(ul)
-    > *[aria-current="page"] {
-    background-color: var(--color-sidebar-primary) !important;
-    color: var(--color-sidebar-primary-foreground) !important;
-}
-
-/* Normalize summary/toggle backgrounds */
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    li
-    > details
-    > summary,
-:is([data-theme="ceit"], [data-theme="ceit-light"]) details[open] > summary,
-:is([data-theme="ceit"], [data-theme="ceit-light"])
-    .menu
-    .menu-dropdown-toggle {
-    background-color: transparent !important;
-    box-shadow: none !important;
-    border: 0 !important;
-    outline: 0 !important;
-}
-
-/* Custom button for delete confirmation modal */
+/* Custom Components */
 .btn-delete-modal {
     background-color: var(--color-error);
     color: var(--color-error-content);
@@ -611,57 +517,41 @@
     outline-offset: 2px;
 }
 
-/* MaryUI Table Styling - Target Design */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .table {
-    border-collapse: separate;
-    border-spacing: 0;
-    border-radius: var(--radius-box);
-    border: 2px solid var(--color-border);
-    overflow: hidden;
-}
-
-/* Table Header - #1d1816 dark background */
-:is([data-theme="ceit"], [data-theme="ceit-light"]) .table thead {
-    background-color: var(--color-card);
-}
-
-/* Table Header */
-[data-theme="ceit"] .table thead th {
-    padding: 1rem;
-    font-weight: 600;
-    color: var(--color-foreground);
-    border: none;
-    border-bottom: 2px solid var(--color-border);
-}
-
-[data-theme="ceit-light"] .table thead th {
-    padding: 1rem;
-    font-weight: 600;
-    color: var(--color-foreground);
-    border: none;
-    border-bottom: 2px solid var(--color-border);
-}
-
-/* Table Body Rows */
-[data-theme="ceit"] .table tbody tr:hover,
-[data-theme="ceit-light"] .table tbody tr:hover {
-    background-color: var(--color-muted) !important;
-}
-
-[data-theme="ceit"] .table tbody td {
-    padding: 1rem;
-    color: var(--color-foreground);
-    border: none;
-    border-bottom: 2px solid var(--color-border);
-}
-
-[data-theme="ceit-light"] .table tbody td {
-    padding: 1rem;
-    color: var(--color-foreground);
-    border: none;
-    border-bottom: 2px solid var(--color-border);
-}
-
 .sidebar-bg {
     background-color: var(--sidebar) !important;
+}
+
+/* Rounded corners for menu-sub elements */
+.mary-menu-sub,
+.mary-menu-sub > *,
+.menu > li:has(ul) > *,
+.menu > li:has(ul) > details > summary {
+    border-radius: var(--radius-field) !important;
+}
+
+/* Active/current route menu items - bold text only */
+.mary-menu-item[aria-current="page"],
+.mary-menu-item.active,
+.menu li > *[aria-current="page"],
+.menu li > *.active,
+.menu li > a[aria-current="page"],
+.menu li > a.active,
+.menu li > button[aria-current="page"],
+.menu li > button.active,
+.menu li > details > summary[aria-current="page"],
+.menu li > details > summary.active {
+    font-weight: bold !important;
+    background-color: transparent !important;
+    color: var(--color-sidebar-foreground) !important;
+}
+
+/* Ensure active states are visible */
+.mary-menu-item.active a,
+.mary-menu-item.active button,
+.menu li.active a,
+.menu li.active button,
+.menu-sub li.active a,
+.menu-sub li.active button {
+    font-weight: bold !important;
+    color: var(--color-sidebar-foreground) !important;
 }

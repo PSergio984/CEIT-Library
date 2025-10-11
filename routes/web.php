@@ -37,6 +37,26 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
         Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
         Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)->name('academic-paper.show');
         Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
+
+        // Placeholder routes for future implementation
+        Route::get('/transactions', function () {
+            return view('admin.transactions');
+        })->name('transactions');
+        Route::get('/students', function () {
+            return view('admin.students');
+        })->name('students');
+        Route::get('/librarians', function () {
+            return view('admin.librarians');
+        })->name('librarians');
+        Route::get('/librarians/assign', function () {
+            return view('admin.librarians.assign');
+        })->name('librarians.assign');
+        Route::get('/attendance', function () {
+            return view('admin.attendance');
+        })->name('attendance');
+        Route::get('/violation-logs', function () {
+            return view('admin.violation-logs');
+        })->name('violation-logs');
     });
 
 Route::view('profile', 'profile')
