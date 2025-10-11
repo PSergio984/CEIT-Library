@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="ceit">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" data-theme="light">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,7 +29,7 @@
         </x-slot:brand>
         <x-slot:actions>
             <div class="flex items-center gap-2">
-                <x-mary-theme-toggle darkTheme="ceit" lightTheme="ceit-light" class="btn-sm"/>
+                <x-mary-theme-toggle class="btn-sm"/>
 
                 {{-- Mobile Profile Dropdown --}}
                 @auth
@@ -67,7 +67,7 @@
     {{-- MAIN --}}
     <x-mary-main full-width>
         {{-- SIDEBAR --}}
-        <x-slot:sidebar drawer="main-drawer" collapsible class="sidebar-bg border-r border-sidebar-border">
+        <x-slot:sidebar drawer="main-drawer" collapsible class="border-r border-base-300">
 
             {{-- BRAND --}}
             <div class="px-4 py-3 flex items-center gap-3">
@@ -115,7 +115,7 @@
                 <nav class="bg-background border-b border-border">
                     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                         <div class="flex justify-end items-center h-16 gap-2">
-                            <x-mary-theme-toggle darkTheme="ceit" lightTheme="ceit-light" class="btn-sm"/>
+                            <x-mary-theme-toggle darkTheme="dark" lightTheme="light" class="btn-sm"/>
                             <livewire:layout.navigation />
                         </div>
                     </div>
