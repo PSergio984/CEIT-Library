@@ -7,10 +7,16 @@
         dark --prefersdark;
 }
 
+@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
+
 /* Dark theme variant support */
 @custom-variant dark (&:where(.dark, .dark *));
 
-@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
 
 /* ===================================
    Enhanced Table Styling
