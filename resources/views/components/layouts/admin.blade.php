@@ -22,47 +22,17 @@
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <label for="main-drawer" class="cursor-pointer">
-                <x-mary-icon name="o-bars-3" class="w-6 h-6" />
-            </label>
+            <div class="ml-5 pt-5">App</div>
         </x-slot:brand>
         <x-slot:actions>
             <div class="flex items-center gap-2">
-                <x-mary-theme-toggle darkTheme="fancychad" lightTheme="light" class="btn-sm" />
+                <label for="main-drawer" class="lg:hidden">
+                    <x-heroicon-s-home-modern />
+                </label>
 
-                {{-- Mobile Profile Dropdown --}}
-                @auth
-                    <x-dropdown align="right" width="48">
-                        <x-slot name="trigger">
-                            <button
-                                class="inline-flex items-center px-2 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-base-content bg-base-100 hover:bg-base-200 focus:outline-none transition ease-in-out duration-150">
-                                <x-mary-icon name="o-user-circle" class="w-6 h-6" />
-                            </button>
-                        </x-slot>
-                        <x-slot name="content">
-                            <div class="px-4 py-2 border-b border-base-300 bg-base-200">
-                                <div class="font-medium text-sm text-base-content">{{ auth()->user()->first_name }}
-                                    {{ auth()->user()->last_name }}</div>
-                                <div class="text-xs text-base-content/70">{{ auth()->user()->email }}</div>
-                            </div>
-                            <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-base-200">
-                                {{ __('Profile') }}
-                            </x-dropdown-link>
-                            <form method="POST" action="{{ route('logout') }}">
-                                @csrf
-                                <button type="submit" class="w-full text-start">
-                                    <x-dropdown-link class="hover:bg-base-200">
-                                        {{ __('Log Out') }}
-                                    </x-dropdown-link>
-                                </button>
-                            </form>
-                        </x-slot>
-                    </x-dropdown>
-                @endauth
             </div>
         </x-slot:actions>
     </x-mary-nav>
-
     {{-- MAIN --}}
     <x-mary-main full-width>
         <div class="flex">
@@ -80,7 +50,6 @@
                         </div>
                     </div>
 
-                    <x-mary-menu-separator />
 
                     {{-- MENU --}}
                     <x-mary-menu activate-by-route>
@@ -112,8 +81,7 @@
                             <x-mary-menu-item title="Electrical Engineering" icon="o-bolt"
                                 link="/admin/academic-papers/electrical-engineering" />
                         </x-mary-menu-sub>
-                        <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down"
-                            link="/admin/transactions" />
+                        <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
                         <x-mary-menu-sub title="Users List" icon="o-user">
                             <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
                             <x-mary-menu-sub title="Librarian" icon="o-building-library">
@@ -127,31 +95,20 @@
                             link="/admin/violation-logs" />
 
                     </x-mary-menu>
-
                 </x-slot:sidebar>
+            </div>
 
-                {{-- CONTENT --}}
+            {{-- The `$slot` goes here --}}
+            <div class="flex-1 bg-base-100">
                 <x-slot:content>
-                    {{-- Desktop Navigation --}}
-                    <div class="hidden lg:block">
-                        <nav class="bg-base-100 border-b border-base-300">
-                            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                                <div class="flex justify-end items-center h-16 gap-2">
-                                    <x-mary-theme-toggle darkTheme="fancychad" lightTheme="light" class="btn-sm" />
-                                    <livewire:layout.navigation />
-                                </div>
-                            </div>
-                        </nav>
-                    </div>
                     {{ $slot }}
                 </x-slot:content>
-
+            </div>
+        </div>
     </x-mary-main>
 
     {{-- Toast --}}
     <x-mary-toast />
-
-    @livewireScripts
 </body>
 
 </html>
