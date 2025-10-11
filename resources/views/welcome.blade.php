@@ -57,19 +57,27 @@
                 PLV eLib is a digital library system that makes searching<br class="hidden md:block">
                 <span class="md:hidden"> </span>and borrowing theses faster, easier, and more secure.
             </p>
-            <div
-                class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center w-full max-w-md sm:max-w-none">
-                <a href="{{ route('register') }}"
-                    class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
-
-                    REGISTER
-                </a>
-                <a href="{{ route('login') }}"
-                    class="border-2 border-slate-700 text-slate-700 hover:bg-slate-700 hover:text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
-
-                    LOGIN
-                </a>
-            </div>
+            @guest
+                <div
+                    class="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center items-center w-full max-w-md sm:max-w-none">
+                    <a href="{{ route('register') }}" wire:navigate
+                        class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
+                        REGISTER
+                    </a>
+                    <a href="{{ route('login') }}" wire:navigate
+                        class="border-2 border-slate-700 text-slate-700 hover:bg-slate-700 hover:text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
+                        LOGIN
+                    </a>
+                </div>
+            @endguest
+            @auth
+                <div class="flex justify-center items-center w-full max-w-md sm:max-w-none">
+                    <a href="{{ route('dashboard') }}" wire:navigate
+                        class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
+                        GO TO DASHBOARD
+                    </a>
+                </div>
+            @endauth
         </div>
     </main>
 

@@ -70,21 +70,16 @@
             <tbody>
                 @forelse($transactions as $transaction)
                     <tr>
-                        <td>{{ $transaction->user->first_name ?? 'N/A' }} {{ $transaction->user->last_name ?? 'N/A' }}
+                        <td>{{ trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A' }}
                         </td>
-                        <td>{{ $transaction->user->email ?? 'N/A' }}</td>
-                        <td>{{ $transaction->user->student_no ?? 'N/A' }}</td>
+                        <td>{{ $transaction->user?->email ?? 'N/A' }}</td>
+                        <td>{{ $transaction->user?->student_no ?? 'N/A' }}</td>
 
-                        <td class="font-medium">
-                            {{ $transaction->inventory->academicPaper->title ?? 'No Title' }}
+                        <td>{{ $transaction->inventory?->academicPaper?->title ?? 'No Title' }}</td>
+                        <td>{{ collect(data_get($transaction, 'inventory.academicPaper.authors', []))->pluck('name')->join(', ') ?: 'No Authors' }}
                         </td>
-                        <td>
-                            {{ $transaction->inventory->academicPaper->authors->pluck('name')->join(', ') ?? 'No Authors' }}
-                        </td>
-                        <td>
-                            {{ $transaction->inventory->academicPaper->paper_type ?? 'N/A' }}
-                        </td>
-                        <td>{{ $transaction->inventory->academicPaper->publication_year ?? 'N/A' }}</td>
+                        <td>{{ $transaction->inventory?->academicPaper?->paper_type ?? 'N/A' }}</td>
+                        <td>{{ $transaction->inventory?->academicPaper?->publication_year ?? 'N/A' }}</td>
 
                         <td>{{ $transaction->time_in?->format('M d, Y H:i') ?? 'N/A' }}</td>
                         <td>{{ $transaction->time_out?->format('M d, Y H:i') ?? 'Active' }}</td>

@@ -23,15 +23,17 @@ class AdminBorrowTransactions extends AdminComponent
             'user',
             'inventory.academicPaper.authors'  // Get book details
         ])
-        ->when($this->search, function($query) {
-            $query->whereHas('user', function($q) {
-                $q->where('first_name', 'like', "%{$this->search}%")
-                  ->orWhere('last_name', 'like', "%{$this->search}%")
-                  ->orWhere('email', 'like', "%{$this->search}%")
-                  ->orWhere('student_no', 'like', "%{$this->search}%");
-            })
-            ->orWhereHas('inventory.academicPaper', function($q) {
-                $q->where('title', 'like', "%{$this->search}%");
+        ->when($this->search, function ($query) {
+            $query->where(function ($query) {
+                $query->whereHas('user', function ($q) {
+                    $q->where('first_name', 'like', "%{$this->search}%")
+                    ->orWhere('last_name', 'like', "%{$this->search}%")
+                    ->orWhere('email', 'like', "%{$this->search}%")
+                    ->orWhere('student_no', 'like', "%{$this->search}%");
+                })
+                ->orWhereHas('inventory.academicPaper', function ($q) {
+                    $q->where('title', 'like', "%{$this->search}%");
+                });
             });
         })
         ->when($this->paperTypeFilter, function($query) {
