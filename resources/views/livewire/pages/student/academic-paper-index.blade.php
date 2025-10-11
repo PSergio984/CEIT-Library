@@ -21,7 +21,7 @@
                         :rows="$this->academicPapers"
                         with-pagination
                         :sort-by="$sortBy"
-                        per-page="perPage"
+                       :per-page="$perPage"
                         :per-page-values="[5, 10, 25, 50]"
                         row-class="text-base-content hover:bg-base-200 hover:text-base-content"
                         header-class="text-base-content"
@@ -37,7 +37,7 @@
                           <x-mary-button
                               icon="o-eye"
                               class="btn-sm btn-primary"
-                              wire:click="showPaperDetails({{ $row['id'] }})"
+                              wire:click="showPaperDetails({{ $row->id }})"
                           >
                               View
                           </x-mary-button>
@@ -112,7 +112,7 @@
                                     <td>{{ $copy->id }}</td>
                                     <td>
                                             <span
-                                                class="badge px-4 py-1 {{ $copy->status === 'Available' ? 'badge-success' : ($copy->status === 'Borrowed' ? 'badge-warning' : 'badge-error') }}">
+                                                class="badge px-4 py-1 {{ $this->getStatusBadgeClass($copy->status) }}">
                                                 {{ $copy->status }}
                                             </span>
                                     </td>

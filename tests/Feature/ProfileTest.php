@@ -44,7 +44,7 @@ class ProfileTest extends TestCase
         try {
             $component = Volt::test('profile.update-profile-information-form')
                 ->set('name', 'Test User')
-                ->set('email', 'test@example.com')
+                ->set('email', 'test@plv.edu.ph')
                 ->call('updateProfileInformation');
 
             $component
@@ -54,7 +54,7 @@ class ProfileTest extends TestCase
             $user->refresh();
 
             $this->assertSame('Test User', $user->name);
-            $this->assertSame('test@example.com', $user->email);
+            $this->assertSame('test@plv.edu.ph', $user->email);
             $this->assertNull($user->email_verified_at);
         } catch (\Exception $e) {
             // If Volt component doesn't exist, skip this test

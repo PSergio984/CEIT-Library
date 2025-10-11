@@ -14,9 +14,11 @@ use App\Models\ViolationTransaction;
 use Carbon\Carbon;
 // use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class LibrarySystemTest extends TestCase
 {
+    use TestHelper;
     // use RefreshDatabase; // Using custom test database creation
 
     public function test_user_can_borrow_academic_paper()
@@ -36,7 +38,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $this->assertDatabaseHas('borrow_transactions', [
@@ -71,7 +73,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // User returns the paper
@@ -236,7 +238,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Update the inventory status to Reserved (simulating the borrowing process)
@@ -263,7 +265,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if accessors exist before testing
@@ -360,7 +362,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-1-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-1')
         ]);
 
         BorrowTransaction::create([
@@ -369,7 +371,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-2-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-2')
         ]);
 
         // Update inventory statuses to Reserved (simulating the borrowing process)

@@ -41,12 +41,12 @@ class SuccessTest extends TestCase
         $user = User::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
             'student_no' => '20-3001',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
             'student_no' => '20-3001',
         ]);
     }

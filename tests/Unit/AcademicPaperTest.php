@@ -10,9 +10,11 @@ use App\Models\User;
 use Carbon\Carbon;
 // use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class AcademicPaperTest extends TestCase
 {
+    use TestHelper;
     // use RefreshDatabase; // Using custom test database creation
 
     public function test_academic_paper_can_be_created_with_factory()
@@ -93,7 +95,7 @@ class AcademicPaperTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the relationship exists
@@ -155,7 +157,7 @@ class AcademicPaperTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
             'status' => 'started'
         ]);
 

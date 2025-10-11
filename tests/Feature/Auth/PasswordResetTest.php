@@ -160,7 +160,7 @@ class PasswordResetTest extends TestCase
     public function test_password_reset_requires_plv_email_domain(): void
     {
         $component = Volt::test('pages.auth.forgot-password')
-            ->set('email', 'user@gmail.com') // Non-PLV domain
+            ->set('email', 'user@plv.edu.ph') // Non-PLV domain
             ->call('sendPasswordResetLink');
 
         // Should fail validation for non-PLV email

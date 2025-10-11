@@ -13,11 +13,11 @@ class QuickTest extends TestCase
         $user = User::factory()->create([
             'first_name' => 'Test',
             'last_name' => 'User',
-            'email' => 'test@example.com',
+            'email' => 'test@plv.edu.ph',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'test@example.com',
+            'email' => 'test@plv.edu.ph',
         ]);
 
         $this->assertInstanceOf(User::class, $user);

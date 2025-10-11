@@ -13,9 +13,11 @@ use App\Models\ViolationTransaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class UserTest extends TestCase
 {
+    use TestHelper;
 
     /**
      * Test user can be created with factory.
@@ -163,7 +165,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-1-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-1')
         ]);
 
         BorrowTransaction::create([
@@ -172,7 +174,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now()->subDays(3),
             'expires_at' => Carbon::now()->addDays(11),
-            'session_token' => 'test-token-2-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-2')
         ]);
 
         $this->assertCount(2, $user->borrowTransactions);
@@ -830,7 +832,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-1-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-1')
         ]);
 
         BorrowTransaction::create([
@@ -839,7 +841,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now()->subDays(3),
             'expires_at' => Carbon::now()->addDays(11),
-            'session_token' => 'test-token-2-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-2')
         ]);
 
         $this->assertCount(2, $user->borrowTransactions);
@@ -874,7 +876,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $overdueTransactions = $user->borrowTransactions()

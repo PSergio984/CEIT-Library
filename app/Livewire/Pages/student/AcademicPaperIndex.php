@@ -102,7 +102,7 @@ class AcademicPaperIndex extends Component
         $this->selectedPaper = null;
     }
 
-    public function requestQr($copyId): void
+    public function requestQr(): void
     {
         // TODO: Implement QR code request functionality
         // This could generate a QR code for the specific copy
@@ -121,6 +121,18 @@ class AcademicPaperIndex extends Component
             'Electrical Engineering' => Vite::asset('public/images/ees.png'),
             'Information Technology' => Vite::asset('public/images/vits.png'),
             default => '',
+        };
+    }
+
+    /**
+     * Get the appropriate badge class for a given status.
+     */
+    public function getStatusBadgeClass(string $status): string
+    {
+        return match ($status) {
+            'Available' => 'badge-success',
+            'Borrowed' => 'badge-warning',
+            default => 'badge-error',
         };
     }
 

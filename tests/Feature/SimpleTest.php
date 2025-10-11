@@ -13,11 +13,11 @@ class SimpleTest extends TestCase
         $user = User::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
         ]);
 
         $this->assertInstanceOf(User::class, $user);

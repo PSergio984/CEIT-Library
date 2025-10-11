@@ -33,10 +33,7 @@ class RegistrationTest extends TestCase
             ->set('password_confirmation', 'password123')
             ->call('register');
 
-        $this->assertTrue(
-            $component1->instance()->getErrorBag()->has('first_name'),
-            'Expected first_name validation error'
-        );
+        $this->assertTrue($component1->instance()->getErrorBag()->has('first_name'));
 
         // Test with invalid email
         $component2 = Volt::test('pages.auth.register')
@@ -48,10 +45,7 @@ class RegistrationTest extends TestCase
             ->set('password_confirmation', 'password123')
             ->call('register');
 
-        $this->assertTrue(
-            $component2->instance()->getErrorBag()->has('email'),
-            'Expected email validation error'
-        );
+        $this->assertTrue($component2->instance()->getErrorBag()->has('email'));
 
         // Test with mismatched passwords
         $component3 = Volt::test('pages.auth.register')
@@ -63,10 +57,7 @@ class RegistrationTest extends TestCase
             ->set('password_confirmation', 'different_password')
             ->call('register');
 
-        $this->assertTrue(
-            $component3->instance()->getErrorBag()->has('password'),
-            'Expected password validation error'
-        );
+        $this->assertTrue($component3->instance()->getErrorBag()->has('password'));
     }
 
     public function test_registration_with_complete_data(): void
@@ -152,7 +143,7 @@ class RegistrationTest extends TestCase
             ->set('first_name', 'John')
             ->set('last_name', 'Doe')
             ->set('student_no', '20-3001')
-            ->set('email', 'john.doe@gmail.com') // Non-PLV domain
+            ->set('email', 'john.doe@plv.edu.ph') // Non-PLV domain
             ->set('password', 'SecurePass123!')
             ->set('password_confirmation', 'SecurePass123!')
             ->call('register');

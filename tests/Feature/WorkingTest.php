@@ -12,9 +12,11 @@ use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class WorkingTest extends TestCase
 {
+    use TestHelper;
     public function test_basic_models_work()
     {
         // Test User creation
@@ -58,7 +60,7 @@ class WorkingTest extends TestCase
             'time_in' => Carbon::now(),
             'status' => 'started',
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $this->assertDatabaseHas('borrow_transactions', [
