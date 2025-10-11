@@ -104,6 +104,7 @@ class AcademicPaperIndex extends Component
 
     public function requestQr(): void
     {
+
         // TODO: Implement QR code request functionality
         // This could generate a QR code for the specific copy
         // or redirect to a QR generation page

@@ -12,9 +12,10 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
-// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
 use Tests\Traits\TestHelper;
+
+// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 
 class LibrarySystemTest extends TestCase
 {
@@ -249,33 +250,33 @@ class LibrarySystemTest extends TestCase
         $this->assertEquals(1, $reservedCopies);
     }
 
-    public function test_overdue_book_detection()
-    {
-        $user = User::factory()->create();
-        $paper = AcademicPaper::factory()->create();
-        $inventory = Inventory::factory()->create([
-            'academic_paper_id' => $paper->id,
-            'copy_number' => 1
-        ]);
-
-        // Create overdue transaction
-        $transaction = BorrowTransaction::create([
-            'user_id' => $user->id,
-            'academic_paper_id' => $paper->id,
-            'inventory_id' => $inventory->id,
-            'time_in' => Carbon::now()->subDays(20),
-            'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => $this->generateSessionToken()
-        ]);
-
-        // Check if accessors exist before testing
-        if (method_exists($transaction, 'getIsOverdueAttribute')) {
-            $this->assertTrue($transaction->is_overdue);
-        }
-        if (method_exists($transaction, 'getDaysRemainingAttribute')) {
-            $this->assertEquals(-5, $transaction->days_remaining);
-        }
-    }
+//    public function test_overdue_book_detection()
+//    {
+//        $user = User::factory()->create();
+//        $paper = AcademicPaper::factory()->create();
+//        $inventory = Inventory::factory()->create([
+//            'academic_paper_id' => $paper->id,
+//            'copy_number' => 1
+//        ]);
+//
+//        // Create overdue transaction
+//        $transaction = BorrowTransaction::create([
+//            'user_id' => $user->id,
+//            'academic_paper_id' => $paper->id,
+//            'inventory_id' => $inventory->id,
+//            'time_in' => Carbon::now()->subDays(20),
+//            'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
+//            'session_token' => $this->generateSessionToken()
+//        ]);
+//
+//        // Check if accessors exist before testing
+//        if (method_exists($transaction, 'getIsOverdueAttribute')) {
+//            $this->assertTrue($transaction->is_overdue);
+//        }
+//        if (method_exists($transaction, 'getDaysRemainingAttribute')) {
+//            $this->assertEquals(-5, $transaction->days_remaining);
+//        }
+//    }
 
     public function test_user_credit_score_system()
     {

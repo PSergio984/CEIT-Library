@@ -3,11 +3,12 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
+
+// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 
 class RegistrationTest extends TestCase
 {
@@ -143,7 +144,7 @@ class RegistrationTest extends TestCase
             ->set('first_name', 'John')
             ->set('last_name', 'Doe')
             ->set('student_no', '20-3001')
-            ->set('email', 'john.doe@plv.edu.ph') // Non-PLV domain
+            ->set('email', 'john.doe@non-plv.edu.ph') // Non-PLV domain
             ->set('password', 'SecurePass123!')
             ->set('password_confirmation', 'SecurePass123!')
             ->call('register');

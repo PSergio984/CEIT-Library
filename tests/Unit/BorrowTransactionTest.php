@@ -7,14 +7,12 @@ use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\User;
 use Carbon\Carbon;
-// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
 use Tests\Traits\TestHelper;
 
 class BorrowTransactionTest extends TestCase
 {
     use TestHelper;
-    // use RefreshDatabase; // Using custom test database creation
 
     public function test_borrow_transaction_can_be_created_with_factory()
     {
