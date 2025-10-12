@@ -41,6 +41,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
+        $this->searchAdvisers();
+        $this->searchDeans();
         $this->headers = [
             ['key' => 'id', 'label' => '#'],
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
@@ -144,15 +146,19 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->isEditing = false;
         $this->form->reset();
         $this->form->populateYearChoices();
+        $this->searchAdvisers();
+        $this->searchDeans();
         $this->formDrawer = true;
     }
 
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
-        $academicPaper = AcademicPaper::findOrFail($id);
+        $academicPaper = AcademicPaper::with('authors')->findOrFail($id);
         $this->isEditing = true;
         $this->form->setAcademicPaper($academicPaper);
+        $this->searchAdvisers();
+        $this->searchDeans();
         $this->formDrawer = true;
     }
 
@@ -161,18 +167,70 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         if ($this->isEditing) {
             $this->form->update();
-            $this->success("{$this->form->academicPaper->title} updated", 'Updated Successfully!');
+            $this->success("{$this->form->academicPaper->catalog_code} updated", 'Updated Successfully!');
         } else {
-            $this->form->store();
-            $this->success('New Academic Paper created', 'Academic Paper Created Successfully!');
+            $paper = $this->form->store();
+            $this->success("{$paper->catalog_code} created", 'Academic Paper Created Successfully!');
         }
 
         $this->formDrawer = false;
         $this->isEditing = false;
         $this->form->reset();
         $this->form->populateYearChoices();
+        $this->searchAdvisers();
+        $this->searchDeans();
         $this->resetPage('academic-papers-index');
     }
+
+
+    // Search method for advisers
+    public function searchAdvisers(string $value = '')
+    {
+        // Get search results
+        $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+            ->where('research_project_adviser', 'like', "%{$value}%")
+            ->distinct()
+            ->pluck('research_project_adviser')
+            ->filter()
+            ->map(function ($adviser) {
+                return ['id' => $adviser, 'name' => $adviser];
+            })
+            ->take(10);
+
+        // Include selected option if it exists and is not in search results
+        if (!empty($this->form->research_project_adviser)) {
+            $selectedOption = collect([['id' => $this->form->research_project_adviser, 'name' => $this->form->research_project_adviser]]);
+            $advisers = $advisers->merge($selectedOption)->unique('id');
+        }
+
+        $this->form->adviser_options = $advisers;
+        return $advisers->toArray();
+    }
+
+    // Search method for deans
+    public function searchDeans(string $value = '')
+    {
+        // Get search results
+        $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+            ->where('dean', 'like', "%{$value}%")
+            ->distinct()
+            ->pluck('dean')
+            ->filter()
+            ->map(function ($dean) {
+                return ['id' => $dean, 'name' => $dean];
+            })
+            ->take(10);
+
+        // Include selected option if it exists and is not in search results
+        if (!empty($this->form->dean)) {
+            $selectedOption = collect([['id' => $this->form->dean, 'name' => $this->form->dean]]);
+            $deans = $deans->merge($selectedOption)->unique('id');
+        }
+
+        $this->form->dean_options = $deans;
+        return $deans->toArray();
+    }
+
     public function render()
     {
         return view('livewire.pages.Admin.admin-academic-paper-index');

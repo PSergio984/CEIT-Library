@@ -71,16 +71,9 @@ class AcademicPaperTest extends TestCase
             'copy_number' => 2
         ]);
 
-        // Check if the relationship exists (assuming it's defined in the model)
-        if (method_exists($paper, 'copies')) {
-            $this->assertCount(2, $paper->copies);
-            $this->assertTrue($paper->copies->contains($inventory1));
-            $this->assertTrue($paper->copies->contains($inventory2));
-        } else {
-            // If relationship doesn't exist, just verify the inventory items were created
-            $this->assertDatabaseHas('inventories', ['id' => $inventory1->id]);
-            $this->assertDatabaseHas('inventories', ['id' => $inventory2->id]);
-        }
+        $this->assertCount(2, $paper->copies);
+        +$this->assertTrue($paper->copies->contains($inventory1));
+        +$this->assertTrue($paper->copies->contains($inventory2));
     }
 
     public function test_academic_paper_can_have_borrow_transactions()

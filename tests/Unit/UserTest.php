@@ -740,48 +740,17 @@ class UserTest extends TestCase
      *
      * @return void
      */
-    public function test_user_can_be_soft_deleted()
+    public function test_user_can_be_deleted()
     {
         $user = User::factory()->create();
         $userId = $user->id;
 
         $user->delete();
 
-        // Check if the model uses soft deletes
-        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($user))) {
-            $this->assertSoftDeleted('users', ['id' => $userId]);
-            $this->assertNull(User::find($userId));
-            $this->assertNotNull(User::withTrashed()->find($userId));
-        } else {
-            // If no soft deletes, just verify the user was deleted
-            $this->assertDatabaseMissing('users', ['id' => $userId]);
-            $this->assertNull(User::find($userId));
-        }
+        $this->assertDatabaseMissing('users', ['id' => $userId]);
+        $this->assertNull(User::find($userId));
     }
 
-    /**
-     * Test user can be restored from soft delete.
-     *
-     * @return void
-     */
-    public function test_user_can_be_restored_from_soft_delete()
-    {
-        $user = User::factory()->create();
-        $userId = $user->id;
-
-        $user->delete();
-
-        // Check if the model uses soft deletes
-        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($user))) {
-            $this->assertSoftDeleted('users', ['id' => $userId]);
-            $user->restore();
-            $this->assertDatabaseHas('users', ['id' => $userId, 'deleted_at' => null]);
-        } else {
-            // If no soft deletes, just verify the user was deleted
-            $this->assertDatabaseMissing('users', ['id' => $userId]);
-            $this->markTestSkipped('User model does not use soft deletes');
-        }
-    }
 
     /**
      * Test user credit score starts at default value.

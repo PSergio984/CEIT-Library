@@ -102,17 +102,44 @@
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.research_project_adviser" @endif>
                                         Research Project Adviser @if($isEditing) <span wire:dirty wire:target="form.research_project_adviser" class="text-orange-400">*</span> @endif
                                     </label>
-                                    <x-mary-input wire:model="form.research_project_adviser" required class="mb-4" placeholder="Enter adviser name" />
+                                    <x-mary-choices 
+                                        wire:model="form.research_project_adviser" 
+                                        placeholder="Search Research Adviser..." 
+                                        single 
+                                        searchable 
+                                        search-function="searchAdvisers" 
+                                        icon="o-user"
+                                        min-chars="1"
+                                        debounce="300ms"
+                                        :options="$form->adviser_options ?? []" 
+                                        clearable/>
                                     
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean" @endif>
                                         Dean @if($isEditing) <span wire:dirty wire:target="form.dean" class="text-orange-400">*</span> @endif
                                     </label>
-                                    <x-mary-input wire:model="form.dean" required class="mb-4" placeholder="Enter dean name" />
+                                    <x-mary-choices 
+                                        wire:model="form.dean" 
+                                        placeholder="Search dean..." 
+                                        single 
+                                        searchable 
+                                        search-function="searchDeans" 
+                                        icon="o-user-circle"
+                                        min-chars="1"
+                                        debounce="300ms"
+                                        :options="$form->dean_options ?? []"
+                                        clearable />
+                                   
 
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_names" @endif>
                                         Authors @if($isEditing) <span wire:dirty wire:target="form.author_names" class="text-orange-400">*</span> @endif
                                     </label>
-                                    <x-mary-tags label="Authors" wire:model="form.author_names" icon="o-user-group" hint="Enter author names and hit enter" clearable />
+                                    <x-mary-tags wire:model="form.author_names" placeholder="Enter author names and hit enter" icon="o-user-group" clearable />
+                                   
+
+                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.number_of_copies" @endif>
+                                        Number of Copies @if($isEditing) <span wire:dirty wire:target="form.number_of_copies" class="text-orange-400">*</span> @endif
+                                    </label>
+                                    <x-mary-input type="number" wire:model="form.number_of_copies" min="1" max="100" placeholder="Enter number of copies" icon="o-document-duplicate" hint="How many copies of this paper should be available" required />
 
                                     <x-slot:actions>
                                         <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
@@ -121,7 +148,7 @@
                                             class="btn btn-primary disabled:opacity-75 disabled:bg-blue-300"
                                             wire:dirty.class="hover:bg-blue-900"
                                             wire:dirty.remove.attr="disabled"
-                                            @if($isEditing) disabled @endif>
+                                            @if($isEditing || empty($form->research_project_adviser) || empty($form->dean)) disabled @endif>
                                             {{ $isEditing ? 'Update' : 'Save' }}
                                         </button>
                                     </x-slot:actions>
