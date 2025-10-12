@@ -143,8 +143,16 @@ class AcademicPaperForm extends Form
         $this->research_project_adviser = $academicPaper->research_project_adviser ?? '';
         $this->department = $academicPaper->department;
         $this->dean = $academicPaper->dean ?? '';
-        $this->author_names = $academicPaper->authors()->pluck('name')->filter()->toArray();
-        $this->number_of_copies = $academicPaper->copies()->count() ?: 1;
+
+        // Use already loaded relationships to avoid N+1 queries
+        $this->author_names = $academicPaper->relationLoaded('authors')
+            ? $academicPaper->authors->pluck('name')->filter()->toArray()
+            : $academicPaper->authors()->pluck('name')->filter()->toArray();
+
+        $this->number_of_copies = $academicPaper->relationLoaded('copies')
+            ? ($academicPaper->copies->count() ?: 1)
+            : ($academicPaper->copies()->count() ?: 1);
+
         $this->academicPaper = $academicPaper;
 
         // Load static choices to ensure dropdowns are populated

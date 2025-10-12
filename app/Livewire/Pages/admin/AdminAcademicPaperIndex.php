@@ -53,12 +53,17 @@ class AdminAcademicPaperIndex extends AdminComponent
     private ?string $lastAdviserSearch = null;
     private ?string $lastDeanSearch = null;
 
+    // Flag to prevent duplicate cache queries
+    private bool $advisersLoaded = false;
+    private bool $deansLoaded = false;
+
     public function mount(?string $dept = null)
     {
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
-        $this->searchAdvisers();
-        $this->searchDeans();
+        // Initialize empty collections to avoid null references
+        $this->form->adviser_options = collect();
+        $this->form->dean_options = collect();
         $this->headers = [
             ['key' => 'id', 'label' => '#'],
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
@@ -116,9 +121,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     private function buildAcademicPapersQuery()
     {
         return AcademicPaper::query()
-            ->with(['copies' => function ($query) {
-                $query->select('academic_paper_id', 'status');
-            }])
+            ->with([
+                'authors' => function ($query) {
+                    $query->select('authors.id', 'authors.name');
+                },
+                'copies' => function ($query) {
+                    $query->select('id', 'academic_paper_id', 'status');
+                }
+            ])
             // filter by department if provided via route slug
             ->when($this->dept, function ($q) {
                 $value = $this->getDepartmentName($this->dept);
@@ -180,21 +190,57 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function create(): void
     {
         $this->isEditing = false;
-        $this->form->reset();
-        $this->form->populateYearChoices();
-        $this->searchAdvisers();
-        $this->searchDeans();
+        $this->form->reset(); // This already calls populateYearChoices() and loadStaticChoices()
+
+        // Only load search options if not already cached
+        if ($this->cachedAdvisers === null) {
+            $this->searchAdvisers();
+        }
+        if ($this->cachedDeans === null) {
+            $this->searchDeans();
+        }
+
         $this->formDrawer = true;
     }
 
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
-        $academicPaper = AcademicPaper::with('authors')->findOrFail($id);
+        // Check if we already have the correct paper loaded
+        $needsLoading = true;
+        if ($this->form->academicPaper && $this->form->academicPaper->id === $id) {
+            // Check if relationships are loaded
+            if (
+                $this->form->academicPaper->relationLoaded('authors') &&
+                $this->form->academicPaper->relationLoaded('copies')
+            ) {
+                $needsLoading = false;
+            }
+        }
+
+        // Only load if we don't already have this paper loaded with relationships
+        if ($needsLoading) {
+            $academicPaper = AcademicPaper::with([
+                'authors' => function ($query) {
+                    $query->select('authors.id', 'authors.name');
+                },
+                'copies' => function ($query) {
+                    $query->select('id', 'academic_paper_id', 'status');
+                }
+            ])->findOrFail($id);
+            $this->form->setAcademicPaper($academicPaper);
+        }
+
         $this->isEditing = true;
-        $this->form->setAcademicPaper($academicPaper);
-        $this->searchAdvisers();
-        $this->searchDeans();
+
+        // Only load search options if not already cached
+        if ($this->cachedAdvisers === null) {
+            $this->searchAdvisers();
+        }
+        if ($this->cachedDeans === null) {
+            $this->searchDeans();
+        }
+
         $this->formDrawer = true;
     }
 
@@ -217,8 +263,6 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->isEditing = false;
         $this->form->reset();
         $this->form->populateYearChoices();
-        $this->searchAdvisers();
-        $this->searchDeans();
         $this->resetPage('academic-papers-index');
     }
 
@@ -232,12 +276,39 @@ class AdminAcademicPaperIndex extends AdminComponent
             return $this->cachedAdvisers;
         }
 
+        // Prevent duplicate loading for empty searches - more aggressive check
+        if ($value === '' && ($this->advisersLoaded || $this->cachedAdvisers !== null)) {
+            $this->form->adviser_options = collect($this->cachedAdvisers);
+            return $this->cachedAdvisers;
+        }
+
         // Use cache for common searches (empty or very short searches)
         $cacheKey = $value === '' ? 'advisers_all' : null;
-        if ($cacheKey && Cache::has($cacheKey)) {
-            $advisers = collect(Cache::get($cacheKey));
+        if ($cacheKey) {
+            $cachedData = Cache::get($cacheKey);
+            if ($cachedData !== null) {
+                $advisers = collect($cachedData);
+            } else {
+                // Get search results from database
+                $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+                    ->when($value !== '', function ($query) use ($value) {
+                        $query->where('research_project_adviser', 'like', "%{$value}%");
+                    })
+                    ->distinct()
+                    ->pluck('research_project_adviser')
+                    ->filter()
+                    ->map(function ($adviser) {
+                        return ['id' => $adviser, 'name' => $adviser];
+                    })
+                    ->take(10);
+
+                // Cache empty search results for 5 minutes
+                if ($value === '') {
+                    Cache::put($cacheKey, $advisers->toArray(), 300);
+                }
+            }
         } else {
-            // Get search results from database
+            // Get search results from database for non-empty searches
             $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
                 ->when($value !== '', function ($query) use ($value) {
                     $query->where('research_project_adviser', 'like', "%{$value}%");
@@ -249,11 +320,6 @@ class AdminAcademicPaperIndex extends AdminComponent
                     return ['id' => $adviser, 'name' => $adviser];
                 })
                 ->take(10);
-
-            // Cache empty search results for 5 minutes
-            if ($value === '') {
-                Cache::put($cacheKey, $advisers->toArray(), 300);
-            }
         }
 
         // Include selected option if it exists and is not in search results
@@ -267,6 +333,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->lastAdviserSearch = $value;
         $this->form->adviser_options = $advisers;
 
+        // Mark as loaded for empty searches
+        if ($value === '') {
+            $this->advisersLoaded = true;
+        }
+
         return $this->cachedAdvisers;
     }
 
@@ -279,12 +350,39 @@ class AdminAcademicPaperIndex extends AdminComponent
             return $this->cachedDeans;
         }
 
+        // Prevent duplicate loading for empty searches - more aggressive check
+        if ($value === '' && ($this->deansLoaded || $this->cachedDeans !== null)) {
+            $this->form->dean_options = collect($this->cachedDeans);
+            return $this->cachedDeans;
+        }
+
         // Use cache for common searches (empty or very short searches)
         $cacheKey = $value === '' ? 'deans_all' : null;
-        if ($cacheKey && Cache::has($cacheKey)) {
-            $deans = collect(Cache::get($cacheKey));
+        if ($cacheKey) {
+            $cachedData = Cache::get($cacheKey);
+            if ($cachedData !== null) {
+                $deans = collect($cachedData);
+            } else {
+                // Get search results from database
+                $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+                    ->when($value !== '', function ($query) use ($value) {
+                        $query->where('dean', 'like', "%{$value}%");
+                    })
+                    ->distinct()
+                    ->pluck('dean')
+                    ->filter()
+                    ->map(function ($dean) {
+                        return ['id' => $dean, 'name' => $dean];
+                    })
+                    ->take(10);
+
+                // Cache empty search results for 5 minutes
+                if ($value === '') {
+                    Cache::put($cacheKey, $deans->toArray(), 300);
+                }
+            }
         } else {
-            // Get search results from database
+            // Get search results from database for non-empty searches
             $deans = \App\Models\AcademicPaper::whereNotNull('dean')
                 ->when($value !== '', function ($query) use ($value) {
                     $query->where('dean', 'like', "%{$value}%");
@@ -296,11 +394,6 @@ class AdminAcademicPaperIndex extends AdminComponent
                     return ['id' => $dean, 'name' => $dean];
                 })
                 ->take(10);
-
-            // Cache empty search results for 5 minutes
-            if ($value === '') {
-                Cache::put($cacheKey, $deans->toArray(), 300);
-            }
         }
 
         // Include selected option if it exists and is not in search results
@@ -313,6 +406,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->cachedDeans = $deans->toArray();
         $this->lastDeanSearch = $value;
         $this->form->dean_options = $deans;
+
+        // Mark as loaded for empty searches
+        if ($value === '') {
+            $this->deansLoaded = true;
+        }
 
         return $this->cachedDeans;
     }
@@ -339,6 +437,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->cachedDeans = null;
         $this->lastAdviserSearch = null;
         $this->lastDeanSearch = null;
+        $this->advisersLoaded = false;
+        $this->deansLoaded = false;
     }
 
     /**
@@ -375,7 +475,19 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public function showPaperDetails(AcademicPaper $academicPaper): void
     {
-        $this->selectedPaper = $academicPaper->load('authors', 'copies');
+        // Only load relationships if they're not already loaded
+        if (!$academicPaper->relationLoaded('authors') || !$academicPaper->relationLoaded('copies')) {
+            $this->selectedPaper = $academicPaper->load([
+                'authors' => function ($query) {
+                    $query->select('authors.id', 'authors.name');
+                },
+                'copies' => function ($query) {
+                    $query->select('id', 'academic_paper_id', 'status');
+                }
+            ]);
+        } else {
+            $this->selectedPaper = $academicPaper;
+        }
         $this->showModal = true;
     }
 
