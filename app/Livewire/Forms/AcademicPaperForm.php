@@ -4,6 +4,7 @@ namespace App\Livewire\Forms;
 
 use App\Models\AcademicPaper;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -70,8 +71,8 @@ class AcademicPaperForm extends Form
     public function populateYearChoices()
     {
         // Cache year choices since they don't change often
-        $this->year_choices = Cache::remember('academic_paper_year_choices', 3600, function () {
-            $currentYear = date('Y');
+        $currentYear = date('Y');
+        $this->year_choices = Cache::remember("academic_paper_year_choices_{$currentYear}", 3600, function () use ($currentYear) {
             $years = [];
             for ($y = $currentYear; $y >= 2002; $y--) {
                 $years[] = ['id' => $y, 'name' => $y];
@@ -81,7 +82,7 @@ class AcademicPaperForm extends Form
     }
 
 
-    private function syncAuthors($academicPaper)
+    private function syncAuthors(\App\Models\AcademicPaper $academicPaper)
     {
         if (empty($this->author_names)) {
             $academicPaper->authors()->detach();
@@ -162,22 +163,25 @@ class AcademicPaperForm extends Form
             'research_project_adviser' => 'required|string',
             'dean' => 'required|string',
         ]);
-        $paper = AcademicPaper::create([
-            'title' => $this->title,
-            'publication_year' => $this->publication_year,
-            'paper_type' => $this->paper_type,
-            'research_project_adviser' => $this->research_project_adviser,
-            'department' => $this->department,
-            'dean' => $this->dean,
-        ]);
 
-        // Sync authors
-        $this->syncAuthors($paper);
+        return DB::transaction(function () {
+            $paper = AcademicPaper::create([
+                'title' => $this->title,
+                'publication_year' => $this->publication_year,
+                'paper_type' => $this->paper_type,
+                'research_project_adviser' => $this->research_project_adviser,
+                'department' => $this->department,
+                'dean' => $this->dean,
+            ]);
 
-        // Create inventory copies
-        $this->createInventoryCopies($paper);
+            // Sync authors
+            $this->syncAuthors($paper);
 
-        return $paper;
+            // Create inventory copies
+            $this->createInventoryCopies($paper);
+
+            return $paper;
+        });
     }
 
     public function update()
@@ -196,19 +200,22 @@ class AcademicPaperForm extends Form
             'research_project_adviser' => 'required|string',
             'dean' => 'required|string',
         ]);
-        $updateData = $this->only(['title', 'publication_year', 'paper_type', 'department']);
-        $updateData['research_project_adviser'] = $this->research_project_adviser ?? '';
-        $updateData['dean'] = $this->dean ?? '';
-        $this->academicPaper->update($updateData);
 
-        // Sync authors
-        $this->syncAuthors($this->academicPaper);
+        return DB::transaction(function () {
+            $updateData = $this->only(['title', 'publication_year', 'paper_type', 'department']);
+            $updateData['research_project_adviser'] = $this->research_project_adviser ?? '';
+            $updateData['dean'] = $this->dean ?? '';
+            $this->academicPaper->update($updateData);
 
-        // Update inventory copies
-        $this->createInventoryCopies($this->academicPaper);
+            // Sync authors
+            $this->syncAuthors($this->academicPaper);
 
-        $this->setAcademicPaper($this->academicPaper->refresh());
-        return $this->academicPaper;
+            // Update inventory copies
+            $this->createInventoryCopies($this->academicPaper);
+
+            $this->setAcademicPaper($this->academicPaper->refresh());
+            return $this->academicPaper;
+        });
     }
 
     public function reset(...$properties)

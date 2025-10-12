@@ -68,15 +68,19 @@ class AdminAcademicPaperIndex extends AdminComponent
     #[Computed]
     public function academicPapers()
     {
-        // Create a cache key based on current filters and pagination
+        // Get current version token for cache busting
+        $version = $this->getAcademicPapersVersion();
+
+        // Create a cache key based on current filters, pagination, and version
         $cacheKey = sprintf(
-            'academic_papers_%s_%s_%s_%s_%d_%d',
+            'academic_papers_%s_%s_%s_%s_%d_%d_v%d',
             $this->dept ?? 'all',
             $this->search ?: 'no_search',
             $this->sortBy['column'],
             $this->sortBy['direction'],
             $this->perPage,
-            request()->get('page', 1)
+            $this->page('academic-papers-index'),
+            $version
         );
 
         // Use cache for non-search queries (empty search) with short TTL
@@ -313,34 +317,12 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     private function invalidateSearchCaches(): void
     {
+        // Clear individual cache keys
         Cache::forget('advisers_all');
         Cache::forget('deans_all');
 
-        // Clear academic papers cache patterns
-        $patterns = [
-            'academic_papers_all_*',
-            'academic_papers_it_*',
-            'academic_papers_ce_*',
-            'academic_papers_ee_*',
-        ];
-
-        foreach ($patterns as $pattern) {
-            $this->clearCachePattern($pattern);
-        }
-    }
-
-    /**
-     * Clear cache entries matching a pattern
-     */
-    private function clearCachePattern(string $pattern): void
-    {
-        // This is a simplified approach - in production you might want to use Redis with pattern matching
-        // or implement a more sophisticated cache tagging system
-        $cache = Cache::getStore();
-        if (method_exists($cache, 'flush')) {
-            // For simple cache stores, we'll rely on TTL expiration
-            // In production with Redis, you could use SCAN with MATCH pattern
-        }
+        // Increment version token to invalidate all academic papers caches
+        $this->incrementAcademicPapersVersion();
     }
 
     /**
@@ -352,6 +334,23 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->cachedDeans = null;
         $this->lastAdviserSearch = null;
         $this->lastDeanSearch = null;
+    }
+
+    /**
+     * Get current version token for academic papers cache busting
+     */
+    private function getAcademicPapersVersion(): int
+    {
+        return Cache::get('academic_papers_version', 1);
+    }
+
+    /**
+     * Increment version token to invalidate all academic papers caches
+     */
+    private function incrementAcademicPapersVersion(): void
+    {
+        $currentVersion = $this->getAcademicPapersVersion();
+        Cache::put('academic_papers_version', $currentVersion + 1, 86400); // 24 hours
     }
 
     /**
