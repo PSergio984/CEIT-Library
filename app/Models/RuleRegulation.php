@@ -14,7 +14,6 @@ class RuleRegulation extends Model
     protected $fillable = [
         'rule_header_id',
         'content',
-        'order',
     ];
 
     public function ruleHeader(): BelongsTo

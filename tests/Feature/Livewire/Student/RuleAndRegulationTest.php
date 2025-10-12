@@ -20,7 +20,6 @@ class RuleAndRegulationTest extends TestCase
             ->has(
                 RuleRegulation::factory()->state([
                     'content' => 'Alpha',
-                    'order' => 1,
                 ]),
                 'ruleRegulations'
             )
@@ -33,7 +32,6 @@ class RuleAndRegulationTest extends TestCase
             ->has(
                 RuleRegulation::factory()->state([
                     'content' => 'Beta',
-                    'order' => 1,
                 ]),
                 'ruleRegulations'
             )

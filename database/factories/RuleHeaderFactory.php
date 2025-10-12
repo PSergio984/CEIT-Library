@@ -17,7 +17,7 @@ class RuleHeaderFactory extends Factory
     public function definition(): array
     {
         return [
-            'title' => $this->faker->unique()->sentence(3), // e.g., "I. General Information"
+            'title' => $this->faker->unique()->sentence(3), // "General Information"
             'order' => $this->faker->unique()->numberBetween(1, 100),
         ];
     }
