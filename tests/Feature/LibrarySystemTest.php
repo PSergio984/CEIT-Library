@@ -282,27 +282,21 @@ class LibrarySystemTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Check if accessor exists before testing
-        if (method_exists($user, 'getCreditScoreAttribute')) {
-            // User starts with default credit score
-            $this->assertEquals(100, $user->credit_score);
+        // User starts with default credit score
+        $this->assertEquals(100, $user->credit_score);
 
-            // Add violation that reduces credit score
-            $violation = Violation::factory()->create();
-            ViolationTransaction::create([
-                'user_id' => $user->id,
-                'violation_id' => $violation->id,
-                'severity' => 'Minor',
-                'remarks' => 'Late return violation',
-                'date_occurred' => Carbon::now(),
-            ]);
+        // Add violation that reduces credit score
+        $violation = Violation::factory()->create();
+        ViolationTransaction::create([
+            'user_id' => $user->id,
+            'violation_id' => $violation->id,
+            'severity' => 'medium', // Adjusted to match penalty logic
+            'remarks' => 'Late return violation',
+            'date_occurred' => Carbon::now(),
+        ]);
 
-            // Credit score should be reduced (assuming penalty reduces credit score)
-            $this->assertLessThan(100, $user->fresh()->credit_score);
-        } else {
-            // If accessor doesn't exist, just verify the user was created
-            $this->assertInstanceOf(User::class, $user);
-        }
+        // Credit score should be reduced (assuming penalty reduces credit score)
+        $this->assertLessThan(100, $user->fresh()->credit_score);
     }
 
     public function test_library_attendance_tracking()

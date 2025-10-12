@@ -49,25 +49,25 @@
             <!-- Copies Table -->
             @if($academicPaper->copies->count() > 0)
                 <div class="overflow-x-auto">
-                    <table class="table table-sm w-full">
+                    <table class="table table-sm w-full border-collapse border border-base-300 rounded-lg overflow-hidden shadow-sm">
                         <thead>
-                        <tr>
-                            <th>Copy Id</th>
-                            <th>Availability</th>
-                            <th>Action</th>
+                        <tr class="bg-base-200">
+                            <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Copy Id</th>
+                            <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Availability</th>
+                            <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Action</th>
                         </tr>
                         </thead>
                         <tbody>
                         @foreach($academicPaper->copies as $copy)
-                            <tr>
-                                <td>{{ $copy->id }}</td>
-                                <td>
+                            <tr class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
+                                <td class="px-4 py-3 text-base-content font-medium">{{ $copy->id }}</td>
+                                <td class="px-4 py-3">
                                         <span
                                             class="badge px-4 py-1 {{ $copy->status === 'Available' ? 'badge-success' : ($copy->status === 'Borrowed' ? 'badge-warning' : 'badge-error') }}">
                                             {{ $copy->status }}
                                         </span>
                                 </td>
-                                <td>
+                                <td class="px-4 py-3">
                                     @if($copy->status === 'Available')
                                         <x-mary-button
                                             icon="o-qr-code"

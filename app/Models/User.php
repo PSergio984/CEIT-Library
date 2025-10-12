@@ -159,9 +159,12 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ViolationTransaction::class);
     }
 
-    public function creditScore()
+    // Accessor for credit score
+    public function getCreditScoreAttribute()
     {
-        return $this->hasOne(ScoreIncrement::class);
+        $defaultScore = 100;
+        $penaltySum = $this->violations()->sum('penalty'); // Assuming 'penalty' is a column in ViolationTransaction
+        return $defaultScore - $penaltySum;
     }
 
     // Check if user is currently in the library

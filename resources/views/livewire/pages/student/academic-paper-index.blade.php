@@ -21,10 +21,11 @@
                         :rows="$this->academicPapers"
                         with-pagination
                         :sort-by="$sortBy"
-                       :per-page="$perPage"
+                        :per-page="$perPage"
                         :per-page-values="[5, 10, 25, 50]"
-                        row-class="text-base-content hover:bg-base-200 hover:text-base-content"
-                        header-class="text-base-content"
+                        row-class="text-base-content hover:bg-base-100 hover:text-base-content transition-all duration-150 border-b border-base-200 last:border-b-0"
+                        header-class="text-base-content bg-gradient-to-r from-base-200 to-base-300 font-semibold border-b-2 border-base-300"
+                        class="table-enhanced rounded-lg shadow-lg overflow-hidden"
                       >
                           @scope('cell_status', $row)
                           <x-mary-badge
@@ -98,25 +99,25 @@
                 <!-- Copies Table -->
                 @if($selectedPaper->copies->count() > 0)
                     <div class="overflow-x-auto -mx-2 sm:mx-0">
-                        <table class="table table-sm w-full text-sm sm:text-base">
+                        <table class="table table-sm w-full text-sm sm:text-base border-collapse border border-base-300 rounded-lg overflow-hidden shadow-sm">
                             <thead>
-                            <tr>
-                                <th>Copy Id</th>
-                                <th>Availability</th>
-                                <th>Action</th>
+                            <tr class="bg-base-200">
+                                <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Copy Id</th>
+                                <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Availability</th>
+                                <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Action</th>
                             </tr>
                             </thead>
                             <tbody>
                             @foreach($selectedPaper->copies as $copy)
-                                <tr>
-                                    <td>{{ $copy->id }}</td>
-                                    <td>
+                                <tr class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
+                                    <td class="px-4 py-3 text-base-content font-medium">{{ $copy->id }}</td>
+                                    <td class="px-4 py-3">
                                             <span
                                                 class="badge px-4 py-1 {{ $this->getStatusBadgeClass($copy->status) }}">
                                                 {{ $copy->status }}
                                             </span>
                                     </td>
-                                    <td>
+                                    <td class="px-4 py-3">
                                         @if($copy->status === 'Available')
                                             <x-mary-button
                                                 icon="o-qr-code"

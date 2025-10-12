@@ -25,44 +25,91 @@
 
 /* Table Container - Rounded corners and borders */
 .table-container {
-    @apply overflow-x-auto rounded-box border border-base-300 bg-base-100;
+    @apply overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-sm;
 }
 
 /* Enhanced Table Styling */
-.table {
-    border-collapse: separate;
-    border-spacing: 0;
-    @apply w-full;
-}
+    .table {
+        border-collapse: separate;
+        border-spacing: 0;
+    @apply w-full rounded-lg overflow-hidden;
+    }
 
-.table thead {
-    @apply bg-base-200;
-}
+    .table thead {
+    @apply bg-gradient-to-r from-base-200 to-base-300;
+    }
 
-.table thead th {
+    .table thead th {
     @apply px-6 py-4 text-left text-sm font-semibold text-base-content border-b-2 border-base-300;
     white-space: nowrap;
+    position: relative;
+}
+
+.table thead th:first-child {
+    @apply rounded-tl-lg;
+}
+
+.table thead th:last-child {
+    @apply rounded-tr-lg;
 }
 
 .table tbody td {
-    @apply px-6 py-4 text-sm text-base-content border-b border-base-300;
+    @apply px-6 py-4 text-sm text-base-content border-b border-base-200;
+    transition: all 0.15s ease-in-out;
+}
+
+.table tbody tr {
+    @apply transition-all duration-150;
 }
 
 .table tbody tr:hover {
-    @apply bg-base-200 transition-colors duration-150;
+    @apply bg-base-100 shadow-sm;
+    transform: translateY(-1px);
 }
 
 .table tbody tr:last-child td {
     @apply border-b-0;
 }
 
+.table tbody tr:last-child td:first-child {
+    @apply rounded-bl-lg;
+}
+
+.table tbody tr:last-child td:last-child {
+    @apply rounded-br-lg;
+}
+
 /* Table with zebra stripes option */
 .table-zebra tbody tr:nth-child(even) {
-    @apply bg-base-200/50;
+    @apply bg-base-200/30;
 }
 
 .table-zebra tbody tr:nth-child(even):hover {
-    @apply bg-base-200;
+    @apply bg-base-100 shadow-sm;
+}
+
+/* Enhanced table borders and shadows */
+.table-enhanced {
+    @apply border border-base-300 rounded-lg shadow-lg overflow-hidden;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.table-enhanced thead {
+    @apply bg-gradient-to-r from-primary/10 to-secondary/10;
+}
+
+.table-enhanced thead th {
+    @apply border-b-2 border-primary/20;
+}
+
+/* Responsive table styling */
+@media (max-width: 768px) {
+    .table thead th,
+    .table tbody td {
+        @apply px-3 py-2 text-xs;
+    }
 }
 
 /* ===================================

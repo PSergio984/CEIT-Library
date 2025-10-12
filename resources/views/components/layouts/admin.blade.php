@@ -103,6 +103,7 @@
 
                 <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
                 <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs" />
+                <x-mary-menu-item title="View as Student" icon="o-eye" link="/academic-papers" />
 
             </x-mary-menu>
 

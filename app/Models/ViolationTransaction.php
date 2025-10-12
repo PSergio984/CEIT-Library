@@ -66,17 +66,17 @@ class ViolationTransaction extends Model
     public static function getUserViolations($userId)
     {
         return static::where('user_id', $userId)
-                    ->with('violation')
-                    ->orderBy('date_occurred', 'desc')
-                    ->get();
+            ->with('violation')
+            ->orderBy('date_occurred', 'desc')
+            ->get();
     }
 
     // Get total penalty score for a user
     public static function getUserTotalPenalty($userId)
     {
         return static::join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
-                    ->where('violation_transactions.user_id', $userId)
-                    ->sum('violations.penalty_score');
+            ->where('violation_transactions.user_id', $userId)
+            ->sum('violations.penalty_score');
     }
 
     // Scope for filtering by severity
@@ -101,5 +101,27 @@ class ViolationTransaction extends Model
     public function scopeRecent($query, $days = 30)
     {
         return $query->where('date_occurred', '>=', Carbon::now()->subDays($days));
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($violationTransaction) {
+            // Assuming 'penalty' is calculated based on severity or other logic
+            $violationTransaction->penalty = self::calculatePenalty($violationTransaction->severity);
+        });
+    }
+
+    public static function calculatePenalty($severity)
+    {
+        // Example penalty calculation logic based on severity
+        $penaltyMap = [
+            'low' => 5,
+            'medium' => 10,
+            'high' => 20,
+        ];
+
+        return $penaltyMap[$severity] ?? 0;
     }
 }
