@@ -24,6 +24,7 @@ class AcademicPaperForm extends Form
     public string $department = '';
     #[Validate('required')]
     public string $dean = '';
+    public array $author_names = [];
     public array $type_choices = [
         ['id' => 'Thesis', 'name' => 'Thesis'],
         ['id' => 'Capstone', 'name' => 'Capstone'],
@@ -51,6 +52,29 @@ class AcademicPaperForm extends Form
         $this->year_choices = $years;
     }
 
+    private function syncAuthors($academicPaper)
+    {
+        if (empty($this->author_names)) {
+            $academicPaper->authors()->detach();
+            return;
+        }
+
+        $authorIds = [];
+        foreach ($this->author_names as $authorName) {
+            $authorName = trim($authorName);
+            if (empty($authorName)) continue;
+
+            // Find existing author or create new one
+            $author = \App\Models\Author::firstOrCreate(
+                ['name' => $authorName],
+                ['name' => $authorName]
+            );
+            $authorIds[] = $author->id;
+        }
+
+        $academicPaper->authors()->sync($authorIds);
+    }
+
     public function setAcademicPaper(AcademicPaper $academicPaper)
     {
         $this->id = $academicPaper->id;
@@ -61,13 +85,14 @@ class AcademicPaperForm extends Form
         $this->research_project_adviser = $academicPaper->research_project_adviser;
         $this->department = $academicPaper->department;
         $this->dean = $academicPaper->dean;
+        $this->author_names = $academicPaper->authors()->pluck('name')->toArray();
         $this->academicPaper = $academicPaper;
     }
 
     public function store()
     {
         $this->validate();
-        AcademicPaper::create([
+        $paper = AcademicPaper::create([
             'title' => $this->title,
             'publication_year' => $this->publication_year,
             'paper_type' => $this->paper_type,
@@ -75,6 +100,9 @@ class AcademicPaperForm extends Form
             'department' => $this->department,
             'dean' => $this->dean,
         ]);
+
+        // Sync authors
+        $this->syncAuthors($paper);
     }
 
     public function update()
@@ -85,6 +113,10 @@ class AcademicPaperForm extends Form
 
         $this->validate();
         $this->academicPaper->update($this->only(['title', 'publication_year', 'paper_type', 'research_project_adviser', 'department', 'dean']));
+
+        // Sync authors
+        $this->syncAuthors($this->academicPaper);
+
         $this->setAcademicPaper($this->academicPaper->refresh());
         return $this->academicPaper;
     }
@@ -95,6 +127,7 @@ class AcademicPaperForm extends Form
         $this->academicPaper = null;
         $this->id = null;
         $this->catalog_code = null;
+        $this->author_names = [];
         $this->populateYearChoices();
     }
 }

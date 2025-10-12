@@ -109,6 +109,11 @@
                                     </label>
                                     <x-mary-input wire:model="form.dean" required class="mb-4" placeholder="Enter dean name" />
 
+                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_names" @endif>
+                                        Authors @if($isEditing) <span wire:dirty wire:target="form.author_names" class="text-orange-400">*</span> @endif
+                                    </label>
+                                    <x-mary-tags label="Authors" wire:model="form.author_names" icon="o-user-group" hint="Enter author names and hit enter" clearable />
+
                                     <x-slot:actions>
                                         <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
                                         <button 
