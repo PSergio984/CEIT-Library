@@ -28,59 +28,38 @@
             </label>
         </x-slot:brand>
         <x-slot:actions>
-            <div class="flex items-center gap-2">
-                {{-- Mobile Profile Dropdown --}}
-                @auth
-                <x-dropdown align="right" width="48">
-                    <x-slot name="trigger">
-                        <button
-                            class="inline-flex items-center px-2 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-foreground bg-card hover:bg-muted focus:outline-none transition ease-in-out duration-150">
-                            <x-mary-icon name="o-user-circle" class="w-6 h-6" />
-                        </button>
-                    </x-slot>
-                    <x-slot name="content">
-                        <div class="px-4 py-2 border-b border-border bg-muted">
-                            <div
-                                class="font-medium text-sm text-foreground">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
-                            <div class="text-xs text-muted-foreground">{{ auth()->user()->email }}</div>
-                        </div>
-                        <x-dropdown-link :href="route('profile')" wire:navigate class="hover:bg-muted">
-                            {{ __('Profile') }}
-                        </x-dropdown-link>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <button type="submit" class="w-full text-start">
-                                <x-dropdown-link class="hover:bg-muted">
-                                    {{ __('Log Out') }}
-                                </x-dropdown-link>
-                            </button>
-                        </form>
-                    </x-slot>
-                </x-dropdown>
-                @endauth
-            </div>
+            {{-- Mobile User Dropdown --}}
+            <livewire:layout.navigation />
         </x-slot:actions>
     </x-mary-nav>
 
     {{-- MAIN --}}
     <x-mary-main full-width class="flex-1 flex flex-col">
         {{-- SIDEBAR --}}
-        <x-slot:sidebar drawer="main-drawer" collapsible class="border-r border-base-300">
+        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
 
             {{-- BRAND --}}
-            <div class="px-4 py-3 flex items-center gap-3">
-                <div class="flex-shrink-0">
-                    <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
-                </div>
-                <div class="overflow-hidden transition-all duration-300 w-full" x-show="!collapsed">
-                    <div class="font-bold text-lg text-sidebar-foreground whitespace-nowrap">CEIT Library</div>
+            <div class="flex items-center justify-center py-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class=" transition-all duration-300" x-show="!collapsed">
+                            <div class="font-bold text-xl text-base-content whitespace-nowrap">CEIT Library</div>
+                        </div>
+                        {{-- Theme Toggle beside Library text --}}
+                        <div x-show="!collapsed">
+                            <x-mary-theme-toggle class="btn btn-sm btn-circle btn-ghost" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
             <x-mary-menu-separator />
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route>
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
 
                 <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
                     <x-mary-menu-item title="All" icon="o-document-text" link="/academic-papers" />

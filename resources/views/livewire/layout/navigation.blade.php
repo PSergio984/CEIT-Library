@@ -33,21 +33,13 @@ new class extends Component
                 @auth
                     <x-dropdown align="right" width="48" contentClasses="py-1 bg-base-100">
                         <x-slot name="trigger">
-                            <button
-                                class="inline-flex items-center px-3 py-3 border border-transparent text-sm leading-4 font-medium rounded-md text-foreground bg-background hover:bg-muted focus:outline-none transition ease-in-out duration-150">
-                                <x-mary-icon name="o-user-circle" class="w-8 h-8 sm:w-9 sm:h-9" />
-                            </button>
+                            <x-mary-button icon="o-user" class="btn-ghost btn-circle" />
                         </x-slot>
 
                         <x-slot name="content" class="bg-base-100 border-base-300">
                             <div class="px-4 py-2 border-b border-base-300 bg-base-200">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <div class="font-medium text-sm text-base-content">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
-                                        <div class="text-xs text-base-content opacity-70">{{ auth()->user()->email }}</div>
-                                    </div>
-                                    <x-mary-theme-toggle />
-                                </div>
+                                <div class="font-medium text-sm text-base-content">{{ auth()->user()->first_name }} {{ auth()->user()->last_name }}</div>
+                                <div class="text-xs text-base-content opacity-70">{{ auth()->user()->email }}</div>
                             </div>
                             
                             
