@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light" data-theme="light">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,7 +29,6 @@
         </x-slot:brand>
         <x-slot:actions>
             <div class="flex items-center gap-2">
-
                 {{-- Mobile Profile Dropdown --}}
                 @auth
                 <x-dropdown align="right" width="48">

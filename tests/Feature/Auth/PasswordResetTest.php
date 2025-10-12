@@ -152,9 +152,12 @@ class PasswordResetTest extends TestCase
             ->set('email', 'nonexistent@plv.edu.ph')
             ->call('sendPasswordResetLink');
 
-        // This should either show an error or succeed (depending on security policy)
-        // The important thing is that it doesn't crash
-        $this->assertTrue(true, 'Password reset request handled for non-existent user');
+
+
+        // Verify the application handles non-existent users gracefully
+        // Either shows a generic success message (security best practice)
+        // or shows a specific error
+        $component->assertHasNoErrors(); // Or assertHasErrors('email') depending on your security policy
     }
 
     public function test_password_reset_requires_plv_email_domain(): void

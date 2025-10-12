@@ -151,16 +151,6 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetPage('academic-papers-index');
     }
 
-    public function deleteAcademicPaper($id)
-    {
-        $academicPaper = AcademicPaper::find($id);
-        if ($academicPaper) {
-            $academicPaper->delete();
-            $this->warning("$academicPaper->title deleted", 'Good bye!');
-        } else {
-            $this->warning("Academic paper not found", 'Error!');
-        }
-    }
 
     // Open confirmation modal
     public function confirmDelete(int $id): void
