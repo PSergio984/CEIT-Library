@@ -67,7 +67,7 @@ class RegistrationTest extends TestCase
             ->set('first_name', 'John')
             ->set('last_name', 'Doe')
             ->set('student_no', '20-3001')
-            ->set('email', 'john.doe@plv.edu.ph')
+            ->set('email', 'johndoe@plv.edu.ph')
             ->set('password', 'SecurePass123!')
             ->set('password_confirmation', 'SecurePass123!');
 
@@ -78,14 +78,14 @@ class RegistrationTest extends TestCase
 
         // Verify user was created
         $this->assertDatabaseHas('users', [
-            'email' => 'john.doe@plv.edu.ph',
+            'email' => 'johndoe@plv.edu.ph',
             'first_name' => 'John',
             'last_name' => 'Doe',
             'student_no' => '20-3001',
         ]);
 
         // Verify password is hashed
-        $user = User::where('email', 'john.doe@plv.edu.ph')->first();
+        $user = User::where('email', 'johndoe@plv.edu.ph')->first();
         $this->assertTrue(Hash::check('SecurePass123!', $user->password));
     }
 
@@ -156,7 +156,7 @@ class RegistrationTest extends TestCase
             ->set('first_name', 'Jane')
             ->set('last_name', 'Smith')
             ->set('student_no', '20-3002')
-            ->set('email', 'jane.smith@plv.edu.ph') // Valid PLV domain
+            ->set('email', 'janesmith@plv.edu.ph') // Valid PLV domain
             ->set('password', 'SecurePass123!')
             ->set('password_confirmation', 'SecurePass123!')
             ->call('register');
@@ -184,7 +184,7 @@ class RegistrationTest extends TestCase
             ->set('first_name', 'John')
             ->set('last_name', 'Doe')
             ->set('student_no', '20-3001')
-            ->set('email', 'john.doe@plv.edu.ph')
+            ->set('email', 'johndoe@plv.edu.ph')
             ->set('password', 'SecurePass123!')
             ->set('password_confirmation', 'SecurePass123!')
             ->call('register');
@@ -200,7 +200,7 @@ class RegistrationTest extends TestCase
             'first_name' => 'Jane',
             'last_name' => 'Smith',
             'student_no' => '20-3003',
-            'email' => 'jane.smith@plv.edu.ph',
+            'email' => 'janesmith@plv.edu.ph',
             'password' => 'SecurePass123!',
         ];
 
@@ -221,5 +221,79 @@ class RegistrationTest extends TestCase
         $this->assertEquals($userData['last_name'], $user->last_name);
         $this->assertEquals($userData['student_no'], $user->student_no);
         $this->assertNull($user->email_verified_at); // Should be null initially
+    }
+
+    public function test_registration_requires_name_to_match_email_prefix(): void
+    {
+        // Test case 1: Names don't match email prefix - should fail
+        $component1 = Volt::test('pages.auth.register')
+            ->set('first_name', 'John')
+            ->set('last_name', 'Doe')
+            ->set('student_no', '20-3001')
+            ->set('email', 'jane.smith@plv.edu.ph') // Email prefix is 'jane.smith'
+            ->set('password', 'SecurePass123!')
+            ->set('password_confirmation', 'SecurePass123!')
+            ->call('register');
+
+        $this->assertTrue($component1->instance()->getErrorBag()->has('last_name'));
+        $errorMessage = $component1->instance()->getErrorBag()->first('last_name');
+        $this->assertStringContainsString('must match the characters before @plv.edu.ph', $errorMessage);
+
+        // Test case 2: Names match email prefix - should pass
+        $component2 = Volt::test('pages.auth.register')
+            ->set('first_name', 'Jane')
+            ->set('last_name', 'Smith')
+            ->set('student_no', '20-3002')
+            ->set('email', 'janesmith@plv.edu.ph') // Email prefix is 'janesmith'
+            ->set('password', 'SecurePass123!')
+            ->set('password_confirmation', 'SecurePass123!')
+            ->call('register');
+
+        $component2->assertHasNoErrors();
+
+        // Verify user was created successfully
+        $this->assertDatabaseHas('users', [
+            'email' => 'janesmith@plv.edu.ph',
+            'first_name' => 'Jane',
+            'last_name' => 'Smith',
+        ]);
+
+        // Test case 3: Names with spaces should work (spaces are removed)
+        $component3 = Volt::test('pages.auth.register')
+            ->set('first_name', 'Mary Jane')
+            ->set('last_name', 'Watson')
+            ->set('student_no', '20-3003')
+            ->set('email', 'maryjanewatson@plv.edu.ph') // Email prefix is 'maryjanewatson'
+            ->set('password', 'SecurePass123!')
+            ->set('password_confirmation', 'SecurePass123!')
+            ->call('register');
+
+        $component3->assertHasNoErrors();
+
+        // Test case 4: Case insensitive matching
+        $component4 = Volt::test('pages.auth.register')
+            ->set('first_name', 'ERIC')
+            ->set('last_name', 'ASDF')
+            ->set('student_no', '20-3004')
+            ->set('email', 'ericasdf@plv.edu.ph') // Email prefix is 'ericasdf'
+            ->set('password', 'SecurePass123!')
+            ->set('password_confirmation', 'SecurePass123!')
+            ->call('register');
+
+        $component4->assertHasNoErrors();
+
+        // Test case 5: Should fail when concatenated name doesn't match
+        $component5 = Volt::test('pages.auth.register')
+            ->set('first_name', 'asdf')
+            ->set('last_name', 'asdf')
+            ->set('student_no', '20-3005')
+            ->set('email', 'test@plv.edu.ph') // Email prefix is 'test'
+            ->set('password', 'SecurePass123!')
+            ->set('password_confirmation', 'SecurePass123!')
+            ->call('register');
+
+        $this->assertTrue($component5->instance()->getErrorBag()->has('last_name'));
+        $errorMessage = $component5->instance()->getErrorBag()->first('last_name');
+        $this->assertStringContainsString('Expected: test, Got: asdfasdf', $errorMessage);
     }
 }

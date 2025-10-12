@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Rules\PlvEmailDomain;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -12,7 +13,7 @@ use Livewire\Form;
 
 class LoginForm extends Form
 {
-    #[Validate('required|string|email|regex:/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/')]
+    #[Validate(['required', 'string', 'email', new PlvEmailDomain])]
     public string $email = '';
 
     #[Validate('required|string')]

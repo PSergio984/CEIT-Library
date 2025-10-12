@@ -1,5 +1,6 @@
 <?php
 
+use App\Rules\PlvEmailDomain;
 use Illuminate\Support\Facades\Password;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
@@ -14,7 +15,7 @@ new #[Layout('layouts.guest')] class extends Component
     public function sendPasswordResetLink(): void
     {
         $this->validate([
-            'email' => ['required', 'string', 'email', 'regex:/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/'],
+            'email' => ['required', 'string', 'email', new PlvEmailDomain],
         ]);
 
         // We will send the password reset link to this user. Once we have attempted
