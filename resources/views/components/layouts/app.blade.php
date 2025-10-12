@@ -29,7 +29,7 @@
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}
-            <livewire:layout.navigation />
+            <livewire:layout.user-menu />
         </x-slot:actions>
     </x-mary-nav>
 

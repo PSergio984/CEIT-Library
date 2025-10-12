@@ -37,6 +37,11 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Pwd@12345'),
         ]);
 
+        Librarian::factory()->active()->create([
+            'user_id' => $librarian->id,
+            'created_by' => $admin->id,
+        ]);
+
         // Create regular student users
         $students = User::factory(50)->create();
 

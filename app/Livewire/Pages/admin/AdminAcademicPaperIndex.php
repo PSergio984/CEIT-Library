@@ -137,7 +137,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                     $query->where('status', 'Available');
                 }
             ])
-            ->orderBy(...array_values($this->sortBy));
+            ->orderBy($this->getSortColumn(), $this->getSortDirection());
     }
 
     // Reset pagination when dept or search changes
@@ -430,9 +430,9 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         return match ($this->selectedPaper->department) {
-            'Civil Engineering' => Vite::asset('public/images/aces.png'),
-            'Electrical Engineering' => Vite::asset('public/images/ees.png'),
-            'Information Technology' => Vite::asset('public/images/vits.png'),
+            'Civil Engineering' => asset('images/aces.png'),
+            'Electrical Engineering' => asset('images/ees.png'),
+            'Information Technology' => asset('images/vits.png'),
             default => '',
         };
     }
@@ -447,6 +447,43 @@ class AdminAcademicPaperIndex extends AdminComponent
             'Borrowed' => 'badge-warning',
             default => 'badge-error',
         };
+    }
+
+    /**
+     * Get the sanitized sort column, mapping virtual columns to real database columns
+     */
+    private function getSortColumn(): string
+    {
+        $allowedColumns = [
+            'id',
+            'catalog_code',
+            'title',
+            'publication_year',
+            'paper_type',
+            'research_project_adviser',
+            'available_copies', // maps to the withCount field
+        ];
+
+        $column = $this->sortBy['column'] ?? 'id';
+
+        // Map virtual columns to real database columns
+        $columnMapping = [
+            'status' => 'available_copies', // Map virtual 'status' to real 'available_copies'
+        ];
+
+        $mappedColumn = $columnMapping[$column] ?? $column;
+
+        // Validate against whitelist
+        return in_array($mappedColumn, $allowedColumns) ? $mappedColumn : 'id';
+    }
+
+    /**
+     * Get the sanitized sort direction
+     */
+    private function getSortDirection(): string
+    {
+        $direction = $this->sortBy['direction'] ?? 'asc';
+        return in_array(strtolower($direction), ['asc', 'desc']) ? strtolower($direction) : 'asc';
     }
 
     public function render()
