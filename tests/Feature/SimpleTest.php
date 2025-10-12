@@ -27,12 +27,12 @@ class SimpleTest extends TestCase
     {
         $paper = AcademicPaper::factory()->create([
             'title' => 'Test Paper',
-            'catalog_code' => 'TEST-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertDatabaseHas('academic_papers', [
             'title' => 'Test Paper',
-            'catalog_code' => 'TEST-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertInstanceOf(AcademicPaper::class, $paper);

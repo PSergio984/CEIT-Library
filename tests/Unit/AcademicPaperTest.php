@@ -21,12 +21,12 @@ class AcademicPaperTest extends TestCase
     {
         $paper = AcademicPaper::factory()->create([
             'title' => 'Test Paper',
-            'catalog_code' => 'CEIT-0001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertInstanceOf(AcademicPaper::class, $paper);
         $this->assertEquals('Test Paper', $paper->title);
-        $this->assertEquals('CEIT-0001', $paper->catalog_code);
+        $this->assertEquals('CEIT-IT-25-01', $paper->catalog_code);
     }
 
     public function test_academic_paper_has_fillable_attributes()

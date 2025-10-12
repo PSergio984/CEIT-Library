@@ -88,4 +88,13 @@ class AcademicPaperForm extends Form
         $this->setAcademicPaper($this->academicPaper->refresh());
         return $this->academicPaper;
     }
+
+    public function reset(...$properties)
+    {
+        parent::reset(...$properties);
+        $this->academicPaper = null;
+        $this->id = null;
+        $this->catalog_code = null;
+        $this->populateYearChoices();
+    }
 }

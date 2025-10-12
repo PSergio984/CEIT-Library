@@ -87,8 +87,8 @@ class AcademicPaper extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'LIKE', "%{$search}%")
-              ->orWhere('research_project_adviser', 'LIKE', "%{$search}%")
-              ->orWhere('catalog_code', 'LIKE', "%{$search}%");
+                ->orWhere('research_project_adviser', 'LIKE', "%{$search}%")
+                ->orWhere('catalog_code', 'LIKE', "%{$search}%");
         });
     }
 
@@ -111,11 +111,50 @@ class AcademicPaper extends Model
         static::creating(function ($paper) {
             if (empty($paper->catalog_code)) {
                 do {
-                    // Example: CAT-YYYYMMDD-XXXX (customize as needed)
-                    $code = 'CAT-' . date('Ymd') . '-' . strtoupper(uniqid());
+                    // Format: CEIT-{DEPARTMENT_CODE}-{YEAR}-{SEQUENCE}
+                    $departmentCode = self::getDepartmentCode($paper->department);
+                    $year = substr($paper->publication_year, -2); // 2-digit year from publication_year
+
+                    // Get the next sequence number for this department and year
+                    $sequence = self::getNextSequence($departmentCode, $year);
+
+                    $code = "CEIT-{$departmentCode}-{$year}-{$sequence}";
                 } while (self::where('catalog_code', $code)->exists());
                 $paper->catalog_code = $code;
             }
         });
+    }
+
+    /**
+     * Get department code from department name
+     */
+    private static function getDepartmentCode($department)
+    {
+        $departmentCodes = [
+            'Information Technology' => 'IT',
+            'Civil Engineering' => 'CE',
+            'Electrical Engineering' => 'EE',
+        ];
+
+        return $departmentCodes[$department] ?? 'XX';
+    }
+
+    /**
+     * Get next sequence number for department and year
+     */
+    private static function getNextSequence($departmentCode, $year)
+    {
+        // Find the highest sequence number for this department and year
+        $pattern = "CEIT-{$departmentCode}-{$year}-%";
+        $highestSequence = self::where('catalog_code', 'like', $pattern)
+            ->get()
+            ->map(function ($paper) {
+                // Extract sequence number from catalog_code
+                $parts = explode('-', $paper->catalog_code);
+                return (int) end($parts);
+            })
+            ->max();
+
+        return str_pad(($highestSequence ?? 0) + 1, 2, '0', STR_PAD_LEFT);
     }
 }

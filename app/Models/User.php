@@ -122,18 +122,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isLibrarian()
     {
         return $this->librarianDuty()
-                   ->where('status', 'active')
-                   ->where('expires_at', '>', now())
-                   ->exists();
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->exists();
     }
 
     // Get active librarian record
     public function getActiveLibrarianDuty()
     {
         return $this->librarianDuty()
-                   ->where('status', 'active')
-                   ->where('expires_at', '>', now())
-                   ->first();
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->first();
     }
 
     // Check if user has specific librarian permission
@@ -163,7 +163,10 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getCreditScoreAttribute()
     {
         $defaultScore = 100;
-        $penaltySum = $this->violations()->sum('penalty'); // Assuming 'penalty' is a column in ViolationTransaction
+        // Join with violations table to sum penalty_score from the related Violation model
+        $penaltySum = $this->violations()
+            ->join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
+            ->sum('violations.penalty_score');
         return $defaultScore - $penaltySum;
     }
 
@@ -171,9 +174,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isInLibrary()
     {
         return $this->librarySessions()
-                   ->where('status', 'active')
-                   ->whereNotNull('time_in')
-                   ->whereNull('time_out')
-                   ->exists();
+            ->where('status', 'active')
+            ->whereNotNull('time_in')
+            ->whereNull('time_out')
+            ->exists();
     }
 }

@@ -75,7 +75,7 @@
                                     @if($isEditing)
                                         <div wire:dirty wire:target="form" class="alert alert-info mb-4">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            <span>The academic paper with the ID of <strong>{{ $form->id ?? 'N/A' }}</strong> has been changed.</span>
+                                            <span>You have unsaved changes to academic paper ID {{ $form->id ?? 'N/A' }}</span>
                                         </div>
                                     @endif
 
@@ -113,7 +113,6 @@
                                         <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
                                         <button 
                                             type="submit"
-                                            wire:click="saveAcademicPaper"
                                             class="btn btn-primary disabled:opacity-75 disabled:bg-blue-300"
                                             wire:dirty.class="hover:bg-blue-900"
                                             wire:dirty.remove.attr="disabled"

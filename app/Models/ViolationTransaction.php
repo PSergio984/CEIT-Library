@@ -102,26 +102,4 @@ class ViolationTransaction extends Model
     {
         return $query->where('date_occurred', '>=', Carbon::now()->subDays($days));
     }
-
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($violationTransaction) {
-            // Assuming 'penalty' is calculated based on severity or other logic
-            $violationTransaction->penalty = self::calculatePenalty($violationTransaction->severity);
-        });
-    }
-
-    public static function calculatePenalty($severity)
-    {
-        // Example penalty calculation logic based on severity
-        $penaltyMap = [
-            'low' => 5,
-            'medium' => 10,
-            'high' => 20,
-        ];
-
-        return $penaltyMap[$severity] ?? 0;
-    }
 }

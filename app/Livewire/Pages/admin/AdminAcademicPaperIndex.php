@@ -168,6 +168,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         $this->formDrawer = false;
+        $this->isEditing = false;
         $this->form->reset();
         $this->form->populateYearChoices();
         $this->resetPage('academic-papers-index');

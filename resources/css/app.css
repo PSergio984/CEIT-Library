@@ -29,17 +29,17 @@
 }
 
 /* Enhanced Table Styling */
-    .table {
-        border-collapse: separate;
-        border-spacing: 0;
-    @apply w-full rounded-lg overflow-hidden;
-    }
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    @apply w-full rounded-lg;
+}
 
-    .table thead {
+.table thead {
     @apply bg-gradient-to-r from-base-200 to-base-300;
-    }
+}
 
-    .table thead th {
+.table thead th {
     @apply px-6 py-4 text-left text-sm font-semibold text-base-content border-b-2 border-base-300;
     white-space: nowrap;
     position: relative;
@@ -90,7 +90,7 @@
 
 /* Enhanced table borders and shadows */
 .table-enhanced {
-    @apply border border-base-300 rounded-lg shadow-lg overflow-hidden;
+    @apply border border-base-300 rounded-lg shadow-lg;
     box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);

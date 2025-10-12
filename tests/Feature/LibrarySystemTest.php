@@ -250,33 +250,33 @@ class LibrarySystemTest extends TestCase
         $this->assertEquals(1, $reservedCopies);
     }
 
-//    public function test_overdue_book_detection()
-//    {
-//        $user = User::factory()->create();
-//        $paper = AcademicPaper::factory()->create();
-//        $inventory = Inventory::factory()->create([
-//            'academic_paper_id' => $paper->id,
-//            'copy_number' => 1
-//        ]);
-//
-//        // Create overdue transaction
-//        $transaction = BorrowTransaction::create([
-//            'user_id' => $user->id,
-//            'academic_paper_id' => $paper->id,
-//            'inventory_id' => $inventory->id,
-//            'time_in' => Carbon::now()->subDays(20),
-//            'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-//            'session_token' => $this->generateSessionToken()
-//        ]);
-//
-//        // Check if accessors exist before testing
-//        if (method_exists($transaction, 'getIsOverdueAttribute')) {
-//            $this->assertTrue($transaction->is_overdue);
-//        }
-//        if (method_exists($transaction, 'getDaysRemainingAttribute')) {
-//            $this->assertEquals(-5, $transaction->days_remaining);
-//        }
-//    }
+    //    public function test_overdue_book_detection()
+    //    {
+    //        $user = User::factory()->create();
+    //        $paper = AcademicPaper::factory()->create();
+    //        $inventory = Inventory::factory()->create([
+    //            'academic_paper_id' => $paper->id,
+    //            'copy_number' => 1
+    //        ]);
+    //
+    //        // Create overdue transaction
+    //        $transaction = BorrowTransaction::create([
+    //            'user_id' => $user->id,
+    //            'academic_paper_id' => $paper->id,
+    //            'inventory_id' => $inventory->id,
+    //            'time_in' => Carbon::now()->subDays(20),
+    //            'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
+    //            'session_token' => $this->generateSessionToken()
+    //        ]);
+    //
+    //        // Check if accessors exist before testing
+    //        if (method_exists($transaction, 'getIsOverdueAttribute')) {
+    //            $this->assertTrue($transaction->is_overdue);
+    //        }
+    //        if (method_exists($transaction, 'getDaysRemainingAttribute')) {
+    //            $this->assertEquals(-5, $transaction->days_remaining);
+    //        }
+    //    }
 
     public function test_user_credit_score_system()
     {
@@ -286,17 +286,17 @@ class LibrarySystemTest extends TestCase
         $this->assertEquals(100, $user->credit_score);
 
         // Add violation that reduces credit score
-        $violation = Violation::factory()->create();
+        $violation = Violation::factory()->create(['penalty_score' => 10]);
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation->id,
-            'severity' => 'medium', // Adjusted to match penalty logic
+            'severity' => 'Minor',
             'remarks' => 'Late return violation',
             'date_occurred' => Carbon::now(),
         ]);
 
-        // Credit score should be reduced (assuming penalty reduces credit score)
-        $this->assertLessThan(100, $user->fresh()->credit_score);
+        // Credit score should be reduced by the penalty score (100 - 10 = 90)
+        $this->assertEquals(90, $user->fresh()->credit_score);
     }
 
     public function test_library_attendance_tracking()
