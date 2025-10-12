@@ -12,8 +12,19 @@ class RuleAndRegulationIndex extends Component
     #[Computed]
     public function ruleHeaders(): Collection
     {
-        return RuleHeader::with('ruleRegulations')
-            ->orderBy('order')
+        return RuleHeader::query()
+            // remove any default/global ordering on RuleHeader
+            ->reorder()
+            ->with([
+                'ruleRegulations' => function ($q) {
+                    // remove any default ordering on the relation
+                    $q->reorder()
+                        ->orderByRaw('CASE WHEN content IS NULL OR TRIM(content) = "" THEN 1 ELSE 0 END')
+                        ->orderByRaw('LOWER(TRIM(content)) ASC');
+                },
+            ])
+            ->orderByRaw('CASE WHEN title IS NULL OR TRIM(title) = "" THEN 1 ELSE 0 END')
+            ->orderByRaw('LOWER(TRIM(title)) ASC')
             ->get();
     }
 

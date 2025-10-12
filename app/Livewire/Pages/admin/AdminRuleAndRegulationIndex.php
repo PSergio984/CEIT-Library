@@ -5,10 +5,13 @@ namespace App\Livewire\Pages\Admin;
 use App\Livewire\Forms\RuleAndRegulationForm;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use Livewire\Component;
 
 class AdminRuleAndRegulationIndex extends AdminComponent
 {
@@ -19,26 +22,93 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     public array $sortBy = ['column' => 'rule_header_id', 'direction' => 'asc'];
     public array $headers = [];
     public int $perPage = 10;
-    public bool $showEditModal = false;
     public ?int $editingRuleId = null;
+    public bool $openDrawer = false;
+    public bool $openModal = false;
+    public bool $isEdit = false;
+    public string $search = '';
+    #[Url(as: 'header')]
+    public ?int $filterHeaderId = null;
+
+    public bool $confirmDeleteModal = false;
+    public ?int $deletingRuleId = null;
+    public bool $myModal1 = false;
 
     public function mount(): void
     {
         $this->headers = [
-            ['key' => 'id', 'label' => '#', 'class' => 'w-16'],
+            ['key' => 'id', 'label' => '#', 'class' => 'w-16', 'sortable' => false],
             ['key' => 'ruleHeader.title', 'label' => 'Header', 'sortable' => true],
-            ['key' => 'content', 'label' => 'Content', 'sortable' => false],
-            ['key' => 'order', 'label' => 'Order', 'class' => 'w-20'],
+            ['key' => 'content', 'label' => 'Content', 'sortable' => true],
+            ['key' => 'updated_at', 'label' => 'Updated', 'sortable' => true, 'class' => 'w-40'],
         ];
     }
 
-    #[Computed]
-    public function rules()
+
+    public function openCreateDrawer(): void
     {
-        return RuleRegulation::query()
-            ->with('ruleHeader')
-            ->orderBy(...array_values($this->sortBy))
-            ->paginate($this->perPage);
+        $this->isEdit = false;
+        $this->editingRuleId = null;
+        $this->form->reset();
+        $this->openDrawer = true;
+    }
+
+    public function openEditDrawer(int $id): void
+    {
+        $rule = RuleRegulation::findOrFail($id);
+        $this->isEdit = true;
+        $this->editingRuleId = $id;
+        $this->form->rule_header_id = $rule->rule_header_id;
+        $this->form->content = $rule->content;
+        $this->openDrawer = true;
+    }
+
+    public function save(): void
+    {
+        if ($this->isEdit && $this->editingRuleId) {
+            $this->form->update($this->editingRuleId);
+            $this->success('Rule updated successfully');
+        } else {
+            $this->form->store();
+            $this->success('Rule created successfully');
+        }
+        $this->openDrawer = false;
+        $this->editingRuleId = null;
+        $this->form->reset();
+    }
+
+    #[Computed]
+    public function rules(): LengthAwarePaginator
+    {
+        $query = RuleRegulation::query()
+            ->reorder()
+            ->with(['ruleHeader' => fn ($q) => $q->reorder()])
+            ->when($this->filterHeaderId, fn ($q, $id) => $q->where('rule_header_id', $id))
+            ->when($this->search !== '', function ($q) {
+                $s = "%{$this->search}%";
+                $q->where(function ($q) use ($s) {
+                    $q->where('content', 'like', $s)
+                        ->orWhereHas('ruleHeader', fn ($hq) => $hq->where('title', 'like', $s));
+                });
+            });
+
+        $column = $this->sortBy['column'] ?? 'ruleHeader.title';
+        $direction = $this->sortBy['direction'] ?? 'asc';
+
+        if ($column === 'ruleHeader.title') {
+            $query->orderBy(
+                RuleHeader::select('title')
+                    ->whereColumn('rule_headers.id', 'rule_regulations.rule_header_id'),
+                $direction
+            );
+        } elseif ($column === 'content') {
+            $query->orderByRaw('CASE WHEN content IS NULL OR TRIM(content) = "" THEN 1 ELSE 0 END')
+                ->orderByRaw('LOWER(TRIM(content)) ' . ($direction === 'desc' ? 'DESC' : 'ASC'));
+        } else {
+            $query->orderBy($column, $direction);
+        }
+
+        return $query->paginate($this->perPage);
     }
 
     public function edit(int $id): void
@@ -49,7 +119,7 @@ class AdminRuleAndRegulationIndex extends AdminComponent
         $this->form->rule_header_id = $rule->rule_header_id;
         $this->form->content = $rule->content;
 
-        $this->showEditModal = true;
+        $this->openDrawer = true;
     }
 
     public function update(): void
@@ -57,17 +127,28 @@ class AdminRuleAndRegulationIndex extends AdminComponent
         $this->form->update($this->editingRuleId);
 
         $this->success('Rule updated successfully');
-        $this->showEditModal = false;
+        $this->openDrawer = false;
         $this->editingRuleId = null;
         $this->form->reset();
     }
 
-    public function delete(int $id): void
+    // Open confirmation modal
+    public function confirmDelete(int $id): void
     {
-        $rule = RuleRegulation::findOrFail($id);
-        $rule->delete();
+        $this->deletingRuleId = $id;
+        $this->confirmDeleteModal = true;
+    }
 
-        $this->warning('Rule deleted successfully');
+    // Perform deletion after confirmation
+    public function deleteConfirmed(): void
+    {
+        if ($this->deletingRuleId) {
+            $rule = RuleRegulation::findOrFail($this->deletingRuleId);
+            $rule->delete();
+            $this->warning('Rule deleted successfully');
+        }
+        $this->confirmDeleteModal = false;
+        $this->deletingRuleId = null;
     }
 
     public function render()

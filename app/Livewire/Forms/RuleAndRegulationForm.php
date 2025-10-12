@@ -21,13 +21,11 @@ class RuleAndRegulationForm extends Form
 
         DB::transaction(function () {
             $lastOrder = RuleRegulation::where('rule_header_id', $this->rule_header_id)
-                ->lockForUpdate()
-                ->max('order') ?? 0;
+                ->lockForUpdate();
 
             RuleRegulation::create([
                 'rule_header_id' => $this->rule_header_id,
                 'content'        => $this->content,
-                'order'          => $lastOrder + 1,
             ]);
         });
     }

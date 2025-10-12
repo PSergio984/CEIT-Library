@@ -20,7 +20,6 @@ class RuleRegulationFactory extends Factory
         return [
             'rule_header_id' => RuleHeader::factory(),
             'content' => $this->faker->paragraph(2),
-            'order' => $this->faker->numberBetween(1, 100),
         ];
     }
 }

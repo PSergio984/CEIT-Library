@@ -3,10 +3,10 @@
 namespace Tests\Feature\Livewire\Admin;
 
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
-use App\Livewire\Pages\Admin\CreateRuleAndRegulation;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 class AdminRuleAndRegulationIndexTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseTransactions;
 
     #[Test]
     public function it_reads_rules_list(): void
@@ -28,23 +28,24 @@ class AdminRuleAndRegulationIndexTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(AdminRuleAndRegulationIndex::class)
-            ->assertStatus(200)
             ->assertSee($header->title)
             ->assertSee($regulation->content);
     }
 
     #[Test]
-    public function it_creates_a_rule_via_create_component(): void
+    public function it_creates_a_rule_via_admin_index_component(): void
     {
         $user = User::factory()->create();
         $header = RuleHeader::factory()->create(['title' => 'General']);
 
         Livewire::actingAs($user)
-            ->test(CreateRuleAndRegulation::class)
+            ->test(AdminRuleAndRegulationIndex::class)
+            ->call('openCreateDrawer')
             ->set('form.rule_header_id', $header->id)
             ->set('form.content', 'Return books on time.')
             ->call('save')
-            ->assertHasNoErrors();
+            ->assertSet('openDrawer', false)
+            ->assertSee('Return books on time.');
 
         $this->assertDatabaseHas('rule_regulations', [
             'rule_header_id' => $header->id,
@@ -67,7 +68,7 @@ class AdminRuleAndRegulationIndexTest extends TestCase
             ->call('edit', $rule->id)
             ->set('form.content', 'Updated content')
             ->call('update')
-            ->assertSet('showEditModal', false)
+            ->assertSet('openDrawer', false)
             ->assertSee('Updated content');
 
         $this->assertDatabaseHas('rule_regulations', [
@@ -89,7 +90,10 @@ class AdminRuleAndRegulationIndexTest extends TestCase
         Livewire::actingAs($user)
             ->test(AdminRuleAndRegulationIndex::class)
             ->assertSee('To be deleted')
-            ->call('delete', $rule->id)
+            ->call('confirmDelete', $rule->id)
+            ->assertSet('confirmDeleteModal', true)
+            ->call('deleteConfirmed')
+            ->assertSet('confirmDeleteModal', false)
             ->assertDontSee('To be deleted');
 
         $this->assertDatabaseMissing('rule_regulations', ['id' => $rule->id]);

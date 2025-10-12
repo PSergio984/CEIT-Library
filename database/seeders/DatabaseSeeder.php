@@ -252,6 +252,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 3 active librarians on duty');
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
+        $this->command->info('- 3 Main Header for Rules and Regulations with 3-5 rules each');
 
         $this->command->info('- Sample violations, credit scores, and session history');
     }

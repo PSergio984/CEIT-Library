@@ -16,8 +16,6 @@ return new class extends Migration
             $table->foreignId('rule_header_id')->constrained()->onDelete('cascade');
             // The full text of the rule/regulation
             $table->text('content');
-            // Sort order within its main header
-            $table->unsignedSmallInteger('order');
             $table->timestamps();
         });
     }
