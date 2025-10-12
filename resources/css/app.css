@@ -1,8 +1,7 @@
 @import "tailwindcss";
+@plugin "daisyui";
 
-/* daisyUI */
 @plugin "daisyui" {
-    /* biome-ignore lint/unknownProperty: daisyUI themes property */
     themes:
         light --default,
         dark --prefersdark;
@@ -18,6 +17,8 @@
 @source "../**/*.blade.php";
 @source "../**/*.js";
 @source "../**/*.vue";
+/** daisyUI */
+/* daisyUI plugin with themes */
 
 /* ===================================
    Enhanced Table Styling

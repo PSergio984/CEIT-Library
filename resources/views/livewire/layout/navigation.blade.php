@@ -28,8 +28,9 @@ new class extends Component
                 {{-- Empty left side - breadcrumbs can go here if needed --}}
             </div>
 
-            <!-- Settings Dropdown - Desktop Only -->
-            <div class="flex items-center ms-6">
+            <!-- Theme Toggle and Settings Dropdown - Desktop Only -->
+            <div class="flex items-center gap-2 ms-6">
+                <x-mary-theme-toggle class="btn btn-circle btn-ghost" />
                 @auth
                     <x-dropdown align="right" width="48">
                         <x-slot name="trigger">
