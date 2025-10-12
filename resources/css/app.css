@@ -125,11 +125,6 @@
     @apply bg-primary text-base-100;
 }
 
-/* Pagination Layout - MaryUI Default Structure */
-.mary-table-pagination {
-    @apply flex items-center justify-between w-full;
-}
-
 /* Enhanced Buttons */
 .btn {
     @apply transition-all duration-150;

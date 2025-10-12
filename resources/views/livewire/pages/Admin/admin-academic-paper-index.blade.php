@@ -42,13 +42,20 @@
                             :sort-by="$sortBy"
                             per-page="perPage"
                             :per-page-values="[5, 10, 25, 50]"
-                            link="/academic-papers/{id}"
                             row-class="text-base-content hover:bg-base-100 hover:text-base-content transition-all duration-150 border-b border-base-200 last:border-b-0"
                             header-class="text-base-content bg-gradient-to-r from-base-200 to-base-300 font-semibold border-b-2 border-base-300"
                             class="table-enhanced rounded-lg shadow-lg overflow-hidden w-full"
                         >
+                            @scope('cell_status', $row)
+                            <span class="badge {{ $row->status === 'Available' ? 'badge-success' : 'badge-error' }}">
+                                {{ $row->status }}
+                            </span>
+                            @endscope
+
                             @scope('actions', $row)
-                            <div class="flex items-center gap-4 justify-center">
+                            <div class="flex items-center gap-2 justify-center">
+                                <x-mary-button icon="o-eye" wire:click="showPaperDetails({{ $row->id }})"
+                                               class="btn-ghost btn-sm" tooltip="View Details"/>
                                 <x-mary-button icon="o-pencil-square" wire:click="edit({{ $row->id }})"
                                                class="btn-ghost btn-sm" tooltip="Edit"/>
                                 <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $row->id }})"
@@ -66,6 +73,103 @@
                                     <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.deleteModal = false" />
                                     <x-mary-button label="Delete" class="btn-error" wire:click="performDelete" />
                                 </x-slot:actions>
+                            </x-mary-modal>
+
+                            {{-- Academic Paper Details Modal --}}
+                            <x-mary-modal wire:model="showModal" title="" box-class="max-w-5xl w-full">
+                                @if($selectedPaper)
+                                    <div class="space-y-6">
+                                        <!-- Title Section -->
+                                        <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+                                            <h3 class="text-lg sm:text-xl font-bold flex-1 pr-4">{{ $selectedPaper->title }}</h3>
+                                            <div class="flex items-center gap-3">
+                                                @if($this->departmentIcon)
+                                                    <img src="{{ $this->departmentIcon }}" alt="{{ $selectedPaper->department }} Logo"
+                                                         class="w-20 h-20 sm:w-24 sm:h-24 object-contain">
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        <!-- Details Grid -->
+                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+                                            <div class="space-y-2 sm:space-y-3">
+                                                <div>
+                                                    <span class="font-semibold">Catalog Code:</span> {{ $selectedPaper->catalog_code }}
+                                                </div>
+                                                <div>
+                                                    <span class="font-semibold">Department:</span> {{ $selectedPaper->department }}
+                                                </div>
+                                                <div>
+                                                    <span class="font-semibold">Members:</span>
+                                                    @forelse($selectedPaper->authors as $author)
+                                                        {{ $author->name }}@if(!$loop->last)
+                                                            ,
+                                                        @endif
+                                                    @empty
+                                                        No authors listed
+                                                    @endforelse
+                                                </div>
+                                            </div>
+
+                                            <div class="space-y-2 sm:space-y-3">
+                                                <div>
+                                                    <span class="font-semibold">Adviser:</span> {{ $selectedPaper->research_project_adviser }}
+                                                </div>
+                                                <div>
+                                                    <span class="font-semibold">Year:</span> {{ $selectedPaper->publication_year }}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Copies Table -->
+                                        @if($selectedPaper->copies->count() > 0)
+                                            <div class="overflow-x-auto -mx-2 sm:mx-0">
+                                                <table class="table table-sm w-full text-sm sm:text-base border-collapse border border-base-300 rounded-lg overflow-hidden shadow-sm">
+                                                    <thead>
+                                                    <tr class="bg-base-200">
+                                                        <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Copy Id</th>
+                                                        <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Availability</th>
+                                                        <th class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">Action</th>
+                                                    </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                    @foreach($selectedPaper->copies as $copy)
+                                                        <tr class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
+                                                            <td class="px-4 py-3 text-base-content font-medium">{{ $copy->id }}</td>
+                                                            <td class="px-4 py-3">
+                                                                <span
+                                                                    class="badge px-4 py-1 {{ $this->getStatusBadgeClass($copy->status) }}">
+                                                                    {{ $copy->status }}
+                                                                </span>
+                                                            </td>
+                                                            <td class="px-4 py-3">
+                                                                <div class="flex items-center gap-2">
+                                                                    @if($copy->status === 'Available')
+                                                                        <x-mary-button
+                                                                            icon="o-qr-code"
+                                                                            class="btn-sm btn-success"
+                                                                            wire:click="requestQr({{ $copy->id }})"
+                                                                            tooltip="Generate QR Code"
+                                                                        />
+                                                                        <x-mary-button
+                                                                            icon="o-trash"
+                                                                            class="btn-sm btn-error"
+                                                                            wire:click="confirmCopyDelete({{ $copy->id }})"
+                                                                            tooltip="Delete Copy"
+                                                                        />
+                                                                    @else
+                                                                        <span class="text-error text-sm font-bold">Not Available</span>
+                                                                    @endif
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
+                                    </div>
+                                @endif
                             </x-mary-modal>
 
                             {{-- Create/Edit Academic Paper Drawer --}}
@@ -139,7 +243,19 @@
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.number_of_copies" @endif>
                                         Number of Copies @if($isEditing) <span wire:dirty wire:target="form.number_of_copies" class="text-orange-400">*</span> @endif
                                     </label>
-                                    <x-mary-input type="number" wire:model="form.number_of_copies" min="1" max="100" placeholder="Enter number of copies" icon="o-document-duplicate" hint="How many copies of this paper should be available" required />
+                                    @if($isEditing)
+                                        <div class="mb-4">
+                                            <x-mary-input type="number" wire:model="form.number_of_copies" min="1" max="100" placeholder="Enter number of copies" icon="o-document-duplicate" disabled />
+                                            <div class="text-sm text-warning mt-1 flex items-center gap-1">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                                </svg>
+                                                Copies cannot be modified here. Manage individual copies in the view modal.
+                                            </div>
+                                        </div>
+                                    @else
+                                        <x-mary-input type="number" wire:model="form.number_of_copies" min="1" max="100" placeholder="Enter number of copies" icon="o-document-duplicate" hint="How many copies of this paper should be available" required />
+                                    @endif
 
                                     <x-slot:actions>
                                         <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
@@ -154,6 +270,16 @@
                                     </x-slot:actions>
                                 </x-mary-form>  
                             </x-mary-drawer>
+
+                            {{-- Copy Deletion Confirmation Modal --}}
+                            <x-mary-modal wire:model="copyDeleteModal" title="Delete Copy" class="backdrop-blur">
+                                <p>Are you sure you want to delete copy #{{ $copyToDelete }}?</p>
+                                <p class="text-sm text-muted-foreground">This action cannot be undone. Only available copies can be deleted.</p>
+                                <x-slot:actions>
+                                    <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.copyDeleteModal = false" />
+                                    <x-mary-button label="Delete Copy" class="btn-error" wire:click="performCopyDelete" />
+                                </x-slot:actions>
+                            </x-mary-modal>
                     </div>
                 </div>
             </div>

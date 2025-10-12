@@ -5,6 +5,7 @@ namespace App\Livewire\Pages\Admin;
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -38,6 +39,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     public bool $isEditing = false;
     public AcademicPaperForm $form;
 
+    // Modal properties
+    public bool $showModal = false;
+    public ?AcademicPaper $selectedPaper = null;
+
+    // Copy deletion modal properties
+    public bool $copyDeleteModal = false;
+    public ?int $copyToDelete = null;
+
     // Cache properties for memoization
     private ?array $cachedAdvisers = null;
     private ?array $cachedDeans = null;
@@ -56,8 +65,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'paper_type', 'label' => 'Paper Type'],
-            ['key' => 'total_copies', 'label' => 'Total Copies'],
-            ['key' => 'available_copies', 'label' => 'Available'],
+            ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
         ];
         $this->form->populateYearChoices();
     }
@@ -85,13 +93,21 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Use cache for non-search queries (empty search) with short TTL
         if (empty($this->search)) {
-            return Cache::remember($cacheKey, 60, function () {
+            $paginated = Cache::remember($cacheKey, 60, function () {
                 return $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
             });
+        } else {
+            // For search queries, don't cache as they're more dynamic
+            $paginated = $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
         }
 
-        // For search queries, don't cache as they're more dynamic
-        return $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
+        // Transform items to include status as a direct property
+        $paginated->getCollection()->transform(function ($paper) {
+            $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
+            return $paper;
+        });
+
+        return $paginated;
     }
 
     /**
@@ -117,7 +133,6 @@ class AdminAcademicPaperIndex extends AdminComponent
                 });
             })
             ->withCount([
-                'copies as total_copies',
                 'copies as available_copies' => function ($query) {
                     $query->where('status', 'Available');
                 }
@@ -366,6 +381,82 @@ class AdminAcademicPaperIndex extends AdminComponent
             ];
             return $map[$dept] ?? $dept;
         });
+    }
+
+    public function showPaperDetails(AcademicPaper $academicPaper): void
+    {
+        $this->selectedPaper = $academicPaper->load('authors', 'copies');
+        $this->showModal = true;
+    }
+
+    public function closeModal(): void
+    {
+        $this->showModal = false;
+        $this->selectedPaper = null;
+    }
+
+    public function requestQr(): void
+    {
+        // TODO: Implement QR code request functionality
+        // This could generate a QR code for the specific copy
+        // or redirect to a QR generation page
+    }
+
+    public function confirmCopyDelete(int $copyId): void
+    {
+        $this->copyToDelete = $copyId;
+        $this->copyDeleteModal = true;
+    }
+
+    public function performCopyDelete(): void
+    {
+        if ($this->copyToDelete) {
+            $copy = \App\Models\Inventory::find($this->copyToDelete);
+            if ($copy && $copy->status === 'Available') {
+                $copy->delete();
+                $this->success("Copy #{$this->copyToDelete} deleted successfully", 'Copy Deleted!');
+
+                // Refresh the selected paper data
+                if ($this->selectedPaper) {
+                    $this->selectedPaper = $this->selectedPaper->fresh(['authors', 'copies']);
+                }
+
+                // Invalidate caches to reflect the change
+                $this->invalidateSearchCaches();
+            } else {
+                $this->error("Cannot delete copy #{$this->copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
+            }
+        }
+
+        $this->copyDeleteModal = false;
+        $this->copyToDelete = null;
+    }
+
+    #[Computed]
+    public function departmentIcon(): string
+    {
+        if (!$this->selectedPaper || !$this->selectedPaper->department) {
+            return '';
+        }
+
+        return match ($this->selectedPaper->department) {
+            'Civil Engineering' => Vite::asset('public/images/aces.png'),
+            'Electrical Engineering' => Vite::asset('public/images/ees.png'),
+            'Information Technology' => Vite::asset('public/images/vits.png'),
+            default => '',
+        };
+    }
+
+    /**
+     * Get the appropriate badge class for a given status.
+     */
+    public function getStatusBadgeClass(string $status): string
+    {
+        return match ($status) {
+            'Available' => 'badge-success',
+            'Borrowed' => 'badge-warning',
+            default => 'badge-error',
+        };
     }
 
     public function render()
