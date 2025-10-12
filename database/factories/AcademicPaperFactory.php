@@ -24,19 +24,7 @@ class AcademicPaperFactory extends Factory
 
         $department = $this->faker->randomElement($departments);
 
-        // Generate catalog code following the new format: CEIT-{DEPARTMENT_CODE}-{YEAR}-{SEQUENCE}
-        $departmentCodes = [
-            'Information Technology' => 'IT',
-            'Civil Engineering' => 'CE',
-            'Electrical Engineering' => 'EE',
-        ];
-
-        $departmentCode = $departmentCodes[$department];
-        $year = date('y'); // Current 2-digit year
-        $sequence = str_pad($this->faker->unique()->numberBetween(1, 99), 2, '0', STR_PAD_LEFT);
-
         return [
-            'catalog_code' => "CEIT-{$departmentCode}-{$year}-{$sequence}",
             'title' => $this->faker->sentence(6, true),
             'publication_year' => $this->faker->numberBetween(2002, 2025),
             'paper_type' => $this->faker->randomElement(['Thesis', 'Feasib', 'Capstone', 'Research', 'Practicum', 'Report']),

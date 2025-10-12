@@ -144,17 +144,50 @@ class AcademicPaper extends Model
      */
     private static function getNextSequence($departmentCode, $year)
     {
-        // Find the highest sequence number for this department and year
+        // Use database-side query to extract and find max sequence number
         $pattern = "CEIT-{$departmentCode}-{$year}-%";
-        $highestSequence = self::where('catalog_code', 'like', $pattern)
-            ->get()
-            ->map(function ($paper) {
-                // Extract sequence number from catalog_code
-                $parts = explode('-', $paper->catalog_code);
-                return (int) end($parts);
-            })
-            ->max();
 
-        return str_pad(($highestSequence ?? 0) + 1, 2, '0', STR_PAD_LEFT);
+        // Check if we're using SQLite (for testing) or MySQL (for production)
+        $connection = config('database.default');
+        $driver = config("database.connections.{$connection}.driver");
+
+        if ($driver === 'sqlite') {
+            // SQLite-compatible query: use a simple approach with known format
+            // Format: CEIT-{DEPARTMENT_CODE}-{YEAR}-{SEQUENCE}
+            $highestSequence = self::where('catalog_code', 'like', $pattern)
+                ->selectRaw('
+                    COALESCE(
+                        MAX(
+                            CAST(
+                                SUBSTR(
+                                    catalog_code, 
+                                    LENGTH("CEIT-' . $departmentCode . '-' . $year . '-") + 1
+                                ) AS INTEGER
+                            )
+                        ), 
+                        0
+                    ) as max_sequence
+                ')
+                ->value('max_sequence');
+        } else {
+            // MySQL-compatible query using SUBSTRING_INDEX
+            $highestSequence = self::where('catalog_code', 'like', $pattern)
+                ->selectRaw('
+                    COALESCE(
+                        MAX(
+                            CAST(
+                                NULLIF(
+                                    SUBSTRING_INDEX(catalog_code, "-", -1),
+                                    ""
+                                ) AS UNSIGNED
+                            )
+                        ), 
+                        0
+                    ) as max_sequence
+                ')
+                ->value('max_sequence');
+        }
+
+        return str_pad($highestSequence + 1, 2, '0', STR_PAD_LEFT);
     }
 }
