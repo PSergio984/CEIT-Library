@@ -222,4 +222,37 @@ class AcademicPaperTest extends TestCase
         $this->assertDatabaseMissing('academic_papers', ['id' => $paperId]);
         $this->assertNull(AcademicPaper::find($paperId));
     }
+
+    public function test_academic_paper_auto_generates_catalog_code()
+    {
+        $paper = AcademicPaper::factory()->create([
+            'title' => 'Test Paper',
+            'department' => 'Information Technology',
+            'publication_year' => now()->year,
+            // Note: catalog_code is intentionally omitted
+        ]);
+
+        // Verify the catalog code was auto-generated with expected format
+        $this->assertNotNull($paper->catalog_code);
+        $this->assertMatchesRegularExpression('/^CEIT-IT-\d{2}-\d+$/', $paper->catalog_code);
+        $this->assertDatabaseHas('academic_papers', [
+            'id' => $paper->id,
+            'catalog_code' => $paper->catalog_code,
+        ]);
+    }
+
+    public function test_academic_paper_factory_attaches_authors()
+    {
+        // Create some authors first so the factory can attach them
+        $authors = \App\Models\Author::factory()->count(5)->create();
+
+        $paper = AcademicPaper::factory()->create([
+            'title' => 'Test Paper with Authors',
+        ]);
+
+        // Verify 1-4 authors are attached (as per factory configure())
+        $authorCount = $paper->authors()->count();
+        $this->assertGreaterThanOrEqual(1, $authorCount);
+        $this->assertLessThanOrEqual(4, $authorCount);
+    }
 }

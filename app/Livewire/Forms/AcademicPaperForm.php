@@ -8,14 +8,14 @@ use Livewire\Form;
 
 class AcademicPaperForm extends Form
 {
-    public ?AcademicPaper $academicPaper;
+    public ?AcademicPaper $academicPaper = null;
 
-    public ?int $id;
-    public ?string $catalog_code;
+    public ?int $id = null;
+    public ?string $catalog_code = null;
     #[Validate('required')]
     public string $title = '';
     #[Validate('required')]
-    public ?int $publication_year;
+    public ?int $publication_year = null;
     #[Validate('required')]
     public string $paper_type = '';
     #[Validate('required')]

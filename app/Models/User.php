@@ -163,7 +163,9 @@ class User extends Authenticatable implements MustVerifyEmail
     public function getCreditScoreAttribute()
     {
         $defaultScore = 100;
-        // Join with violations table to sum penalty_score from the related Violation model
+        // Use the existing relationship to sum penalty_score from the related Violation model
+        // Join only the violations table (matching violation_transactions.violation_id to violations.id)
+        // and sum violations.penalty_score, using the relation's base table and a single join
         $penaltySum = $this->violations()
             ->join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
             ->sum('violations.penalty_score');
