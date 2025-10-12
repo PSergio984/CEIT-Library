@@ -79,7 +79,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->sortBy['column'],
             $this->sortBy['direction'],
             $this->perPage,
-            $this->page('academic-papers-index'),
+            $this->getPage('academic-papers-index'),
             $version
         );
 
