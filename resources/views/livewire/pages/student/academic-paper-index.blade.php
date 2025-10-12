@@ -10,9 +10,15 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-base-100 overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
-                    <div class="mb-6">
-                        <h3 class="text-lg font-medium text-base-content mb-2">Library Academic Paper Collection</h3>
-                        <p class="text-sm text-base-content/70">Browse and access Academic Paper documents from the CEIT Library</p>
+                    <!-- Header Actions -->
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+                        <div class="mb-6">
+                            <h3 class="text-lg font-medium text-base-content mb-2">Library Academic Paper Collection</h3>
+                            <p class="text-sm text-base-content/70">Browse and access Academic Paper documents from the CEIT Library</p>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <x-mary-input label="Search Title Here" wire:model.live.debounce="search" placeholder="Search Title Here" inline icon="o-magnifying-glass" clearable />
+                        </div>
                     </div>
 
                     <div class="overflow-x-auto">
@@ -27,6 +33,19 @@
                         header-class="text-base-content bg-gradient-to-r from-base-200 to-base-300 font-semibold border-b-2 border-base-300"
                         class="table-enhanced rounded-lg shadow-lg overflow-hidden"
                       >
+                        <x-slot:empty>
+                          <div class="text-center py-8">
+                            <x-mary-icon name="o-document-magnifying-glass" class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
+                            <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
+                            <p class="text-sm text-base-content/70">
+                              @if($search)
+                                There's no academic paper matching your query "{{ $search }}"
+                              @else
+                                No academic papers are available at the moment
+                              @endif
+                            </p>
+                          </div>
+                        </x-slot:empty>
                           @scope('cell_status', $row)
                           <x-mary-badge
                               :value="$row->status"
@@ -39,6 +58,7 @@
                               icon="o-eye"
                               class="btn-sm btn-primary"
                               wire:click="showPaperDetails({{ $row->id }})"
+                              tooltip="View Details"
                           >
                               View
                           </x-mary-button>
@@ -123,6 +143,7 @@
                                                 icon="o-qr-code"
                                                 class="btn-sm btn-success"
                                                 wire:click="requestQr({{ $copy->id }})"
+                                                tooltip="Request QR Code"
                                             >
                                             </x-mary-button>
                                         @else

@@ -18,6 +18,7 @@ class AcademicPaperIndex extends Component
     public array $headers = [];
     public int $perPage = 10;
     public ?string $dept = null;
+    public string $search = '';
 
     // Modal properties
     public bool $showModal = false;
@@ -60,6 +61,10 @@ class AcademicPaperIndex extends Component
                 $value = $map[$this->dept] ?? $this->dept;
                 $q->where('department', $value);
             })
+            // search functionality
+            ->when($this->search, function ($q) {
+                $q->where('title', 'like', '%' . $this->search . '%');
+            })
             ->withCount([
                 'copies as available_copies' => function ($query) {
                     $query->where('status', 'Available');
@@ -86,6 +91,12 @@ class AcademicPaperIndex extends Component
 
     // Reset pagination when dept changes
     public function updatedDept(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    // Reset pagination when search changes
+    public function updatedSearch(): void
     {
         $this->resetPage('academic-papers-index');
     }

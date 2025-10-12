@@ -46,6 +46,19 @@
                             header-class="text-base-content bg-gradient-to-r from-base-200 to-base-300 font-semibold border-b-2 border-base-300"
                             class="table-enhanced rounded-lg shadow-lg overflow-hidden w-full"
                         >
+                            <x-slot:empty>
+                              <div class="text-center py-8">
+                                <x-mary-icon name="o-document-magnifying-glass" class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
+                                <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
+                                <p class="text-sm text-base-content/70">
+                                  @if($search)
+                                    There's no academic paper matching your query "{{ $search }}"
+                                  @else
+                                    No academic papers are available at the moment
+                                  @endif
+                                </p>
+                              </div>
+                            </x-slot:empty>
                             @scope('cell_status', $row)
                             <span class="badge {{ $row->status === 'Available' ? 'badge-success' : 'badge-error' }}">
                                 {{ $row->status }}
