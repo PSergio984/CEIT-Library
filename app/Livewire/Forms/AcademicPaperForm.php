@@ -3,6 +3,7 @@
 namespace App\Livewire\Forms;
 
 use App\Models\AcademicPaper;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
@@ -26,20 +27,8 @@ class AcademicPaperForm extends Form
     public array $author_names = [];
     #[Validate('required|integer|min:1|max:100')]
     public int $number_of_copies = 1;
-    public array $type_choices = [
-        ['id' => 'Thesis', 'name' => 'Thesis'],
-        ['id' => 'Capstone', 'name' => 'Capstone'],
-        ['id' => 'Feasib', 'name' => 'Feasib'],
-        ['id' => 'Research', 'name' => 'Research'],
-        ['id' => 'Practicum', 'name' => 'Practicum'],
-        ['id' => 'Report', 'name' => 'Report'],
-    ];
-    public array $department_choices = [
-        ['id' => 'Civil Engineering', 'name' => 'Civil Engineering'],
-        ['id' => 'Information Technology', 'name' => 'Information Technology'],
-        ['id' => 'Electrical Engineering', 'name' => 'Electrical Engineering'],
-
-    ];
+    public array $type_choices = [];
+    public array $department_choices = [];
 
     public array $year_choices = [];
     public ?\Illuminate\Support\Collection $adviser_options = null;
@@ -50,16 +39,45 @@ class AcademicPaperForm extends Form
         $this->adviser_options = collect();
         $this->dean_options = collect();
         $this->populateYearChoices();
+        $this->loadStaticChoices();
+    }
+
+    /**
+     * Load static choices with caching
+     */
+    private function loadStaticChoices(): void
+    {
+        $this->type_choices = Cache::remember('academic_paper_type_choices', 3600, function () {
+            return [
+                ['id' => 'Thesis', 'name' => 'Thesis'],
+                ['id' => 'Capstone', 'name' => 'Capstone'],
+                ['id' => 'Feasib', 'name' => 'Feasib'],
+                ['id' => 'Research', 'name' => 'Research'],
+                ['id' => 'Practicum', 'name' => 'Practicum'],
+                ['id' => 'Report', 'name' => 'Report'],
+            ];
+        });
+
+        $this->department_choices = Cache::remember('academic_paper_department_choices', 3600, function () {
+            return [
+                ['id' => 'Civil Engineering', 'name' => 'Civil Engineering'],
+                ['id' => 'Information Technology', 'name' => 'Information Technology'],
+                ['id' => 'Electrical Engineering', 'name' => 'Electrical Engineering'],
+            ];
+        });
     }
 
     public function populateYearChoices()
     {
-        $currentYear = date('Y');
-        $years = [];
-        for ($y = $currentYear; $y >= 2002; $y--) {
-            $years[] = ['id' => $y, 'name' => $y];
-        }
-        $this->year_choices = $years;
+        // Cache year choices since they don't change often
+        $this->year_choices = Cache::remember('academic_paper_year_choices', 3600, function () {
+            $currentYear = date('Y');
+            $years = [];
+            for ($y = $currentYear; $y >= 2002; $y--) {
+                $years[] = ['id' => $y, 'name' => $y];
+            }
+            return $years;
+        });
     }
 
 
@@ -127,6 +145,9 @@ class AcademicPaperForm extends Form
         $this->author_names = $academicPaper->authors()->pluck('name')->filter()->toArray();
         $this->number_of_copies = $academicPaper->copies()->count() ?: 1;
         $this->academicPaper = $academicPaper;
+
+        // Load static choices to ensure dropdowns are populated
+        $this->loadStaticChoices();
     }
 
     public function store()
@@ -138,16 +159,16 @@ class AcademicPaperForm extends Form
             'department' => 'required',
             'author_names' => 'required|array|min:1',
             'number_of_copies' => 'required|integer|min:1|max:100',
-            'research_project_adviser' => 'required',
-            'dean' => 'required',
+            'research_project_adviser' => 'required|string',
+            'dean' => 'required|string',
         ]);
         $paper = AcademicPaper::create([
             'title' => $this->title,
             'publication_year' => $this->publication_year,
             'paper_type' => $this->paper_type,
-            'research_project_adviser' => $this->research_project_adviser ?? '',
+            'research_project_adviser' => $this->research_project_adviser,
             'department' => $this->department,
-            'dean' => $this->dean ?? '',
+            'dean' => $this->dean,
         ]);
 
         // Sync authors
@@ -172,8 +193,8 @@ class AcademicPaperForm extends Form
             'department' => 'required',
             'author_names' => 'required|array|min:1',
             'number_of_copies' => 'required|integer|min:1|max:100',
-            'research_project_adviser' => 'required',
-            'dean' => 'required',
+            'research_project_adviser' => 'required|string',
+            'dean' => 'required|string',
         ]);
         $updateData = $this->only(['title', 'publication_year', 'paper_type', 'department']);
         $updateData['research_project_adviser'] = $this->research_project_adviser ?? '';
@@ -196,10 +217,13 @@ class AcademicPaperForm extends Form
         $this->academicPaper = null;
         $this->id = null;
         $this->catalog_code = null;
+        $this->research_project_adviser = '';
+        $this->dean = '';
         $this->author_names = [];
         $this->number_of_copies = 1;
         $this->adviser_options = collect();
         $this->dean_options = collect();
         $this->populateYearChoices();
+        $this->loadStaticChoices();
     }
 }

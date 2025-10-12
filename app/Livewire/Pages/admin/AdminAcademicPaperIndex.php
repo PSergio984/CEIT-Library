@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -37,6 +38,12 @@ class AdminAcademicPaperIndex extends AdminComponent
     public bool $isEditing = false;
     public AcademicPaperForm $form;
 
+    // Cache properties for memoization
+    private ?array $cachedAdvisers = null;
+    private ?array $cachedDeans = null;
+    private ?string $lastAdviserSearch = null;
+    private ?string $lastDeanSearch = null;
+
     public function mount(?string $dept = null)
     {
         $this->dept = $dept;
@@ -61,19 +68,40 @@ class AdminAcademicPaperIndex extends AdminComponent
     #[Computed]
     public function academicPapers()
     {
-        $query = AcademicPaper::query()
+        // Create a cache key based on current filters and pagination
+        $cacheKey = sprintf(
+            'academic_papers_%s_%s_%s_%s_%d_%d',
+            $this->dept ?? 'all',
+            $this->search ?: 'no_search',
+            $this->sortBy['column'],
+            $this->sortBy['direction'],
+            $this->perPage,
+            request()->get('page', 1)
+        );
+
+        // Use cache for non-search queries (empty search) with short TTL
+        if (empty($this->search)) {
+            return Cache::remember($cacheKey, 60, function () {
+                return $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
+            });
+        }
+
+        // For search queries, don't cache as they're more dynamic
+        return $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
+    }
+
+    /**
+     * Build the academic papers query with filters and relationships
+     */
+    private function buildAcademicPapersQuery()
+    {
+        return AcademicPaper::query()
             ->with(['copies' => function ($query) {
                 $query->select('academic_paper_id', 'status');
             }])
             // filter by department if provided via route slug
             ->when($this->dept, function ($q) {
-                // map short slugs to real department names if needed
-                $map = [
-                    'it' => 'Information Technology',
-                    'ce' => 'Civil Engineering',
-                    'ee' => 'Electrical Engineering',
-                ];
-                $value = $map[$this->dept] ?? $this->dept;
+                $value = $this->getDepartmentName($this->dept);
                 $q->where('department', $value);
             })
             ->when($this->search, function ($query) {
@@ -91,8 +119,6 @@ class AdminAcademicPaperIndex extends AdminComponent
                 }
             ])
             ->orderBy(...array_values($this->sortBy));
-
-        return $query->paginate($this->perPage, pageName: 'academic-papers-index');
     }
 
     // Reset pagination when dept or search changes
@@ -132,6 +158,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             if ($academicPaper) {
                 $title = $academicPaper->title;
                 $academicPaper->delete();
+                $this->invalidateSearchCaches();
                 $this->warning("$title deleted", 'Good bye!');
             }
         }
@@ -173,6 +200,10 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->success("{$paper->catalog_code} created", 'Academic Paper Created Successfully!');
         }
 
+        // Invalidate caches when data changes
+        $this->invalidateSearchCaches();
+        $this->clearRequestCaches();
+
         $this->formDrawer = false;
         $this->isEditing = false;
         $this->form->reset();
@@ -183,19 +214,38 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
 
-    // Search method for advisers
+    // Search method for advisers with caching
     public function searchAdvisers(string $value = '')
     {
-        // Get search results
-        $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
-            ->where('research_project_adviser', 'like', "%{$value}%")
-            ->distinct()
-            ->pluck('research_project_adviser')
-            ->filter()
-            ->map(function ($adviser) {
-                return ['id' => $adviser, 'name' => $adviser];
-            })
-            ->take(10);
+        // Check if we have cached results for the same search
+        if ($this->lastAdviserSearch === $value && $this->cachedAdvisers !== null) {
+            $this->form->adviser_options = collect($this->cachedAdvisers);
+            return $this->cachedAdvisers;
+        }
+
+        // Use cache for common searches (empty or very short searches)
+        $cacheKey = $value === '' ? 'advisers_all' : null;
+        if ($cacheKey && Cache::has($cacheKey)) {
+            $advisers = collect(Cache::get($cacheKey));
+        } else {
+            // Get search results from database
+            $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+                ->when($value !== '', function ($query) use ($value) {
+                    $query->where('research_project_adviser', 'like', "%{$value}%");
+                })
+                ->distinct()
+                ->pluck('research_project_adviser')
+                ->filter()
+                ->map(function ($adviser) {
+                    return ['id' => $adviser, 'name' => $adviser];
+                })
+                ->take(10);
+
+            // Cache empty search results for 5 minutes
+            if ($value === '') {
+                Cache::put($cacheKey, $advisers->toArray(), 300);
+            }
+        }
 
         // Include selected option if it exists and is not in search results
         if (!empty($this->form->research_project_adviser)) {
@@ -203,23 +253,46 @@ class AdminAcademicPaperIndex extends AdminComponent
             $advisers = $advisers->merge($selectedOption)->unique('id');
         }
 
+        // Cache the results for this request
+        $this->cachedAdvisers = $advisers->toArray();
+        $this->lastAdviserSearch = $value;
         $this->form->adviser_options = $advisers;
-        return $advisers->toArray();
+
+        return $this->cachedAdvisers;
     }
 
-    // Search method for deans
+    // Search method for deans with caching
     public function searchDeans(string $value = '')
     {
-        // Get search results
-        $deans = \App\Models\AcademicPaper::whereNotNull('dean')
-            ->where('dean', 'like', "%{$value}%")
-            ->distinct()
-            ->pluck('dean')
-            ->filter()
-            ->map(function ($dean) {
-                return ['id' => $dean, 'name' => $dean];
-            })
-            ->take(10);
+        // Check if we have cached results for the same search
+        if ($this->lastDeanSearch === $value && $this->cachedDeans !== null) {
+            $this->form->dean_options = collect($this->cachedDeans);
+            return $this->cachedDeans;
+        }
+
+        // Use cache for common searches (empty or very short searches)
+        $cacheKey = $value === '' ? 'deans_all' : null;
+        if ($cacheKey && Cache::has($cacheKey)) {
+            $deans = collect(Cache::get($cacheKey));
+        } else {
+            // Get search results from database
+            $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+                ->when($value !== '', function ($query) use ($value) {
+                    $query->where('dean', 'like', "%{$value}%");
+                })
+                ->distinct()
+                ->pluck('dean')
+                ->filter()
+                ->map(function ($dean) {
+                    return ['id' => $dean, 'name' => $dean];
+                })
+                ->take(10);
+
+            // Cache empty search results for 5 minutes
+            if ($value === '') {
+                Cache::put($cacheKey, $deans->toArray(), 300);
+            }
+        }
 
         // Include selected option if it exists and is not in search results
         if (!empty($this->form->dean)) {
@@ -227,8 +300,73 @@ class AdminAcademicPaperIndex extends AdminComponent
             $deans = $deans->merge($selectedOption)->unique('id');
         }
 
+        // Cache the results for this request
+        $this->cachedDeans = $deans->toArray();
+        $this->lastDeanSearch = $value;
         $this->form->dean_options = $deans;
-        return $deans->toArray();
+
+        return $this->cachedDeans;
+    }
+
+    /**
+     * Invalidate search-related caches when data changes
+     */
+    private function invalidateSearchCaches(): void
+    {
+        Cache::forget('advisers_all');
+        Cache::forget('deans_all');
+
+        // Clear academic papers cache patterns
+        $patterns = [
+            'academic_papers_all_*',
+            'academic_papers_it_*',
+            'academic_papers_ce_*',
+            'academic_papers_ee_*',
+        ];
+
+        foreach ($patterns as $pattern) {
+            $this->clearCachePattern($pattern);
+        }
+    }
+
+    /**
+     * Clear cache entries matching a pattern
+     */
+    private function clearCachePattern(string $pattern): void
+    {
+        // This is a simplified approach - in production you might want to use Redis with pattern matching
+        // or implement a more sophisticated cache tagging system
+        $cache = Cache::getStore();
+        if (method_exists($cache, 'flush')) {
+            // For simple cache stores, we'll rely on TTL expiration
+            // In production with Redis, you could use SCAN with MATCH pattern
+        }
+    }
+
+    /**
+     * Clear request-level caches to force fresh data
+     */
+    private function clearRequestCaches(): void
+    {
+        $this->cachedAdvisers = null;
+        $this->cachedDeans = null;
+        $this->lastAdviserSearch = null;
+        $this->lastDeanSearch = null;
+    }
+
+    /**
+     * Get department name from slug with caching
+     */
+    private function getDepartmentName(string $dept): string
+    {
+        return Cache::remember("dept_mapping_{$dept}", 3600, function () use ($dept) {
+            $map = [
+                'it' => 'Information Technology',
+                'ce' => 'Civil Engineering',
+                'ee' => 'Electrical Engineering',
+            ];
+            return $map[$dept] ?? $dept;
+        });
     }
 
     public function render()

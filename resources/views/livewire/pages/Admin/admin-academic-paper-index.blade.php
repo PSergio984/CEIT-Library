@@ -148,7 +148,7 @@
                                             class="btn btn-primary disabled:opacity-75 disabled:bg-blue-300"
                                             wire:dirty.class="hover:bg-blue-900"
                                             wire:dirty.remove.attr="disabled"
-                                            @if($isEditing || empty($form->research_project_adviser) || empty($form->dean)) disabled @endif>
+                                            @if($isEditing || trim($form->research_project_adviser ?? '') === '' || trim($form->dean ?? '') === '' || $errors->has('form.research_project_adviser') || $errors->has('form.dean')) disabled @endif>
                                             {{ $isEditing ? 'Update' : 'Save' }}
                                         </button>
                                     </x-slot:actions>
