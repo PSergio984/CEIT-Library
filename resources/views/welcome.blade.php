@@ -13,6 +13,7 @@
 
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
 </head>
 
 <body class="min-h-screen font-sans relative"
@@ -81,6 +82,7 @@
         </div>
     </main>
 
+    @livewireScripts
 </body>
 
 </html>
