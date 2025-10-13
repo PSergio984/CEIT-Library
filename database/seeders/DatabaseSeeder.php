@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\RuleHeader;
 use App\Models\User;
 use App\Models\AcademicPaper;
 use App\Models\Violation;
@@ -11,6 +12,7 @@ use App\Models\Attendance;
 use App\Models\Librarian;
 use App\Models\Inventory;
 use App\Models\BorrowTransaction;
+use App\Models\RuleRegulation;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -225,6 +227,23 @@ class DatabaseSeeder extends Seeder
             ]);
         }
 
+        $rulesHeaders = [
+            ['title' => 'I.General Information', 'order' => 1],
+            ['title' => 'II.Duties and Responsibilities', 'order' => 2],
+            ['title' => 'III.Study Room Rules and Regulations', 'order' => 3],
+        ];
+
+        foreach ($rulesHeaders as $headerData) {
+            $header = RuleHeader::create($headerData);
+            // Create 3-5 rules for each header
+            for ($i = 1; $i <= rand(3, 5); $i++) {
+                RuleRegulation::factory()->create([
+                    'rule_header_id' => $header->id,
+                ]);
+            }
+
+        }
+
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
         $this->command->info('- 52 users (2 Admin, 50 students)');
@@ -233,6 +252,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 3 active librarians on duty');
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
+        $this->command->info('- 3 Main Header for Rules and Regulations with 3-5 rules each');
 
         $this->command->info('- Sample violations, credit scores, and session history');
     }
