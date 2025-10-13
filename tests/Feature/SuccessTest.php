@@ -14,25 +14,25 @@ class SuccessTest extends TestCase
         $paper = AcademicPaper::factory()->create([
             'title' => 'A Paper About Fulltext Search',
             'research_project_adviser' => 'Dr. Fulltext Expert',
-            'catalog_code' => 'FT-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertDatabaseHas('academic_papers', [
             'title' => 'A Paper About Fulltext Search',
             'research_project_adviser' => 'Dr. Fulltext Expert',
-            'catalog_code' => 'FT-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         // Test that we can create multiple papers
         $paper2 = AcademicPaper::factory()->create([
             'title' => 'Another Paper',
             'research_project_adviser' => 'Dr. Another Expert',
-            'catalog_code' => 'FT-002',
+            'catalog_code' => 'CEIT-IT-25-02',
         ]);
 
         $this->assertDatabaseHas('academic_papers', [
             'title' => 'Another Paper',
-            'catalog_code' => 'FT-002',
+            'catalog_code' => 'CEIT-IT-25-02',
         ]);
     }
 
@@ -41,12 +41,12 @@ class SuccessTest extends TestCase
         $user = User::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
             'student_no' => '20-3001',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
             'student_no' => '20-3001',
         ]);
     }

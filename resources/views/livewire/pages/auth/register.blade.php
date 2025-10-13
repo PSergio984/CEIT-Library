@@ -2,6 +2,7 @@
 
 use App\Mail\Welcome;
 use App\Models\User;
+use App\Rules\PlvEmailDomain;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -26,9 +27,43 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $validated = $this->validate([
             'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
-            'student_no' => ['required', 'string', 'size:7', 'regex:/^\d{2}-\d{4}$/', 'unique:' . User::class],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:100', 'unique:' . User::class, 'regex:/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/'],
+            'last_name' => [
+                'required', 
+                'string', 
+                'max:255', 
+                function ($attribute, $value, $fail) {
+                    // Get email from the current form data
+                    $email = $this->email ?? '';
+                    $firstName = $this->first_name ?? '';
+                    $lastName = $value;
+
+                    if (!$email) {
+                        return; // Skip validation if no email provided
+                    }
+
+                    // Extract the email prefix (part before @plv.edu.ph)
+                    if (!preg_match('/^(.+)@plv\.edu\.ph$/', $email, $matches)) {
+                        return; // Skip if email doesn't match PLV format
+                    }
+
+                    $emailPrefix = strtolower($matches[1]);
+
+                    // Only validate when we have both names
+                    if (empty($firstName) || empty($lastName)) {
+                        return;
+                    }
+
+                    // Concatenate both names and normalize (remove spaces and convert to lowercase)
+                    $concatenatedName = strtolower(str_replace(' ', '', $firstName . $lastName));
+
+                    // Check if concatenated name matches email prefix
+                    if ($concatenatedName !== $emailPrefix) {
+                        $fail('The first name and last name must match the characters before @plv.edu.ph in your email address. Expected: ' . $emailPrefix . ', Got: ' . $concatenatedName);
+                    }
+                }
+            ],
+            'student_no' => ['required', 'string', 'size:7', 'unique:' . User::class],
+            'email' => ['required', 'string', 'lowercase', new PlvEmailDomain, 'email', 'max:100', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
 

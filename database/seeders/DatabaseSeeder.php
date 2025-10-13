@@ -24,15 +24,22 @@ class DatabaseSeeder extends Seeder
         $admin = User::factory()->create([
             'first_name' => 'Janrel',
             'last_name' => 'Motovlogs',
-            'email' => 'Admin@gmail.com',
+            'email' => 'admin@plv.edu.ph',
             'is_admin' => true,
             'password' => bcrypt('Pwd@12345'),
         ]);
 
-        $libraryManager = User::factory()->create([
-            'first_name' => 'Library',
-            'last_name' => 'Manager',
-            'email' => 'library.manager@plv.edu.ph',
+        $librarian = User::factory()->create([
+            'first_name' => 'Librarian',
+            'last_name' => 'Librarian',
+            'email' => 'librarian@plv.edu.ph',
+            'is_admin' => false,
+            'password' => bcrypt('Pwd@12345'),
+        ]);
+
+        Librarian::factory()->active()->create([
+            'user_id' => $librarian->id,
+            'created_by' => $admin->id,
         ]);
 
         // Create regular student users

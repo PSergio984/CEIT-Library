@@ -66,17 +66,17 @@ class ViolationTransaction extends Model
     public static function getUserViolations($userId)
     {
         return static::where('user_id', $userId)
-                    ->with('violation')
-                    ->orderBy('date_occurred', 'desc')
-                    ->get();
+            ->with('violation')
+            ->orderBy('date_occurred', 'desc')
+            ->get();
     }
 
     // Get total penalty score for a user
     public static function getUserTotalPenalty($userId)
     {
         return static::join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
-                    ->where('violation_transactions.user_id', $userId)
-                    ->sum('violations.penalty_score');
+            ->where('violation_transactions.user_id', $userId)
+            ->sum('violations.penalty_score');
     }
 
     // Scope for filtering by severity

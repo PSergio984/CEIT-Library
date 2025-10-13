@@ -13,9 +13,11 @@ use App\Models\ViolationTransaction;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class UserTest extends TestCase
 {
+    use TestHelper;
 
     /**
      * Test user can be created with factory.
@@ -163,7 +165,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-1-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-1')
         ]);
 
         BorrowTransaction::create([
@@ -172,7 +174,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now()->subDays(3),
             'expires_at' => Carbon::now()->addDays(11),
-            'session_token' => 'test-token-2-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-2')
         ]);
 
         $this->assertCount(2, $user->borrowTransactions);
@@ -194,18 +196,17 @@ class UserTest extends TestCase
     }
 
     /**
-     * Test user has credit score relationship.
+     * Test user has credit score accessor.
      *
      * @return void
      */
-    public function test_user_has_credit_score_relationship()
+    public function test_user_has_credit_score_accessor()
     {
         $user = User::factory()->create();
 
-        $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasOne::class,
-            $user->creditScore()
-        );
+        // Test that the credit score accessor exists and returns a numeric value
+        $this->assertIsInt($user->credit_score);
+        $this->assertEquals(100, $user->credit_score);
     }
 
     /**
@@ -739,48 +740,17 @@ class UserTest extends TestCase
      *
      * @return void
      */
-    public function test_user_can_be_soft_deleted()
+    public function test_user_can_be_deleted()
     {
         $user = User::factory()->create();
         $userId = $user->id;
 
         $user->delete();
 
-        // Check if the model uses soft deletes
-        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($user))) {
-            $this->assertSoftDeleted('users', ['id' => $userId]);
-            $this->assertNull(User::find($userId));
-            $this->assertNotNull(User::withTrashed()->find($userId));
-        } else {
-            // If no soft deletes, just verify the user was deleted
-            $this->assertDatabaseMissing('users', ['id' => $userId]);
-            $this->assertNull(User::find($userId));
-        }
+        $this->assertDatabaseMissing('users', ['id' => $userId]);
+        $this->assertNull(User::find($userId));
     }
 
-    /**
-     * Test user can be restored from soft delete.
-     *
-     * @return void
-     */
-    public function test_user_can_be_restored_from_soft_delete()
-    {
-        $user = User::factory()->create();
-        $userId = $user->id;
-
-        $user->delete();
-
-        // Check if the model uses soft deletes
-        if (in_array('Illuminate\Database\Eloquent\SoftDeletes', class_uses($user))) {
-            $this->assertSoftDeleted('users', ['id' => $userId]);
-            $user->restore();
-            $this->assertDatabaseHas('users', ['id' => $userId, 'deleted_at' => null]);
-        } else {
-            // If no soft deletes, just verify the user was deleted
-            $this->assertDatabaseMissing('users', ['id' => $userId]);
-            $this->markTestSkipped('User model does not use soft deletes');
-        }
-    }
 
     /**
      * Test user credit score starts at default value.
@@ -791,13 +761,22 @@ class UserTest extends TestCase
     {
         $user = User::factory()->create();
 
-        // Check if the accessor exists
-        if (method_exists($user, 'getCreditScoreAttribute')) {
-            $this->assertEquals(100, $user->credit_score); // Assuming default is 100
-        } else {
-            // If accessor doesn't exist, just verify the user was created
-            $this->assertInstanceOf(User::class, $user);
-        }
+        // User with no violations should have default credit score of 100
+        $this->assertEquals(100, $user->credit_score);
+    }
+
+    /**
+     * Test user credit score calculation with no violations.
+     *
+     * @return void
+     */
+    public function test_user_credit_score_with_no_violations()
+    {
+        $user = User::factory()->create();
+
+        // User with no violations should have full credit score
+        $this->assertEquals(100, $user->credit_score);
+        $this->assertCount(0, $user->violations);
     }
 
     /**
@@ -830,7 +809,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-1-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-1')
         ]);
 
         BorrowTransaction::create([
@@ -839,7 +818,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now()->subDays(3),
             'expires_at' => Carbon::now()->addDays(11),
-            'session_token' => 'test-token-2-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-2')
         ]);
 
         $this->assertCount(2, $user->borrowTransactions);
@@ -874,7 +853,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $overdueTransactions = $user->borrowTransactions()
@@ -943,16 +922,20 @@ class UserTest extends TestCase
     }
 
     /**
-     * Test user total penalty amount.
+     * Test user credit score calculation with multiple violations.
      *
      * @return void
      */
-    public function test_user_total_penalty_amount()
+    public function test_user_credit_score_with_multiple_violations()
     {
         $user = User::factory()->create();
 
-        $violation1 = Violation::factory()->create();
-        $violation2 = Violation::factory()->create();
+        // User starts with default credit score
+        $this->assertEquals(100, $user->credit_score);
+
+        // Create violations with specific penalty scores
+        $violation1 = Violation::factory()->create(['penalty_score' => 5]);
+        $violation2 = Violation::factory()->create(['penalty_score' => 15]);
 
         ViolationTransaction::create([
             'user_id' => $user->id,
@@ -970,8 +953,35 @@ class UserTest extends TestCase
             'remarks' => 'Damaged book violation'
         ]);
 
-        // Since there's no penalty column, just verify the violations were created
+        // Verify violations were created
         $this->assertCount(2, $user->violations);
+
+        // Credit score should be reduced by total penalty (100 - 5 - 15 = 80)
+        $this->assertEquals(80, $user->fresh()->credit_score);
+    }
+
+    /**
+     * Test user credit score calculation with high penalty.
+     *
+     * @return void
+     */
+    public function test_user_credit_score_with_high_penalty()
+    {
+        $user = User::factory()->create();
+
+        // Create violation with high penalty score
+        $violation = Violation::factory()->create(['penalty_score' => 150]);
+
+        ViolationTransaction::create([
+            'user_id' => $user->id,
+            'violation_id' => $violation->id,
+            'severity' => 'Critical',
+            'date_occurred' => Carbon::now(),
+            'remarks' => 'Serious violation'
+        ]);
+
+        // Credit score should be reduced by penalty (100 - 150 = -50)
+        $this->assertEquals(-50, $user->fresh()->credit_score);
     }
 
     /**

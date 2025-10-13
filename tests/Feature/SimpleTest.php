@@ -13,11 +13,11 @@ class SimpleTest extends TestCase
         $user = User::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'email' => 'john@example.com',
+            'email' => 'john@plv.edu.ph',
         ]);
 
         $this->assertInstanceOf(User::class, $user);
@@ -27,12 +27,12 @@ class SimpleTest extends TestCase
     {
         $paper = AcademicPaper::factory()->create([
             'title' => 'Test Paper',
-            'catalog_code' => 'TEST-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertDatabaseHas('academic_papers', [
             'title' => 'Test Paper',
-            'catalog_code' => 'TEST-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertInstanceOf(AcademicPaper::class, $paper);

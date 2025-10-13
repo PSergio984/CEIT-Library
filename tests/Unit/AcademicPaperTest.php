@@ -10,21 +10,23 @@ use App\Models\User;
 use Carbon\Carbon;
 // use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class AcademicPaperTest extends TestCase
 {
+    use TestHelper;
     // use RefreshDatabase; // Using custom test database creation
 
     public function test_academic_paper_can_be_created_with_factory()
     {
         $paper = AcademicPaper::factory()->create([
             'title' => 'Test Paper',
-            'catalog_code' => 'CEIT-0001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertInstanceOf(AcademicPaper::class, $paper);
         $this->assertEquals('Test Paper', $paper->title);
-        $this->assertEquals('CEIT-0001', $paper->catalog_code);
+        $this->assertEquals('CEIT-IT-25-01', $paper->catalog_code);
     }
 
     public function test_academic_paper_has_fillable_attributes()
@@ -69,16 +71,9 @@ class AcademicPaperTest extends TestCase
             'copy_number' => 2
         ]);
 
-        // Check if the relationship exists (assuming it's defined in the model)
-        if (method_exists($paper, 'copies')) {
-            $this->assertCount(2, $paper->copies);
-            $this->assertTrue($paper->copies->contains($inventory1));
-            $this->assertTrue($paper->copies->contains($inventory2));
-        } else {
-            // If relationship doesn't exist, just verify the inventory items were created
-            $this->assertDatabaseHas('inventories', ['id' => $inventory1->id]);
-            $this->assertDatabaseHas('inventories', ['id' => $inventory2->id]);
-        }
+        $this->assertCount(2, $paper->copies);
+        +$this->assertTrue($paper->copies->contains($inventory1));
+        +$this->assertTrue($paper->copies->contains($inventory2));
     }
 
     public function test_academic_paper_can_have_borrow_transactions()
@@ -93,7 +88,7 @@ class AcademicPaperTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the relationship exists
@@ -155,7 +150,7 @@ class AcademicPaperTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
             'status' => 'started'
         ]);
 
@@ -219,5 +214,38 @@ class AcademicPaperTest extends TestCase
 
         $this->assertDatabaseMissing('academic_papers', ['id' => $paperId]);
         $this->assertNull(AcademicPaper::find($paperId));
+    }
+
+    public function test_academic_paper_auto_generates_catalog_code()
+    {
+        $paper = AcademicPaper::factory()->create([
+            'title' => 'Test Paper',
+            'department' => 'Information Technology',
+            'publication_year' => now()->year,
+            // Note: catalog_code is intentionally omitted
+        ]);
+
+        // Verify the catalog code was auto-generated with expected format
+        $this->assertNotNull($paper->catalog_code);
+        $this->assertMatchesRegularExpression('/^CEIT-IT-\d{2}-\d+$/', $paper->catalog_code);
+        $this->assertDatabaseHas('academic_papers', [
+            'id' => $paper->id,
+            'catalog_code' => $paper->catalog_code,
+        ]);
+    }
+
+    public function test_academic_paper_factory_attaches_authors()
+    {
+        // Create some authors first so the factory can attach them
+        $authors = \App\Models\Author::factory()->count(5)->create();
+
+        $paper = AcademicPaper::factory()->create([
+            'title' => 'Test Paper with Authors',
+        ]);
+
+        // Verify 1-4 authors are attached (as per factory configure())
+        $authorCount = $paper->authors()->count();
+        $this->assertGreaterThanOrEqual(1, $authorCount);
+        $this->assertLessThanOrEqual(4, $authorCount);
     }
 }

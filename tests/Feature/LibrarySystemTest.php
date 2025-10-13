@@ -12,11 +12,14 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
-// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
+
+// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 
 class LibrarySystemTest extends TestCase
 {
+    use TestHelper;
     // use RefreshDatabase; // Using custom test database creation
 
     public function test_user_can_borrow_academic_paper()
@@ -36,7 +39,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $this->assertDatabaseHas('borrow_transactions', [
@@ -71,7 +74,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // User returns the paper
@@ -236,7 +239,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Update the inventory status to Reserved (simulating the borrowing process)
@@ -247,59 +250,29 @@ class LibrarySystemTest extends TestCase
         $this->assertEquals(1, $reservedCopies);
     }
 
-    public function test_overdue_book_detection()
-    {
-        $user = User::factory()->create();
-        $paper = AcademicPaper::factory()->create();
-        $inventory = Inventory::factory()->create([
-            'academic_paper_id' => $paper->id,
-            'copy_number' => 1
-        ]);
-
-        // Create overdue transaction
-        $transaction = BorrowTransaction::create([
-            'user_id' => $user->id,
-            'academic_paper_id' => $paper->id,
-            'inventory_id' => $inventory->id,
-            'time_in' => Carbon::now()->subDays(20),
-            'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => 'test-token-' . uniqid()
-        ]);
-
-        // Check if accessors exist before testing
-        if (method_exists($transaction, 'getIsOverdueAttribute')) {
-            $this->assertTrue($transaction->is_overdue);
-        }
-        if (method_exists($transaction, 'getDaysRemainingAttribute')) {
-            $this->assertEquals(-5, $transaction->days_remaining);
-        }
-    }
+    // TODO: Implement overdue book detection feature - add is_overdue and days_remaining accessors to BorrowTransaction model
+    // This test was disabled because the required accessor methods (getIsOverdueAttribute, getDaysRemainingAttribute) 
+    // don't exist in the BorrowTransaction model. To re-enable: implement the accessors and uncomment this test.
 
     public function test_user_credit_score_system()
     {
         $user = User::factory()->create();
 
-        // Check if accessor exists before testing
-        if (method_exists($user, 'getCreditScoreAttribute')) {
-            // User starts with default credit score
-            $this->assertEquals(100, $user->credit_score);
+        // User starts with default credit score
+        $this->assertEquals(100, $user->credit_score);
 
-            // Add violation that reduces credit score
-            $violation = Violation::factory()->create();
-            ViolationTransaction::create([
-                'user_id' => $user->id,
-                'violation_id' => $violation->id,
-                'severity' => 'Minor',
-                'remarks' => 'Late return violation',
-                'date_occurred' => Carbon::now(),
-            ]);
+        // Add violation that reduces credit score
+        $violation = Violation::factory()->create(['penalty_score' => 10]);
+        ViolationTransaction::create([
+            'user_id' => $user->id,
+            'violation_id' => $violation->id,
+            'severity' => 'Minor',
+            'remarks' => 'Late return violation',
+            'date_occurred' => Carbon::now(),
+        ]);
 
-            // Credit score should be reduced (assuming penalty reduces credit score)
-            $this->assertLessThan(100, $user->fresh()->credit_score);
-        } else {
-            // If accessor doesn't exist, just verify the user was created
-            $this->assertInstanceOf(User::class, $user);
-        }
+        // Credit score should be reduced by the penalty score (100 - 10 = 90)
+        $this->assertEquals(90, $user->fresh()->credit_score);
     }
 
     public function test_library_attendance_tracking()
@@ -360,7 +333,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-1-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-1')
         ]);
 
         BorrowTransaction::create([
@@ -369,7 +342,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-2-' . uniqid()
+            'session_token' => $this->generateSessionToken('test-token-2')
         ]);
 
         // Update inventory statuses to Reserved (simulating the borrowing process)

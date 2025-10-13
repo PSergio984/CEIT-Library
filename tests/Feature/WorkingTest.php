@@ -12,9 +12,11 @@ use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class WorkingTest extends TestCase
 {
+    use TestHelper;
     public function test_basic_models_work()
     {
         // Test User creation
@@ -31,12 +33,12 @@ class WorkingTest extends TestCase
         // Test AcademicPaper creation
         $paper = AcademicPaper::factory()->create([
             'title' => 'Test Paper',
-            'catalog_code' => 'TEST-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         $this->assertDatabaseHas('academic_papers', [
             'title' => 'Test Paper',
-            'catalog_code' => 'TEST-001',
+            'catalog_code' => 'CEIT-IT-25-01',
         ]);
 
         // Test Inventory creation
@@ -58,7 +60,7 @@ class WorkingTest extends TestCase
             'time_in' => Carbon::now(),
             'status' => 'started',
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $this->assertDatabaseHas('borrow_transactions', [
@@ -140,7 +142,6 @@ class WorkingTest extends TestCase
             $user->librarySessions()
         );
 
-        // Test academic paper relationships - check if they exist first
         if (method_exists($paper, 'copies')) {
             $this->assertInstanceOf(
                 \Illuminate\Database\Eloquent\Relations\HasMany::class,

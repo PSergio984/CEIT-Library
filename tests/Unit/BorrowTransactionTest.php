@@ -7,12 +7,12 @@ use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\User;
 use Carbon\Carbon;
-// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class BorrowTransactionTest extends TestCase
 {
-    // use RefreshDatabase; // Using custom test database creation
+    use TestHelper;
 
     public function test_borrow_transaction_can_be_created_with_factory()
     {
@@ -27,7 +27,7 @@ class BorrowTransactionTest extends TestCase
             'user_id' => $user->id,
             'academic_paper_id' => $paper->id,
             'inventory_id' => $inventory->id,
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $this->assertInstanceOf(BorrowTransaction::class, $transaction);
@@ -68,7 +68,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the relationship exists
@@ -99,7 +99,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the relationship exists
@@ -130,7 +130,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the relationship exists
@@ -161,7 +161,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $this->assertInstanceOf(Carbon::class, $transaction->time_in);
@@ -183,7 +183,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
             'time_out' => null,
         ]);
 
@@ -205,7 +205,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $transaction->time_out = Carbon::now();
@@ -232,7 +232,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the accessor exists
@@ -259,7 +259,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9), // Expires in 9 days
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the accessor exists
@@ -286,7 +286,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
             'status' => 'started'
         ]);
 
@@ -314,7 +314,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => 'test-token-' . uniqid(),
+            'session_token' => $this->generateSessionToken(),
             'time_out' => Carbon::now(),
             'status' => 'completed'
         ]);
@@ -343,7 +343,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9), // 9 days remaining
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the accessor exists
@@ -370,7 +370,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // 5 days overdue
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         // Check if the accessor exists
@@ -397,7 +397,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $this->assertNotNull($transaction->created_at);
@@ -421,7 +421,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => 'test-token-' . uniqid()
+            'session_token' => $this->generateSessionToken()
         ]);
 
         $transactionId = $transaction->id;
