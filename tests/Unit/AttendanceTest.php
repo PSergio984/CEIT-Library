@@ -12,6 +12,13 @@ class AttendanceTest extends TestCase
 {
     // use RefreshDatabase; // Using custom test database creation
 
+    protected function tearDown(): void
+    {
+        // Reset Carbon's test time after each test
+        Carbon::setTestNow();
+        parent::tearDown();
+    }
+
     public function test_attendance_can_be_created_with_factory()
     {
         $user = User::factory()->create();
@@ -131,9 +138,13 @@ class AttendanceTest extends TestCase
 
     public function test_attendance_duration_calculation()
     {
+        // Freeze time for deterministic testing
+        $fixedTime = Carbon::parse('2024-01-01 12:00:00');
+        Carbon::setTestNow($fixedTime);
+
         $user = User::factory()->create();
-        $timeIn = Carbon::now()->subHours(2);
-        $timeOut = Carbon::now();
+        $timeIn = $fixedTime->copy()->subHours(2);  // 10:00:00
+        $timeOut = $fixedTime->copy();              // 12:00:00
 
         $attendance = Attendance::create([
             'user_id' => $user->id,
@@ -273,20 +284,24 @@ class AttendanceTest extends TestCase
 
     public function test_attendance_can_calculate_total_hours_for_user()
     {
+        // Freeze time for deterministic testing
+        $fixedTime = Carbon::parse('2024-01-01 15:00:00');
+        Carbon::setTestNow($fixedTime);
+
         $user = User::factory()->create();
 
-        // Create multiple attendance records
+        // Create multiple attendance records with fixed time calculations
         Attendance::create([
             'user_id' => $user->id,
-            'time_in' => Carbon::now()->subHours(2),
-            'time_out' => Carbon::now(),
+            'time_in' => $fixedTime->copy()->subHours(2),   // 13:00
+            'time_out' => $fixedTime->copy(),               // 15:00 (2 hours)
             'status' => 'completed'
         ]);
 
         Attendance::create([
             'user_id' => $user->id,
-            'time_in' => Carbon::now()->subHours(3),
-            'time_out' => Carbon::now()->subHours(1),
+            'time_in' => $fixedTime->copy()->subHours(3),   // 12:00
+            'time_out' => $fixedTime->copy()->subHours(1),  // 14:00 (2 hours)
             'status' => 'completed'
         ]);
 

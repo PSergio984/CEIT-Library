@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="csrf-token" content="{{ csrf_token() }}">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ $title ?? config('app.name') }}</title>
 
@@ -23,16 +24,13 @@
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <label for="main-drawer" class="cursor-pointer">
-                <x-mary-icon name="o-bars-3" class="w-6 h-6" />
-            </label>
+            <div class="ml-5 pt-5">App</div>
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}
             <livewire:layout.user-menu />
         </x-slot:actions>
     </x-mary-nav>
-
     {{-- MAIN --}}
     <x-mary-main full-width>
         {{-- SIDEBAR --}}
@@ -56,7 +54,6 @@
                 </div>
             </div>
 
-            <x-mary-menu-separator />
 
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
@@ -93,9 +90,14 @@
             <div class="hidden lg:block">
                 <livewire:layout.navigation />
             </div>
-            {{ $slot }}
-        </x-slot:content>
 
+            {{-- The `$slot` goes here --}}
+            <div class="flex-1 bg-base-100">
+                <x-slot:content>
+                    {{ $slot }}
+                </x-slot:content>
+            </div>
+        </div>
     </x-mary-main>
 
     {{-- Toast --}}

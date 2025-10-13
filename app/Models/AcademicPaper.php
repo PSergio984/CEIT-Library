@@ -88,7 +88,10 @@ class AcademicPaper extends Model
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'LIKE', "%{$search}%")
                 ->orWhere('research_project_adviser', 'LIKE', "%{$search}%")
-                ->orWhere('catalog_code', 'LIKE', "%{$search}%");
+                ->orWhere('catalog_code', 'LIKE', "%{$search}%")
+                ->orWhereHas('authors', function ($authorQuery) use ($search) {
+                    $authorQuery->where('name', 'LIKE', "%{$search}%");
+                });
         });
     }
 
