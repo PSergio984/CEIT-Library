@@ -87,8 +87,8 @@ class AcademicPaper extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'LIKE', "%{$search}%")
-              ->orWhere('research_project_adviser', 'LIKE', "%{$search}%")
-              ->orWhere('catalog_code', 'LIKE', "%{$search}%");
+                ->orWhere('research_project_adviser', 'LIKE', "%{$search}%")
+                ->orWhere('catalog_code', 'LIKE', "%{$search}%");
         });
     }
 
@@ -111,11 +111,83 @@ class AcademicPaper extends Model
         static::creating(function ($paper) {
             if (empty($paper->catalog_code)) {
                 do {
-                    // Example: CAT-YYYYMMDD-XXXX (customize as needed)
-                    $code = 'CAT-' . date('Ymd') . '-' . strtoupper(uniqid());
+                    // Format: CEIT-{DEPARTMENT_CODE}-{YEAR}-{SEQUENCE}
+                    $departmentCode = self::getDepartmentCode($paper->department);
+                    $year = substr($paper->publication_year, -2); // 2-digit year from publication_year
+
+                    // Get the next sequence number for this department and year
+                    $sequence = self::getNextSequence($departmentCode, $year);
+
+                    $code = "CEIT-{$departmentCode}-{$year}-{$sequence}";
                 } while (self::where('catalog_code', $code)->exists());
                 $paper->catalog_code = $code;
             }
         });
+    }
+
+    /**
+     * Get department code from department name
+     */
+    private static function getDepartmentCode($department)
+    {
+        $departmentCodes = [
+            'Information Technology' => 'IT',
+            'Civil Engineering' => 'CE',
+            'Electrical Engineering' => 'EE',
+        ];
+
+        return $departmentCodes[$department] ?? 'XX';
+    }
+
+    /**
+     * Get next sequence number for department and year
+     */
+    private static function getNextSequence($departmentCode, $year)
+    {
+        // Use database-side query to extract and find max sequence number
+        $pattern = "CEIT-{$departmentCode}-{$year}-%";
+
+        // Check if we're using SQLite (for testing) or MySQL (for production)
+        $connection = config('database.default');
+        $driver = config("database.connections.{$connection}.driver");
+
+        if ($driver === 'sqlite') {
+            // SQLite-compatible query: use a simple approach with known format
+            // Format: CEIT-{DEPARTMENT_CODE}-{YEAR}-{SEQUENCE}
+            $highestSequence = self::where('catalog_code', 'like', $pattern)
+                ->selectRaw('
+                    COALESCE(
+                        MAX(
+                            CAST(
+                                SUBSTR(
+                                    catalog_code, 
+                                    LENGTH("CEIT-' . $departmentCode . '-' . $year . '-") + 1
+                                ) AS INTEGER
+                            )
+                        ), 
+                        0
+                    ) as max_sequence
+                ')
+                ->value('max_sequence');
+        } else {
+            // MySQL-compatible query using SUBSTRING_INDEX
+            $highestSequence = self::where('catalog_code', 'like', $pattern)
+                ->selectRaw('
+                    COALESCE(
+                        MAX(
+                            CAST(
+                                NULLIF(
+                                    SUBSTRING_INDEX(catalog_code, "-", -1),
+                                    ""
+                                ) AS UNSIGNED
+                            )
+                        ), 
+                        0
+                    ) as max_sequence
+                ')
+                ->value('max_sequence');
+        }
+
+        return str_pad($highestSequence + 1, 2, '0', STR_PAD_LEFT);
     }
 }

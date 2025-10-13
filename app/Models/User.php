@@ -122,18 +122,18 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isLibrarian()
     {
         return $this->librarianDuty()
-                   ->where('status', 'active')
-                   ->where('expires_at', '>', now())
-                   ->exists();
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->exists();
     }
 
     // Get active librarian record
     public function getActiveLibrarianDuty()
     {
         return $this->librarianDuty()
-                   ->where('status', 'active')
-                   ->where('expires_at', '>', now())
-                   ->first();
+            ->where('status', 'active')
+            ->where('expires_at', '>', now())
+            ->first();
     }
 
     // Check if user has specific librarian permission
@@ -159,18 +159,26 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ViolationTransaction::class);
     }
 
-    public function creditScore()
+    // Accessor for credit score
+    public function getCreditScoreAttribute()
     {
-        return $this->hasOne(ScoreIncrement::class);
+        $defaultScore = 100;
+        // Use the existing relationship to sum penalty_score from the related Violation model
+        // Join only the violations table (matching violation_transactions.violation_id to violations.id)
+        // and sum violations.penalty_score, using the relation's base table and a single join
+        $penaltySum = $this->violations()
+            ->join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
+            ->sum('violations.penalty_score');
+        return $defaultScore - $penaltySum;
     }
 
     // Check if user is currently in the library
     public function isInLibrary()
     {
         return $this->librarySessions()
-                   ->where('status', 'active')
-                   ->whereNotNull('time_in')
-                   ->whereNull('time_out')
-                   ->exists();
+            ->where('status', 'active')
+            ->whereNotNull('time_in')
+            ->whereNull('time_out')
+            ->exists();
     }
 }

@@ -16,18 +16,20 @@ class AcademicPaperFactory extends Factory
      */
     public function definition(): array
     {
+        $departments = [
+            'Civil Engineering',
+            'Information Technology',
+            'Electrical Engineering'
+        ];
+
+        $department = $this->faker->randomElement($departments);
+
         return [
-            'catalog_code' => 'CEIT-' . $this->faker->unique()->numberBetween(1000, 9999),
             'title' => $this->faker->sentence(6, true),
-            'publication_year' => $this->faker->numberBetween(2018, 2025),
-            'paper_type' => $this->faker->randomElement(['academic paper', 'Dissertation', 'Capstone', 'Research Paper']),
+            'publication_year' => $this->faker->numberBetween(2002, 2025),
+            'paper_type' => $this->faker->randomElement(['Thesis', 'Feasib', 'Capstone', 'Research', 'Practicum', 'Report']),
             'research_project_adviser' => $this->faker->name(),
-            'department' => $this->faker->randomElement([
-                'Computer Engineering',
-                'Information Technology',
-                'Electronics Engineering',
-                'Electrical Engineering'
-            ]),
+            'department' => $department,
             'dean' => $this->faker->randomElement([
                 'Dr. Maria Santos',
                 'Dr. Juan Dela Cruz',
@@ -40,7 +42,7 @@ class AcademicPaperFactory extends Factory
     {
         return $this->afterCreating(function ($academicPaper) {
             // Attach 1-4 random authors if any exist
-            $authorIds = \App\Models\Author::inRandomOrder()->limit(rand(1,4))->pluck('id');
+            $authorIds = \App\Models\Author::inRandomOrder()->limit(rand(1, 4))->pluck('id');
             if ($authorIds->count()) {
                 $academicPaper->authors()->attach($authorIds);
             }

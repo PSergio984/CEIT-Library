@@ -1,59 +1,196 @@
 @import "tailwindcss";
-
 @plugin "daisyui";
 
-@plugin "daisyui/theme" {
-    name: "fancychad";
-    default: true;
-    prefersdark: true;
-    color-scheme: "dark";
-    --color-base-100: oklch(13% 0.028 261.692);
-    --color-base-200: oklch(21% 0.034 264.665);
-    --color-base-300: oklch(27% 0.033 256.848);
-    --color-base-content: oklch(96% 0.003 264.542);
-    --color-primary: oklch(69% 0.17 162.48);
-    --color-primary-content: oklch(97% 0.021 166.113);
-    --color-secondary: oklch(70% 0.213 47.604);
-    --color-secondary-content: oklch(98% 0.016 73.684);
-    --color-accent: oklch(0% 0 0);
-    --color-accent-content: oklch(100% 0 0);
-    --color-neutral: oklch(13% 0.028 261.692);
-    --color-neutral-content: oklch(98% 0.002 247.839);
-    --color-info: oklch(60% 0.126 221.723);
-    --color-info-content: oklch(98% 0.019 200.873);
-    --color-success: oklch(60% 0.118 184.704);
-    --color-success-content: oklch(98% 0.014 180.72);
-    --color-warning: oklch(66% 0.179 58.318);
-    --color-warning-content: oklch(98% 0.022 95.277);
-    --color-error: oklch(57% 0.245 27.325);
-    --color-error-content: oklch(97% 0.013 17.38);
-    --radius-selector: 2rem;
-    --radius-field: 0.5rem;
-    --radius-box: 1rem;
-    --size-selector: 0.25rem;
-    --size-field: 0.25rem;
-    --border: 1px;
-    --depth: 1;
-    --noise: 0;
-}
-
-/** daisyUI */
-/* daisyUI plugin with themes */
 @plugin "daisyui" {
-    themes: ["light", "fancychad"];
+    themes:
+        light --default,
+        dark --prefersdark;
 }
 
-/* maryUI */
 @source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
 
-/* Theme toggle */
+/* Dark theme variant support */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* maryUI custom styles */
-.mary-table-pagination span[aria-current="page"] > span {
-    @apply bg-primary text-base-100
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
+@source "../../storage/framework/views/*.php";
+@source "../**/*.blade.php";
+@source "../**/*.js";
+@source "../**/*.vue";
+/** daisyUI */
+/* daisyUI plugin with themes */
+
+/* ===================================
+   Enhanced Table Styling
+   =================================== */
+
+/* Table Container - Rounded corners and borders */
+.table-container {
+    @apply overflow-x-auto rounded-box border border-base-300 bg-base-100 shadow-sm;
 }
 
+/* Enhanced Table Styling */
+.table {
+    border-collapse: separate;
+    border-spacing: 0;
+    @apply w-full rounded-lg;
+}
+
+.table thead {
+    @apply bg-gradient-to-r from-base-200 to-base-300;
+}
+
+.table thead th {
+    @apply px-6 py-4 text-left text-sm font-semibold text-base-content border-b-2 border-base-300;
+    white-space: nowrap;
+    position: relative;
+}
+
+.table thead th:first-child {
+    @apply rounded-tl-lg;
+}
+
+.table thead th:last-child {
+    @apply rounded-tr-lg;
+}
+
+.table tbody td {
+    @apply px-6 py-4 text-sm text-base-content border-b border-base-200;
+    transition: all 0.15s ease-in-out;
+}
+
+.table tbody tr {
+    @apply transition-all duration-150;
+}
+
+.table tbody tr:hover {
+    @apply bg-base-100 shadow-sm;
+    transform: translateY(-1px);
+}
+
+.table tbody tr:last-child td {
+    @apply border-b-0;
+}
+
+.table tbody tr:last-child td:first-child {
+    @apply rounded-bl-lg;
+}
+
+.table tbody tr:last-child td:last-child {
+    @apply rounded-br-lg;
+}
+
+/* Table with zebra stripes option */
+.table-zebra tbody tr:nth-child(even) {
+    @apply bg-base-200/30;
+}
+
+.table-zebra tbody tr:nth-child(even):hover {
+    @apply bg-base-100 shadow-sm;
+}
+
+/* Enhanced table borders and shadows */
+.table-enhanced {
+    @apply border border-base-300 rounded-lg shadow-lg;
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.table-enhanced thead {
+    @apply bg-gradient-to-r from-primary/10 to-secondary/10;
+}
+
+.table-enhanced thead th {
+    @apply border-b-2 border-primary/20;
+}
+
+/* Responsive table styling */
+@media (max-width: 768px) {
+    .table thead th,
+    .table tbody td {
+        @apply px-3 py-2 text-xs;
+    }
+}
+
+/* ===================================
+   MaryUI Component Customizations
+   =================================== */
+
+/* Pagination - Traditional Button Styles */
 .mary-table-pagination button {
-    @apply cursor-pointer
+    @apply cursor-pointer;
+}
+
+.mary-table-pagination span[aria-current="page"] > span {
+    @apply bg-primary text-base-100;
+}
+
+/* Enhanced Buttons */
+.btn {
+    @apply transition-all duration-150;
+}
+
+.btn:hover {
+    @apply transform -translate-y-0.5 shadow-lg;
+}
+
+/* Enhanced Form Controls */
+.input:focus,
+.select:focus,
+.textarea:focus {
+    @apply ring-2 ring-primary border-primary;
+}
+
+/* MaryUI Components with enhanced styling */
+.mary-card {
+    @apply bg-base-100 text-base-content border border-base-300 rounded-box shadow-sm;
+}
+
+.mary-modal {
+    @apply bg-base-100 text-base-content border border-base-300 rounded-box;
+}
+
+.mary-dropdown-content {
+    @apply bg-base-100 text-base-content border border-base-300 rounded-box shadow-lg;
+}
+
+.mary-alert {
+    @apply bg-base-100 text-base-content border border-base-300 rounded-box;
+}
+
+/* Enhanced Menu Styling */
+.menu {
+    @apply rounded-box;
+}
+
+.menu li > a,
+.menu li > button {
+    @apply rounded-lg transition-colors duration-150;
+}
+
+.menu li > a:hover,
+.menu li > button:hover {
+    @apply bg-primary text-primary-content;
+}
+
+/* Status badges */
+.badge {
+    @apply rounded-full px-3 py-1 text-xs font-medium;
+}
+
+.badge-success {
+    @apply bg-success text-success-content;
+}
+
+.badge-warning {
+    @apply bg-warning text-warning-content;
+}
+
+.badge-info {
+    @apply bg-info text-info-content;
+}
+
+.badge-error {
+    @apply bg-error text-error-content;
 }

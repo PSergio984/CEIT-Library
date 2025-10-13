@@ -3,14 +3,14 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+// use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 use Illuminate\Support\Facades\Hash;
 
 class PasswordConfirmationTest extends TestCase
 {
-    use RefreshDatabase;
+    // use RefreshDatabase; // Using custom test database creation
 
     public function test_confirm_password_screen_can_be_rendered(): void
     {

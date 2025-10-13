@@ -1,90 +1,114 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light" data-theme="light">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ config('app.name', 'Laravel') }}</title>
+        <title>@yield('title', $title ?? config('app.name'))</title>
+
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="{{ asset('images/ceit-logo.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
         @livewireStyles
     </head>
+    <body class="min-h-screen font-sans antialiased bg-background text-foreground flex flex-col">
 
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <div class="ml-5 pt-5">App</div>
+            <label for="main-drawer" class="cursor-pointer">
+                <x-mary-icon name="o-bars-3" class="w-6 h-6" />
+            </label>
         </x-slot:brand>
         <x-slot:actions>
-            <div class="flex items-center gap-2">
-                <label for="main-drawer" class="lg:hidden">
-                    <x-heroicon-s-home-modern />
-                </label>
-
-            </div>
+            {{-- Mobile User Dropdown --}}
+            <livewire:layout.user-menu />
         </x-slot:actions>
     </x-mary-nav>
-    {{-- MAIN --}}
-    <x-mary-main full-width>
-        <div class="flex">
-            {{-- SIDEBAR --}}
-            <div>
-                <x-slot:sidebar drawer="main-drawer" collapsible  class="bg-base-300">
 
-                    {{-- BRAND --}}
-                    <div class="ml-4 pt-5 flex items-center justify-between">
-                        <img src="{{ Vite::asset('public/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
-                        <div class="flex-1 flex items-center justify-between transition-all duration-300" x-show="!collapsed">
-                            <div>CEIT Library</div>
-                            <x-mary-theme-toggle darkTheme="fancychad" lightTheme="light"/>
+    {{-- MAIN --}}
+    <x-mary-main full-width class="flex-1 flex flex-col">
+        {{-- SIDEBAR --}}
+        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
+
+            {{-- BRAND --}}
+            <div class="flex items-center justify-center py-4">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0">
+                        <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class=" transition-all duration-300" x-show="!collapsed">
+                            <div class="font-bold text-xl text-base-content whitespace-nowrap">CEIT Library</div>
+                        </div>
+                        {{-- Theme Toggle beside Library text --}}
+                        <div x-show="!collapsed">
+                            <x-mary-theme-toggle class="btn btn-sm btn-circle btn-ghost" />
                         </div>
                     </div>
-
-
-                    {{-- MENU --}}
-                    <x-mary-menu activate-by-route>
-                        <x-mary-menu-sub title="Academic Paper" icon="o-book-open">
-                            <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
-                            <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/admin/academic-papers/civil" />
-                            <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/electrical" />
-                        </x-mary-menu-sub>
-                        <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rules" />
-                        <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />
-                        <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
-                        <x-mary-menu-item title="Credit Score History" icon="o-exclamation-triangle" link="/credit-score-history" />
-
-                    </x-mary-menu>
-                </x-slot:sidebar>
+                </div>
             </div>
 
-            {{-- The `$slot` goes here --}}
-            <div class="flex-1 bg-base-100">
-                <x-slot:content>
+            <x-mary-menu-separator />
+
+            {{-- MENU --}}
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
+
+                <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
+                    <x-mary-menu-item title="All" icon="o-document-text" link="/academic-papers" />
+                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/academic-papers/it" />
+                    <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/academic-papers/ce" />
+                    <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/academic-papers/ee" />
+                </x-mary-menu-sub>
+
+                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rules" />
+                <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />
+                <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
+                <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" />
+                @can('Admin-access')
+                    <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/academic-papers" />
+                @endcan
+
+            </x-mary-menu>
+
+        </x-slot:sidebar>
+
+        {{-- CONTENT --}}
+        <x-slot:content>
+            <div class="flex flex-col min-h-screen">
+                {{-- Desktop Navigation --}}
+                <div class="hidden lg:block">
                     <livewire:layout.navigation />
+                </div>
+
+                <div class="flex-1">
                     {{ $slot }}
+                </div>
 
-                    <!-- Simple Footer -->
-                    <footer class="bg-base-100 border-t border-base-300">
-                        <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
-                            <div class="text-center text-sm text-base-content">
-                                <p>&copy; {{ date('Y') }} PLV eLib - CEIT Library Management System</p>
-                                <p class="mt-1">Pamantasan ng Lungsod ng Valenzuela</p>
-                            </div>
+                <!-- Footer -->
+                <footer class="bg-background border-t border-border mt-auto">
+                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                        <div class="text-center text-sm text-muted-foreground">
+                            <p>&copy; {{ date('Y') }} PLV eLib - CEIT Library Management System</p>
+                            <p class="mt-1">Pamantasan ng Lungsod ng Valenzuela</p>
                         </div>
-                    </footer>
-                </x-slot:content>
+                    </div>
+                </footer>
             </div>
+        </x-slot:content>
 
-        </div>
     </x-mary-main>
 
     {{-- Toast --}}
     <x-mary-toast />
-    </body>
+
+    @livewireScripts
+</body>
 </html>
