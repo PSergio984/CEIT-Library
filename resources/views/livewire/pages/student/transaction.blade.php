@@ -84,7 +84,9 @@
 
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
-                        <div class="text-xs text-base-content/60 mb-1">College of Information Technology</div>
+                        <div class="text-xs text-base-content/60 mb-1">
+                            {{ $transaction['academic_paper']->department ?? 'N/A' }}
+                        </div>
                         <div class="flex items-center gap-2 mb-2">
                             <span class="bg-base-200 text-base-content px-2 py-1 rounded text-xs font-medium">
                                 {{ $transaction['paper_type'] }}
@@ -119,8 +121,8 @@
                 </h3>
 
                 <div class="text-sm text-base-content/70 mb-3">
-                    Copy: 1<br>
-                    Copy ID: {{ $transaction['id'] }}
+                    Copy: {{ $transaction['inventory']->copy_number ?? 'N/A' }}<br>
+                    Inventory ID: {{ $transaction['inventory']->id ?? 'N/A' }}
                 </div>
 
                 <div class="text-sm text-base-content/70 mb-2">
@@ -211,8 +213,8 @@
                     </h3>
 
                     <div class="text-sm text-base-content/70 mb-3">
-                        Copy: 1<br>
-                        Copy ID: {{ $transaction['id'] }}
+                        Copy: {{ $transaction['inventory']->copy_number ?? 'N/A' }}<br>
+                        Inventory ID: {{ $transaction['inventory']->id ?? 'N/A' }}
                     </div>
 
                     <div class="text-sm text-base-content/70 mb-2">

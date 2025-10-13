@@ -148,11 +148,9 @@ class AdminBorrowTransactions extends AdminComponent
     public function extendTransaction($id)
     {
         $transaction = BorrowTransaction::find($id);
-        if ($transaction && $transaction->status === 'active') {
-            $transaction->update([
-                'expires_at' => $transaction->expires_at->addDays(7)
-            ]);
-            $this->success("Transaction #$id extended by 7 days!");
+        if (!$transaction) {
+            $this->error("Transaction #$id not found!");
+            return;
         }
     }
 

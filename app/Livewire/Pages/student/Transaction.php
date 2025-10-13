@@ -22,13 +22,12 @@ class Transaction extends Component
     #[Computed]
     public function paperTypes(): array
     {
-        return BorrowTransaction::with('inventory.academicPaper')
+        return BorrowTransaction::query()
             ->where('user_id', Auth::id())
-            ->get()
-            ->pluck('inventory.academicPaper.paper_type')
-            ->unique()
-            ->filter()
-            ->values()
+            ->join('inventories', 'borrow_transactions.inventory_id', '=', 'inventories.id')
+            ->join('academic_papers', 'inventories.academic_paper_id', '=', 'academic_papers.id')
+            ->distinct()
+            ->pluck('academic_papers.paper_type')
             ->toArray();
     }
 
@@ -82,6 +81,7 @@ class Transaction extends Component
                     'notes' => $transaction->notes ?? 'No notes',
                     'expires_at' => $transaction->expires_at,
                     'academic_paper' => $transaction->inventory->academicPaper,
+                    'inventory' => $transaction->inventory,
                 ];
             });
     }
