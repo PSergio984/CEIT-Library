@@ -66,6 +66,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'password',
+        'is_admin',
     ];
 
     /**
