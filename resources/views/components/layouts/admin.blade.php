@@ -67,7 +67,7 @@
                     <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/ee" />
                 </x-mary-menu-sub>
 
-                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/transactions" />
+                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
 
                 <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
                 <x-mary-menu-sub title="Librarians" icon="o-building-library">
