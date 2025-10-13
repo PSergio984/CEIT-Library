@@ -4,9 +4,12 @@ use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.guest')]
+#[Title('Verify Email - CEIT Library')]
+class extends Component
 {
     /**
      * Send an email verification notification to the user.
@@ -31,7 +34,7 @@ new #[Layout('layouts.guest')] class extends Component
     {
         $logout();
 
-        $this->redirect('/', navigate: true);
+        $this->redirect(route('login'), navigate: true);
     }
 }; ?>
 
@@ -48,8 +51,23 @@ new #[Layout('layouts.guest')] class extends Component
     </div>
     <!-- Card Body -->
     <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
+        @if (session('verification-sent'))
+            <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-green-700">{{ session('verification-sent') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+        
         <div class="mb-4 text-sm sm:text-base md:text-lg text-gray-700">
-            {{ __('Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
+            {{ __('Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
         </div>
         @if (session('status') == 'verification-link-sent')
             <div class="mb-4 font-medium text-sm sm:text-base text-green-600">

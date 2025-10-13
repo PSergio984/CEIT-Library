@@ -3,9 +3,12 @@
 use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.guest')]
+#[Title('Login - CEIT Library')]
+class extends Component
 {
     public LoginForm $form;
 
@@ -20,7 +23,7 @@ new #[Layout('layouts.guest')] class extends Component
 
         Session::regenerate();
 
-        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+        $this->redirectIntended(default: route('academic-paper.index', absolute: false), navigate: true);
     }
 }; ?>
 
@@ -42,6 +45,23 @@ new #[Layout('layouts.guest')] class extends Component
             to your account</h2>
         <!-- Session Status -->
         <x-auth-session-status class="mb-4" :status="session('status')" />
+        
+        
+        <!-- Email Verified Message -->
+        @if (session('verified'))
+            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+                <div class="flex">
+                    <div class="flex-shrink-0">
+                        <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                        </svg>
+                    </div>
+                    <div class="ml-3">
+                        <p class="text-sm text-blue-700">{{ session('verified') }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         <x-mary-form wire:submit="login">
             <x-mary-errors title="Oops!" description="Please, fix them." icon="o-face-frown"/>

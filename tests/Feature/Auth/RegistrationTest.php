@@ -178,7 +178,7 @@ class RegistrationTest extends TestCase
         $this->assertTrue($component->instance()->getErrorBag()->has('password'));
     }
 
-    public function test_registration_redirects_after_successful_registration(): void
+    public function test_registration_redirects_to_verification_after_successful_registration(): void
     {
         $component = Volt::test('pages.auth.register')
             ->set('first_name', 'John')
@@ -190,8 +190,15 @@ class RegistrationTest extends TestCase
             ->call('register');
 
         $component->assertHasNoErrors();
-        // Note: The actual redirect behavior depends on your registration logic
-        // You might need to adjust this based on your implementation
+
+        // Assert redirect to verification notice page
+        $component->assertRedirect(route('verification.notice'));
+
+        // Verify user was created and temporarily logged in
+        $user = User::where('email', 'johndoe@plv.edu.ph')->first();
+        $this->assertNotNull($user);
+        $this->assertNull($user->email_verified_at);
+        $this->assertAuthenticated(); // User should be authenticated to access verification page
     }
 
     public function test_registration_creates_user_with_correct_attributes(): void
