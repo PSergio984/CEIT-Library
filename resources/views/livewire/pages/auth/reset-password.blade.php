@@ -8,9 +8,12 @@ use Illuminate\Support\Str;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.guest')]
+#[Title('Reset Password - CEIT Library')]
+class extends Component
 {
     #[Locked]
     public string $token = '';

@@ -8,11 +8,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.guest')]
+#[Title('Register - CEIT Library')]
+class extends Component
 {
-
     public string $first_name = '';
     public string $last_name = '';
     public string $student_no = '';
@@ -74,9 +76,10 @@ new #[Layout('layouts.guest')] class extends Component
         // Send welcome email for testing
         Mail::to($user->email)->queue(new Welcome());
 
+        // Temporarily log in user to access verification notice page, then redirect there
         Auth::login($user);
-
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+        session()->flash('verification-sent', 'Registration successful! Please check your email and verify your account.');
+        $this->redirect(route('verification.notice'), navigate: true);
     }
 }; ?>
 

@@ -3,9 +3,12 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
-new #[Layout('layouts.guest')] class extends Component
+new #[Layout('layouts.guest')]
+#[Title('Confirm Password - CEIT Library')]
+class extends Component
 {
     public string $password = '';
 
