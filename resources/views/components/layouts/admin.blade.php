@@ -75,7 +75,7 @@
                     <x-mary-menu-item title="Assign New" icon="o-user-plus" link="/admin/librarians/assign" />
                 </x-mary-menu-sub>
 
-                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rule-and-regulations" />
+                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rule-and-regulation" />
                 <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
                 <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs" />
                 <x-mary-menu-item title="View as Student" icon="o-eye" link="/academic-papers" />
