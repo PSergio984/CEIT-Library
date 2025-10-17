@@ -343,7 +343,7 @@ class AcademicPaperForm extends Form
         if (empty($properties)) {
             // Reset all properties
             $this->title = '';
-            $this->publication_year = 0;
+            $this->publication_year = null;
             $this->paper_type = '';
             $this->research_project_adviser = '';
             $this->department = '';
@@ -358,7 +358,7 @@ class AcademicPaperForm extends Form
                         $this->title = '';
                         break;
                     case 'publication_year':
-                        $this->publication_year = 0;
+                        $this->publication_year = null;
                         break;
                     case 'paper_type':
                         $this->paper_type = '';

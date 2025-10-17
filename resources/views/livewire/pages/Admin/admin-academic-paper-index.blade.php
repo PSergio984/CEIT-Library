@@ -236,8 +236,6 @@
                                         hint="Start typing to search for an adviser"
                                         error-field="form.research_project_adviser" />
                                    
-
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean" @endif>
                                     
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean" @endif>
                                         Dean @if($isEditing) <span wire:dirty wire:target="form.dean" class="text-orange-400">*</span> @endif

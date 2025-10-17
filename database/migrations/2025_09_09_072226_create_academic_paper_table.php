@@ -28,7 +28,7 @@ return new class extends Migration
             $table->index('research_project_adviser'); // For searching by adviser
 
             // Full-text search only supported on MySQL/MariaDB, not SQLite
-            if (DB::getDriverName() !== 'sqlite') {
+            if (DB::connection()->getDriverName() !== 'sqlite') {
                 $table->fullText(['title', 'research_project_adviser']); // Full-text search on title and adviser
             }
         });
