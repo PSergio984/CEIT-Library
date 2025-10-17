@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -25,7 +26,11 @@ return new class extends Migration
             // Add indexes for better performance
             $table->index('department'); // For department-based searches
             $table->index('research_project_adviser'); // For searching by adviser
-            $table->fullText(['title', 'research_project_adviser']); // Full-text search on title and adviser
+
+            // Full-text search only supported on MySQL/MariaDB, not SQLite
+            if (DB::getDriverName() !== 'sqlite') {
+                $table->fullText(['title', 'research_project_adviser']); // Full-text search on title and adviser
+            }
         });
     }
 

@@ -17,8 +17,8 @@ class AcademicPaperForm extends Form
     public ?string $catalog_code = null;
     #[Validate('required')]
     public string $title = '';
-    #[Validate('required')]
-    public int $publication_year = 0;
+    #[Validate('required|integer|min:2002|max:2100')]
+    public ?int $publication_year = null;
     #[Validate('required')]
     public string $paper_type = '';
     public ?string $research_project_adviser = '';
@@ -228,6 +228,29 @@ class AcademicPaperForm extends Form
     }
 
     /**
+     * Get custom validation messages
+     */
+    private function validationMessages(): array
+    {
+        return [
+            'title.required' => 'The title field is required.',
+            'publication_year.required' => 'The publication year field is required.',
+            'paper_type.required' => 'The paper type field is required.',
+            'department.required' => 'The department field is required.',
+            'author_names.required' => 'At least one author is required.',
+            'author_names.min' => 'At least one author must be specified.',
+            'number_of_copies.required' => 'The number of copies field is required.',
+            'number_of_copies.integer' => 'The number of copies must be a valid number.',
+            'number_of_copies.min' => 'The number of copies must be at least 1.',
+            'number_of_copies.max' => 'The number of copies cannot exceed 100.',
+            'research_project_adviser.required' => 'The research project adviser field is required.',
+            'research_project_adviser.string' => 'The research project adviser must be a valid text.',
+            'dean.required' => 'The dean field is required.',
+            'dean.string' => 'The dean must be a valid text.',
+        ];
+    }
+
+    /**
      * Get all form data as an array
      */
     public function all(): array
@@ -253,14 +276,8 @@ class AcademicPaperForm extends Form
             $rules = $this->validationRules();
         }
 
-        $validator = \Illuminate\Support\Facades\Validator::make(
-            $this->all(),
-            $rules
-        );
-
-        if ($validator->fails()) {
-            throw new \Illuminate\Validation\ValidationException($validator);
-        }
+        // Use Livewire's validate() method which properly handles error bag keys
+        $this->validate($rules, $this->validationMessages());
 
         return true;
     }

@@ -194,6 +194,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         $this->isEditing = false;
         $this->form->reset(); // This already calls populateYearChoices() and loadStaticChoices()
+        $this->resetErrorBag(); // Clear any previous validation errors
 
         // Only load search options if not already cached
         if ($this->cachedAdvisers === null) {
@@ -209,25 +210,18 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
-        // Check if we already have the correct paper ID loaded
-        $needsLoading = true;
-        if ($this->form->academicPaperId === $id) {
-            // Paper ID is already set, no need to reload
-            $needsLoading = false;
-        }
+        $this->resetErrorBag(); // Clear any previous validation errors
 
-        // Only load if we don't already have this paper loaded
-        if ($needsLoading) {
-            $academicPaper = AcademicPaper::with([
-                'authors' => function ($query) {
-                    $query->select('authors.id', 'authors.name');
-                },
-                'copies' => function ($query) {
-                    $query->select('id', 'academic_paper_id', 'status');
-                }
-            ])->findOrFail($id);
-            $this->form->setAcademicPaper($academicPaper);
-        }
+        // Always reload the paper data to ensure fresh state
+        $academicPaper = AcademicPaper::with([
+            'authors' => function ($query) {
+                $query->select('authors.id', 'authors.name');
+            },
+            'copies' => function ($query) {
+                $query->select('id', 'academic_paper_id', 'status');
+            }
+        ])->findOrFail($id);
+        $this->form->setAcademicPaper($academicPaper);
 
         $this->isEditing = true;
 

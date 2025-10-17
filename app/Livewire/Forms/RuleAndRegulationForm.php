@@ -10,7 +10,7 @@ use Livewire\Form;
 class RuleAndRegulationForm extends Form
 {
     #[Validate('required|integer|exists:rule_headers,id')]
-    public int $rule_header_id;
+    public ?int $rule_header_id = null;
 
     #[Validate('required|string|min:1')]
     public string $content = '';

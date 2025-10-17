@@ -10,6 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AcademicPaperFormTest extends TestCase
@@ -23,10 +24,10 @@ class AcademicPaperFormTest extends TestCase
         parent::setUp();
         Cache::flush();
 
-        $this->admin = User::factory()->create(['role' => 'admin']);
+        $this->admin = User::factory()->create(['is_admin' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_create_a_new_academic_paper()
     {
         $this->actingAs($this->admin);
@@ -56,7 +57,7 @@ class AcademicPaperFormTest extends TestCase
         $this->assertEquals(3, $paper->copies()->count());
     }
 
-    /** @test */
+    #[Test]
     public function admin_cannot_create_paper_without_required_fields()
     {
         $this->actingAs($this->admin);
@@ -68,7 +69,7 @@ class AcademicPaperFormTest extends TestCase
             ->assertHasErrors(['form.title']);
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_update_an_existing_academic_paper()
     {
         $this->actingAs($this->admin);
@@ -97,7 +98,7 @@ class AcademicPaperFormTest extends TestCase
         $this->assertEquals(3, $paper->fresh()->copies()->count());
     }
 
-    /** @test */
+    #[Test]
     public function admin_can_increase_number_of_copies()
     {
         $this->actingAs($this->admin);
@@ -119,7 +120,7 @@ class AcademicPaperFormTest extends TestCase
         $this->assertEquals(5, $paper->fresh()->copies()->count());
     }
 
-    /** @test */
+    #[Test]
     public function it_prevents_decreasing_copies_below_borrowed_count()
     {
         $this->actingAs($this->admin);

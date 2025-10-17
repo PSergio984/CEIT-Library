@@ -3,7 +3,6 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
-use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;

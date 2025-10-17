@@ -113,7 +113,22 @@ class AcademicPaper extends Model
 
         static::creating(function ($paper) {
             if (empty($paper->catalog_code)) {
-                $paper->catalog_code = self::generateUniqueCatalogCode($paper->department, $paper->publication_year);
+                // Guard against missing required fields
+                if (empty($paper->department)) {
+                    throw new \InvalidArgumentException('Department is required to generate catalog code');
+                }
+
+                if (empty($paper->publication_year)) {
+                    throw new \InvalidArgumentException('Publication year is required to generate catalog code');
+                }
+
+                // Ensure publication_year is a valid string with sufficient length
+                $year = (string) $paper->publication_year;
+                if (strlen($year) < 2) {
+                    throw new \InvalidArgumentException('Publication year must be at least 2 characters long');
+                }
+
+                $paper->catalog_code = self::generateUniqueCatalogCode($paper->department, $year);
             }
         });
     }
@@ -123,8 +138,19 @@ class AcademicPaper extends Model
      */
     private static function generateUniqueCatalogCode($department, $publicationYear)
     {
+        // Validate inputs
+        if (empty($department)) {
+            throw new \InvalidArgumentException('Department cannot be empty');
+        }
+
+        // Ensure publication year is a string and has sufficient length
+        $yearString = (string) $publicationYear;
+        if (strlen($yearString) < 2) {
+            throw new \InvalidArgumentException('Publication year must be at least 2 characters long, got: ' . $yearString);
+        }
+
         $departmentCode = self::getDepartmentCode($department);
-        $year = substr($publicationYear, -2);
+        $year = substr($yearString, -2);
 
         $maxRetries = 10; // Prevent infinite loops
         $attempt = 0;
