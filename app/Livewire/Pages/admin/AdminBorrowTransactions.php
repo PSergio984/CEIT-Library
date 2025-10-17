@@ -21,6 +21,7 @@ class AdminBorrowTransactions extends AdminComponent
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
         ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-16'],
+        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-32'],
         ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-48'],
         ['key' => 'paper_type', 'label' => 'Type', 'sortable' => true, 'class' => 'w-20'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-28'],
@@ -42,7 +43,8 @@ class AdminBorrowTransactions extends AdminComponent
                 $query->where(function ($query) {
                     $query->whereHas('user', function ($q) {
                         $q->where('first_name', 'like', "%{$this->search}%")
-                            ->orWhere('last_name', 'like', "%{$this->search}%");
+                            ->orWhere('last_name', 'like', "%{$this->search}%")
+                            ->orWhere('email', 'like', "%{$this->search}%");
                     })
                         ->orWhereHas('inventory.academicPaper', function ($q) {
                             $q->where('title', 'like', "%{$this->search}%");
@@ -102,6 +104,7 @@ class AdminBorrowTransactions extends AdminComponent
                 return [
                     'id' => $transaction->id,
                     'user_name' => trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A',
+                    'email' => $transaction->user?->email ?? 'N/A',
                     'user' => $transaction->user,
                     'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
                     'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',

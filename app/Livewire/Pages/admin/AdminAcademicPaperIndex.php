@@ -131,8 +131,11 @@ class AdminAcademicPaperIndex extends AdminComponent
             ])
             // filter by department if provided via route slug
             ->when($this->dept, function ($q) {
-                $value = $this->getDepartmentName($this->dept);
-                $q->where('department', $value);
+                $departmentName = $this->getDepartmentName($this->dept);
+                // Only apply filter if we have a valid department name
+                if ($departmentName && in_array($departmentName, config('departments.valid_names', []))) {
+                    $q->where('department', $departmentName);
+                }
             })
             ->when($this->search, function ($query) {
                 $search = '%' . $this->search . '%';
@@ -206,19 +209,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
-        // Check if we already have the correct paper loaded
+        // Check if we already have the correct paper ID loaded
         $needsLoading = true;
-        if ($this->form->academicPaper && $this->form->academicPaper->id === $id) {
-            // Check if relationships are loaded
-            if (
-                $this->form->academicPaper->relationLoaded('authors') &&
-                $this->form->academicPaper->relationLoaded('copies')
-            ) {
-                $needsLoading = false;
-            }
+        if ($this->form->academicPaperId === $id) {
+            // Paper ID is already set, no need to reload
+            $needsLoading = false;
         }
 
-        // Only load if we don't already have this paper loaded with relationships
+        // Only load if we don't already have this paper loaded
         if ($needsLoading) {
             $academicPaper = AcademicPaper::with([
                 'authors' => function ($query) {
@@ -248,8 +246,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function saveAcademicPaper(): void
     {
         if ($this->isEditing) {
-            $this->form->update();
-            $this->success("{$this->form->academicPaper->catalog_code} updated", 'Updated Successfully!');
+            $paper = $this->form->update();
+            $this->success("{$paper->catalog_code} updated", 'Updated Successfully!');
         } else {
             $paper = $this->form->store();
             $this->success("{$paper->catalog_code} created", 'Academic Paper Created Successfully!');
@@ -464,12 +462,21 @@ class AdminAcademicPaperIndex extends AdminComponent
     private function getDepartmentName(string $dept): string
     {
         return Cache::remember("dept_mapping_{$dept}", 3600, function () use ($dept) {
-            $map = [
-                'it' => 'Information Technology',
-                'ce' => 'Civil Engineering',
-                'ee' => 'Electrical Engineering',
-            ];
-            return $map[$dept] ?? $dept;
+            $mapping = config('departments.mapping', []);
+            $validNames = config('departments.valid_names', []);
+
+            // Check if it's a known slug
+            if (isset($mapping[$dept])) {
+                return $mapping[$dept];
+            }
+
+            // Check if it's already a valid department name
+            if (in_array($dept, $validNames)) {
+                return $dept;
+            }
+
+            // Return original value as fallback
+            return $dept;
         });
     }
 

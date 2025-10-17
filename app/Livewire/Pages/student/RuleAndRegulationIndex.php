@@ -19,11 +19,11 @@ class RuleAndRegulationIndex extends Component
                 'ruleRegulations' => function ($q) {
                     // remove any default ordering on the relation
                     $q->reorder()
-                        ->orderByRaw('CASE WHEN content IS NULL OR TRIM(content) = "" THEN 1 ELSE 0 END')
+                        ->orderByRaw('CASE WHEN content IS NULL OR TRIM(content) = \'\' THEN 1 ELSE 0 END')
                         ->orderByRaw('LOWER(TRIM(content)) ASC');
                 },
             ])
-            ->orderByRaw('CASE WHEN title IS NULL OR TRIM(title) = "" THEN 1 ELSE 0 END')
+            ->orderByRaw('CASE WHEN title IS NULL OR TRIM(title) = \'\' THEN 1 ELSE 0 END')
             ->orderByRaw('LOWER(TRIM(title)) ASC')
             ->get();
     }

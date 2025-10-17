@@ -105,6 +105,9 @@
                 <div class="font-medium">{{ $row['user_name'] }}</div>
             @endscope
 
+            @scope('cell_email', $row)
+                <div class="text-sm text-base-content/70">{{ $row['email'] }}</div>
+            @endscope
 
             @scope('cell_title', $row)
                 <div class="max-w-64 truncate" title="{{ $row['title'] }}">

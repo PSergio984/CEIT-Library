@@ -18,7 +18,7 @@ class RuleHeaderFactory extends Factory
     {
         return [
             'title' => $this->faker->unique()->sentence(3), // "General Information"
-            'order' => $this->faker->unique()->numberBetween(1, 100),
+            'order' => $this->faker->numberBetween(1, 100), // For sorting the headers
         ];
     }
 

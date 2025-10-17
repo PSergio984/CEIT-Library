@@ -80,7 +80,9 @@
     <div class="block lg:hidden space-y-4">
         @foreach ($this->transactions as $transaction)
             <div class="bg-base-100 rounded-lg p-4 shadow-lg border border-base-300 cursor-pointer hover:shadow-xl transition-shadow"
-                wire:click="viewTransaction({{ $transaction['id'] }})">
+                tabindex="0" role="button"
+                wire:click="viewTransaction({{ $transaction['id'] }})"
+                wire:keydown.enter="viewTransaction({{ $transaction['id'] }})">
 
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
@@ -95,23 +97,7 @@
                     </div>
                     <div class="text-right">
                         <div class="text-right mt-1">
-                            @if ($transaction['status'] === 'expired')
-                                <span class="text-red-500 font-bold text-sm">
-                                    {{ strtoupper($transaction['status']) }}
-                                </span>
-                            @elseif ($transaction['status'] === 'completed')
-                                <span class="text-success font-medium text-sm">
-                                    {{ strtoupper($transaction['status']) }}
-                                </span>
-                            @elseif ($transaction['status'] === 'started')
-                                <span class="text-blue-500 font-medium text-sm">
-                                    ACTIVE
-                                </span>
-                            @else
-                                <span class="text-base-content font-medium text-sm">
-                                    {{ strtoupper($transaction['status']) }}
-                                </span>
-                            @endif
+                            <x-transaction-status :status="$transaction['status']" />
                         </div>
                     </div>
                 </div>
@@ -139,7 +125,7 @@
                 <div class="text-sm text-base-content/70 mb-4">
                     Due Date:
                     <span
-                        class="text-base-content font-medium @if ($transaction['status'] === 'started') font-bold  text-red-200 px-2 py-1 rounded @endif">
+                        class="font-medium @if ($transaction['status'] === 'started') font-bold text-red-200 px-2 py-1 rounded @else text-base-content @endif">
                         @if ($transaction['expires_at'])
                             {{ $transaction['expires_at']->format('m/d/Y') }}
                         @else
@@ -151,7 +137,7 @@
                 @if ($transaction['status'] === 'completed')
                     <div class="text-sm text-base-content/70 mb-4">
                         Date Returned:
-                        <span class="text-base-content text-green-300 font-medium">
+                        <span class="text-green-300 font-medium">
                             @if ($transaction['time_out'])
                                 {{ $transaction['time_out']->format('m/d/Y') }}
                             @else
@@ -173,7 +159,9 @@
         <div class="grid grid-cols-1 gap-4">
             @foreach ($this->transactions as $transaction)
                 <div class="bg-base-100 rounded-lg p-4 shadow-lg border border-base-300 cursor-pointer hover:shadow-xl transition-shadow"
-                    wire:click="viewTransaction({{ $transaction['id'] }})">
+                    tabindex="0" role="button"
+                    wire:click="viewTransaction({{ $transaction['id'] }})"
+                    wire:keydown.enter="viewTransaction({{ $transaction['id'] }})">
 
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
@@ -187,23 +175,7 @@
                         </div>
                         <div class="text-right">
                             <div class="text-right mt-1">
-                                @if ($transaction['status'] === 'expired')
-                                    <span class="text-red-500 font-bold text-sm">
-                                        {{ strtoupper($transaction['status']) }}
-                                    </span>
-                                @elseif ($transaction['status'] === 'completed')
-                                    <span class="text-success font-medium text-sm">
-                                        {{ strtoupper($transaction['status']) }}
-                                    </span>
-                                @elseif ($transaction['status'] === 'started')
-                                    <span class="text-blue-500 font-medium text-sm">
-                                        ACTIVE
-                                    </span>
-                                @else
-                                    <span class="text-base-content font-medium text-sm">
-                                        {{ strtoupper($transaction['status']) }}
-                                    </span>
-                                @endif
+                                <x-transaction-status :status="$transaction['status']" />
                             </div>
                         </div>
                     </div>
@@ -231,7 +203,7 @@
                     <div class="text-sm text-base-content/70 mb-4">
                         Due Date:
                         <span
-                            class="text-base-content font-medium @if ($transaction['status'] === 'started') font-bold text-red-200 px-2 py-1 rounded @endif">
+                            class="font-medium @if ($transaction['status'] === 'started') font-bold text-red-200 px-2 py-1 rounded @else text-base-content @endif">
                             @if ($transaction['expires_at'])
                                 {{ $transaction['expires_at']->format('m/d/Y') }}
                             @else

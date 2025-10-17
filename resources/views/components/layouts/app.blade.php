@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="light" data-theme="light">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
 <head>
     <meta charset="utf-8">
@@ -24,7 +24,7 @@
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <div class="ml-5 pt-5">App</div>
+            <div class="ml-5 pt-5">CEIT Library</div>
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}

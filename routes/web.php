@@ -37,11 +37,13 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
     ->name('admin.')
     ->group(function () {
         Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
+        Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
         Route::get('/academic-papers/{dept?}', AdminAcademicPaperIndex::class)
             ->where('dept', 'it|ce|ee')
             ->name('academic-paper.index');
-        Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
-        Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)->name('academic-paper.show');
+        Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
+            ->whereNumber('academicPaper')
+            ->name('academic-paper.show');
         Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
         Route::get('/rule-and-regulation',  AdminRuleAndRegulationIndex::class)->name('rules-and-regulations.index');
         Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');

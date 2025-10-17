@@ -6,12 +6,10 @@ use App\Livewire\Forms\RuleAndRegulationForm;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
-use Livewire\Component;
 
 class AdminRuleAndRegulationIndex extends AdminComponent
 {
@@ -82,17 +80,17 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     {
         $query = RuleRegulation::query()
             ->reorder()
-            ->with(['ruleHeader' => fn ($q) => $q->reorder()])
-            ->when($this->filterHeaderId, fn ($q, $id) => $q->where('rule_header_id', $id))
+            ->with(['ruleHeader' => fn($q) => $q->reorder()])
+            ->when($this->filterHeaderId, fn($q, $id) => $q->where('rule_header_id', $id))
             ->when($this->search !== '', function ($q) {
                 $s = "%{$this->search}%";
                 $q->where(function ($q) use ($s) {
                     $q->where('content', 'like', $s)
-                        ->orWhereHas('ruleHeader', fn ($hq) => $hq->where('title', 'like', $s));
+                        ->orWhereHas('ruleHeader', fn($hq) => $hq->where('title', 'like', $s));
                 });
             });
 
-        $column = $this->sortBy['column'] ?? 'ruleHeader.title';
+        $column = $this->sortBy['column'] ?? 'rule_header_id';
         $direction = $this->sortBy['direction'] ?? 'asc';
 
         if ($column === 'ruleHeader.title') {
@@ -115,6 +113,7 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     {
         $rule = RuleRegulation::findOrFail($id);
 
+        $this->isEdit = true;
         $this->editingRuleId = $id;
         $this->form->rule_header_id = $rule->rule_header_id;
         $this->form->content = $rule->content;
