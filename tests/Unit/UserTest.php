@@ -27,14 +27,12 @@ class UserTest extends TestCase
     public function test_user_can_be_created_with_factory()
     {
         $user = User::factory()->create([
-            'student_no' => '23-9999',
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john.doe@plv.edu.ph',
         ]);
 
         $this->assertDatabaseHas('users', [
-            'student_no' => '23-9999',
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john.doe@plv.edu.ph',
@@ -68,7 +66,6 @@ class UserTest extends TestCase
         $user = new User();
         $fillable = $user->getFillable();
 
-        $this->assertContains('student_no', $fillable);
         $this->assertContains('first_name', $fillable);
         $this->assertContains('last_name', $fillable);
         $this->assertContains('email', $fillable);
@@ -653,7 +650,6 @@ class UserTest extends TestCase
     public function test_user_can_be_created_with_minimum_fields()
     {
         $user = User::factory()->create([
-            'student_no' => '23-9999',
             'first_name' => 'Test',
             'last_name' => 'User',
             'email' => 'test.user@plv.edu.ph',
@@ -661,7 +657,6 @@ class UserTest extends TestCase
         ]);
 
         $this->assertInstanceOf(User::class, $user);
-        $this->assertEquals('23-9999', $user->student_no);
     }
 
     /**
@@ -992,7 +987,6 @@ class UserTest extends TestCase
     public function test_user_creation_with_all_required_fields()
     {
         $userData = [
-            'student_no' => '23-1234',
             'first_name' => 'Alice',
             'last_name' => 'Johnson',
             'email' => 'alice.johnson@plv.edu.ph',
@@ -1002,7 +996,6 @@ class UserTest extends TestCase
         $user = User::create($userData);
 
         $this->assertInstanceOf(User::class, $user);
-        $this->assertEquals($userData['student_no'], $user->student_no);
         $this->assertEquals($userData['first_name'], $user->first_name);
         $this->assertEquals($userData['last_name'], $user->last_name);
         $this->assertEquals($userData['email'], $user->email);

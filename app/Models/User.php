@@ -11,7 +11,6 @@ use Illuminate\Notifications\Notifiable;
 
 /**
  * @property int $id
- * @property string $student_no
  * @property string $first_name
  * @property string $last_name
  * @property string $email
@@ -46,7 +45,6 @@ use Illuminate\Notifications\Notifiable;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStudentNo($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @mixin \Eloquent
  */
@@ -61,7 +59,6 @@ class User extends Authenticatable implements MustVerifyEmail
      * @var list<string>
      */
     protected $fillable = [
-        'student_no',
         'first_name',
         'last_name',
         'email',

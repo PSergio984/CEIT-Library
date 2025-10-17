@@ -36,12 +36,6 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-sm font-medium text-base-content">{{ __('Student Number') }}</label>
-                                <div class="mt-1 p-3 bg-base-200 rounded-lg border border-base-300">
-                                    <span class="text-base-content font-medium">{{ auth()->user()->student_no }}</span>
-                                </div>
-                            </div>
                         </div>
                     </section>
                 </div>
