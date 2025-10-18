@@ -5,9 +5,11 @@ namespace App\Livewire\Pages\Student;
 use App\Models\BorrowTransaction;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Auth;
 
+#[Title('Transaction History')]
 class Transaction extends Component
 {
     use WithPagination;
@@ -37,10 +39,10 @@ class Transaction extends Component
             'user',
             'inventory.academicPaper'
         ])
-        ->where('user_id', Auth::id());
+            ->where('user_id', Auth::id());
 
         if ($this->search) {
-            $query->whereHas('inventory.academicPaper', function($q) {
+            $query->whereHas('inventory.academicPaper', function ($q) {
                 $q->search($this->search);
             });
         }
@@ -50,7 +52,7 @@ class Transaction extends Component
         }
 
         if ($this->paperTypeFilter) {
-            $query->whereHas('inventory.academicPaper', function($q) {
+            $query->whereHas('inventory.academicPaper', function ($q) {
                 $q->where('paper_type', $this->paperTypeFilter);
             });
         }

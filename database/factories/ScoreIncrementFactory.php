@@ -18,41 +18,24 @@ class ScoreIncrementFactory extends Factory
      */
     public function definition(): array
     {
+        $rewardTypes = [
+            ['name' => 'Attendance 30+ Minutes', 'points' => 5],
+            ['name' => 'On-Time Return', 'points' => 10],
+            ['name' => 'Perfect Attendance (Week)', 'points' => 15],
+            ['name' => 'Library Event Participation', 'points' => 12],
+            ['name' => 'Helping Other Students', 'points' => 8],
+            ['name' => 'Book Care Excellence', 'points' => 10],
+            ['name' => 'Early Bird Bonus', 'points' => 5],
+            ['name' => 'Study Group Leader', 'points' => 7],
+        ];
+
+        $reward = $this->faker->randomElement($rewardTypes);
+
         return [
             'user_id' => User::factory(),
-            'name' => $this->faker->word(),
+            'name' => $reward['name'],
             'description' => $this->faker->optional()->sentence(),
-            'score_value' => $this->faker->numberBetween(50, 100), // Realistic score range considering violations
+            'score_value' => $reward['points'], // Individual reward points (not total score)
         ];
-    }
-
-    /**
-     * Create a user with excellent score
-     */
-    public function excellent()
-    {
-        return $this->state(fn (array $attributes) => [
-            'score_value' => $this->faker->numberBetween(70, 75),
-        ]);
-    }
-
-    /**
-     * Create a user with good score
-     */
-    public function good()
-    {
-        return $this->state(fn (array $attributes) => [
-            'score_value' => $this->faker->numberBetween(50, 69),
-        ]);
-    }
-
-    /**
-     * Create a user with poor score
-     */
-    public function poor()
-    {
-        return $this->state(fn (array $attributes) => [
-            'score_value' => $this->faker->numberBetween(10, 29),
-        ]);
     }
 }

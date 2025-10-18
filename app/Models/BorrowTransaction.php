@@ -66,6 +66,47 @@ class BorrowTransaction extends Model
         'expires_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        // When borrow transaction status transitions to completed, check if on-time and create ScoreIncrement
+        static::updated(function ($transaction) {
+            // Only award points if status just transitioned to completed (not already completed)
+            $wasCompleted = $transaction->getOriginal('status') === 'completed';
+            $isNowCompleted = $transaction->status === 'completed';
+
+            if (!$wasCompleted && $isNowCompleted && $transaction->time_out && $transaction->expires_at) {
+                // Check if returned on time
+                if ($transaction->time_out <= $transaction->expires_at) {
+                    // Efficient idempotency check: use indexed related_borrow_transaction_id for exact lookup
+                    $existingReward = ScoreIncrement::where('user_id', $transaction->user_id)
+                        ->where('related_borrow_transaction_id', $transaction->id)
+                        ->exists();
+
+                    if (!$existingReward) {
+                        // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
+                        ScoreIncrement::create([
+                            'user_id' => $transaction->user_id,
+                            'name' => 'On-Time Return',
+                            'description' => "Returned borrowed material on time",
+                            'score_value' => 10,
+                            'related_borrow_transaction_id' => $transaction->id,
+                        ]);
+                    }
+                }
+            }
+        });
+
+        // When transaction is deleted, delete related ScoreIncrement records via Eloquent
+        // so the ScoreIncrement observers run and adjust user credit_score correctly
+        static::deleting(function ($transaction) {
+            ScoreIncrement::where('related_borrow_transaction_id', $transaction->id)
+                ->cursor()
+                ->each(function ($scoreIncrement) {
+                    $scoreIncrement->delete();
+                });
+        });
+    }
+
     // Relationship with user
     public function user()
     {
@@ -149,9 +190,9 @@ class BorrowTransaction extends Model
     public static function getActiveSession($userId, $academicPaperId)
     {
         return static::where('user_id', $userId)
-                    ->where('academic_paper_id', $academicPaperId)
-                    ->where('status', 'started')
-                    ->first();
+            ->where('academic_paper_id', $academicPaperId)
+            ->where('status', 'started')
+            ->first();
     }
 
     // Boot method to handle token generation

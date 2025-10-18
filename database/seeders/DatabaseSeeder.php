@@ -119,11 +119,9 @@ class DatabaseSeeder extends Seeder
             }
         });
 
-        // Create credit scores for all users (including Admin)
-        $allUsers = User::all();
-        foreach ($allUsers as $user) {
-            ScoreIncrement::factory()->create(['user_id' => $user->id]);
-        }
+        // Note: ScoreIncrements are now individual reward records, not total scores
+        // The user's credit_score column in the users table tracks the total
+        // Only create ScoreIncrements for actual reward events
 
         // Create some user violations for random students
         $violations = Violation::all();
@@ -140,12 +138,7 @@ class DatabaseSeeder extends Seeder
                     'violation_id' => $violation->id,
                 ]);
             }
-
-            // Update credit score based on violations
-            $creditScore = ScoreIncrement::where('user_id', $violationStudent->id)->first();
-            if ($creditScore) {
-                $creditScore->updateScore();
-            }
+            // Note: Credit scores are now automatically updated via model events
         }
 
         // Create at least 5 borrow transactions for each status for the specific student
@@ -315,6 +308,133 @@ class DatabaseSeeder extends Seeder
             Attendance::factory()->active()->create([
                 'user_id' => $currentLibraryUser->id,
                 'scanned_by' => $activeLibrarian ? $activeLibrarian->id : null,
+            ]);
+        }
+
+        // Add positive score increment history for the specific student (student@plv.edu.ph)
+        // These represent rewards/bonuses that increase their credit score
+        $rewardDates = [
+            $today->copy()->subDays(10),
+            $today->copy()->subDays(7),
+            $today->copy()->subDays(5),
+            $today->copy()->subDays(3),
+            $today->copy()->subDay(),
+        ];
+
+        $scoreIncrement1 = new ScoreIncrement([
+            'user_id' => $specificStudent->id,
+            'name' => 'Perfect Attendance (Week)',
+            'description' => 'Attended library every day this week',
+            'score_value' => 15,
+        ]);
+        $scoreIncrement1->forceFill([
+            'created_at' => $rewardDates[0]->setTime(17, 30, 0),
+            'updated_at' => $rewardDates[0]->setTime(17, 30, 0),
+        ]);
+        $scoreIncrement1->save();
+
+        $scoreIncrement2 = new ScoreIncrement([
+            'user_id' => $specificStudent->id,
+            'name' => 'Library Event Participation',
+            'description' => 'Participated in library orientation program',
+            'score_value' => 12,
+        ]);
+        $scoreIncrement2->forceFill([
+            'created_at' => $rewardDates[1]->setTime(13, 0, 0),
+            'updated_at' => $rewardDates[1]->setTime(13, 0, 0),
+        ]);
+        $scoreIncrement2->save();
+
+        $scoreIncrement3 = new ScoreIncrement([
+            'user_id' => $specificStudent->id,
+            'name' => 'Helping Other Students',
+            'description' => 'Assisted fellow student in finding research materials',
+            'score_value' => 8,
+        ]);
+        $scoreIncrement3->forceFill([
+            'created_at' => $rewardDates[2]->setTime(11, 20, 0),
+            'updated_at' => $rewardDates[2]->setTime(11, 20, 0),
+        ]);
+        $scoreIncrement3->save();
+
+        $scoreIncrement4 = new ScoreIncrement([
+            'user_id' => $specificStudent->id,
+            'name' => 'Early Bird Bonus',
+            'description' => 'First student to arrive at library opening time',
+            'score_value' => 5,
+        ]);
+        $scoreIncrement4->forceFill([
+            'created_at' => $rewardDates[3]->setTime(8, 0, 0),
+            'updated_at' => $rewardDates[3]->setTime(8, 0, 0),
+        ]);
+        $scoreIncrement4->save();
+
+        $scoreIncrement5 = new ScoreIncrement([
+            'user_id' => $specificStudent->id,
+            'name' => 'Book Care Excellence',
+            'description' => 'Maintained borrowed materials in excellent condition',
+            'score_value' => 10,
+        ]);
+        $scoreIncrement5->forceFill([
+            'created_at' => $rewardDates[4]->setTime(15, 45, 0),
+            'updated_at' => $rewardDates[4]->setTime(15, 45, 0),
+        ]);
+        $scoreIncrement5->save();
+
+        // Add sample violations for the specific student (student@plv.edu.ph)
+        // These will show negative points in the credit score history
+        $violationDates = [
+            $today->copy()->subDays(12),
+            $today->copy()->subDays(8),
+            $today->copy()->subDays(4),
+            $today->copy()->subDays(2),
+        ];
+
+        // Late Return violation (Minor severity, -5 points)
+        $lateReturnViolation = Violation::where('name', 'Late Return of Books')->first();
+        if ($lateReturnViolation) {
+            ViolationTransaction::create([
+                'user_id' => $specificStudent->id,
+                'violation_id' => $lateReturnViolation->id,
+                'date_occurred' => $violationDates[0],
+                'severity' => 'Minor',
+                'remarks' => 'Returned thesis 2 days past due date',
+            ]);
+        }
+
+        // Loud Talking violation (Minor severity, -3 points)
+        $loudTalkingViolation = Violation::where('name', 'Loud Talking in Library')->first();
+        if ($loudTalkingViolation) {
+            ViolationTransaction::create([
+                'user_id' => $specificStudent->id,
+                'violation_id' => $loudTalkingViolation->id,
+                'date_occurred' => $violationDates[1],
+                'severity' => 'Minor',
+                'remarks' => 'Talking loudly in the reading area',
+            ]);
+        }
+
+        // Eating in Library violation (Minor severity, -4 points)
+        $eatingViolation = Violation::where('name', 'Eating in Library')->first();
+        if ($eatingViolation) {
+            ViolationTransaction::create([
+                'user_id' => $specificStudent->id,
+                'violation_id' => $eatingViolation->id,
+                'date_occurred' => $violationDates[2],
+                'severity' => 'Minor',
+                'remarks' => 'Eating snacks in the study area',
+            ]);
+        }
+
+        // Mobile Phone violation (Minor severity, -3 points)
+        $mobilePhoneViolation = Violation::where('name', 'Using Mobile Phone Loudly')->first();
+        if ($mobilePhoneViolation) {
+            ViolationTransaction::create([
+                'user_id' => $specificStudent->id,
+                'violation_id' => $mobilePhoneViolation->id,
+                'date_occurred' => $violationDates[3],
+                'severity' => 'Minor',
+                'remarks' => 'Received a call without leaving the study area',
             ]);
         }
 

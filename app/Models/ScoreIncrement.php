@@ -39,12 +39,86 @@ class ScoreIncrement extends Model
         'name',
         'description',
         'score_value',
+        'related_attendance_id',
+        'related_borrow_transaction_id',
     ];
+
+    protected static function booted()
+    {
+        // When a score increment is created, atomically add points to user's credit_score
+        static::created(function ($scoreIncrement) {
+            static::updateUserCreditScoreAtomic($scoreIncrement->user_id, $scoreIncrement->score_value);
+        });
+
+        // When a score increment is updated, atomically adjust the difference
+        static::updated(function ($scoreIncrement) {
+            $oldUserId = $scoreIncrement->getOriginal('user_id');
+            $newUserId = $scoreIncrement->user_id;
+            $oldValue = $scoreIncrement->getOriginal('score_value');
+            $newValue = $scoreIncrement->score_value;
+
+            if ($oldUserId !== $newUserId) {
+                // user_id changed: remove points from original user, add to new user
+                static::updateUserCreditScoreAtomic($oldUserId, -$oldValue);
+                static::updateUserCreditScoreAtomic($newUserId, $newValue);
+            } else {
+                // user_id unchanged: apply delta to current user
+                $delta = $newValue - $oldValue;
+                if ($delta !== 0) {
+                    static::updateUserCreditScoreAtomic($newUserId, $delta);
+                }
+            }
+        });
+
+        // When a score increment is deleted, atomically subtract points from user's credit_score
+        static::deleted(function ($scoreIncrement) {
+            static::updateUserCreditScoreAtomic($scoreIncrement->user_id, -$scoreIncrement->score_value);
+        });
+    }
+
+    /**
+     * Atomically update user's credit score with proper clamping (0-100)
+     * Uses a single SQL UPDATE to prevent race conditions
+     * Handles missing users gracefully and uses parameterized queries for safety
+     * Supports SQLite (MIN/MAX) and MySQL/Postgres (LEAST/GREATEST) for portability
+     */
+    protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
+    {
+        // Detect the database driver to use appropriate SQL functions
+        $driver = \DB::connection()->getDriverName();
+
+        // SQLite uses MIN/MAX, while MySQL and PostgreSQL use LEAST/GREATEST
+        if ($driver === 'sqlite') {
+            // SQLite syntax: MIN for upper bound, MAX for lower bound
+            \DB::statement(
+                'UPDATE users SET credit_score = MIN(100, MAX(0, credit_score + ?)) WHERE id = ?',
+                [$delta, $userId]
+            );
+        } else {
+            // MySQL/PostgreSQL syntax: LEAST for upper bound, GREATEST for lower bound
+            \DB::statement(
+                'UPDATE users SET credit_score = LEAST(100, GREATEST(0, credit_score + ?)) WHERE id = ?',
+                [$delta, $userId]
+            );
+        }
+    }
 
     // Relationship with user
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relationship with attendance (for attendance-based rewards)
+    public function attendance()
+    {
+        return $this->belongsTo(Attendance::class, 'related_attendance_id');
+    }
+
+    // Relationship with borrow transaction (for on-time return rewards)
+    public function borrowTransaction()
+    {
+        return $this->belongsTo(BorrowTransaction::class, 'related_borrow_transaction_id');
     }
 
     // Update score based on violations

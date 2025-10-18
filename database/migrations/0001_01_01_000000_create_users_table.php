@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
-            $table->unsignedInteger('credit_score')->default(100);
+            $table->unsignedInteger('credit_score')->default(100)->check('credit_score >= 0 AND credit_score <= 100');
             $table->string('password');
             $table->boolean('is_admin')->default(false);
             $table->enum('account_status', ['active', 'suspended'])->default('active');

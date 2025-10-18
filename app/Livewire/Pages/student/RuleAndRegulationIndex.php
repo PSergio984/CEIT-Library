@@ -6,7 +6,9 @@ use App\Models\RuleHeader;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
+use Livewire\Attributes\Title;
 
+#[Title('Rules and Regulations')]
 class RuleAndRegulationIndex extends Component
 {
     #[Computed]

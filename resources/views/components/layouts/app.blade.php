@@ -24,7 +24,11 @@
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <div class="ml-5 pt-5">CEIT Library</div>
+            {{-- Hamburger menu button --}}
+            <label for="main-drawer" class="btn btn-square btn-ghost lg:hidden mr-2">
+                <x-mary-icon name="o-bars-3" class="w-5 h-5" />
+            </label>
+            <div>CEIT Library</div>
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}

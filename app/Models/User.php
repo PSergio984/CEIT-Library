@@ -157,18 +157,6 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ViolationTransaction::class);
     }
 
-    // Accessor for credit score
-    public function getCreditScoreAttribute()
-    {
-        $defaultScore = 100;
-        // Use the existing relationship to sum penalty_score from the related Violation model
-        // Join only the violations table (matching violation_transactions.violation_id to violations.id)
-        // and sum violations.penalty_score, using the relation's base table and a single join
-        $penaltySum = $this->violations()
-            ->join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
-            ->sum('violations.penalty_score');
-        return $defaultScore - $penaltySum;
-    }
 
     // Check if user is currently in the library
     public function isInLibrary()
