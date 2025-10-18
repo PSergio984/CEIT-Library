@@ -99,9 +99,11 @@ class BorrowTransaction extends Model
         // When transaction is deleted, delete related ScoreIncrement records via Eloquent
         // so the ScoreIncrement observers run and adjust user credit_score correctly
         static::deleting(function ($transaction) {
-            ScoreIncrement::where('related_borrow_transaction_id', $transaction->id)->each(function ($scoreIncrement) {
-                $scoreIncrement->delete();
-            });
+            ScoreIncrement::where('related_borrow_transaction_id', $transaction->id)
+                ->cursor()
+                ->each(function ($scoreIncrement) {
+                    $scoreIncrement->delete();
+                });
         });
     }
 

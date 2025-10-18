@@ -86,7 +86,7 @@ class Attendance extends Model
         // When attendance is deleted, delete related ScoreIncrement records via Eloquent
         // so the ScoreIncrement observers run and adjust user credit_score correctly
         static::deleting(function ($attendance) {
-            ScoreIncrement::where('related_attendance_id', $attendance->id)->each(function ($scoreIncrement) {
+            ScoreIncrement::where('related_attendance_id', $attendance->id)->cursor()->each(function ($scoreIncrement) {
                 $scoreIncrement->delete();
             });
         });

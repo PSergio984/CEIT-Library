@@ -17,8 +17,8 @@ return new class extends Migration
             // Using nullOnDelete instead of cascade so Eloquent observers run when cleaning up
             $table->foreignId('related_attendance_id')->nullable()->after('user_id')->constrained('attendances')->nullOnDelete();
 
-            // Add index for fast lookups when checking if attendance reward already exists
-            $table->index(['user_id', 'related_attendance_id']);
+            // Enforce idempotency: one reward per user+attendance
+            $table->unique(['user_id', 'related_attendance_id'], 'score_increments_user_attendance_unique');
         });
     }
 
@@ -29,7 +29,7 @@ return new class extends Migration
     {
         Schema::table('score_increments', function (Blueprint $table) {
             $table->dropForeign(['related_attendance_id']);
-            $table->dropIndex(['user_id', 'related_attendance_id']);
+            $table->dropUnique('score_increments_user_attendance_unique');
             $table->dropColumn('related_attendance_id');
         });
     }

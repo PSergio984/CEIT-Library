@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('score_increments', function (Blueprint $table) {
             $table->foreignId('related_borrow_transaction_id')->nullable()->after('related_attendance_id')->constrained('borrow_transactions')->nullOnDelete();
-            $table->index(['user_id', 'related_borrow_transaction_id']);
+            $table->unique(['user_id', 'related_borrow_transaction_id'], 'score_increments_user_borrow_txn_unique');
         });
     }
 
@@ -24,7 +24,7 @@ return new class extends Migration
     {
         Schema::table('score_increments', function (Blueprint $table) {
             $table->dropForeign(['related_borrow_transaction_id']);
-            $table->dropIndex(['user_id', 'related_borrow_transaction_id']);
+            $table->dropUnique('score_increments_user_borrow_txn_unique');
             $table->dropColumn('related_borrow_transaction_id');
         });
     }

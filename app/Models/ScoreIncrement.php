@@ -52,12 +52,21 @@ class ScoreIncrement extends Model
 
         // When a score increment is updated, atomically adjust the difference
         static::updated(function ($scoreIncrement) {
+            $oldUserId = $scoreIncrement->getOriginal('user_id');
+            $newUserId = $scoreIncrement->user_id;
             $oldValue = $scoreIncrement->getOriginal('score_value');
             $newValue = $scoreIncrement->score_value;
-            $delta = $newValue - $oldValue;
 
-            if ($delta !== 0) {
-                static::updateUserCreditScoreAtomic($scoreIncrement->user_id, $delta);
+            if ($oldUserId !== $newUserId) {
+                // user_id changed: remove points from original user, add to new user
+                static::updateUserCreditScoreAtomic($oldUserId, -$oldValue);
+                static::updateUserCreditScoreAtomic($newUserId, $newValue);
+            } else {
+                // user_id unchanged: apply delta to current user
+                $delta = $newValue - $oldValue;
+                if ($delta !== 0) {
+                    static::updateUserCreditScoreAtomic($newUserId, $delta);
+                }
             }
         });
 
