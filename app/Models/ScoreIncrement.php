@@ -41,6 +41,29 @@ class ScoreIncrement extends Model
         'score_value',
     ];
 
+    protected static function booted()
+    {
+        // When a score increment is created, add points to user's credit_score
+        static::created(function ($scoreIncrement) {
+            $user = User::find($scoreIncrement->user_id);
+            if ($user) {
+                $newScore = $user->credit_score + $scoreIncrement->score_value;
+                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
+                $user->save();
+            }
+        });
+
+        // When a score increment is deleted, subtract points from user's credit_score
+        static::deleted(function ($scoreIncrement) {
+            $user = User::find($scoreIncrement->user_id);
+            if ($user) {
+                $newScore = $user->credit_score - $scoreIncrement->score_value;
+                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
+                $user->save();
+            }
+        });
+    }
+
     // Relationship with user
     public function user()
     {

@@ -38,7 +38,6 @@ class AcademicPaperIndex extends Component
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
-            ['key' => 'actions', 'label' => 'Actions', 'sortable' => false],
         ];
     }
 

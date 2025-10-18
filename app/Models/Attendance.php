@@ -53,6 +53,34 @@ class Attendance extends Model
         'time_out' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        // When attendance is updated to completed, check if 30+ minutes and create ScoreIncrement
+        static::updated(function ($attendance) {
+            // Only award points if status changed to completed and stayed 30+ minutes
+            if ($attendance->status === 'completed' && $attendance->time_in && $attendance->time_out) {
+                $minutes = $attendance->time_in->diffInMinutes($attendance->time_out);
+                if ($minutes >= 30) {
+                    // Check if we already created a ScoreIncrement for this attendance
+                    $existingReward = ScoreIncrement::where('user_id', $attendance->user_id)
+                        ->where('name', 'Attendance 30+ Minutes')
+                        ->where('description', 'LIKE', '%Attendance ID: ' . $attendance->id . '%')
+                        ->exists();
+
+                    if (!$existingReward) {
+                        // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
+                        ScoreIncrement::create([
+                            'user_id' => $attendance->user_id,
+                            'name' => 'Attendance 30+ Minutes',
+                            'description' => "Stayed in library for {$minutes} minutes (Attendance ID: {$attendance->id})",
+                            'score_value' => 5,
+                        ]);
+                    }
+                }
+            }
+        });
+    }
+
     // Relationship with user
     public function user()
     {
@@ -94,9 +122,9 @@ class Attendance extends Model
     public static function getActiveSession($userId)
     {
         return static::where('user_id', $userId)
-                    ->where('status', 'active')
-                    ->whereNotNull('time_in')
-                    ->whereNull('time_out')
-                    ->first();
+            ->where('status', 'active')
+            ->whereNotNull('time_in')
+            ->whereNull('time_out')
+            ->first();
     }
 }

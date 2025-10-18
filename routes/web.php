@@ -1,5 +1,6 @@
 <?php
 
+
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
@@ -7,6 +8,7 @@ use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
+use App\Livewire\Pages\Student\CreditScoreHistory;
 use App\Livewire\Pages\Student\AcademicPaperIndex;
 use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
@@ -28,6 +30,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->where('dept', 'it|ce|ee')
         ->name('academic-paper.index.dept');
     Route::get('/rule-and-regulation',  RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
+    Route::get('/credit-score-history',  CreditScoreHistory::class)->name('CreditScoreHistory');
     Route::get('/transactions', Transaction::class)->name('transactions');
 });
 

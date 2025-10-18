@@ -50,6 +50,33 @@ class ViolationTransaction extends Model
         'date_occurred' => 'date',
     ];
 
+    protected static function booted()
+    {
+        // When a violation is created, subtract penalty from user's credit_score
+        static::created(function ($violationTransaction) {
+            $user = User::find($violationTransaction->user_id);
+            $violation = Violation::find($violationTransaction->violation_id);
+
+            if ($user && $violation) {
+                $newScore = $user->credit_score - $violation->penalty_score;
+                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
+                $user->save();
+            }
+        });
+
+        // When a violation is deleted, add penalty back to user's credit_score
+        static::deleted(function ($violationTransaction) {
+            $user = User::find($violationTransaction->user_id);
+            $violation = Violation::find($violationTransaction->violation_id);
+
+            if ($user && $violation) {
+                $newScore = $user->credit_score + $violation->penalty_score;
+                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
+                $user->save();
+            }
+        });
+    }
+
     // Relationship with user
     public function user()
     {

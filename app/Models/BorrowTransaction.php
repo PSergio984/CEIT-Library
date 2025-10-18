@@ -66,6 +66,33 @@ class BorrowTransaction extends Model
         'expires_at' => 'datetime',
     ];
 
+    protected static function booted()
+    {
+        // When borrow transaction is updated to completed, check if on-time and create ScoreIncrement
+        static::updated(function ($transaction) {
+            // Only award points if status changed to completed and returned on time
+            if ($transaction->status === 'completed' && $transaction->time_out && $transaction->expires_at) {
+                if ($transaction->time_out <= $transaction->expires_at) {
+                    // Check if we already created a ScoreIncrement for this transaction
+                    $existingReward = ScoreIncrement::where('user_id', $transaction->user_id)
+                        ->where('name', 'On-Time Return')
+                        ->where('description', 'LIKE', '%Transaction ID: ' . $transaction->id . '%')
+                        ->exists();
+
+                    if (!$existingReward) {
+                        // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
+                        ScoreIncrement::create([
+                            'user_id' => $transaction->user_id,
+                            'name' => 'On-Time Return',
+                            'description' => "Returned borrowed material on time (Transaction ID: {$transaction->id})",
+                            'score_value' => 10,
+                        ]);
+                    }
+                }
+            }
+        });
+    }
+
     // Relationship with user
     public function user()
     {
@@ -149,9 +176,9 @@ class BorrowTransaction extends Model
     public static function getActiveSession($userId, $academicPaperId)
     {
         return static::where('user_id', $userId)
-                    ->where('academic_paper_id', $academicPaperId)
-                    ->where('status', 'started')
-                    ->first();
+            ->where('academic_paper_id', $academicPaperId)
+            ->where('status', 'started')
+            ->first();
     }
 
     // Boot method to handle token generation
