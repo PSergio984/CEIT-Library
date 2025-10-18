@@ -77,11 +77,9 @@ class BorrowTransaction extends Model
             if (!$wasCompleted && $isNowCompleted && $transaction->time_out && $transaction->expires_at) {
                 // Check if returned on time
                 if ($transaction->time_out <= $transaction->expires_at) {
-                    // More robust idempotency check: look for specific transaction reward by ID in description
-                    $rewardIdentifier = "transaction_{$transaction->id}";
+                    // Efficient idempotency check: use indexed related_borrow_transaction_id for exact lookup
                     $existingReward = ScoreIncrement::where('user_id', $transaction->user_id)
-                        ->where('name', 'On-Time Return')
-                        ->where('description', 'LIKE', "%{$rewardIdentifier}%")
+                        ->where('related_borrow_transaction_id', $transaction->id)
                         ->exists();
 
                     if (!$existingReward) {
@@ -89,12 +87,21 @@ class BorrowTransaction extends Model
                         ScoreIncrement::create([
                             'user_id' => $transaction->user_id,
                             'name' => 'On-Time Return',
-                            'description' => "Returned borrowed material on time [transaction_{$transaction->id}]",
+                            'description' => "Returned borrowed material on time",
                             'score_value' => 10,
+                            'related_borrow_transaction_id' => $transaction->id,
                         ]);
                     }
                 }
             }
+        });
+
+        // When transaction is deleted, delete related ScoreIncrement records via Eloquent
+        // so the ScoreIncrement observers run and adjust user credit_score correctly
+        static::deleting(function ($transaction) {
+            ScoreIncrement::where('related_borrow_transaction_id', $transaction->id)->each(function ($scoreIncrement) {
+                $scoreIncrement->delete();
+            });
         });
     }
 

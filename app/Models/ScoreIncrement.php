@@ -40,6 +40,7 @@ class ScoreIncrement extends Model
         'description',
         'score_value',
         'related_attendance_id',
+        'related_borrow_transaction_id',
     ];
 
     protected static function booted()
@@ -103,6 +104,12 @@ class ScoreIncrement extends Model
     public function attendance()
     {
         return $this->belongsTo(Attendance::class, 'related_attendance_id');
+    }
+
+    // Relationship with borrow transaction (for on-time return rewards)
+    public function borrowTransaction()
+    {
+        return $this->belongsTo(BorrowTransaction::class, 'related_borrow_transaction_id');
     }
 
     // Update score based on violations
