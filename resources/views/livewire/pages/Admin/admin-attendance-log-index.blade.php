@@ -1,11 +1,30 @@
 <div class="p-6">
     <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
 
+    {{-- Statistics Cards --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <x-mary-stat
+            title="Currently in Library"
+            description="Students checked in today"
+            value="{{ $this->currentlyInLibrary }}"
+            icon="o-user-group"
+            class="bg-base-200 p-4 rounded-lg mb-6"
+            tooltip-bottom="Students who are currently in the library" />
+
+        <x-mary-stat
+            title="Timed Out Today"
+            description="Students who left today"
+            value="{{ $this->timedOutToday }}"
+            icon="o-arrow-right-on-rectangle"
+            class="bg-base-200 p-4 rounded-lg mb-6"
+            tooltip-bottom="Students who checked out today" />
+    </div>
+
     <div class="bg-base-200 p-4 rounded-lg mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
                 <x-mary-input label="Search" wire:model.live.debounce.300ms="search"
-                              placeholder="Search by name or email..." icon="o-magnifying-glass" />
+                              placeholder="Search by name or librarian..." icon="o-magnifying-glass" />
             </div>
 
             <div>
@@ -40,7 +59,8 @@
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         <h3 class="font-semibold text-base">{{ $attendance['user_name'] }}</h3>
-                        <p class="text-sm text-base-content/70">{{ $attendance['email'] }}</p>
+                        <p class="text-base-content/50 font-medium">Scanned By:</p>
+                        <p class="text-sm text-base-content/70">{{ $attendance['scanned_by_name'] }}</p>
                     </div>
                     <span class="badge badge-{{ $attendance['status'] == 'completed' ? 'success' : 'warning' }} badge-sm">
                         {{ ucfirst($attendance['status']) }}

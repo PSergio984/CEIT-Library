@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\Attendance;
+use App\Models\Librarian;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -18,7 +19,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
         ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
-        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-32'],
+        ['key' => 'scanned_by_name', 'label' => 'Scanned_By', 'sortable' => true, 'class' => 'min-w-40'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-36'],
         ['key' => 'time_out', 'label' => 'Time Out', 'sortable' => true, 'class' => 'w-36'],
         ['key' => 'duration_minutes', 'label' => 'Duration', 'sortable' => true, 'class' => 'w-24'],
@@ -29,12 +30,11 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     protected function getAttendancesQuery()
     {
-        return Attendance::with('user')
+        return Attendance::with(['user', 'scannedByLibrarian.user'])
             ->when($this->search, function ($query) {
                 $query->whereHas('user', function ($q) {
                     $q->where('first_name', 'like', "%{$this->search}%")
-                        ->orWhere('last_name', 'like', "%{$this->search}%")
-                        ->orWhere('email', 'like', "%{$this->search}%");
+                        ->orWhere('last_name', 'like', "%{$this->search}%");
                 });
             })
             ->when($this->statusFilter, fn($q) => $q->where('status', $this->statusFilter))
@@ -60,20 +60,40 @@ class AdminAttendanceLogIndex extends AdminComponent
             $query->orderBy('time_in', 'desc');
         }
 
+
         return $query->paginate($this->perPage)
             ->through(function ($attendance) {
+                $scannerName = null;
+                if ($attendance->scannedByLibrarian && $attendance->scannedByLibrarian->user) {
+                    $scannerName = trim(($attendance->scannedByLibrarian->user->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian->user->last_name ?? ''));
+                }
+
                 return [
-                    'id' => $attendance->id,
-                    'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
-                    'email' => $attendance->user?->email ?? 'N/A',
-                    'user' => $attendance->user,
-                    'time_in' => $attendance->time_in,
-                    'time_out' => $attendance->time_out,
+                    'id'               => $attendance->id,
+                    'user_name'        => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
+                    'scanned_by_name'  => $scannerName ?: 'N/A',
+                    'user'             => $attendance->user,
+                    'time_in'          => $attendance->time_in,
+                    'time_out'         => $attendance->time_out,
                     'duration_minutes' => $attendance->duration_minutes,
-                    'status' => $attendance->status,
-                    'original' => $attendance,
+                    'status'           => $attendance->status,
+                    'original'         => $attendance,
                 ];
             });
+    }
+
+    public function getCurrentlyInLibraryProperty()
+    {
+        return Attendance::where('status', 'active')
+            ->whereDate('time_in', today())
+            ->count();
+    }
+
+    public function getTimedOutTodayProperty()
+    {
+        return Attendance::where('status', 'completed')
+            ->whereDate('time_out', today())
+            ->count();
     }
 
     public function updatingSearch()
