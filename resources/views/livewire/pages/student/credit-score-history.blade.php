@@ -2,7 +2,7 @@
     <div class="flex items-center justify-between mb-6">
         <h1 class="text-2xl font-bold">Credit Score History</h1>
         <div class="text-sm text-base-content/70">
-            Current Score: <span class="font-bold text-lg">{{ $this->currentScore() }}</span>
+            Credit Score: <span class="font-bold text-lg">{{ $this->creditScore() }}</span>
         </div>
     </div>
 

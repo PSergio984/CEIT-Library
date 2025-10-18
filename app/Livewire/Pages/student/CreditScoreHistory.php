@@ -22,15 +22,11 @@ class CreditScoreHistory extends Component
     public string $selectedDate = '';
     public int $perPage = 10;
 
-
     #[Computed]
-    public function currentScore(): int
+    public function creditScore()
     {
-        // Return the credit_score from the database (fresh from DB, not cached)
-
-        return Auth::user()->fresh()->credit_score ?? 100;
+        return Auth::user()->credit_score;
     }
-
     #[Computed]
     public function history()
     {
