@@ -1,6 +1,5 @@
 <?php
 
-
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;

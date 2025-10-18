@@ -82,8 +82,8 @@ class ViolationTransaction extends Model
                 $newViolation = Violation::find($newViolationId);
                 $newPenalty = $newViolation ? $newViolation->penalty_score : 0;
 
-                // Update the stored penalty
-                $violationTransaction->violation_penalty = $newPenalty;
+                // Persist stored penalty without firing events again
+                $violationTransaction->updateQuietly(['violation_penalty' => $newPenalty]);
 
                 // Remove old penalty and apply new penalty (delta = old - new because penalties are negative)
                 $delta = $oldPenalty - $newPenalty;

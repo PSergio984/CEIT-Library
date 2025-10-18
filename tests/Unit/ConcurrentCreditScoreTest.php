@@ -24,7 +24,6 @@ class ConcurrentCreditScoreTest extends TestCase
 
         // Simulate concurrent creation of score increments
         $scoreValues = [10, 15, 20, 5];
-        $expectedTotal = 50 + array_sum($scoreValues); // 50 + 50 = 100
 
         // Create multiple score increments rapidly
         foreach ($scoreValues as $value) {

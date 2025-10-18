@@ -64,12 +64,9 @@ class Attendance extends Model
             if (!$wasCompleted && $isNowCompleted) {
                 // Use the existing duration_minutes property instead of recalculating
                 if ($attendance->duration_minutes >= 30) {
-                    // More robust idempotency check: look for specific attendance reward by ID in description
-                    // This is more efficient than LIKE and checks the exact format
-                    $rewardIdentifier = "attendance_{$attendance->id}";
+                    // Efficient idempotency check: use indexed related_attendance_id for exact lookup
                     $existingReward = ScoreIncrement::where('user_id', $attendance->user_id)
-                        ->where('name', 'Attendance 30+ Minutes')
-                        ->where('description', 'LIKE', "%{$rewardIdentifier}%")
+                        ->where('related_attendance_id', $attendance->id)
                         ->exists();
 
                     if (!$existingReward) {
@@ -77,8 +74,9 @@ class Attendance extends Model
                         ScoreIncrement::create([
                             'user_id' => $attendance->user_id,
                             'name' => 'Attendance 30+ Minutes',
-                            'description' => "Stayed in library for {$attendance->duration_minutes} minutes [attendance_{$attendance->id}]",
+                            'description' => "Stayed in library for {$attendance->duration_minutes} minutes",
                             'score_value' => 5,
+                            'related_attendance_id' => $attendance->id,
                         ]);
                     }
                 }
