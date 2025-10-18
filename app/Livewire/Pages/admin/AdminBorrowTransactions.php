@@ -6,7 +6,9 @@ use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
 
+#[Title('Borrow Logs')]
 class AdminBorrowTransactions extends AdminComponent
 {
     use WithPagination, Toast;
