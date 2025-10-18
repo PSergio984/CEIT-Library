@@ -43,25 +43,40 @@ class ScoreIncrement extends Model
 
     protected static function booted()
     {
-        // When a score increment is created, add points to user's credit_score
+        // When a score increment is created, atomically add points to user's credit_score
         static::created(function ($scoreIncrement) {
-            $user = User::find($scoreIncrement->user_id);
-            if ($user) {
-                $newScore = $user->credit_score + $scoreIncrement->score_value;
-                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
-                $user->save();
+            static::updateUserCreditScoreAtomic($scoreIncrement->user_id, $scoreIncrement->score_value);
+        });
+
+        // When a score increment is updated, atomically adjust the difference
+        static::updated(function ($scoreIncrement) {
+            $oldValue = $scoreIncrement->getOriginal('score_value');
+            $newValue = $scoreIncrement->score_value;
+            $delta = $newValue - $oldValue;
+
+            if ($delta !== 0) {
+                static::updateUserCreditScoreAtomic($scoreIncrement->user_id, $delta);
             }
         });
 
-        // When a score increment is deleted, subtract points from user's credit_score
+        // When a score increment is deleted, atomically subtract points from user's credit_score
         static::deleted(function ($scoreIncrement) {
-            $user = User::find($scoreIncrement->user_id);
-            if ($user) {
-                $newScore = $user->credit_score - $scoreIncrement->score_value;
-                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
-                $user->save();
-            }
+            static::updateUserCreditScoreAtomic($scoreIncrement->user_id, -$scoreIncrement->score_value);
         });
+    }
+
+    /**
+     * Atomically update user's credit score with proper clamping (0-100)
+     * Uses a single SQL UPDATE to prevent race conditions
+     * Handles missing users gracefully and uses parameterized queries for safety
+     */
+    protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
+    {
+        // Use parameterized query with DB::statement for proper binding
+        \DB::statement(
+            'UPDATE users SET credit_score = LEAST(100, GREATEST(0, credit_score + ?)) WHERE id = ?',
+            [$delta, $userId]
+        );
     }
 
     // Relationship with user

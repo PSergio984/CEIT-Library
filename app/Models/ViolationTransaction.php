@@ -41,6 +41,7 @@ class ViolationTransaction extends Model
     protected $fillable = [
         'user_id',
         'violation_id',
+        'violation_penalty',
         'date_occurred',
         'severity',
         'remarks',
@@ -52,29 +53,65 @@ class ViolationTransaction extends Model
 
     protected static function booted()
     {
-        // When a violation is created, subtract penalty from user's credit_score
+        // Store the original penalty when creating a violation transaction
+        static::creating(function ($violationTransaction) {
+            // If violation_penalty not explicitly set, fetch it from the violation
+            if (!$violationTransaction->violation_penalty) {
+                $violation = Violation::find($violationTransaction->violation_id);
+                if ($violation) {
+                    $violationTransaction->violation_penalty = $violation->penalty_score;
+                }
+            }
+        });
+
+        // When a violation is created, atomically subtract the stored penalty from user's credit_score
         static::created(function ($violationTransaction) {
-            $user = User::find($violationTransaction->user_id);
-            $violation = Violation::find($violationTransaction->violation_id);
-
-            if ($user && $violation) {
-                $newScore = $user->credit_score - $violation->penalty_score;
-                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
-                $user->save();
+            if ($violationTransaction->violation_penalty) {
+                static::updateUserCreditScoreAtomic($violationTransaction->user_id, -$violationTransaction->violation_penalty);
             }
         });
 
-        // When a violation is deleted, add penalty back to user's credit_score
+        // When a violation is updated (e.g., violation_id changes), atomically adjust using stored penalties
+        static::updated(function ($violationTransaction) {
+            $oldViolationId = $violationTransaction->getOriginal('violation_id');
+            $newViolationId = $violationTransaction->violation_id;
+            $oldPenalty = $violationTransaction->getOriginal('violation_penalty');
+
+            if ($oldViolationId !== $newViolationId) {
+                // Fetch new violation penalty
+                $newViolation = Violation::find($newViolationId);
+                $newPenalty = $newViolation ? $newViolation->penalty_score : 0;
+
+                // Update the stored penalty
+                $violationTransaction->violation_penalty = $newPenalty;
+
+                // Remove old penalty and apply new penalty (delta = old - new because penalties are negative)
+                $delta = $oldPenalty - $newPenalty;
+                static::updateUserCreditScoreAtomic($violationTransaction->user_id, $delta);
+            }
+        });
+
+        // When a violation is deleted, atomically add the stored penalty back to user's credit_score
         static::deleted(function ($violationTransaction) {
-            $user = User::find($violationTransaction->user_id);
-            $violation = Violation::find($violationTransaction->violation_id);
-
-            if ($user && $violation) {
-                $newScore = $user->credit_score + $violation->penalty_score;
-                $user->credit_score = max(0, min(100, $newScore)); // Cap between 0-100
-                $user->save();
+            // Use the stored penalty to ensure exact reversal
+            if ($violationTransaction->violation_penalty) {
+                static::updateUserCreditScoreAtomic($violationTransaction->user_id, $violationTransaction->violation_penalty);
             }
         });
+    }
+
+    /**
+     * Atomically update user's credit score with proper clamping (0-100)
+     * Uses a single SQL UPDATE to prevent race conditions
+     * Handles missing users gracefully and uses parameterized queries for safety
+     */
+    protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
+    {
+        // Use parameterized query with DB::statement for proper binding
+        \DB::statement(
+            'UPDATE users SET credit_score = LEAST(100, GREATEST(0, credit_score + ?)) WHERE id = ?',
+            [$delta, $userId]
+        );
     }
 
     // Relationship with user

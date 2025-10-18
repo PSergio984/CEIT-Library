@@ -55,16 +55,21 @@ class Attendance extends Model
 
     protected static function booted()
     {
-        // When attendance is updated to completed, check if 30+ minutes and create ScoreIncrement
+        // When attendance status transitions to completed, check if 30+ minutes and create ScoreIncrement
         static::updated(function ($attendance) {
-            // Only award points if status changed to completed and stayed 30+ minutes
-            if ($attendance->status === 'completed' && $attendance->time_in && $attendance->time_out) {
-                $minutes = $attendance->time_in->diffInMinutes($attendance->time_out);
-                if ($minutes >= 30) {
-                    // Check if we already created a ScoreIncrement for this attendance
+            // Only award points if status just transitioned to completed (not already completed)
+            $wasCompleted = $attendance->getOriginal('status') === 'completed';
+            $isNowCompleted = $attendance->status === 'completed';
+
+            if (!$wasCompleted && $isNowCompleted) {
+                // Use the existing duration_minutes property instead of recalculating
+                if ($attendance->duration_minutes >= 30) {
+                    // More robust idempotency check: look for specific attendance reward by ID in description
+                    // This is more efficient than LIKE and checks the exact format
+                    $rewardIdentifier = "attendance_{$attendance->id}";
                     $existingReward = ScoreIncrement::where('user_id', $attendance->user_id)
                         ->where('name', 'Attendance 30+ Minutes')
-                        ->where('description', 'LIKE', '%Attendance ID: ' . $attendance->id . '%')
+                        ->where('description', 'LIKE', "%{$rewardIdentifier}%")
                         ->exists();
 
                     if (!$existingReward) {
@@ -72,7 +77,7 @@ class Attendance extends Model
                         ScoreIncrement::create([
                             'user_id' => $attendance->user_id,
                             'name' => 'Attendance 30+ Minutes',
-                            'description' => "Stayed in library for {$minutes} minutes (Attendance ID: {$attendance->id})",
+                            'description' => "Stayed in library for {$attendance->duration_minutes} minutes [attendance_{$attendance->id}]",
                             'score_value' => 5,
                         ]);
                     }

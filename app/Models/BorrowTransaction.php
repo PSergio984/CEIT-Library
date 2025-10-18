@@ -68,15 +68,20 @@ class BorrowTransaction extends Model
 
     protected static function booted()
     {
-        // When borrow transaction is updated to completed, check if on-time and create ScoreIncrement
+        // When borrow transaction status transitions to completed, check if on-time and create ScoreIncrement
         static::updated(function ($transaction) {
-            // Only award points if status changed to completed and returned on time
-            if ($transaction->status === 'completed' && $transaction->time_out && $transaction->expires_at) {
+            // Only award points if status just transitioned to completed (not already completed)
+            $wasCompleted = $transaction->getOriginal('status') === 'completed';
+            $isNowCompleted = $transaction->status === 'completed';
+
+            if (!$wasCompleted && $isNowCompleted && $transaction->time_out && $transaction->expires_at) {
+                // Check if returned on time
                 if ($transaction->time_out <= $transaction->expires_at) {
-                    // Check if we already created a ScoreIncrement for this transaction
+                    // More robust idempotency check: look for specific transaction reward by ID in description
+                    $rewardIdentifier = "transaction_{$transaction->id}";
                     $existingReward = ScoreIncrement::where('user_id', $transaction->user_id)
                         ->where('name', 'On-Time Return')
-                        ->where('description', 'LIKE', '%Transaction ID: ' . $transaction->id . '%')
+                        ->where('description', 'LIKE', "%{$rewardIdentifier}%")
                         ->exists();
 
                     if (!$existingReward) {
@@ -84,7 +89,7 @@ class BorrowTransaction extends Model
                         ScoreIncrement::create([
                             'user_id' => $transaction->user_id,
                             'name' => 'On-Time Return',
-                            'description' => "Returned borrowed material on time (Transaction ID: {$transaction->id})",
+                            'description' => "Returned borrowed material on time [transaction_{$transaction->id}]",
                             'score_value' => 10,
                         ]);
                     }

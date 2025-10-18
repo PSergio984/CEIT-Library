@@ -321,50 +321,65 @@ class DatabaseSeeder extends Seeder
             $today->copy()->subDay(),
         ];
 
-        ScoreIncrement::create([
+        $scoreIncrement1 = new ScoreIncrement([
             'user_id' => $specificStudent->id,
             'name' => 'Perfect Attendance (Week)',
             'description' => 'Attended library every day this week',
             'score_value' => 15,
+        ]);
+        $scoreIncrement1->forceFill([
             'created_at' => $rewardDates[0]->setTime(17, 30, 0),
             'updated_at' => $rewardDates[0]->setTime(17, 30, 0),
         ]);
+        $scoreIncrement1->save();
 
-        ScoreIncrement::create([
+        $scoreIncrement2 = new ScoreIncrement([
             'user_id' => $specificStudent->id,
             'name' => 'Library Event Participation',
             'description' => 'Participated in library orientation program',
             'score_value' => 12,
+        ]);
+        $scoreIncrement2->forceFill([
             'created_at' => $rewardDates[1]->setTime(13, 0, 0),
             'updated_at' => $rewardDates[1]->setTime(13, 0, 0),
         ]);
+        $scoreIncrement2->save();
 
-        ScoreIncrement::create([
+        $scoreIncrement3 = new ScoreIncrement([
             'user_id' => $specificStudent->id,
             'name' => 'Helping Other Students',
             'description' => 'Assisted fellow student in finding research materials',
             'score_value' => 8,
+        ]);
+        $scoreIncrement3->forceFill([
             'created_at' => $rewardDates[2]->setTime(11, 20, 0),
             'updated_at' => $rewardDates[2]->setTime(11, 20, 0),
         ]);
+        $scoreIncrement3->save();
 
-        ScoreIncrement::create([
+        $scoreIncrement4 = new ScoreIncrement([
             'user_id' => $specificStudent->id,
             'name' => 'Early Bird Bonus',
             'description' => 'First student to arrive at library opening time',
             'score_value' => 5,
+        ]);
+        $scoreIncrement4->forceFill([
             'created_at' => $rewardDates[3]->setTime(8, 0, 0),
             'updated_at' => $rewardDates[3]->setTime(8, 0, 0),
         ]);
+        $scoreIncrement4->save();
 
-        ScoreIncrement::create([
+        $scoreIncrement5 = new ScoreIncrement([
             'user_id' => $specificStudent->id,
             'name' => 'Book Care Excellence',
             'description' => 'Maintained borrowed materials in excellent condition',
             'score_value' => 10,
+        ]);
+        $scoreIncrement5->forceFill([
             'created_at' => $rewardDates[4]->setTime(15, 45, 0),
             'updated_at' => $rewardDates[4]->setTime(15, 45, 0),
         ]);
+        $scoreIncrement5->save();
 
         // Add sample violations for the specific student (student@plv.edu.ph)
         // These will show negative points in the credit score history
