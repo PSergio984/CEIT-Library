@@ -18,11 +18,31 @@ return new class extends Migration
         });
 
         // Backfill existing records with current penalty values
-        DB::statement('
-            UPDATE violation_transactions vt
-            INNER JOIN violations v ON vt.violation_id = v.id
-            SET vt.violation_penalty = v.penalty_score
-        ');
+        $driver = DB::getDriverName();
+        if ($driver === 'mysql') {
+            DB::statement('
+                UPDATE violation_transactions vt
+                INNER JOIN violations v ON vt.violation_id = v.id
+                SET vt.violation_penalty = v.penalty_score
+            ');
+        } elseif ($driver === 'pgsql') {
+            DB::statement('
+                UPDATE violation_transactions vt
+                SET violation_penalty = v.penalty_score
+                FROM violations v
+                WHERE vt.violation_id = v.id
+            ');
+        } elseif ($driver === 'sqlite') {
+            DB::statement('
+                UPDATE violation_transactions
+                SET violation_penalty = (
+                    SELECT penalty_score FROM violations WHERE violations.id = violation_transactions.violation_id
+                )
+                WHERE violation_id IN (SELECT id FROM violations)
+            ');
+        } else {
+            throw new \RuntimeException("Unsupported database driver: $driver");
+        }
     }
 
     /**
