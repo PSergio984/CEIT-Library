@@ -5,6 +5,7 @@ use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
+use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
 use App\Livewire\Pages\Student\AcademicPaperIndex;
@@ -47,6 +48,7 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
         Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
         Route::get('/rule-and-regulation',  AdminRuleAndRegulationIndex::class)->name('rules-and-regulations.index');
         Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');
+        Route::get('/attendance', AdminAttendanceLogIndex::class)->name('attendance-logs');
     });
 
 Route::view('profile', 'profile')
