@@ -66,6 +66,13 @@
         @endscope
     </x-mary-table>
 
+    @if ($this->rules->isEmpty())
+        <div class="text-center py-12">
+            <h3 class="text-lg font-medium mb-2">No Rule & Regulations found</h3>
+            <p class="text-base-content/70 mb-4">Try adjusting your search criteria or filters.</p>
+        </div>
+    @endif
+
     <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
         <div class="px-2 py-3">
             <h3 class="text-lg font-semibold mb-4">

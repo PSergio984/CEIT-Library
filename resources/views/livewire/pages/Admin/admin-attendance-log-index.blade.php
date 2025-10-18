@@ -23,7 +23,7 @@
     <div class="bg-base-200 p-4 rounded-lg mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
-                <x-mary-input label="Search" wire:model.live.debounce.300ms="search"
+                <x-mary-input label="Search" wire:model.live.debounce.200ms="search"
                               placeholder="Search by name or librarian..." icon="o-magnifying-glass" />
             </div>
 

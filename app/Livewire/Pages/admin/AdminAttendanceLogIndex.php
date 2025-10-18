@@ -30,15 +30,27 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     protected function getAttendancesQuery()
     {
+        $search = trim($this->search);
+
         return Attendance::with(['user', 'scannedByLibrarian.user'])
-            ->when($this->search, function ($query) {
-                $query->whereHas('user', function ($q) {
-                    $q->where('first_name', 'like', "%{$this->search}%")
-                        ->orWhere('last_name', 'like', "%{$this->search}%");
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    // Search student name (match full name or individual parts)
+                    $q->whereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                            ->orWhere('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%");
+                    })
+                        // Search librarian name (match full name or individual parts)
+                        ->orWhereHas('scannedByLibrarian.user', function ($librarianQuery) use ($search) {
+                            $librarianQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                                ->orWhere('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
                 });
             })
-            ->when($this->statusFilter, fn($q) => $q->where('status', $this->statusFilter))
-            ->when($this->selectedDate, fn($q) => $q->whereDate('time_in', $this->selectedDate));
+            ->when($this->statusFilter, fn($q) => $q->where('attendances.status', $this->statusFilter))
+            ->when($this->selectedDate, fn($q) => $q->whereDate('attendances.time_in', $this->selectedDate));
     }
 
     public function getAttendancesProperty()
@@ -53,6 +65,11 @@ class AdminAttendanceLogIndex extends AdminComponent
                 $query->join('users', 'attendances.user_id', '=', 'users.id')
                     ->orderBy('users.first_name', $direction)
                     ->select('attendances.*');
+            } elseif ($column === 'scanned_by_name') {
+                $query->leftJoin('librarians', 'attendances.scanned_by', '=', 'librarians.id')
+                    ->leftJoin('users as librarian_users', 'librarians.user_id', '=', 'librarian_users.id')
+                    ->orderBy('librarian_users.first_name', $direction)
+                    ->select('attendances.*');
             } else {
                 $query->orderBy($column, $direction);
             }
@@ -63,15 +80,11 @@ class AdminAttendanceLogIndex extends AdminComponent
 
         return $query->paginate($this->perPage)
             ->through(function ($attendance) {
-                $scannerName = null;
-                if ($attendance->scannedByLibrarian && $attendance->scannedByLibrarian->user) {
-                    $scannerName = trim(($attendance->scannedByLibrarian->user->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian->user->last_name ?? ''));
-                }
 
                 return [
                     'id'               => $attendance->id,
                     'user_name'        => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
-                    'scanned_by_name'  => $scannerName ?: 'N/A',
+                    'scanned_by_name'  => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
                     'user'             => $attendance->user,
                     'time_in'          => $attendance->time_in,
                     'time_out'         => $attendance->time_out,
