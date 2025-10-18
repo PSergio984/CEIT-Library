@@ -40,7 +40,7 @@
                     <select wire:model.live="statusFilter" class="select select-bordered w-full">
                         <option value="">All Status</option>
                         <option value="requested">Requested</option>
-                        <option value="started">Active</option>
+                        <option value="started">Started</option>
                         <option value="completed">Completed</option>
                         <option value="expired">Expired</option>
                         <option value="cancelled">Cancelled</option>
