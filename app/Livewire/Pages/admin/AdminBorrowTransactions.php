@@ -21,7 +21,7 @@ class AdminBorrowTransactions extends AdminComponent
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
         ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-16'],
-        ['key' => 'user.student_no', 'label' => 'Student No.', 'sortable' => true, 'class' => 'w-24'],
+        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-32'],
         ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-48'],
         ['key' => 'paper_type', 'label' => 'Type', 'sortable' => true, 'class' => 'w-20'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-28'],
@@ -39,30 +39,30 @@ class AdminBorrowTransactions extends AdminComponent
             'user',
             'inventory.academicPaper'
         ])
-        ->when($this->search, function ($query) {
-            $query->where(function ($query) {
-                $query->whereHas('user', function ($q) {
-                    $q->where('first_name', 'like', "%{$this->search}%")
-                    ->orWhere('last_name', 'like', "%{$this->search}%")
-                    ->orWhere('student_no', 'like', "%{$this->search}%");
-                })
-                ->orWhereHas('inventory.academicPaper', function ($q) {
-                    $q->where('title', 'like', "%{$this->search}%");
-                })
-                ->orWhere('notes', 'like', "%{$this->search}%");
+            ->when($this->search, function ($query) {
+                $query->where(function ($query) {
+                    $query->whereHas('user', function ($q) {
+                        $q->where('first_name', 'like', "%{$this->search}%")
+                            ->orWhere('last_name', 'like', "%{$this->search}%")
+                            ->orWhere('email', 'like', "%{$this->search}%");
+                    })
+                        ->orWhereHas('inventory.academicPaper', function ($q) {
+                            $q->where('title', 'like', "%{$this->search}%");
+                        })
+                        ->orWhere('notes', 'like', "%{$this->search}%");
+                });
+            })
+            ->when($this->paperTypeFilter, function ($query) {
+                $query->whereHas('inventory.academicPaper', function ($q) {
+                    $q->where('paper_type', $this->paperTypeFilter);
+                });
+            })
+            ->when($this->statusFilter, function ($query) {
+                $query->where('status', $this->statusFilter);
+            })
+            ->when($this->selectedDate, function ($query) {
+                $query->whereDate('time_in', $this->selectedDate);
             });
-        })
-        ->when($this->paperTypeFilter, function($query) {
-            $query->whereHas('inventory.academicPaper', function($q) {
-                $q->where('paper_type', $this->paperTypeFilter);
-            });
-        })
-        ->when($this->statusFilter, function($query) {
-            $query->where('status', $this->statusFilter);
-        })
-        ->when($this->selectedDate, function($query) {
-            $query->whereDate('time_in', $this->selectedDate);
-        });
     }
 
     public function getTransactionsProperty()
@@ -77,25 +77,20 @@ class AdminBorrowTransactions extends AdminComponent
             switch ($column) {
                 case 'user_name':
                     $query->join('users', 'borrow_transactions.user_id', '=', 'users.id')
-                          ->orderBy('users.first_name', $direction)
-                          ->select('borrow_transactions.*');
-                    break;
-                case 'user.student_no':
-                    $query->join('users', 'borrow_transactions.user_id', '=', 'users.id')
-                          ->orderBy('users.student_no', $direction)
-                          ->select('borrow_transactions.*');
+                        ->orderBy('users.first_name', $direction)
+                        ->select('borrow_transactions.*');
                     break;
                 case 'title':
                     $query->join('inventories', 'borrow_transactions.inventory_id', '=', 'inventories.id')
-                          ->join('academic_papers', 'inventories.academic_paper_id', '=', 'academic_papers.id')
-                          ->orderBy('academic_papers.title', $direction)
-                          ->select('borrow_transactions.*');
+                        ->join('academic_papers', 'inventories.academic_paper_id', '=', 'academic_papers.id')
+                        ->orderBy('academic_papers.title', $direction)
+                        ->select('borrow_transactions.*');
                     break;
                 case 'paper_type':
                     $query->join('inventories', 'borrow_transactions.inventory_id', '=', 'inventories.id')
-                          ->join('academic_papers', 'inventories.academic_paper_id', '=', 'academic_papers.id')
-                          ->orderBy('academic_papers.paper_type', $direction)
-                          ->select('borrow_transactions.*');
+                        ->join('academic_papers', 'inventories.academic_paper_id', '=', 'academic_papers.id')
+                        ->orderBy('academic_papers.paper_type', $direction)
+                        ->select('borrow_transactions.*');
                     break;
                 default:
                     $query->orderBy($column, $direction);
@@ -105,20 +100,21 @@ class AdminBorrowTransactions extends AdminComponent
         }
 
         return $query->paginate($this->perPage)
-                    ->through(function ($transaction) {
-                        return [
-                            'id' => $transaction->id,
-                            'user_name' => trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A',
-                            'user' => $transaction->user,
-                            'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
-                            'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
-                            'time_in' => $transaction->time_in,
-                            'time_out' => $transaction->time_out,
-                            'status' => $transaction->status ?? 'active',
-                            'notes' => $transaction->notes ?? 'N/A',
-                            'original' => $transaction, // Keep original for actions
-                        ];
-                    });
+            ->through(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'user_name' => trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A',
+                    'email' => $transaction->user?->email ?? 'N/A',
+                    'user' => $transaction->user,
+                    'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
+                    'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
+                    'time_in' => $transaction->time_in,
+                    'time_out' => $transaction->time_out,
+                    'status' => $transaction->status ?? 'active',
+                    'notes' => $transaction->notes ?? 'N/A',
+                    'original' => $transaction, // Keep original for actions
+                ];
+            });
     }
 
     public function getPaperTypesProperty()

@@ -46,8 +46,8 @@
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         <h3 class="font-semibold text-base">{{ $transaction['user_name'] }}</h3>
-                        <p class="text-sm text-base-content/70 font-mono">
-                            {{ $transaction['user']?->student_no ?? 'N/A' }}</p>
+                        <p class="text-sm text-base-content/70">
+                            {{ $transaction['user']?->email ?? 'N/A' }}</p>
                     </div>
                     <span
                         class="badge badge-{{ $transaction['status'] == 'completed' ? 'success' : 'warning' }} badge-sm">
@@ -105,8 +105,8 @@
                 <div class="font-medium">{{ $row['user_name'] }}</div>
             @endscope
 
-            @scope('cell_user.student_no', $row)
-                <span class="font-mono text-sm">{{ $row['user']?->student_no ?? 'N/A' }}</span>
+            @scope('cell_email', $row)
+                <div class="text-sm text-base-content/70">{{ $row['email'] }}</div>
             @endscope
 
             @scope('cell_title', $row)

@@ -20,7 +20,6 @@ trait CreatesTestDatabase
         if (!Schema::hasTable('users')) {
             Schema::create('users', function ($table) {
                 $table->id();
-                $table->string('student_no')->unique();
                 $table->string('first_name');
                 $table->string('last_name');
                 $table->string('email')->unique();

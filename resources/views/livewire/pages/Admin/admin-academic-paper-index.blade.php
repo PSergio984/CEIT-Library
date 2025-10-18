@@ -188,6 +188,9 @@
                             {{-- Create/Edit Academic Paper Drawer --}}
                             <x-mary-drawer wire:model="formDrawer" :title="$isEditing ? 'Edit Academic Paper' : 'Create Academic Paper'" right class="w-11/12 lg:w-1/3" separator>
                                 <x-mary-form wire:submit="saveAcademicPaper">
+                                    {{-- Validation Errors Display --}}
+                                    <x-mary-errors title="Please fix the following errors:" description="Review the fields below." icon="o-exclamation-triangle" class="mb-4" />
+                                    
                                     {{-- Change Indicator Header --}}
                                     @if($isEditing)
                                         <div wire:dirty wire:target="form" class="alert alert-info mb-4">
@@ -216,7 +219,7 @@
                                     </label>
                                     <x-mary-select icon="o-document" wire:model="form.paper_type" :options="$form->type_choices" class="mb-4" placeholder="Select Paper Type" required />
                                     
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.research_project_adviser" @endif>
+                                                                        <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.research_project_adviser" @endif>
                                         Research Project Adviser @if($isEditing) <span wire:dirty wire:target="form.research_project_adviser" class="text-orange-400">*</span> @endif
                                     </label>
                                     <x-mary-choices 
@@ -229,7 +232,10 @@
                                         min-chars="1"
                                         debounce="300ms"
                                         :options="$form->adviser_options ?? []" 
-                                        clearable/>
+                                        clearable
+                                        hint="Start typing to search for an adviser"
+                                        error-field="form.research_project_adviser" />
+                                   
                                     
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean" @endif>
                                         Dean @if($isEditing) <span wire:dirty wire:target="form.dean" class="text-orange-400">*</span> @endif
@@ -244,13 +250,21 @@
                                         min-chars="1"
                                         debounce="300ms"
                                         :options="$form->dean_options ?? []"
-                                        clearable />
+                                        clearable
+                                        hint="Start typing to search for a dean"
+                                        error-field="form.dean" />
                                    
 
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_names" @endif>
                                         Authors @if($isEditing) <span wire:dirty wire:target="form.author_names" class="text-orange-400">*</span> @endif
                                     </label>
-                                    <x-mary-tags wire:model="form.author_names" placeholder="Enter author names and hit enter" icon="o-user-group" clearable />
+                                    <x-mary-tags 
+                                        wire:model="form.author_names" 
+                                        placeholder="Enter author names and hit enter" 
+                                        icon="o-user-group" 
+                                        clearable
+                                        hint="Press Enter after typing each author name"
+                                        error-field="form.author_names" />
                                    
 
                                     <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.number_of_copies" @endif>

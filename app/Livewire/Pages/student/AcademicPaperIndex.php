@@ -3,7 +3,6 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
-use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -39,6 +38,7 @@ class AcademicPaperIndex extends Component
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
+            ['key' => 'actions', 'label' => 'Actions', 'sortable' => false],
         ];
     }
 
@@ -52,14 +52,10 @@ class AcademicPaperIndex extends Component
             }])
             // filter by department if provided via route slug
             ->when($this->dept, function ($q) {
-                // map short slugs to real department names if needed
-                $map = [
-                    'it' => 'Information Technology',
-                    'ce' => 'Civil Engineering',
-                    'ee' => 'Electrical Engineering',
-                ];
-                $value = $map[$this->dept] ?? $this->dept;
-                $q->where('department', $value);
+                $departmentName = $this->resolveDepartmentName($this->dept);
+                if ($departmentName) {
+                    $q->where('department', $departmentName);
+                }
             })
             // search functionality
             ->when($this->search, function ($q) {
@@ -121,6 +117,32 @@ class AcademicPaperIndex extends Component
         // or redirect to a QR generation page
     }
 
+    /**
+     * Resolve department name from slug or validate existing name
+     */
+    private function resolveDepartmentName(?string $dept): ?string
+    {
+        if (!$dept) {
+            return null;
+        }
+
+        $mapping = config('departments.mapping', []);
+        $validNames = config('departments.valid_names', []);
+
+        // Check if it's a known slug
+        if (isset($mapping[$dept])) {
+            return $mapping[$dept];
+        }
+
+        // Check if it's already a valid department name
+        if (in_array($dept, $validNames)) {
+            return $dept;
+        }
+
+        // Invalid input, return null to skip filtering
+        return null;
+    }
+
     #[Computed]
     public function departmentIcon(): string
     {
@@ -128,12 +150,10 @@ class AcademicPaperIndex extends Component
             return '';
         }
 
-        return match ($this->selectedPaper->department) {
-            'Civil Engineering' => Vite::asset('public/images/aces.png'),
-            'Electrical Engineering' => Vite::asset('public/images/ees.png'),
-            'Information Technology' => Vite::asset('public/images/vits.png'),
-            default => '',
-        };
+        $icons = config('departments.icons', []);
+        $department = $this->selectedPaper->department;
+
+        return isset($icons[$department]) ? asset($icons[$department]) : '';
     }
 
     /**

@@ -34,7 +34,7 @@
         :rows="$this->rules()"
         :sort-by="$sortBy"
         with-pagination
-        per-page="perPage"
+        :per-page="$perPage"
         :per-page-values="[5, 10, 20]"
     >
         @scope('cell_ruleHeader.title', $rule)
@@ -86,7 +86,7 @@
                 <x-mary-textarea
                     label="Content"
                     rows="6"
-                    wire:model.lazy="form.content"
+                    wire:model.blur="form.content"
                     placeholder="Enter rule content"
                     required
                 />

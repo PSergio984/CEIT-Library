@@ -42,12 +42,10 @@ class SuccessTest extends TestCase
             'first_name' => 'John',
             'last_name' => 'Doe',
             'email' => 'john@plv.edu.ph',
-            'student_no' => '20-3001',
         ]);
 
         $this->assertDatabaseHas('users', [
             'email' => 'john@plv.edu.ph',
-            'student_no' => '20-3001',
         ]);
     }
 

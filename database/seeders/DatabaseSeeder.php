@@ -241,18 +241,16 @@ class DatabaseSeeder extends Seeder
                     'rule_header_id' => $header->id,
                 ]);
             }
-
         }
 
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
-        $this->command->info('- 52 users (2 Admin, 50 students)');
-        $this->command->info('- 30 academic papers');
+        $this->command->info('- 52 users (1 Admin, 1 Librarian, 50 students)');
         $this->command->info('- 10 violation types');
         $this->command->info('- 3 active librarians on duty');
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
-        $this->command->info('- 3 Main Header for Rules and Regulations with 3-5 rules each');
+        $this->command->info('- 3 Main Headers for Rules and Regulations with 3-5 rules each');
 
         $this->command->info('- Sample violations, credit scores, and session history');
     }

@@ -17,7 +17,6 @@ class extends Component
 {
     public string $first_name = '';
     public string $last_name = '';
-    public string $student_no = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
@@ -64,7 +63,6 @@ class extends Component
                     }
                 }
             ],
-            'student_no' => ['required', 'string', 'size:7', 'unique:' . User::class],
             'email' => ['required', 'string', 'lowercase', new PlvEmailDomain, 'email', 'max:100', 'unique:' . User::class],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
         ]);
@@ -121,18 +119,6 @@ class extends Component
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
                     error-field="last_name" />
-            </div>
-            <!-- Student Number -->
-            <div class="mb-4">
-                <x-mary-input
-                    wire:model="student_no"
-                    placeholder="Enter your student number"
-                    icon="o-identification"
-                    clearable
-                    maxlength="7"
-                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
-                    icon-class="!text-gray-700"
-                    error-field="student_no" />
             </div>
             <!-- Email Address -->
             <div class="mb-4">

@@ -24,8 +24,6 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            // Student number format: NN-NNNN (e.g., 20-3001)
-            'student_no' => $this->faker->regexify('[0-9]{2}-[0-9]{4}'),
             'first_name' => $this->faker->firstName(),
             'last_name' => $this->faker->lastName(),
             // Email must end with @plv.edu.ph for validation compatibility
@@ -41,7 +39,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }

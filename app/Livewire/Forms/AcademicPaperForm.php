@@ -5,18 +5,19 @@ namespace App\Livewire\Forms;
 use App\Models\AcademicPaper;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
 
 class AcademicPaperForm extends Form
 {
-    public ?AcademicPaper $academicPaper = null;
+    public ?int $academicPaperId = null;
 
     public ?int $id = null;
     public ?string $catalog_code = null;
     #[Validate('required')]
     public string $title = '';
-    #[Validate('required')]
+    #[Validate('required|integer|min:2002|max:2100')]
     public ?int $publication_year = null;
     #[Validate('required')]
     public string $paper_type = '';
@@ -35,12 +36,37 @@ class AcademicPaperForm extends Form
     public ?\Illuminate\Support\Collection $adviser_options = null;
     public ?\Illuminate\Support\Collection $dean_options = null;
 
-    public function mount()
+    /**
+     * Get the academic paper model from the stored ID
+     */
+    #[Computed]
+    public function academicPaper(): ?AcademicPaper
     {
-        $this->adviser_options = collect();
-        $this->dean_options = collect();
-        $this->populateYearChoices();
-        $this->loadStaticChoices();
+        return $this->academicPaperId
+            ? AcademicPaper::with('authors', 'copies')->find($this->academicPaperId)
+            : null;
+    }
+
+    /**
+     * Boot method called after form is hydrated
+     */
+    public function boot(): void
+    {
+        // Ensure collections are initialized
+        if ($this->adviser_options === null) {
+            $this->adviser_options = collect();
+        }
+        if ($this->dean_options === null) {
+            $this->dean_options = collect();
+        }
+
+        // Lazy load choices only when needed
+        if (empty($this->year_choices)) {
+            $this->populateYearChoices();
+        }
+        if (empty($this->type_choices) || empty($this->department_choices)) {
+            $this->loadStaticChoices();
+        }
     }
 
     /**
@@ -60,11 +86,15 @@ class AcademicPaperForm extends Form
         });
 
         $this->department_choices = Cache::remember('academic_paper_department_choices', 3600, function () {
-            return [
-                ['id' => 'Civil Engineering', 'name' => 'Civil Engineering'],
-                ['id' => 'Information Technology', 'name' => 'Information Technology'],
-                ['id' => 'Electrical Engineering', 'name' => 'Electrical Engineering'],
-            ];
+            $validNames = config('departments.valid_names', [
+                'Information Technology',
+                'Civil Engineering',
+                'Electrical Engineering'
+            ]);
+
+            return collect($validNames)->map(function ($name) {
+                return ['id' => $name, 'name' => $name];
+            })->toArray();
         });
     }
 
@@ -120,11 +150,24 @@ class AcademicPaperForm extends Form
                 ]);
             }
         } elseif ($desiredCount < $currentCount) {
-            // Remove excess copies (only if they're available)
+            // Calculate how many copies need to be removed
+            $neededToRemove = $currentCount - $desiredCount;
+            $availableCount = $academicPaper->copies()->where('status', 'Available')->count();
+
+            // If not enough 'Available' copies exist to remove, surface a clear validation error and do nothing
+            if ($availableCount < $neededToRemove) {
+                $message = "Only {$availableCount} available copies can be removed; {$neededToRemove} required to reach the desired total.";
+
+                throw \Illuminate\Validation\ValidationException::withMessages([
+                    'number_of_copies' => $message,
+                ]);
+            }
+
+            // Remove exactly the number of needed 'Available' copies (highest copy_numbers first)
             $excessCopies = $academicPaper->copies()
                 ->where('status', 'Available')
                 ->orderBy('copy_number', 'desc')
-                ->limit($currentCount - $desiredCount)
+                ->limit($neededToRemove)
                 ->get();
 
             foreach ($excessCopies as $copy) {
@@ -153,15 +196,26 @@ class AcademicPaperForm extends Form
             ? ($academicPaper->copies->count() ?: 1)
             : ($academicPaper->copies()->count() ?: 1);
 
-        $this->academicPaper = $academicPaper;
+        // Store only the ID to avoid serialization overhead
+        $this->academicPaperId = $academicPaper->id;
 
-        // Load static choices to ensure dropdowns are populated
-        $this->loadStaticChoices();
+        // Only load static choices if they haven't been loaded yet
+        if (empty($this->type_choices) || empty($this->department_choices)) {
+            $this->loadStaticChoices();
+        }
+
+        // Ensure year choices are loaded
+        if (empty($this->year_choices)) {
+            $this->populateYearChoices();
+        }
     }
 
-    public function store()
+    /**
+     * Get validation rules for academic paper form
+     */
+    private function validationRules(): array
     {
-        $this->validate([
+        return [
             'title' => 'required',
             'publication_year' => 'required',
             'paper_type' => 'required',
@@ -170,7 +224,67 @@ class AcademicPaperForm extends Form
             'number_of_copies' => 'required|integer|min:1|max:100',
             'research_project_adviser' => 'required|string',
             'dean' => 'required|string',
-        ]);
+        ];
+    }
+
+    /**
+     * Get custom validation messages
+     */
+    private function validationMessages(): array
+    {
+        return [
+            'title.required' => 'The title field is required.',
+            'publication_year.required' => 'The publication year field is required.',
+            'paper_type.required' => 'The paper type field is required.',
+            'department.required' => 'The department field is required.',
+            'author_names.required' => 'At least one author is required.',
+            'author_names.min' => 'At least one author must be specified.',
+            'number_of_copies.required' => 'The number of copies field is required.',
+            'number_of_copies.integer' => 'The number of copies must be a valid number.',
+            'number_of_copies.min' => 'The number of copies must be at least 1.',
+            'number_of_copies.max' => 'The number of copies cannot exceed 100.',
+            'research_project_adviser.required' => 'The research project adviser field is required.',
+            'research_project_adviser.string' => 'The research project adviser must be a valid text.',
+            'dean.required' => 'The dean field is required.',
+            'dean.string' => 'The dean must be a valid text.',
+        ];
+    }
+
+    /**
+     * Get all form data as an array
+     */
+    public function all(): array
+    {
+        return [
+            'title' => $this->title,
+            'publication_year' => $this->publication_year,
+            'paper_type' => $this->paper_type,
+            'department' => $this->department,
+            'research_project_adviser' => $this->research_project_adviser,
+            'dean' => $this->dean,
+            'author_names' => $this->author_names,
+            'number_of_copies' => $this->number_of_copies,
+        ];
+    }
+
+    /**
+     * Safe validation that doesn't require component to be initialized
+     */
+    public function validateSafely(array $rules = [])
+    {
+        if (empty($rules)) {
+            $rules = $this->validationRules();
+        }
+
+        // Use Livewire's validate() method which properly handles error bag keys
+        $this->validate($rules, $this->validationMessages());
+
+        return true;
+    }
+
+    public function store()
+    {
+        $this->validateSafely();
 
         return DB::transaction(function () {
             $paper = AcademicPaper::create([
@@ -194,48 +308,84 @@ class AcademicPaperForm extends Form
 
     public function update()
     {
-        if (!$this->academicPaper) {
+        $paper = $this->academicPaper();
+
+        if (!$paper) {
             throw new \RuntimeException('No academic paper set for update.');
         }
 
-        $this->validate([
-            'title' => 'required',
-            'publication_year' => 'required',
-            'paper_type' => 'required',
-            'department' => 'required',
-            'author_names' => 'required|array|min:1',
-            'number_of_copies' => 'required|integer|min:1|max:100',
-            'research_project_adviser' => 'required|string',
-            'dean' => 'required|string',
-        ]);
+        $this->validateSafely();
 
-        return DB::transaction(function () {
+        return DB::transaction(function () use ($paper) {
             $updateData = $this->only(['title', 'publication_year', 'paper_type', 'department']);
             $updateData['research_project_adviser'] = $this->research_project_adviser ?? '';
             $updateData['dean'] = $this->dean ?? '';
-            $this->academicPaper->update($updateData);
+            $paper->update($updateData);
 
             // Sync authors
-            $this->syncAuthors($this->academicPaper);
+            $this->syncAuthors($paper);
 
             // Update inventory copies
-            $this->createInventoryCopies($this->academicPaper);
+            $this->createInventoryCopies($paper);
 
-            $this->setAcademicPaper($this->academicPaper->refresh());
-            return $this->academicPaper;
+            // Refresh the data from the updated paper
+            $this->setAcademicPaper($paper->refresh());
+
+            return $paper;
         });
     }
 
     public function reset(...$properties)
     {
-        parent::reset(...$properties);
-        $this->academicPaper = null;
+        // Reset form properties without calling parent::reset() to avoid component access issues
+        $properties = count($properties) && is_array($properties[0]) ? $properties[0] : $properties;
+
+        if (empty($properties)) {
+            // Reset all properties
+            $this->title = '';
+            $this->publication_year = null;
+            $this->paper_type = '';
+            $this->research_project_adviser = '';
+            $this->department = '';
+            $this->dean = '';
+            $this->author_names = [];
+            $this->number_of_copies = 1;
+        } else {
+            // Reset only specified properties
+            foreach ($properties as $property) {
+                switch ($property) {
+                    case 'title':
+                        $this->title = '';
+                        break;
+                    case 'publication_year':
+                        $this->publication_year = null;
+                        break;
+                    case 'paper_type':
+                        $this->paper_type = '';
+                        break;
+                    case 'research_project_adviser':
+                        $this->research_project_adviser = '';
+                        break;
+                    case 'department':
+                        $this->department = '';
+                        break;
+                    case 'dean':
+                        $this->dean = '';
+                        break;
+                    case 'author_names':
+                        $this->author_names = [];
+                        break;
+                    case 'number_of_copies':
+                        $this->number_of_copies = 1;
+                        break;
+                }
+            }
+        }
+
+        // Reset additional properties
+        $this->academicPaperId = null;
         $this->id = null;
         $this->catalog_code = null;
-        $this->research_project_adviser = '';
-        $this->dean = '';
-        $this->author_names = [];
-        $this->number_of_copies = 1;
         $this->adviser_options = collect();
         $this->dean_options = collect();
         $this->populateYearChoices();
