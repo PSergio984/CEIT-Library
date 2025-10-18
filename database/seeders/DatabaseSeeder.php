@@ -48,7 +48,7 @@ class DatabaseSeeder extends Seeder
         $students = User::factory(50)->create();
 
         // Create a specific student user
-        $student = User::factory()->create([
+        $specificStudent = User::factory()->create([
             'first_name' => 'Sample',
             'last_name' => 'Student',
             'email' => 'student@plv.edu.ph',
@@ -57,7 +57,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // Add the specific student to the students collection for randomization
-        $students->push($student);
+        $students->push($specificStudent);
 
         // Create violations (predefined set)
         $violationData = [
@@ -157,16 +157,20 @@ class DatabaseSeeder extends Seeder
             'cancelled',    // cancelled
             'requested',    // requested
         ];
+
+        // Eager load copies to avoid N+1 queries
+        $academicPapers->load('copies');
         $academicPapersWithCopies = $academicPapers->filter(function ($paper) {
-            return $paper->copies()->exists();
+            return $paper->copies->isNotEmpty();
         });
+
         foreach ($statuses as $status) {
             for ($i = 0; $i < 5; $i++) {
                 $paper = $academicPapersWithCopies->random();
-                $copy = $paper->copies()->inRandomOrder()->first();
+                $copy = $paper->copies->random();
                 if ($copy) {
                     BorrowTransaction::factory()->state([
-                        'user_id' => $student->id,
+                        'user_id' => $specificStudent->id,
                         'academic_paper_id' => $paper->id,
                         'inventory_id' => $copy->id,
                         'status' => $status,
@@ -179,9 +183,9 @@ class DatabaseSeeder extends Seeder
 
         // Create active librarians (students on duty today)
         $librarianStudents = $students->random(3); // 3 students on librarian duty
-        foreach ($librarianStudents as $student) {
+        foreach ($librarianStudents as $librarianStudent) {
             Librarian::factory()->active()->create([
-                'user_id' => $student->id,
+                'user_id' => $librarianStudent->id,
                 'created_by' => $admin->id,
             ]);
         }
@@ -189,9 +193,9 @@ class DatabaseSeeder extends Seeder
         // Create some expired librarian duties from previous days
         $remainingStudents = $students->diff($librarianStudents); // Exclude current librarians
         $previousLibrarians = $remainingStudents->random(5);
-        foreach ($previousLibrarians as $student) {
+        foreach ($previousLibrarians as $previousLibrarianStudent) {
             Librarian::factory()->expired()->create([
-                'user_id' => $student->id,
+                'user_id' => $previousLibrarianStudent->id,
                 'created_by' => $admin->id,
             ]);
         }
@@ -199,14 +203,14 @@ class DatabaseSeeder extends Seeder
         // Create academic paper sessions (reading history)
         $studentsWithSessions = $students->random(20);
 
-        foreach ($studentsWithSessions as $student) {
+        foreach ($studentsWithSessions as $sessionStudent) {
             $randomAcademicPapers = $academicPapers->random(rand(1, 4));
 
             foreach ($randomAcademicPapers as $academicPaper) {
                 $copy = $academicPaper->copies()->inRandomOrder()->first();
                 if ($copy) {
                     BorrowTransaction::factory()->completed()->create([
-                        'user_id' => $student->id,
+                        'user_id' => $sessionStudent->id,
                         'academic_paper_id' => $academicPaper->id,
                         'inventory_id' => $copy->id,
                     ]);
@@ -216,7 +220,7 @@ class DatabaseSeeder extends Seeder
 
         // Create some active academic paper sessions
         $activeReaders = $students->random(5);
-        foreach ($activeReaders as $student) {
+        foreach ($activeReaders as $activeReader) {
             // Find theses that have available copies
             $academicPapersWithAvailableCopies = $academicPapers->filter(function ($academicPaper) {
                 return $academicPaper->copies()->where('status', 'Available')->exists();
@@ -228,7 +232,7 @@ class DatabaseSeeder extends Seeder
 
                 if ($availableCopy) {
                     BorrowTransaction::factory()->active()->create([
-                        'user_id' => $student->id,
+                        'user_id' => $activeReader->id,
                         'academic_paper_id' => $availableAcademicPaper->id,
                         'inventory_id' => $availableCopy->id,
                     ]);
@@ -241,7 +245,7 @@ class DatabaseSeeder extends Seeder
 
         // Create library entrance/exit sessions
         $studentsWithLibrarySessions = $students->random(25);
-        foreach ($studentsWithLibrarySessions as $student) {
+        foreach ($studentsWithLibrarySessions as $libraryVisitorStudent) {
             // Create 2-5 library visits per student
             $visitCount = rand(2, 5);
             for ($i = 0; $i < $visitCount; $i++) {
@@ -250,14 +254,14 @@ class DatabaseSeeder extends Seeder
                 $librarianRecord = Librarian::where('user_id', $randomLibrarian->id)->first();
 
                 Attendance::factory()->completed()->create([
-                    'user_id' => $student->id,
+                    'user_id' => $libraryVisitorStudent->id,
                     'scanned_by' => $librarianRecord ? $librarianRecord->id : null,
                 ]);
             }
         }
 
         // Ensure the specific student has at least 10 attendance records with varied dates and statuses
-        $specificStudent = $student; // created earlier as student@plv.edu.ph
+        // Note: $specificStudent was created earlier as student@plv.edu.ph
         $today = \Carbon\Carbon::today();
         $dates = [
             $today->copy()->subDays(4),
@@ -304,12 +308,12 @@ class DatabaseSeeder extends Seeder
 
         // Create some users currently in the library
         $currentlyInLibrary = $students->random(8);
-        foreach ($currentlyInLibrary as $student) {
+        foreach ($currentlyInLibrary as $currentLibraryUser) {
             // Use current active librarians for scanning
             $activeLibrarian = Librarian::where('user_id', $librarianStudents->random()->id)->first();
 
             Attendance::factory()->active()->create([
-                'user_id' => $student->id,
+                'user_id' => $currentLibraryUser->id,
                 'scanned_by' => $activeLibrarian ? $activeLibrarian->id : null,
             ]);
         }
