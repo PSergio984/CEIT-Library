@@ -1,10 +1,11 @@
 <?php
 
-namespace app\Livewire\Pages\Admin;
+namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
+use Livewire\Attributes\Title;
 
-class AdminDashboard extends Component
+#[Title('Admin Dashboard')]
+class AdminDashboard extends AdminComponent
 {
     public function render()
     {

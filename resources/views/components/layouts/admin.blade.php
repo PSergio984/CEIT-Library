@@ -97,11 +97,9 @@
 
             {{-- The `$slot` goes here --}}
             <div class="flex-1 bg-base-100">
-                <x-slot:content>
-                    {{ $slot }}
-                </x-slot:content>
+                {{ $slot }}
             </div>
-        </div>
+        </x-slot:content>
     </x-mary-main>
 
     {{-- Toast --}}

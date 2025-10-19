@@ -10,7 +10,9 @@ use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
 
+#[Title('Rules and Regulations')]
 class AdminRuleAndRegulationIndex extends AdminComponent
 {
     use WithPagination, Toast;
