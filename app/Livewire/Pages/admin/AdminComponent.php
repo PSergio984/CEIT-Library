@@ -6,7 +6,7 @@ namespace App\Livewire\Pages\Admin;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
-#[Layout('components.layouts.Admin')]
+#[Layout('components.layouts.admin')]
 class AdminComponent extends Component
 {
 
@@ -15,5 +15,3 @@ class AdminComponent extends Component
         return view('livewire.admin-dashboard');
     }
 }
-
-
