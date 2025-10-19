@@ -37,7 +37,7 @@ class AttendanceFactory extends Factory
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,
-            'scanned_by' => Librarian::inRandomOrder()->first()?->id,
+            'scanned_by' => Librarian::inRandomOrder()->first()?->id ?? Librarian::factory(),
             'duration_minutes' => $durationMinutes,
         ];
     }

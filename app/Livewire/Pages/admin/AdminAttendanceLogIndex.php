@@ -1,9 +1,8 @@
 <?php
 
-namespace App\Livewire\Pages\Admin;
+namespace App\Livewire\Pages\admin;
 
 use App\Models\Attendance;
-use App\Models\Librarian;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -19,7 +18,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
         ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
-        ['key' => 'scanned_by_name', 'label' => 'Scanned_By', 'sortable' => true, 'class' => 'min-w-40'],
+        ['key' => 'scanned_by_name', 'label' => 'Scanned By', 'sortable' => true, 'class' => 'min-w-40'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-36'],
         ['key' => 'time_out', 'label' => 'Time Out', 'sortable' => true, 'class' => 'w-36'],
         ['key' => 'duration_minutes', 'label' => 'Duration', 'sortable' => true, 'class' => 'w-24'],
@@ -98,7 +97,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     public function getCurrentlyInLibraryProperty()
     {
         return Attendance::where('status', 'active')
-            ->whereDate('time_in', today())
+            ->whereNull('time_out')
             ->count();
     }
 
@@ -135,6 +134,6 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     public function render()
     {
-        return view('livewire.pages.admin.admin-attendance-log-index');
+        return view('livewire.pages.Admin.admin-attendance-log-index');
     }
 }

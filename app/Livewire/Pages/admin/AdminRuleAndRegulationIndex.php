@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Pages\Admin;
+namespace App\Livewire\Pages\admin;
 
 use App\Livewire\Forms\RuleAndRegulationForm;
 use App\Models\RuleHeader;

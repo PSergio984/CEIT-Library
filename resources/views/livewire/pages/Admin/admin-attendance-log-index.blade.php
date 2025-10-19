@@ -114,7 +114,7 @@
             @endscope
 
             @scope('cell_email', $row)
-            <div class="text-sm text-base-content/70">{{ $row['email'] }}</div>
+            <div class="text-sm text-base-content/70">{{ $row['scanned_by_name'] }}</div>
             @endscope
 
             @scope('cell_time_in', $row)
