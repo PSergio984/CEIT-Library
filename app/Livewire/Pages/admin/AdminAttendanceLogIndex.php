@@ -15,6 +15,9 @@ class AdminAttendanceLogIndex extends AdminComponent
     public $statusFilter = '';
     public $selectedDate = '';
 
+    // Listeners for QR scanner events
+    protected $listeners = ['qrScanned'];
+
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
         ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
@@ -130,6 +133,21 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->statusFilter = '';
         $this->sortBy = ['column' => 'time_in', 'direction' => 'desc'];
         $this->resetPage();
+    }
+
+    public function openScanner()
+    {
+        // Dispatch event to QR scanner component to start scanning
+        $this->dispatch('startScanning');
+    }
+
+    public function qrScanned($data)
+    {
+        // Handle the scanned QR code data
+        // For now, just show a toast with the scanned data
+        $this->success("QR Code Scanned: {$data}", 'Scanned Successfully!');
+
+        // TODO: Process the scanned data (e.g., log attendance)
     }
 
     public function render()

@@ -1,5 +1,15 @@
 <div class="p-6">
-    <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
+    <div class="flex justify-between items-center mb-6">
+        <div>
+            <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
+        </div>
+        <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
+            Scan QR Code
+        </x-mary-button>
+    </div>
+
+    {{-- QR Scanner Component --}}
+    <livewire:qr-scanner />
 
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
