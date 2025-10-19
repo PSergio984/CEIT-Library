@@ -13,6 +13,8 @@ use Carbon\Carbon;
  */
 class AttendanceFactory extends Factory
 {
+    protected $model = Attendance::class;
+
     /**
      * Define the model's default state.
      *
@@ -23,15 +25,20 @@ class AttendanceFactory extends Factory
         $timeIn = $this->faker->dateTimeBetween('-2 months', 'now');
         $timeOut = $this->faker->optional(0.9)->dateTimeBetween($timeIn, Carbon::parse($timeIn)->addHours(8));
 
+        $durationMinutes = null;
+        if ($timeOut) {
+            $durationMinutes = Carbon::parse($timeIn)->diffInMinutes(Carbon::parse($timeOut));
+        }
+
         $status = $timeOut ? 'completed' : 'active';
 
         return [
-            'user_id' => User::factory(),
+            'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,
-            'scanned_by' => Librarian::factory(),
-            'duration_minutes' => $timeIn && $timeOut ? Carbon::parse($timeIn)->diffInMinutes($timeOut) : null,
+            'scanned_by' => Librarian::inRandomOrder()->first()?->id ?? Librarian::factory(),
+            'duration_minutes' => $durationMinutes,
         ];
     }
 
@@ -59,12 +66,13 @@ class AttendanceFactory extends Factory
         return $this->state(function (array $attributes) {
             $timeIn = $this->faker->dateTimeBetween('-1 month', '-1 day');
             $timeOut = Carbon::parse($timeIn)->addMinutes($this->faker->numberBetween(60, 480));
+            $durationMinutes = Carbon::parse($timeIn)->diffInMinutes($timeOut);
 
             return [
                 'time_in' => $timeIn,
                 'time_out' => $timeOut,
                 'status' => 'completed',
-                'duration_minutes' => Carbon::parse($timeIn)->diffInMinutes($timeOut),
+                'duration_minutes' => $durationMinutes,
             ];
         });
     }

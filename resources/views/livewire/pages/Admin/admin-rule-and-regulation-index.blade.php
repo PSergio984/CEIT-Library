@@ -25,46 +25,55 @@
                 placeholder="Search rules..."
                 class="input input-bordered w-full sm:w-80"
             />
-            <x-mary-button label="Add New Rule" class="btn-warning" wire:click="openCreateDrawer" tooltip="Add a New Rule" />
+            <x-mary-button label="Add New Rule" class="btn-warning" wire:click="openCreateDrawer"
+                           tooltip="Add a New Rule"/>
         </div>
     </div>
 
-    <x-mary-table
-        :headers="$headers"
-        :rows="$this->rules()"
-        :sort-by="$sortBy"
-        with-pagination
-        :per-page="$perPage"
-        :per-page-values="[5, 10, 20]"
-    >
-        @scope('cell_ruleHeader.title', $rule)
-        @if($rule->ruleHeader)
-            <x-mary-badge value="{{ $rule->ruleHeader->title }}" class="badge-ghost"/>
-        @else
-            <x-mary-badge value="No Header" class="badge-error"/>
-        @endif
-        @endscope
+    @if ($this->rules()->isNotEmpty())
+        <x-mary-table
+            :headers="$headers"
+            :rows="$this->rules()"
+            :sort-by="$sortBy"
+            with-pagination
+            :per-page="$perPage"
+            :per-page-values="[5, 10, 20]"
+        >
+            @scope('cell_ruleHeader.title', $rule)
+            @if($rule->ruleHeader)
+                <x-mary-badge value="{{ $rule->ruleHeader->title }}" class="badge-ghost"/>
+            @else
+                <x-mary-badge value="No Header" class="badge-error"/>
+            @endif
+            @endscope
 
-        @scope('cell_content', $rule)
-        @if($rule->content === null)
-            <div class="italic text-sm text-base-content/70">No content</div>
-        @else
-            <div class="max-w-md truncate">
-                {{ $rule->content }}
+            @scope('cell_content', $rule)
+            @if($rule->content === null)
+                <div class="italic text-sm text-base-content/70">No content</div>
+            @else
+                <div class="max-w-md truncate">
+                    {{ $rule->content }}
+                </div>
+            @endif
+            @endscope
+
+
+            @scope('actions', $rule)
+            <div class="flex gap-2">
+                <x-mary-button icon="o-pencil" wire:click="openEditDrawer({{ $rule->id }})" spinner
+                               class="btn-sm btn-ghost" tooltip-left="Edit a Rule"/>
+                <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $rule->id }})" spinner
+                               class="btn-sm btn-ghost text-error" tooltip-left="Delete a Rule"/>
             </div>
-        @endif
-        @endscope
+            @endscope
+        </x-mary-table>
 
-
-        @scope('actions', $rule)
-        <div class="flex gap-2">
-            <x-mary-button icon="o-pencil" wire:click="openEditDrawer({{ $rule->id }})" spinner
-                           class="btn-sm btn-ghost"  tooltip-left="Edit a Rule"/>
-            <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $rule->id }})" spinner
-                           class="btn-sm btn-ghost text-error" tooltip-left="Delete a Rule"/>
+    @else
+        <div class="text-center py-12">
+            <h3 class="text-lg font-medium mb-2">No Rules & Regulations found</h3>
+            <p class="text-base-content/70 mb-4">Try adjusting your search criteria or filters.</p>
         </div>
-        @endscope
-    </x-mary-table>
+    @endif
 
     <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
         <div class="px-2 py-3">
