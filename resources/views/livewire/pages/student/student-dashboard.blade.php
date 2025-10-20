@@ -82,7 +82,8 @@
                                 @endif
                             </div>
                         </div>
-                    </div>                @empty
+                    </div>
+                      @empty
                     <div class="text-center py-8 text-base-content/60">
                         <x-mary-icon name="o-inbox" class="w-12 h-12 mx-auto mb-2"/>
                         <p>No active borrows</p>
@@ -120,7 +121,8 @@
                         @elseif($item->expires_at->diffInDays(now()) <= 3)
                             <x-mary-badge value="Soon" class="badge-warning badge-sm"/>
                         @endif
-                    </div>                @empty
+                    </div>
+                      @empty
                     <div class="text-center py-8 text-base-content/60">
                         <x-mary-icon name="o-check-circle" class="w-12 h-12 mx-auto mb-2 text-success"/>
                         <p>No upcoming due dates</p>

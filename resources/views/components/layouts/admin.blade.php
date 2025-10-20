@@ -44,7 +44,9 @@
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo" link="/dashboard"/>
+                        <a href="/dashboard">
+                            <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
+                        </a>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="overflow-hidden transition-all duration-300" x-show="!collapsed">
