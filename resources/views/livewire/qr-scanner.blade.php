@@ -50,7 +50,7 @@
                            class="file-input file-input-bordered w-full" />
                 </div>
 
-                <div class="mt-4 text-center text-sm text-muted-foreground">
+               <div class="mt-4 text-center text-sm text-base-content/70">
                     Position the QR code within the camera frame
                 </div>
             </div>
@@ -228,7 +228,7 @@
                                 isInitializing = false;
                                 resolve();
                             } else {
-                                alert('No camera found on this device.');
+                                $wire.call('scannerError', 'No camera found on this device. Please connect a camera or use the file upload option.', 'No Camera Detected');
                                 $wire.call('stopScanning');
                                 isInitialized = false;
                                 isInitializing = false;
@@ -260,7 +260,7 @@
                                         })
                                         .catch(err => {
                                             console.error('Error scanning file:', err);
-                                            alert('Could not scan QR code from image. Please try another image.');
+                                            $wire.call('scannerError', 'Could not scan QR code from image. Please try another image.', 'Scan Failed');
                                         });
                                 });
                             }
@@ -275,7 +275,7 @@
                         
                     } catch (error) {
                         console.error('Scanner initialization error:', error);
-                        alert('Failed to initialize scanner: ' + error.message);
+                        $wire.call('scannerError', 'Failed to initialize scanner: ' + error.message, 'Initialization Failed');
                         $wire.call('stopScanning');
                         isInitialized = false;
                         isInitializing = false;
@@ -312,7 +312,7 @@
                         errorCb
                     ).catch(fallbackErr => {
                         console.error('Fallback also failed:', fallbackErr);
-                        alert('Unable to access camera. Please ensure:\n1. Camera permissions are granted\n2. No other app is using the camera');
+                        $wire.call('scannerError', 'Unable to access camera. Please ensure camera permissions are granted and no other app is using the camera.', 'Camera Access Failed');
                         $wire.call('stopScanning');
                         isInitialized = false;
                         html5QrCode = null;

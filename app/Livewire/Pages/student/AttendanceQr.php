@@ -6,6 +6,8 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Title;
+
 
 class AttendanceQr extends Component
 {
@@ -50,10 +52,8 @@ class AttendanceQr extends Component
         $fileName = 'attendance-qrcode.png';
         $tempPath = storage_path('app/temp/' . $fileName);
 
-        // Ensure temp directory exists
-        if (!file_exists(storage_path('app/temp'))) {
-            mkdir(storage_path('app/temp'), 0755, true);
-        }
+        // Ensure temp directory exists using Laravel Storage facade
+        Storage::makeDirectory('temp');
 
         // Save QR code to temp file
         file_put_contents($tempPath, $qrCode);

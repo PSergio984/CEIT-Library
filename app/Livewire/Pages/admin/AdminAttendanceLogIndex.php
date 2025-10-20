@@ -5,7 +5,9 @@ namespace App\Livewire\Pages\admin;
 use App\Models\Attendance;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
 
+#[Title('Attendance Logs')]
 class AdminAttendanceLogIndex extends AdminComponent
 {
     use WithPagination, Toast;
