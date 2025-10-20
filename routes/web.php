@@ -12,6 +12,7 @@ use App\Livewire\Pages\Student\CreditScoreHistory;
 use App\Livewire\Pages\Student\AcademicPaperIndex;
 use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
+use App\Livewire\Pages\Student\StudentDashboard;
 use App\Livewire\Pages\Student\Transaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -20,7 +21,7 @@ Route::view('/', 'welcome');
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::view('/dashboard', 'dashboard')->name('dashboard');
+    Route::get('/dashboard', StudentDashboard::class)->name('student.dashboard');
     Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)
         ->whereNumber('academicPaper')
         ->name('academic-paper.show');

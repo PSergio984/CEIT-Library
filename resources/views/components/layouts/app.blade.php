@@ -44,7 +44,7 @@
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                        <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo"/>
+                        <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo" link="/dashboard">
                     </div>
                     <div class="flex items-center gap-3">
                         <div class=" transition-all duration-300" x-show="!collapsed">
@@ -61,7 +61,7 @@
 
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
-
+                <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" />
                 <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
                     <x-mary-menu-item title="All" icon="o-document-text" link="/academic-papers" />
                     <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/academic-papers/it" />
