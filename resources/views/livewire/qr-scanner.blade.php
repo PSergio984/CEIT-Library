@@ -22,7 +22,7 @@
             <div class="bg-base-100 rounded-lg shadow-xl p-6 max-w-lg w-full mx-4">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">Scan QR Code</h3>
-                    <button wire:click="stopScanning" onclick="window.forceStopScanner()" class="btn btn-sm btn-circle btn-ghost">
+                    <button wire:click="stopScanning" class="btn btn-sm btn-circle btn-ghost">
                         <x-mary-icon name="o-x-mark" class="w-5 h-5" />
                     </button>
                 </div>
@@ -60,6 +60,7 @@
         <script>
             let html5QrCode = null;
             let isInitialized = false;
+            let isInitializing = false;
             let availableCameras = [];
             let currentCameraId = null;
             let scannerConfig = null;
@@ -69,36 +70,77 @@
             console.log('QR Scanner script loaded');
 
             // Initialize scanner when modal opens
-            function initScanner() {
-                console.log('initScanner called, isInitialized:', isInitialized);
+            async function initScanner() {
+                console.log('initScanner called, isInitialized:', isInitialized, 'isInitializing:', isInitializing);
+                
+                // Prevent concurrent initialization
+                if (isInitializing) {
+                    console.log('Already initializing, skipping...');
+                    return;
+                }
                 
                 // Force cleanup if already initialized
                 if (isInitialized || html5QrCode) {
                     console.log('Forcing cleanup before reinitializing');
-                    stopScanner().then(() => {
-                        setTimeout(() => initScannerImpl(), 200);
-                    });
+                    isInitializing = true;
+                    try {
+                        await stopScanner();
+                        // Check if modal is still open
+                        if (!document.getElementById('qr-reader')) {
+                            console.log('Modal closed during cleanup, aborting reinit');
+                            isInitializing = false;
+                            return;
+                        }
+                        await new Promise(resolve => setTimeout(resolve, 200));
+                        // Check again after delay
+                        if (!document.getElementById('qr-reader')) {
+                            console.log('Modal closed during delay, aborting reinit');
+                            isInitializing = false;
+                            return;
+                        }
+                        await initScannerImpl();
+                    } catch (error) {
+                        console.error('Error during reinitialization:', error);
+                        // Handle fallback mode gracefully - don't show error to user
+                        if (!error.isFallback) {
+                            console.error('Non-fallback error during reinitialization');
+                        }
+                        isInitializing = false;
+                    }
                     return;
                 }
                 
-                initScannerImpl();
+                isInitializing = true;
+                try {
+                    await initScannerImpl();
+                } catch (error) {
+                    // Handle fallback mode gracefully - don't show error to user
+                    if (error.isFallback) {
+                        console.log('Scanner in fallback mode (file upload)');
+                    } else {
+                        console.error('Error during initialization:', error);
+                    }
+                    isInitializing = false;
+                }
             }
 
             function initScannerImpl() {
-                // Wait for DOM to be ready
-                setTimeout(() => {
-                    const readerElement = document.getElementById('qr-reader');
-                    console.log('QR reader element:', readerElement);
-                    
-                    if (!readerElement) {
-                        console.error('QR reader element not found');
-                        return;
-                    }
+                return new Promise((resolve, reject) => {
+                    // Wait for DOM to be ready
+                    setTimeout(() => {
+                        const readerElement = document.getElementById('qr-reader');
+                        console.log('QR reader element:', readerElement);
+                        
+                        if (!readerElement) {
+                            console.error('QR reader element not found');
+                            isInitializing = false;
+                            reject(new Error('QR reader element not found'));
+                            return;
+                        }
 
-                    try {
-                        console.log('Creating Html5Qrcode instance');
-                        html5QrCode = new Html5Qrcode("qr-reader");
-                        isInitialized = true;
+                        try {
+                            console.log('Creating Html5Qrcode instance');
+                            html5QrCode = new Html5Qrcode("qr-reader");
                         
                         scannerConfig = {
                             fps: 10,
@@ -182,13 +224,19 @@
                                 }
                                 
                                 startCamera(currentCameraId, scannerConfig, successCallback, errorCallback);
+                                isInitialized = true;
+                                isInitializing = false;
+                                resolve();
                             } else {
                                 alert('No camera found on this device.');
                                 $wire.call('stopScanning');
                                 isInitialized = false;
+                                isInitializing = false;
+                                reject(new Error('No camera found'));
                             }
                         }).catch(err => {
                             console.error('Error getting cameras:', err);
+                            isInitializing = false;
                             
                             // Show file upload fallback
                             const qrReader = document.getElementById('qr-reader');
@@ -218,6 +266,11 @@
                             }
                             
                             console.log('Fallback to file upload enabled');
+                            // Reject with specific error to indicate fallback mode
+                            const fallbackError = new Error('Camera initialization failed, using file upload fallback');
+                            fallbackError.isFallback = true;
+                            fallbackError.originalError = err;
+                            reject(fallbackError);
                         });
                         
                     } catch (error) {
@@ -225,9 +278,12 @@
                         alert('Failed to initialize scanner: ' + error.message);
                         $wire.call('stopScanning');
                         isInitialized = false;
+                        isInitializing = false;
                         html5QrCode = null;
+                        reject(error);
                     }
                 }, 100);
+                });
             }
 
             // Start camera with specific ID
@@ -327,6 +383,7 @@
                 }
                 html5QrCode = null;
                 isInitialized = false;
+                isInitializing = false;
                 
                 // Reset camera selector
                 const cameraSelector = document.getElementById('camera-selector');

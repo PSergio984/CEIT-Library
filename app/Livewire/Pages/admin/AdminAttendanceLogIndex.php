@@ -141,11 +141,18 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->dispatch('startScanning');
     }
 
-    public function qrScanned($data)
+    public function qrScanned(string $data)
     {
+        // Validate the scanned data
+        if ($data === '') {
+            $this->error('Invalid QR code data', 'Scan Failed');
+            return;
+        }
+
         // Handle the scanned QR code data
-        // For now, just show a toast with the scanned data
-        $this->success("QR Code Scanned: {$data}", 'Scanned Successfully!');
+        // Sanitize data for display
+        $sanitizedData = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        $this->success("QR Code Scanned: {$sanitizedData}", 'Scanned Successfully!');
 
         // TODO: Process the scanned data (e.g., log attendance)
     }

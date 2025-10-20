@@ -25,8 +25,24 @@ class QrScanner extends Component
         $this->dispatch('scanner-stopped');
     }
 
-    public function handleScan($data)
+    public function handleScan(string $data)
     {
+        // Validate and sanitize the scanned data
+        $data = trim($data);
+
+        // Add validation based on your expected QR code format
+        // Example: if expecting URLs only
+        // if (!filter_var($data, FILTER_VALIDATE_URL)) {
+        //     $this->addError('scannedData', 'Invalid QR code format');
+        //     return;
+        // }
+
+        // Or length validation
+        if (mb_strlen($data) > 500) {
+            $this->addError('scannedData', 'QR code data too long');
+            return;
+        }
+
         $this->scannedData = $data;
         $this->isScanning = false;
 
