@@ -5,7 +5,9 @@ namespace App\Livewire\Pages\admin;
 use App\Models\Attendance;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
 
+#[Title('Attendance Logs')]
 class AdminAttendanceLogIndex extends AdminComponent
 {
     use WithPagination, Toast;
@@ -14,6 +16,9 @@ class AdminAttendanceLogIndex extends AdminComponent
     public $search = '';
     public $statusFilter = '';
     public $selectedDate = '';
+
+    // Listeners for QR scanner events
+    protected $listeners = ['qrScanned'];
 
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
@@ -130,6 +135,28 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->statusFilter = '';
         $this->sortBy = ['column' => 'time_in', 'direction' => 'desc'];
         $this->resetPage();
+    }
+
+    public function openScanner()
+    {
+        // Dispatch event to QR scanner component to start scanning
+        $this->dispatch('startScanning');
+    }
+
+    public function qrScanned(string $data)
+    {
+        // Validate the scanned data
+        if ($data === '') {
+            $this->error('Invalid QR code data', 'Scan Failed');
+            return;
+        }
+
+        // Handle the scanned QR code data
+        // Sanitize data for display
+        $sanitizedData = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
+        $this->success("QR Code Scanned: {$sanitizedData}", 'Scanned Successfully!');
+
+        // TODO: Process the scanned data (e.g., log attendance)
     }
 
     public function render()
