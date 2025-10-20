@@ -97,6 +97,8 @@ class AdminAttendanceLogIndex extends AdminComponent
     public function getCurrentlyInLibraryProperty()
     {
         return Attendance::where('status', 'active')
+            ->whereNotNull('time_in')
+            ->whereDate('time_in', today())
             ->whereNull('time_out')
             ->count();
     }
