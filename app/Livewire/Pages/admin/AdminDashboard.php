@@ -10,7 +10,9 @@ use App\Models\Inventory;
 use App\Models\Librarian;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Title;
 
+#[Title('Admin Dashboard')]
 class AdminDashboard extends AdminComponent
 {
     #[Computed]
