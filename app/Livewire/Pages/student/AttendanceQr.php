@@ -6,34 +6,44 @@ use Livewire\Attributes\Computed;
 use Livewire\Component;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
-use Livewire\Attributes\Title;
 
 
 class AttendanceQr extends Component
 {
     public string $url = 'http://ceit-library.test/profile';
 
-    // Use in-memory cache for the QR code
-    private ?string $cachedQrCode = null;
+    // Use in-memory cache for the QR code PNG bytes
+    private ?string $cachedQrCodePng = null;
 
-    #[Computed]
-    public function qrCodeDataUri(): string
+    /**
+     * Generate QR code as PNG bytes (centralized generator)
+     * 
+     * @return string PNG binary data
+     */
+    private function generateQrCodePng(): string
     {
         // Return cached value if already generated in this request
-        if ($this->cachedQrCode !== null) {
-            return $this->cachedQrCode;
+        if ($this->cachedQrCodePng !== null) {
+            return $this->cachedQrCodePng;
         }
 
-        // Generate QR code as PNG data URI for better download support
-        $qrCode = QrCode::format('png')
+        // Generate QR code as PNG with consistent parameters
+        $this->cachedQrCodePng = QrCode::format('png')
             ->size(300)
             ->errorCorrection('H')
             ->margin(1)
             ->generate($this->url);
 
-        $this->cachedQrCode = 'data:image/png;base64,' . base64_encode($qrCode);
+        return $this->cachedQrCodePng;
+    }
 
-        return $this->cachedQrCode;
+    #[Computed]
+    public function qrCodeDataUri(): string
+    {
+        // Delegate to centralized generator
+        $pngBytes = $this->generateQrCodePng();
+
+        return 'data:image/png;base64,' . base64_encode($pngBytes);
     }
 
     /**
@@ -41,25 +51,25 @@ class AttendanceQr extends Component
      */
     public function downloadQrCode()
     {
-        // Generate QR code as PNG
-        $qrCode = QrCode::format('png')
-            ->size(300)
-            ->errorCorrection('H')
-            ->margin(1)
-            ->generate($this->url);
+        // Use centralized generator
+        $pngBytes = $this->generateQrCodePng();
 
-        // Create a temporary file
         $fileName = 'attendance-qrcode.png';
-        $tempPath = storage_path('app/temp/' . $fileName);
+        $tempFilePath = 'temp/' . $fileName;
 
-        // Ensure temp directory exists using Laravel Storage facade
-        Storage::makeDirectory('temp');
+        // Ensure temp directory exists using Laravel Storage
+        if (!Storage::exists('temp')) {
+            Storage::makeDirectory('temp');
+        }
 
-        // Save QR code to temp file
-        file_put_contents($tempPath, $qrCode);
+        // Write PNG bytes using Laravel Storage
+        Storage::put($tempFilePath, $pngBytes);
+
+        // Get filesystem path for download response
+        $fullPath = Storage::path($tempFilePath);
 
         // Return download response and delete file after sending
-        return response()->download($tempPath, $fileName)->deleteFileAfterSend(true);
+        return response()->download($fullPath, $fileName)->deleteFileAfterSend(true);
     }
 
     public function render()
