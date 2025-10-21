@@ -1,0 +1,205 @@
+<?php
+
+namespace App\Livewire;
+
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
+use Livewire\Component;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
+use Carbon\Carbon;
+use Mary\Traits\Toast;
+
+class TestQrScanner extends Component
+{
+    use Toast;
+
+    public $testQrCode = null;
+    public $testQrData = null;
+    public $lastScanResult = null;
+    public $validationResult = null;
+
+    protected $listeners = ['startScanning', 'handleScanTest'];
+
+    /**
+     * Create a canonical message for HMAC that covers all sensitive fields
+     */
+    private function createCanonicalMessage(array $data): string
+    {
+        // Sort keys to ensure consistent ordering
+        $fields = [
+            'user_id' => $data['user_id'] ?? '',
+            'email' => $data['email'] ?? '',
+            'name' => $data['name'] ?? '',
+            'timestamp' => $data['timestamp'] ?? '',
+            'nonce' => $data['nonce'] ?? '',
+            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
+        ];
+
+        // Create deterministic string representation
+        return implode('|', [
+            $fields['user_id'],
+            $fields['email'],
+            $fields['name'],
+            $fields['timestamp'],
+            $fields['nonce'],
+            $fields['user'],
+        ]);
+    }
+
+    public function generateTestQr()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            $this->error('You must be logged in to generate a test QR code');
+            return;
+        }
+
+        $secret = config('app.qr_hmac_secret');
+        if (!is_string($secret) || strlen($secret) < 16) {
+            $this->error('QR HMAC secret is not configured properly');
+            return;
+        }
+
+        $timestamp = Carbon::now()->timestamp;
+
+        // Generate unique nonce for replay attack protection
+        $nonce = Str::random(32);
+
+        // Build user payload
+        $userPayload = [
+            'id' => $user->id,
+            'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+        ];
+
+        $data = [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'name' => $user->first_name . ' ' . $user->last_name,
+            'timestamp' => $timestamp,
+            'nonce' => $nonce,
+            'user' => $userPayload,
+        ];
+
+        // Add HMAC hash covering the entire payload
+        $canonicalMessage = $this->createCanonicalMessage($data);
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+
+        // Encrypt the data
+        $encryptedData = Crypt::encryptString(json_encode($data));
+
+        // Store for display
+        $this->testQrData = substr($encryptedData, 0, 100) . '... (' . strlen($encryptedData) . ' chars total)';
+
+        // Generate QR code
+        $this->testQrCode = 'data:image/png;base64,' . base64_encode(
+            QrCode::format('png')
+                ->size(300)
+                ->errorCorrection('H')
+                ->margin(1)
+                ->generate($encryptedData)
+        );
+
+        $this->success('Test QR code generated successfully!');
+    }
+
+    public function openScanner()
+    {
+        $this->dispatch('startScanning');
+    }
+
+    public function handleScanTest($data)
+    {
+        $this->lastScanResult = substr($data, 0, 100) . '... (' . strlen($data) . ' chars total)';
+
+        try {
+            // Decrypt and validate
+            $decryptedJson = Crypt::decryptString($data);
+            $decoded = json_decode($decryptedJson, true);
+
+            $secret = config('app.qr_hmac_secret');
+
+            // Validate structure
+
+            $ageSeconds = isset($decoded['timestamp']) ? (Carbon::now()->timestamp - $decoded['timestamp']) : null;
+            $timestampValid = isset($decoded['timestamp']) && $ageSeconds !== null && $ageSeconds >= 0 && $ageSeconds <= 600;
+
+            $validation = [
+                'decryption' => 'SUCCESS',
+                'structure' => [
+                    'has_user_id' => isset($decoded['user_id']),
+                    'has_timestamp' => isset($decoded['timestamp']),
+                    'has_user' => isset($decoded['user']),
+                    'has_hash' => isset($decoded['hash']),
+                    'has_nonce' => isset($decoded['nonce']),
+                ],
+                'timestamp' => [
+                    'value' => $decoded['timestamp'] ?? null,
+                    'readable' => isset($decoded['timestamp']) ? Carbon::createFromTimestamp($decoded['timestamp'])->toDateTimeString() : null,
+                    'age_seconds' => $ageSeconds,
+                    'valid' => $timestampValid,
+                ],
+                'nonce' => [
+                    'present' => isset($decoded['nonce']),
+                    'length' => isset($decoded['nonce']) ? strlen($decoded['nonce']) : 0,
+                    'hash' => isset($decoded['nonce']) ? hash('sha256', $decoded['nonce']) : null,
+                ],
+                'hmac' => 'CHECKING...',
+                'data' => $decoded,
+            ];
+
+            // Timestamp validation: reject if missing, future, or expired
+            if (!isset($decoded['timestamp']) || $ageSeconds === null) {
+                $this->validationResult = [
+                    'error' => 'QR code timestamp missing or unreadable.',
+                    'details' => $validation,
+                ];
+                $this->error('Validation failed: QR code timestamp missing or unreadable.');
+                return;
+            }
+            if ($ageSeconds < 0) {
+                $this->validationResult = [
+                    'error' => 'QR code timestamp is in the future (invalid).',
+                    'details' => $validation,
+                ];
+                $this->error('Validation failed: QR code timestamp is in the future (invalid).');
+                return;
+            }
+            if ($ageSeconds > 600) {
+                $this->validationResult = [
+                    'error' => 'QR code expired (timestamp too old).',
+                    'details' => $validation,
+                ];
+                $this->error('Validation failed: QR code expired (timestamp too old).');
+                return;
+            }
+
+            // Verify HMAC covering entire payload
+            if (isset($decoded['user_id'], $decoded['timestamp'], $decoded['hash'], $decoded['nonce'])) {
+                $canonicalMessage = $this->createCanonicalMessage($decoded);
+                $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+                $validation['hmac'] = hash_equals($expectedHash, $decoded['hash']) ? 'VALID' : 'INVALID';
+                $validation['hmac_details'] = [
+                    'expected' => substr($expectedHash, 0, 16) . '...',
+                    'received' => substr($decoded['hash'], 0, 16) . '...',
+                    'canonical_message' => substr($canonicalMessage, 0, 100) . '...',
+                ];
+            }
+
+            $this->validationResult = $validation;
+            $this->success('QR code validated successfully!');
+        } catch (\Exception $e) {
+            $this->validationResult = [
+                'error' => $e->getMessage(),
+            ];
+            $this->error('Validation failed: ' . $e->getMessage());
+        }
+    }
+
+    public function render()
+    {
+        return view('livewire.test-qr-scanner');
+    }
+}

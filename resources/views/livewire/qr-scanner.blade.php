@@ -18,10 +18,19 @@
     })
 ">
     @if($isScanning)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75" x-data>
-            <div class="bg-base-100 rounded-lg shadow-xl p-6 max-w-lg w-full mx-4">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm" x-data="{ showDebug: false }">
+            <div class="bg-base-100 rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                {{-- Header --}}
                 <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xl font-bold">Scan QR Code</h3>
+                    <div class="flex items-center gap-3">
+                        <div class="bg-primary/10 p-2 rounded-lg">
+                            <x-mary-icon name="o-qr-code" class="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Scan QR Code</h3>
+                            <p class="text-xs text-base-content/60">Position QR code in camera view</p>
+                        </div>
+                    </div>
                     <button wire:click="stopScanning" class="btn btn-sm btn-circle btn-ghost">
                         <x-mary-icon name="o-x-mark" class="w-5 h-5" />
                     </button>
@@ -30,28 +39,77 @@
                 {{-- Camera Selector --}}
                 <div id="camera-selector" class="mb-4 hidden">
                     <label class="label">
-                        <span class="label-text font-semibold">Select Camera:</span>
+                        <span class="label-text font-semibold flex items-center gap-2">
+                            <x-mary-icon name="o-camera" class="w-4 h-4"/>
+                            Select Camera:
+                        </span>
                     </label>
-                    <select id="camera-select" class="select select-bordered w-full select-sm">
+                    <select id="camera-select" class="select select-bordered w-full">
                         <option value="">Loading cameras...</option>
                     </select>
                 </div>
 
-                {{-- QR Scanner Container --}}
-                <div id="qr-reader" class="w-full rounded-lg overflow-hidden bg-gray-800" style="min-height: 300px;"></div>
+                {{-- Scanner Status --}}
+                <div class="mb-4">
+                    <div class="flex items-center justify-between bg-base-200 rounded-lg p-3">
+                        <div class="flex items-center gap-2">
+                            <span class="loading loading-ring loading-sm text-success"></span>
+                            <span class="text-sm font-medium">Scanner Active</span>
+                        </div>
+                        <button @click="showDebug = !showDebug" class="btn btn-xs btn-ghost">
+                            <x-mary-icon name="o-information-circle" class="w-4 h-4"/>
+                            Debug
+                        </button>
+                    </div>
+                    
+                    {{-- Debug Panel --}}
+                    <div x-show="showDebug" x-transition class="mt-2 bg-base-300 rounded-lg p-3 text-xs font-mono">
+                        <div id="debug-info" class="space-y-1">
+                            <p>Waiting for scanner initialization...</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- QR Scanner Container with Enhanced Frame --}}
+                <div class="relative mb-4">
+                    {{-- Decorative scanning frame --}}
+                    <div class="absolute inset-0 pointer-events-none z-10">
+                        <div class="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+                        <div class="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+                        <div class="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+                        <div class="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+                    </div>
+                    
+                    <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner" style="min-height: 350px;"></div>
+                </div>
 
                 {{-- File Upload Fallback --}}
-                <div id="qr-file-upload" class="hidden mt-4">
-                    <div class="text-center mb-4 text-warning">
-                        <p class="font-semibold">Camera not available</p>
-                        <p class="text-sm">Upload QR code image instead</p>
+                <div id="qr-file-upload" class="hidden">
+                    <div class="alert alert-warning mb-4">
+                        <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5"/>
+                        <div>
+                            <p class="font-semibold">Camera not available</p>
+                            <p class="text-sm">Upload QR code image instead</p>
+                        </div>
                     </div>
                     <input type="file" id="qr-input-file" accept="image/*" 
                            class="file-input file-input-bordered w-full" />
                 </div>
 
-               <div class="mt-4 text-center text-sm text-base-content/70">
-                    Position the QR code within the camera frame
+                {{-- Instructions --}}
+                <div class="bg-info/10 border border-info/20 rounded-lg p-4">
+                    <div class="flex gap-3">
+                        <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0"/>
+                        <div class="text-sm space-y-2">
+                            <p class="font-semibold text-info">Scanning Tips:</p>
+                            <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
+                                <li>Hold QR code steady within the frame</li>
+                                <li>Ensure good lighting on the QR code</li>
+                                <li>Keep QR code flat and avoid glare</li>
+                                <li>Try moving closer or farther if not scanning</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -66,8 +124,24 @@
             let scannerConfig = null;
             let successCallback = null;
             let errorCallback = null;
+            let scanCount = 0;
 
             console.log('QR Scanner script loaded');
+            
+            // Debug logging helper
+            function updateDebugInfo(message, isError = false) {
+                const debugDiv = document.getElementById('debug-info');
+                if (debugDiv) {
+                    const timestamp = new Date().toLocaleTimeString();
+                    const className = isError ? 'text-error' : 'text-success';
+                    const p = document.createElement('p');
+                    p.className = className;
+                    p.textContent = `[${timestamp}] ${message}`;
+                    debugDiv.appendChild(p);
+                    debugDiv.scrollTop = debugDiv.scrollHeight;
+                }
+                console.log(`[QR Scanner] ${message}`);
+            }
 
             // Initialize scanner when modal opens
             async function initScanner() {
@@ -148,15 +222,25 @@
                         };
 
                         successCallback = (decodedText) => {
+                            scanCount++;
+                            updateDebugInfo(`✓ QR Code scanned successfully! (Scan #${scanCount})`, false);
+                            updateDebugInfo(`Data length: ${decodedText.length} characters`, false);
                             console.log('QR Code scanned:', decodedText);
+                            
                             // Stop scanning immediately
                             stopScanner().then(() => {
+                                updateDebugInfo('Sending data to server...', false);
                                 $wire.call('handleScan', decodedText);
                             });
                         };
 
                         errorCallback = (errorMessage) => {
                             // Silently handle scanning errors (too verbose otherwise)
+                            // Only log periodically to avoid spam
+                            if (scanCount === 0) {
+                                updateDebugInfo('Scanning... waiting for QR code', false);
+                                scanCount = -1; // Flag to show we've logged initial message
+                            }
                         };
 
                         console.log('Requesting camera access...');
@@ -164,6 +248,7 @@
                         // Try to get camera devices first
                         Html5Qrcode.getCameras().then(devices => {
                             console.log('Available cameras:', devices);
+                            updateDebugInfo(`Found ${devices.length} camera(s)`, false);
                             availableCameras = devices;
                             
                             if (devices && devices.length) {
@@ -216,6 +301,7 @@
                                 }
                                 
                                 console.log('Selected camera:', selectedCamera);
+                                updateDebugInfo(`Using camera: ${selectedCamera.label || selectedCamera.id}`, false);
                                 currentCameraId = selectedCamera.id;
                                 
                                 const finalSelect = document.getElementById('camera-select');
@@ -223,6 +309,7 @@
                                     finalSelect.value = currentCameraId;
                                 }
                                 
+                                updateDebugInfo('Starting camera...', false);
                                 startCamera(currentCameraId, scannerConfig, successCallback, errorCallback);
                                 isInitialized = true;
                                 isInitializing = false;
@@ -300,6 +387,7 @@
                     errorCb
                 ).then(() => {
                     console.log('Camera started successfully');
+                    updateDebugInfo('✓ Camera started - Ready to scan!', false);
                 }).catch(err => {
                     console.error('Error starting camera:', err);
                     

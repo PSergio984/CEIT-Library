@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\Student;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -16,23 +17,72 @@ class AttendanceQr extends Component
     private ?string $cachedQrCodePng = null;
 
     /**
+     * Create a canonical message for HMAC that covers all sensitive fields
+     */
+    private function createCanonicalMessage(array $data): string
+    {
+        // Sort keys to ensure consistent ordering
+        $fields = [
+            'user_id' => $data['user_id'] ?? '',
+            'email' => $data['email'] ?? '',
+            'name' => $data['name'] ?? '',
+            'timestamp' => $data['timestamp'] ?? '',
+            'nonce' => $data['nonce'] ?? '',
+            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
+        ];
+
+        // Create deterministic string representation
+        return implode('|', [
+            $fields['user_id'],
+            $fields['email'],
+            $fields['name'],
+            $fields['timestamp'],
+            $fields['nonce'],
+            $fields['user'],
+        ]);
+    }
+
+    /**
      * Generate encrypted attendance data for QR code
      * Format: encrypted JSON with user_id, timestamp, and hash for tamper protection
      */
     private function generateAttendanceData(): string
     {
         $user = Auth::user();
+        if (!$user) {
+            abort(401, 'Unauthenticated');
+        }
+
+        $secret = config('app.qr_hmac_secret');
+        if (!is_string($secret) || strlen($secret) < 16) {
+            throw new \RuntimeException('QR HMAC secret is missing or insecure.');
+        }
+
         $timestamp = Carbon::now()->timestamp;
 
-        // Create data array with user info and timestamp
+        // Generate unique nonce for replay attack protection
+        $nonce = Str::random(32);
+
+        // Build serializable user representation for QR payload
+        $userPayload = [
+            'id' => $user->id,
+            'email' => $user->email,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+        ];
+
         $data = [
             'user_id' => $user->id,
             'email' => $user->email,
             'name' => $user->first_name . ' ' . $user->last_name,
             'timestamp' => $timestamp,
-            // Add hash for additional tamper protection
-            'hash' => hash_hmac('sha256', $user->id . $timestamp, config('app.qr_hmac_secret'))
+            'nonce' => $nonce,
+            'user' => $userPayload,
         ];
+
+        // Add hash for additional tamper protection covering entire payload
+        $canonicalMessage = $this->createCanonicalMessage($data);
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
         // Encrypt the data to prevent tampering
         $encryptedData = Crypt::encryptString(json_encode($data));

@@ -14,10 +14,18 @@ use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
 use App\Livewire\Pages\Student\StudentDashboard;
 use App\Livewire\Pages\Student\Transaction;
+use App\Livewire\TestQrScanner;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+
+// Test route for QR code system (only available in non-production environments)
+if (config('app.env') !== 'production') {
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/test-qr', TestQrScanner::class)->name('test-qr');
+    });
+}
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {

@@ -1,17 +1,40 @@
 <div>
     {{-- Attendance QR Component --}}
-    <div class="flex flex-col items-center justify-center py-4 sm:py-6">
-        {{-- Header --}}
+    <div class="flex flex-col items-center justify-center py-4 sm:py-6 px-4">
+        {{-- Header with Icon --}}
         <div class="mb-4 sm:mb-6 text-center">
-            <h2 class="text-xl sm:text-2xl font-bold text-base-content mb-2">Your Attendance QR Code</h2>
-            <p class="text-sm sm:text-base text-base-content/70">Show this to the librarian for library check-in/check-out</p>
+            <div class="flex justify-center mb-3">
+                <div class="bg-primary/10 p-4 rounded-full">
+                    <x-mary-icon name="o-qr-code" class="w-12 h-12 text-primary"/>
+                </div>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-bold text-base-content mb-2">Your Attendance QR Code</h2>
+            <p class="text-sm sm:text-base text-base-content/70">Show this to the librarian for check-in/check-out</p>
         </div>
 
-        {{-- QR Code Display --}}
-        <div class="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-4 sm:mb-6">
-            <img src="{{ $this->qrCodeDataUri }}" 
-                 alt="Attendance QR Code" 
-                 class="w-64 h-64 sm:w-80 sm:h-80 rounded-lg"/>
+        {{-- QR Code Display with Enhanced Styling --}}
+        <div class="relative bg-gradient-to-br from-base-100 to-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl mb-6 border-2 border-primary/20">
+            {{-- Corner decorations --}}
+            <div class="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+            <div class="absolute top-2 right-2 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+            <div class="absolute bottom-2 left-2 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+            <div class="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+            
+            {{-- QR Code with white background and padding --}}
+            <div class="bg-white p-6 rounded-xl shadow-inner">
+                <img src="{{ $this->qrCodeDataUri }}" 
+                     alt="Attendance QR Code" 
+                     class="w-64 h-64 sm:w-80 sm:h-80 mx-auto"
+                     style="image-rendering: pixelated;"/>
+            </div>
+            
+            {{-- Valid badge --}}
+            <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
+                <div class="badge badge-success gap-1 shadow-lg px-4 py-3">
+                    <x-mary-icon name="o-check-circle" class="w-4 h-4"/>
+                    Valid for 24 hours. Regenerates each visit for security.
+                </div>
+            </div>
         </div>
 
         {{-- User Info Card --}}
@@ -43,17 +66,34 @@
             </div>
         @endif
 
-        {{-- Instructions --}}
-        <div class="alert alert-info max-w-md mb-4">
-            <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
-            <div class="text-sm">
-                <p class="font-semibold mb-1">How to use:</p>
-                <ol class="list-decimal list-inside space-y-1 text-xs">
-                    <li>Show this QR code to the librarian</li>
-                    <li>They will scan it for check-in</li>
-                    <li>Scan again when leaving for check-out</li>
-                    <li>QR code is valid for 24 hours</li>
-                </ol>
+        {{-- Instructions with Step Cards --}}
+        <div class="w-full max-w-md mb-6">
+            <h3 class="text-lg font-semibold mb-3 text-center flex items-center justify-center gap-2">
+                <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info"/>
+                How to Use
+            </h3>
+            <div class="grid gap-3">
+                <div class="flex items-start gap-3 bg-base-200 p-3 rounded-lg">
+                    <div class="badge badge-info badge-lg">1</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold">Show to Librarian</p>
+                        <p class="text-xs text-base-content/70">Present this QR code at the library desk</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-base-200 p-3 rounded-lg">
+                    <div class="badge badge-success badge-lg">2</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold">Check-In Scan</p>
+                        <p class="text-xs text-base-content/70">Librarian scans for entry recording</p>
+                    </div>
+                </div>
+                <div class="flex items-start gap-3 bg-base-200 p-3 rounded-lg">
+                    <div class="badge badge-warning badge-lg">3</div>
+                    <div class="flex-1">
+                        <p class="text-sm font-semibold">Check-Out Scan</p>
+                        <p class="text-xs text-base-content/70">Scan again when leaving to complete session</p>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -68,16 +108,32 @@
             </div>
         </div>
 
-        {{-- Download Button --}}
-        <button wire:click="downloadQrCode"
-                class="btn btn-primary gap-2">
-            <x-mary-icon name="o-arrow-down-tray" class="w-5 h-5"/>
-            Download QR Code
-        </button>
+        {{-- Action Buttons --}}
+        <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md mb-6">
+            <button wire:click="downloadQrCode"
+                    class="btn btn-primary flex-1 gap-2 shadow-lg">
+                <x-mary-icon name="o-arrow-down-tray" class="w-5 h-5"/>
+                Download QR Code
+            </button>
+            <button onclick="window.print()"
+                    class="btn btn-outline btn-primary flex-1 gap-2">
+                <x-mary-icon name="o-printer" class="w-5 h-5"/>
+                Print
+            </button>
+        </div>
         
-        {{-- Refresh Notice --}}
-        <p class="text-xs text-base-content/50 mt-4 text-center">
-            Note: QR code regenerates each time you open this page for enhanced security
-        </p>
+        {{-- Helpful Tips --}}
+        <div class="w-full max-w-md">
+            <div class="bg-base-200 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <x-mary-icon name="o-light-bulb" class="w-5 h-5 text-warning flex-shrink-0 mt-0.5"/>
+                    <div class="text-xs text-base-content/70 space-y-1">
+                        <p><strong>Tip:</strong> Download or screenshot this QR code for offline use</p>
+                        <p><strong>Note:</strong> Valid for 24 hours. Regenerates each visit for security.</p>
+                        <p><strong>Reminder:</strong> Keep your QR code private and secure</p>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
