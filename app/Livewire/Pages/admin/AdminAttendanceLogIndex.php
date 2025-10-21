@@ -18,7 +18,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     public $selectedDate = '';
 
     // Listeners for QR scanner events
-    protected $listeners = ['qrScanned'];
+    protected $listeners = ['qrScanned', 'attendanceRecorded'];
 
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
@@ -145,21 +145,16 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->dispatch('startScanning');
     }
 
-    public function qrScanned(string $data)
+    public function attendanceRecorded($attendance)
     {
-        // Validate the scanned data
-        if ($data === '') {
-            $this->error('Invalid QR code data', 'Scan Failed');
-            return;
-        }
+        // Refresh the attendance list after successful recording
+        $this->resetPage();
 
-        // Handle the scanned QR code data
-        // Sanitize data for display
-        $sanitizedData = htmlspecialchars($data, ENT_QUOTES, 'UTF-8');
-        $this->success("QR Code Scanned: {$sanitizedData}", 'Scanned Successfully!');
-
-        // TODO: Process the scanned data (e.g., log attendance)
+        // The toast notification is already handled by the QrScanner component
+        // Just refresh the page data
+        $this->dispatch('$refresh');
     }
+
 
     public function render()
     {

@@ -2,18 +2,43 @@
 
 namespace App\Livewire\Pages\Student;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Crypt;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Illuminate\Support\Facades\Storage;
-
+use Carbon\Carbon;
 
 class AttendanceQr extends Component
 {
-    public string $url = 'http://ceit-library.test/profile';
-
     // Use in-memory cache for the QR code PNG bytes
     private ?string $cachedQrCodePng = null;
+
+    /**
+     * Generate encrypted attendance data for QR code
+     * Format: encrypted JSON with user_id, timestamp, and hash for tamper protection
+     */
+    private function generateAttendanceData(): string
+    {
+        $user = Auth::user();
+        $timestamp = Carbon::now()->timestamp;
+
+        // Create data array with user info and timestamp
+        $data = [
+            'user_id' => $user->id,
+            'email' => $user->email,
+            'name' => $user->first_name . ' ' . $user->last_name,
+            'timestamp' => $timestamp,
+            // Add hash for additional tamper protection
+            'hash' => hash_hmac('sha256', $user->id . $timestamp, config('app.qr_hmac_secret'))
+        ];
+
+        // Encrypt the data to prevent tampering
+        $encryptedData = Crypt::encryptString(json_encode($data));
+
+        return $encryptedData;
+    }
 
     /**
      * Generate QR code as PNG bytes (centralized generator)
@@ -27,12 +52,15 @@ class AttendanceQr extends Component
             return $this->cachedQrCodePng;
         }
 
+        // Generate encrypted attendance data
+        $attendanceData = $this->generateAttendanceData();
+
         // Generate QR code as PNG with consistent parameters
         $this->cachedQrCodePng = QrCode::format('png')
             ->size(300)
             ->errorCorrection('H')
             ->margin(1)
-            ->generate($this->url);
+            ->generate($attendanceData);
 
         return $this->cachedQrCodePng;
     }
