@@ -19,9 +19,10 @@ return new class extends Migration
             $table->timestamp('expires_at'); // Account expires within the day
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null'); // Admin who created this account
             $table->timestamp('last_login_at')->nullable();
+            $table->timestamp('date_start')->nullable(); // Start date of librarian duty
+            $table->timestamp('date_end')->nullable();   // End date of librarian duty
             $table->string('shift_notes')->nullable(); // Notes about their duty shift
             $table->timestamps();
-
             // Add indexes for better performance
             $table->unique('user_id'); // One librarian account per student
             $table->index(['status', 'expires_at']); // For finding active/expired accounts

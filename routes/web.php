@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminAssignLibrarian;
+use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
@@ -51,6 +53,7 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
         Route::get('/rule-and-regulation',  AdminRuleAndRegulationIndex::class)->name('rules-and-regulations.index');
         Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');
         Route::get('/attendance', AdminAttendanceLogIndex::class)->name('attendance-logs');
+        Route::get('/librarians', AdminAssignLibrarians::class)->name('librarians');
     });
 
 Route::view('profile', 'profile')
