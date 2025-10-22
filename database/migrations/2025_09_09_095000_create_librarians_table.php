@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+
         Schema::create('librarians', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // Reference to the student's account
             $table->integer('batch_no')->nullable();
-            $table->enum('status', ['active', 'inactive', 'expired'])->default('active');
+            $table->enum('status', ['active', 'inactive', 'expired']);
             $table->timestamp('expires_at'); // Account expires within the day
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null'); // Admin who created this account
             $table->timestamp('last_login_at')->nullable();
             $table->timestamp('date_start')->nullable(); // Start date of librarian duty
-            $table->timestamp('date_end')->nullable();   // End date of librarian duty
             $table->string('shift_notes')->nullable(); // Notes about their duty shift
             $table->timestamps();
             // Add indexes for better performance
