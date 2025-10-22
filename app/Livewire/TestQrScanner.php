@@ -24,14 +24,13 @@ class TestQrScanner extends Component
 
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
-     */
+     * Note: Validates user_id, timestamp, and nonce for tamper detection
+     * The user object (containing PII) is also included in the HMAC     */
     private function createCanonicalMessage(array $data): string
     {
         // Sort keys to ensure consistent ordering
         $fields = [
             'user_id' => $data['user_id'] ?? '',
-            'email' => $data['email'] ?? '',
-            'name' => $data['name'] ?? '',
             'timestamp' => $data['timestamp'] ?? '',
             'nonce' => $data['nonce'] ?? '',
             'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
@@ -40,8 +39,6 @@ class TestQrScanner extends Component
         // Create deterministic string representation
         return implode('|', [
             $fields['user_id'],
-            $fields['email'],
-            $fields['name'],
             $fields['timestamp'],
             $fields['nonce'],
             $fields['user'],

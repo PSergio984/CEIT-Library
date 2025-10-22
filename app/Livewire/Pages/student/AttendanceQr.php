@@ -18,14 +18,14 @@ class AttendanceQr extends Component
 
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
+     * Note: Excludes email and name as they are PII and not needed for validation
+     * Uses user_id, timestamp, nonce, and user object for tamper detection
      */
     private function createCanonicalMessage(array $data): string
     {
         // Sort keys to ensure consistent ordering
         $fields = [
             'user_id' => $data['user_id'] ?? '',
-            'email' => $data['email'] ?? '',
-            'name' => $data['name'] ?? '',
             'timestamp' => $data['timestamp'] ?? '',
             'nonce' => $data['nonce'] ?? '',
             'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
@@ -34,8 +34,6 @@ class AttendanceQr extends Component
         // Create deterministic string representation
         return implode('|', [
             $fields['user_id'],
-            $fields['email'],
-            $fields['name'],
             $fields['timestamp'],
             $fields['nonce'],
             $fields['user'],
