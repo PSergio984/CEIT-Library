@@ -1,19 +1,13 @@
     <div>
-        <!-- The x-mary-header tag is assumed to exist in your environment -->
         <header class="p-5 bg-slate-800 shadow-md">
             <h1 class="text-2xl font-bold text-white">Admin - Assign Librarians to Batches</h1>
         </header>
 
-        <!-- Main Content Area - uses padding and minimum height for responsiveness -->
         <div class="p-5 min-h-screen bg-slate-900/90">
-            <!-- Grid parent: Aligns columns at the start for a clean, professional look -->
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-                <!-- Left Column: Create Batch, Available Batches, Assigned Batches (FIXED HEIGHT STRUCTURE) -->
-                <!-- flex-col allows internal elements to stretch vertically -->
                 <div class="flex flex-col space-y-6 lg:h-[calc(100vh-100px)]">
 
-                    <!-- 1. Create a Batch Section (Fixed size, prevents shrinking) -->
                     <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-shrink-0">
                         <h2 class="text-white text-xl font-semibold mb-4">Create a Batch</h2>
                         <div class="space-y-4">
@@ -24,17 +18,16 @@
                         </div>
                     </div>
 
-                    <!-- 2. Available Batches Section (flex-grow for equal space distribution, min-h-0 for correct scrolling) -->
                     <div
                         class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-grow flex flex-col min-h-0">
                         <h2 class="text-white text-xl font-semibold mb-4">Available Batches (Unassigned)</h2>
-                        <!-- Inner container uses flex-1 to fill all remaining height and enables scrolling -->
                         <div class="overflow-y-auto flex-1 rounded-lg">
                             <table class="w-full">
                                 <thead class="sticky top-0 bg-slate-700/90 backdrop-blur-sm z-10">
                                     <tr class="text-slate-300 text-sm border-b border-slate-600">
                                         <th class="text-left py-2 px-3">Batch no.</th>
                                         <th class="text-left py-2 px-3">Members</th>
+                                        <th class="text-left py-2 px-3"></th>
                                     </tr>
                                 </thead>
                                 <tbody class="text-white text-sm">
@@ -44,6 +37,18 @@
                                             <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
                                             <td class="py-3 px-3">
                                                 <div class="text-sm text-slate-300">{!! $batch['members'] !!}</div>
+                                            </td>
+                                            <td class="py-3 px-3 text-center">
+                                                <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
+                                                    class="text-blue-400 hover:text-blue-300 p-1 rounded-full hover:bg-slate-600/50 transition"
+                                                    title="Edit Assignment">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                    </svg>
+                                                </button>
                                             </td>
                                         </tr>
                                     @empty
@@ -57,11 +62,9 @@
                         </div>
                     </div>
 
-                    <!-- 3. Assigned Batches Section (flex-grow for equal space distribution, min-h-0 for correct scrolling) -->
                     <div
                         class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-grow flex flex-col min-h-0">
                         <h2 class="text-white text-xl font-semibold mb-4">Assigned Batches</h2>
-                        <!-- Inner container uses flex-1 to fill all remaining height and enables scrolling -->
                         <div class="overflow-y-auto flex-1 rounded-lg">
                             <table class="w-full">
                                 <thead class="sticky top-0 bg-slate-700/90 backdrop-blur-sm z-10">
@@ -106,17 +109,13 @@
                     </div>
                 </div>
 
-                <!-- Right Column: All Batches (Takes 2 columns, fills height) -->
                 <div class="lg:col-span-2">
                     <div
                         class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex flex-col lg:h-[calc(100vh-100px)]">
                         <h2 class="text-white text-xl font-semibold mb-4">All Batches</h2>
 
-                        <!-- FILTER CONTROLS START -->
                         <div class="mb-6 space-y-4 flex-shrink-0">
-                            <!-- Filters Row: Status and Date Start (Balanced 2-column layout + space) -->
                             <div class="flex flex-col md:flex-row gap-4">
-                                <!-- Status Filter (w-1/3) -->
                                 <div class="w-full md:w-1/3">
                                     <label for="filterStatus"
                                         class="block text-sm font-medium text-slate-400 mb-1">Status</label>
@@ -129,7 +128,6 @@
                                     </select>
                                 </div>
 
-                                <!-- Date Start Filter (w-1/3) -->
                                 <div class="w-full md:w-1/3">
                                     <label for="filterDateStart"
                                         class="block text-sm font-medium text-slate-400 mb-1">Serving
@@ -138,13 +136,10 @@
                                         class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
                                 </div>
 
-                                <!-- Filler column to maintain 3-column alignment visually -->
                                 <div class="w-full md:w-1/3 hidden md:block"></div>
                             </div>
-
-                            <!-- Search and Clear Button Row -->
+                            >
                             <div class="flex space-x-4">
-                                <!-- Search Box -->
                                 <div class="relative flex-1">
                                     <input type="text" wire:model.live.debounce.300ms="batchSearch"
                                         placeholder="Search Batch no., notes, creator, or student name..."
@@ -156,16 +151,14 @@
                                     </svg>
                                 </div>
 
-                                <!-- Clear Filters Button -->
                                 <button wire:click="resetFilters"
                                     class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center whitespace-nowrap">
                                     Clear Filters
                                 </button>
                             </div>
                         </div>
-                        <!-- FILTER CONTROLS END -->
 
-                        <!-- Main Table Container: Uses flex-1 to fill the remaining height and adds scrollbar -->
+
                         <div class="overflow-y-auto flex-1 rounded-lg">
                             <table class="w-full">
                                 <thead class="sticky top-0 bg-slate-700/90 backdrop-blur-sm z-10">
@@ -228,11 +221,9 @@
             </div>
         </div>
 
-        <!-- Create Modal (STYLING CORRECT) -->
         @if ($showCreateModal)
             <div
                 class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-70 flex items-center justify-center p-4">
-
                 <div
                     class="inline-block align-bottom bg-slate-700 rounded-lg text-left overflow-hidden shadow-2xl transform transition-all sm:max-w-md sm:w-full border border-slate-600">
                     <div class="bg-slate-700 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -249,22 +240,49 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Select
-                                    Students</label>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">
+                                    Select Students
+                                    <span class="text-xs text-slate-400">
+                                        ({{ count($selectedStudents) }}/5 selected)
+                                    </span>
+                                </label>
+
+                                @if (count($selectedStudents) >= 5)
+                                    <div class="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 mb-3">
+                                        <p class="text-yellow-300 text-sm">⚠️ Maximum of 5 students reached</p>
+                                    </div>
+                                @endif
+
+                                @if ($availableStudents->isEmpty())
+                                    <div class="bg-orange-900/50 border border-orange-600 rounded-lg p-4 mb-3">
+                                        <p class="text-orange-300 text-sm font-medium">ℹ️ No available students</p>
+                                        <p class="text-orange-200 text-xs mt-1">All active students are already
+                                            assigned to batches.</p>
+                                    </div>
+                                @endif
+
                                 <div
                                     class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3">
                                     @forelse($availableStudents as $student)
+                                        @php
+                                            $isDisabled =
+                                                count($selectedStudents) >= 5 &&
+                                                !in_array($student->id, $selectedStudents);
+                                        @endphp
                                         <label
-                                            class="flex items-center space-x-2 cursor-pointer hover:bg-slate-700 p-2 rounded-lg transition duration-150">
-                                            <input type="checkbox" wire:model="selectedStudents"
-                                                value="{{ $student->id }}"
+                                            class="flex items-center space-x-2 cursor-pointer hover:bg-slate-700 p-2 rounded-lg transition duration-150
+                                            {{ $isDisabled ? 'opacity-50 cursor-not-allowed' : '' }}">
+                                            <input type="checkbox" wire:model.live="selectedStudents"
+                                                value="{{ $student->id }}" {{ $isDisabled ? 'disabled' : '' }}
                                                 class="rounded border-slate-500 text-blue-500 bg-slate-700 focus:ring-blue-500">
-                                            <span class="text-sm text-white">{{ $student->first_name }}
-                                                {{ $student->last_name }} ({{ $student->email }})</span>
+                                            <span class="text-sm text-white">
+                                                {{ $student->first_name }} {{ $student->last_name }}
+                                                <span class="text-slate-400">({{ $student->email }})</span>
+                                            </span>
                                         </label>
                                     @empty
-                                        <p class="text-sm text-slate-400 text-center py-4">No available students
-                                        </p>
+                                        <p class="text-sm text-slate-400 text-center py-4">No students available for
+                                            assignment</p>
                                     @endforelse
                                 </div>
                                 @error('selectedStudents')
@@ -276,7 +294,8 @@
 
                     <div class="bg-slate-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2 rounded-b-lg">
                         <button type="button" wire:click="createBatch"
-                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition duration-200">
+                            {{ $availableStudents->isEmpty() ? 'disabled' : '' }}
+                            class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             Create Batch
                         </button>
                         <button type="button" wire:click="$set('showCreateModal', false)"
@@ -288,51 +307,115 @@
             </div>
         @endif
 
-        <!-- Edit Modal (STYLING CORRECT, SINGLE DATE) -->
         @if ($showEditModal)
             <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
                 aria-modal="true">
                 <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center">
-
                     <div class="fixed inset-0 bg-black bg-opacity-70 transition-opacity"
                         wire:click="$set('showEditModal', false)"></div>
 
                     <div
                         class="inline-block align-bottom bg-slate-700 rounded-lg text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-slate-600 z-10">
-
                         <div class="bg-slate-700 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                             <h3 class="text-lg font-medium text-white mb-4">Assign Batch to Date</h3>
 
                             <div class="space-y-4">
                                 <div class="bg-blue-900/50 p-3 rounded-lg border border-blue-600/50">
-                                    <p class="text-sm font-medium text-white">Batch Number: <span
-                                            class="font-bold font-mono">{{ $editingBatchNo }}</span></p>
+                                    <p class="text-sm font-medium text-white">
+                                        Batch Number: <span class="font-bold font-mono">{{ $editingBatchNo }}</span>
+                                    </p>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-medium text-slate-300 mb-2">Edit Students in
-                                        Batch</label>
+                                    <label class="block text-sm font-medium text-slate-300 mb-2">
+                                        Edit Students in Batch
+                                        <span class="text-xs text-slate-400">
+                                            ({{ count($editingSelectedStudents) }}/5 selected)
+                                        </span>
+                                    </label>
+
+                                    @if (count($editingSelectedStudents) >= 5)
+                                        <div class="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 mb-3">
+                                            <p class="text-yellow-300 text-sm">⚠️ Maximum of 5 students reached.
+                                                Uncheck a student to select another.</p>
+                                        </div>
+                                    @endif
+
                                     <div
                                         class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3">
+                                        @php
+                                            $currentBatchStudentIds = \App\Models\Librarian::where(
+                                                'batch_no',
+                                                $editingBatchNo,
+                                            )
+                                                ->pluck('user_id')
+                                                ->toArray();
+
+                                            $usedInOtherBatches = \App\Models\Librarian::where(
+                                                'batch_no',
+                                                '!=',
+                                                $editingBatchNo,
+                                            )
+                                                ->pluck('user_id')
+                                                ->toArray();
+
+                                            $availableStudents = \App\Models\User::where('account_status', 'active')
+                                                ->where('is_admin', false)
+                                                ->whereNotIn('id', $usedInOtherBatches)
+                                                ->select('id', 'first_name', 'last_name', 'email')
+                                                ->orderBy('last_name')
+                                                ->orderBy('first_name')
+                                                ->get();
+                                        @endphp
+
                                         @forelse($availableStudents as $student)
+                                            @php
+                                                $isSelected = in_array($student->id, $editingSelectedStudents);
+
+                                                $isCurrentBatchMember = in_array($student->id, $currentBatchStudentIds);
+
+                                                $shouldDisable = count($editingSelectedStudents) >= 5 && !$isSelected;
+                                            @endphp
+
                                             <label
-                                                class="flex items-center space-x-2 cursor-pointer hover:bg-slate-700 p-2 rounded-lg transition duration-150">
-                                                <input type="checkbox" wire:model="editingSelectedStudents"
-                                                    value="{{ $student->id }}"
-                                                    class="rounded border-slate-500 text-blue-500 bg-slate-700 focus:ring-blue-500">
-                                                <span class="text-sm text-white">{{ $student->first_name }}
-                                                    {{ $student->last_name }} ({{ $student->email }})</span>
+                                                class="flex items-center justify-between space-x-2 p-2 rounded-lg transition duration-150
+                                        {{ $shouldDisable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-700' }}
+                                        {{ $isCurrentBatchMember && $isSelected ? 'bg-blue-900/20 border border-blue-600/30' : '' }}">
+
+                                                <div class="flex items-center space-x-2 flex-1">
+                                                    <input type="checkbox" wire:model.live="editingSelectedStudents"
+                                                        value="{{ $student->id }}"
+                                                        {{ $shouldDisable ? 'disabled' : '' }}
+                                                        class="rounded border-slate-500 text-blue-500 bg-slate-700 focus:ring-blue-500
+                                                {{ $shouldDisable ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+
+                                                    <div class="flex flex-col">
+                                                        <span class="text-sm text-white">
+                                                            {{ $student->first_name }} {{ $student->last_name }}
+                                                        </span>
+                                                        <span
+                                                            class="text-xs text-slate-400">{{ $student->email }}</span>
+                                                    </div>
+                                                </div>
+
+                                                @if ($isCurrentBatchMember && $isSelected)
+                                                    <span
+                                                        class="text-xs bg-blue-600/50 text-blue-200 px-2 py-1 rounded-full whitespace-nowrap">
+                                                        Current Member
+                                                    </span>
+                                                @endif
                                             </label>
                                         @empty
-                                            <p class="text-sm text-slate-400 text-center py-4">No available students
+                                            <p class="text-sm text-slate-400 text-center py-4">No students available
                                             </p>
                                         @endforelse
                                     </div>
+
                                     @error('editingSelectedStudents')
                                         <span class="text-red-400 text-xs">{{ $message }}</span>
                                     @enderror
                                 </div>
-                                {{-- ... (rest of the date and notes fields are below) ... --}}
+
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Serving Date</label>
                                     <input type="date" wire:model="editingDateStart"

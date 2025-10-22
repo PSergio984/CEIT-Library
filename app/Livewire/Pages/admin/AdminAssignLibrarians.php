@@ -128,7 +128,6 @@ class AdminAssignLibrarians extends AdminComponent
                 $createdBy = strtolower(($first->createdBy->first_name ?? '') . ' ' . ($first->createdBy->last_name ?? ''));
                 $shiftNotes = strtolower($first->shift_notes ?? '');
 
-                // Check for match in student names within the batch
                 $studentMatch = $librarians->contains(function ($lib) use ($search) {
                     $fullName = strtolower($lib->user->first_name . ' ' . $lib->user->last_name);
                     return stripos($fullName, $search) !== false;
@@ -157,12 +156,42 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function getAvailableStudentsProperty()
     {
+        $usedUserIds = Librarian::pluck('user_id')->toArray();
+
         return User::where('account_status', 'active')
             ->where('is_admin', false)
+            ->whereNotIn('id', $usedUserIds)
             ->select('id', 'first_name', 'last_name', 'email')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
+    }
+
+    public function getStudentBatchAssignmentsProperty()
+    {
+        return Librarian::select('user_id', 'batch_no')
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($assignments) {
+                return $assignments->first()->batch_no;
+            });
+    }
+
+    public function getAvailableStudentsForEditProperty()
+    {
+        $usedUserIds = Librarian::where('batch_no', '!=', $this->editingBatchNo ?? '')
+            ->pluck('user_id')
+            ->toArray();
+
+        $availableStudents = User::where('account_status', 'active')
+            ->where('is_admin', false)
+            ->whereNotIn('id', $usedUserIds)
+            ->select('id', 'first_name', 'last_name', 'email')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        return $availableStudents;
     }
 
     public function resetFilters()
@@ -172,7 +201,6 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function openCreateModal()
     {
-        // Clear any previous form data and validation errors
         $this->reset(['selectedStudents', 'newBatchNo']);
         $this->resetErrorBag();
         $this->showCreateModal = true;
@@ -182,8 +210,23 @@ class AdminAssignLibrarians extends AdminComponent
     {
         $this->validate([
             'newBatchNo' => 'required|unique:librarians,batch_no',
-            'selectedStudents' => 'required|array|min:1',
+            'selectedStudents' => 'required|array|min:1|max:5',
+        ], [
+            'selectedStudents.max' => 'A batch can only have a maximum of 5 students.',
         ]);
+
+        $alreadyAssigned = Librarian::whereIn('user_id', $this->selectedStudents)
+            ->with('user')
+            ->get();
+
+        if ($alreadyAssigned->isNotEmpty()) {
+            $studentNames = $alreadyAssigned->map(function ($lib) {
+                return $lib->user->first_name . ' ' . $lib->user->last_name . ' (Batch: ' . $lib->batch_no . ')';
+            })->join(', ');
+
+            $this->error("The following students are already assigned to batches: {$studentNames}");
+            return;
+        }
 
         foreach ($this->selectedStudents as $userId) {
             Librarian::create([
@@ -202,7 +245,6 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function openEditModal($batchNo)
     {
-        // Retrieve all librarian records for the given batch number
         $librarians = Librarian::where('batch_no', $batchNo)->get();
 
         if ($librarians->isEmpty()) {
@@ -212,15 +254,11 @@ class AdminAssignLibrarians extends AdminComponent
 
         $first = $librarians->first();
 
-        // 1. Initialize properties for the edit modal
         $this->editingBatchNo = $batchNo;
         $this->editingDateStart = $first->date_start ? date('Y-m-d', strtotime($first->date_start)) : '';
         $this->editingShiftNotes = $first->shift_notes ?? '';
-
-        // 2. Load the IDs of the students currently in the batch
         $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn($id) => (string) $id)->toArray();
 
-        // Clear any previous validation errors
         $this->resetErrorBag();
         $this->showEditModal = true;
     }
@@ -230,60 +268,72 @@ class AdminAssignLibrarians extends AdminComponent
         $this->validate([
             'editingBatchNo' => 'required',
             'editingDateStart' => 'required|date',
-            'editingSelectedStudents' => 'required|array|min:1', // Add validation for students
+            'editingSelectedStudents' => 'required|array|min:1|max:5',
+        ], [
+            'editingSelectedStudents.max' => 'A batch can only have a maximum of 5 students.',
+            'editingSelectedStudents.min' => 'A batch must have at least 1 student.',
         ]);
 
         $conflictingBatch = Librarian::where('batch_no', '!=', $this->editingBatchNo)
             ->whereNotNull('date_start')
-            ->where('date_start', $this->editingDateStart) // Check for exact date match
+            ->where('date_start', $this->editingDateStart)
             ->first();
 
         if ($conflictingBatch) {
-            // Check if the current batch is already assigned to this date
-            $isSameDate = $this->getLibrariansQueryProperty()->get($this->editingBatchNo)
-                          ->first()
-                          ->date_start == $this->editingDateStart;
+            $currentBatchDate = Librarian::where('batch_no', $this->editingBatchNo)
+                ->first()
+                ->date_start ?? null;
 
-            if (!$isSameDate) {
+            if ($currentBatchDate != $this->editingDateStart) {
                 $this->error("There is already a batch assigned on this date: Batch No. {$conflictingBatch->batch_no}");
                 return;
             }
         }
 
         $currentStudents = Librarian::where('batch_no', $this->editingBatchNo)->pluck('user_id');
-        $newStudents = collect($this->editingSelectedStudents)->map(fn($id) => (int) $id); // Ensure IDs are integers
+        $newStudents = collect($this->editingSelectedStudents)->map(fn($id) => (int) $id);
 
-        // Students to remove: currently in batch but not in new selection
         $studentsToRemove = $currentStudents->diff($newStudents);
-
-        // Students to add: in new selection but not currently in batch
         $studentsToAdd = $newStudents->diff($currentStudents);
 
-        // 1. Remove students (delete Librarian records)
+        if ($studentsToAdd->isNotEmpty()) {
+            $alreadyAssigned = Librarian::whereIn('user_id', $studentsToAdd)
+                ->where('batch_no', '!=', $this->editingBatchNo)
+                ->with('user')
+                ->get();
+
+            if ($alreadyAssigned->isNotEmpty()) {
+                $studentNames = $alreadyAssigned->map(function ($lib) {
+                    return $lib->user->first_name . ' ' . $lib->user->last_name . ' (Batch: ' . $lib->batch_no . ')';
+                })->join(', ');
+
+                $this->error("The following students are already assigned to other batches: {$studentNames}");
+                return;
+            }
+        }
+
         if ($studentsToRemove->isNotEmpty()) {
             Librarian::where('batch_no', $this->editingBatchNo)
                 ->whereIn('user_id', $studentsToRemove)
                 ->delete();
         }
 
-        // 2. Add students (create new Librarian records)
         if ($studentsToAdd->isNotEmpty()) {
             foreach ($studentsToAdd as $userId) {
                 Librarian::create([
                     'user_id' => $userId,
                     'batch_no' => $this->editingBatchNo,
-                    'status' => 'inactive', // New additions start as inactive until assignment is saved/updated
+                    'status' => 'inactive',
                     'expires_at' => now()->addDay(),
                     'created_by' => Auth::id(),
                 ]);
             }
         }
 
-        // 3. Update date, notes, and status for remaining/added students
         Librarian::where('batch_no', $this->editingBatchNo)->update([
             'date_start' => $this->editingDateStart,
             'shift_notes' => $this->editingShiftNotes,
-            'status' => 'active', // Mark all members of the batch as active upon assignment
+            'status' => 'active',
         ]);
 
         $this->success('Batch assignment and members updated successfully! 🎉');
@@ -299,6 +349,7 @@ class AdminAssignLibrarians extends AdminComponent
             'assignedBatches' => $this->assignedBatches,
             'allBatches' => $this->allBatches,
             'availableStudents' => $this->availableStudents,
+            'studentBatchAssignments' => $this->studentBatchAssignments,
         ]);
     }
 }
