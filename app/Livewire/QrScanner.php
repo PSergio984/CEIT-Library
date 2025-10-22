@@ -25,7 +25,7 @@ class QrScanner extends Component
     public ?string $scannedData = null;
 
     // Listeners for parent components to control the scanner
-    protected $listeners = ['startScanning', 'stopScanning', 'scannerError'];
+    protected $listeners = ['startScanning', 'stopScanning', 'scannerError', 'handleFileUploadScan'];
 
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
@@ -82,17 +82,17 @@ class QrScanner extends Component
             $decryptedData = $this->decryptAndValidateAttendanceData($data);
 
             if ($decryptedData === self::VALIDATION_EXPIRED) {
-                $this->error('QR code expired. Please generate a new one.', 'Expired QR Code');
+                $this->error('QR code has expired. Please refresh the page and generate a new QR code.', 'QR Code Expired');
                 $this->stopScanning();
                 return;
             }
             if ($decryptedData === self::VALIDATION_REPLAY) {
-                $this->error('This QR code has already been used. Please generate a new one.', 'Replay Attack Detected');
+                $this->error('This QR code has already been used twice (check-in and check-out). Please refresh the page to generate a new QR code.', 'QR Code Already Used');
                 $this->stopScanning();
                 return;
             }
             if ($decryptedData === self::VALIDATION_INVALID) {
-                $this->error('Invalid or tampered QR code', 'Security Error');
+                $this->error('Invalid QR code. This could be due to tampering, incorrect format, or network issues. Please try generating a new QR code.', 'Invalid QR Code');
                 $this->stopScanning();
                 return;
             }
@@ -101,9 +101,23 @@ class QrScanner extends Component
             $result = $this->processAttendance($decryptedData);
 
             if ($result['success']) {
+                Log::info('Attendance recorded successfully', [
+                    'user_id' => $decryptedData['user_id'],
+                    'action' => $result['action'],
+                    'nonce_usage_count' => $decryptedData['current_usage_count'],
+                ]);
+
                 $this->success($result['message'], $result['title']);
                 $this->dispatch('attendanceRecorded', attendance: $result['attendance']);
             } else {
+                // Attendance processing failed - nonce already consumed during validation
+                // User cannot retry with this QR code
+                Log::warning('Attendance processing failed, nonce already consumed', [
+                    'user_id' => $decryptedData['user_id'],
+                    'error_title' => $result['title'],
+                    'nonce_usage_count' => $decryptedData['current_usage_count'],
+                ]);
+
                 $this->error($result['message'], $result['title']);
             }
 
@@ -147,14 +161,25 @@ class QrScanner extends Component
             }
 
             // Check for replay attack using nonce
+            // Allow TWO uses per nonce: one for check-in, one for check-out
             $nonce = $data['nonce'];
             $cacheKey = 'qr_nonce:' . hash('sha256', $nonce);
 
-            // Atomically mark nonce as used (Cache::add only succeeds if key doesn't exist)
-            if (!Cache::add($cacheKey, true, 86400)) {
-                Log::warning('Replay attack detected - nonce already used', [
+            // Atomically increment and check the usage count to prevent TOCTOU race condition
+            $usageCount = Cache::increment($cacheKey, 1);
+
+            // Set TTL if this is the first use
+            if ($usageCount === 1) {
+                Cache::put($cacheKey, 1, 86400);
+            }
+
+            if ($usageCount > 2) {
+                // QR code already used twice, rollback this increment
+                Cache::decrement($cacheKey, 1);
+                Log::warning('QR code exhausted - already used for check-in and check-out', [
                     'nonce_hash' => hash('sha256', $nonce),
                     'user_id' => $data['user_id'],
+                    'usage_count' => $usageCount,
                 ]);
                 return self::VALIDATION_REPLAY;
             }
@@ -222,16 +247,22 @@ class QrScanner extends Component
             // Increment rate limit counter (1 minute TTL)
             Cache::put($rateLimitKey, $recentScans + 1, 60);
 
-            // Nonce was atomically marked as used earlier using Cache::add()
-            Log::info('QR code validated successfully, nonce marked as used', [
+            // Nonce already atomically incremented during validation check
+            // If attendance processing fails later, the nonce usage is already consumed
+            // This is acceptable as it prevents TOCTOU race conditions
+            Log::info('QR code validated successfully, nonce usage incremented', [
                 'user_id' => $user->id,
                 'nonce_hash' => hash('sha256', $nonce),
+                'current_usage_count' => $usageCount,
+                'remaining_uses' => 2 - $usageCount,
             ]);
 
             return [
                 'user_id' => $data['user_id'],
                 'timestamp' => $qrTimestamp,
                 'user' => $user,
+                'nonce_cache_key' => $cacheKey,
+                'current_usage_count' => $usageCount,
             ];
         } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
             Log::warning('QR code decryption failed - possible tampering', ['error' => $e->getMessage()]);
@@ -276,27 +307,24 @@ class QrScanner extends Component
                     'user_id' => $userId,
                     'attendance_id' => $activeSession->id,
                     'error' => $e->getMessage(),
+                    'exception' => $e,
                 ]);
 
                 return [
                     'success' => false,
-                    'message' => 'Failed to complete check-out. Please try again.',
-                    'title' => 'Check-out Error',
+                    'message' => "Database error during check-out: {$e->getMessage()}. Please contact the librarian for assistance.",
+                    'title' => 'Check-out Failed',
                 ];
             }
         } else {
             // User is checking in (time in) - wrap in transaction
             try {
-                $authUser = Auth::user();
-                $scannerName = trim(($authUser?->first_name ?? 'Unknown') . ' ' . ($authUser?->last_name ?? ''));
-                $notes = 'Scanned by ' . $scannerName;
-                return DB::transaction(function () use ($userId, $scannedBy, $user, $notes) {
+                return DB::transaction(function () use ($userId, $scannedBy, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
                         'time_in' => Carbon::now(),
                         'status' => 'active',
                         'scanned_by' => $scannedBy,
-                        'notes' => $notes,
                     ]);
 
                     return [
@@ -311,12 +339,13 @@ class QrScanner extends Component
                 Log::error('Check-in transaction failed', [
                     'user_id' => $userId,
                     'error' => $e->getMessage(),
+                    'exception' => $e,
                 ]);
 
                 return [
                     'success' => false,
-                    'message' => 'Failed to complete check-in. Please try again.',
-                    'title' => 'Check-in Error',
+                    'message' => "Database error during check-in: {$e->getMessage()}. Please contact the librarian for assistance.",
+                    'title' => 'Check-in Failed',
                 ];
             }
         }
@@ -330,6 +359,18 @@ class QrScanner extends Component
     public function scannerWarning($message, $title = 'Warning')
     {
         $this->warning($message, $title);
+    }
+
+    public function handleFileUploadScan(string $data)
+    {
+        // Log the uploaded QR data for debugging
+        Log::info('File upload scan initiated', [
+            'data_length' => strlen($data),
+            'data_preview' => substr($data, 0, 50) . '...',
+        ]);
+
+        // Use the same handleScan logic
+        $this->handleScan($data);
     }
 
     public function render()

@@ -18,8 +18,36 @@
     })
 ">
     @if($isScanning)
-        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm" x-data="{ showDebug: false }">
-            <div class="bg-base-100 rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm" 
+             x-data="{ 
+                 showDebug: false, 
+                 scanMode: null,
+                 selectMode(mode) {
+                     this.scanMode = mode;
+                     console.log('Scan mode selected:', mode);
+                     if (mode === 'camera') {
+                         setTimeout(() => {
+                             if (window.initCameraScanner) {
+                                 window.initCameraScanner();
+                             }
+                         }, 100);
+                     } else if (mode === 'file') {
+                         setTimeout(() => {
+                             if (window.initFileUploadScanner) {
+                                 window.initFileUploadScanner();
+                             }
+                         }, 100);
+                     }
+                 },
+                 reset() {
+                     this.scanMode = null;
+                     if (window.forceStopScanner) {
+                         window.forceStopScanner();
+                     }
+                 }
+             }">
+            <div class="bg-base-100 rounded-2xl shadow-2xl p-6 w-full mx-4 max-h-[90vh] overflow-y-auto"
+                 :class="scanMode === null ? 'max-w-md' : 'max-w-4xl'">
                 {{-- Header --}}
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
@@ -27,8 +55,16 @@
                             <x-mary-icon name="o-qr-code" class="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold">Scan QR Code</h3>
-                            <p class="text-xs text-base-content/60">Position QR code in camera view</p>
+                            <h3 class="text-xl font-bold">
+                                <span x-show="scanMode === null">Choose Scan Method</span>
+                                <span x-show="scanMode === 'camera'">Camera Scanner</span>
+                                <span x-show="scanMode === 'file'">File Upload Scanner</span>
+                            </h3>
+                            <p class="text-xs text-base-content/60">
+                                <span x-show="scanMode === null">Select how you want to scan</span>
+                                <span x-show="scanMode === 'camera'">Position QR code in camera view</span>
+                                <span x-show="scanMode === 'file'">Upload a QR code image</span>
+                            </p>
                         </div>
                     </div>
                     <button wire:click="stopScanning" class="btn btn-sm btn-circle btn-ghost">
@@ -36,78 +72,138 @@
                     </button>
                 </div>
 
-                {{-- Camera Selector --}}
-                <div id="camera-selector" class="mb-4 hidden">
-                    <label class="label">
-                        <span class="label-text font-semibold flex items-center gap-2">
-                            <x-mary-icon name="o-camera" class="w-4 h-4"/>
-                            Select Camera:
-                        </span>
-                    </label>
-                    <select id="camera-select" class="select select-bordered w-full">
-                        <option value="">Loading cameras...</option>
-                    </select>
-                </div>
-
-                {{-- Scanner Status --}}
-                <div class="mb-4">
-                    <div class="flex items-center justify-between bg-base-200 rounded-lg p-3">
-                        <div class="flex items-center gap-2">
-                            <span class="loading loading-ring loading-sm text-success"></span>
-                            <span class="text-sm font-medium">Scanner Active</span>
+                {{-- Mode Selection --}}
+                <div x-show="scanMode === null" class="space-y-4">
+                    <button @click="selectMode('camera')" 
+                            class="w-full btn btn-lg btn-primary justify-start gap-4 h-auto py-6">
+                        <div class="bg-primary-content/20 p-3 rounded-lg">
+                            <x-mary-icon name="o-camera" class="w-8 h-8" />
                         </div>
-                        <button @click="showDebug = !showDebug" class="btn btn-xs btn-ghost">
-                            <x-mary-icon name="o-information-circle" class="w-4 h-4"/>
-                            Debug
-                        </button>
+                        <div class="text-left">
+                            <div class="font-bold text-lg">Scan with Camera</div>
+                            <div class="text-sm opacity-80 font-normal">Use your device camera to scan QR code</div>
+                        </div>
+                    </button>
+
+                    <button @click="selectMode('file')" 
+                            class="w-full btn btn-lg btn-secondary justify-start gap-4 h-auto py-6">
+                        <div class="bg-secondary-content/20 p-3 rounded-lg">
+                            <x-mary-icon name="o-photo" class="w-8 h-8" />
+                        </div>
+                        <div class="text-left">
+                            <div class="font-bold text-lg">Upload QR Image</div>
+                            <div class="text-sm opacity-80 font-normal">Select a QR code image from your device</div>
+                        </div>
+                    </button>
+                </div>
+
+                {{-- Camera Scanner Mode --}}
+                <div x-show="scanMode === 'camera'" x-transition>
+                    <button @click="reset()" class="btn btn-sm btn-ghost mb-4">
+                        <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
+                        Back to selection
+                    </button>
+
+                    {{-- Camera Selector --}}
+                    <div id="camera-selector" class="mb-4 hidden">
+                        <label class="label">
+                            <span class="label-text font-semibold flex items-center gap-2">
+                                <x-mary-icon name="o-camera" class="w-4 h-4"/>
+                                Select Camera:
+                            </span>
+                        </label>
+                        <select id="camera-select" class="select select-bordered w-full">
+                            <option value="">Loading cameras...</option>
+                        </select>
                     </div>
-                    
-                    {{-- Debug Panel --}}
-                    <div x-show="showDebug" x-transition class="mt-2 bg-base-300 rounded-lg p-3 text-xs font-mono">
-                        <div id="debug-info" class="space-y-1">
-                            <p>Waiting for scanner initialization...</p>
+
+                    {{-- Scanner Status --}}
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between bg-base-200 rounded-lg p-3">
+                            <div class="flex items-center gap-2">
+                                <span class="loading loading-ring loading-sm text-success"></span>
+                                <span class="text-sm font-medium">Camera Active</span>
+                            </div>
+                            <button @click="showDebug = !showDebug" class="btn btn-xs btn-ghost">
+                                <x-mary-icon name="o-information-circle" class="w-4 h-4"/>
+                                Debug
+                            </button>
+                        </div>
+                        
+                        {{-- Debug Panel --}}
+                        <div x-show="showDebug" x-transition class="mt-2 bg-base-300 rounded-lg p-3 text-xs font-mono">
+                            <div id="debug-info" class="space-y-1">
+                                <p>Waiting for scanner initialization...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- QR Scanner Container with Enhanced Frame --}}
+                    <div class="relative mb-4">
+                        {{-- Decorative scanning frame --}}
+                        <div class="absolute inset-0 pointer-events-none z-10">
+                            <div class="absolute top-4 left-4 w-16 h-16 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+                            <div class="absolute top-4 right-4 w-16 h-16 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+                            <div class="absolute bottom-4 left-4 w-16 h-16 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+                            <div class="absolute bottom-4 right-4 w-16 h-16 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+                        </div>
+                        
+                        <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner" style="min-height: 500px;"></div>
+                    </div>
+
+                    {{-- Instructions --}}
+                    <div class="bg-info/10 border border-info/20 rounded-lg p-4">
+                        <div class="flex gap-3">
+                            <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0"/>
+                            <div class="text-sm space-y-2">
+                                <p class="font-semibold text-info">Scanning Tips:</p>
+                                <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
+                                    <li>Hold QR code steady within the frame</li>
+                                    <li>Ensure good lighting on the QR code</li>
+                                    <li>Keep QR code flat and avoid glare</li>
+                                    <li>Try moving closer or farther if not scanning</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                {{-- QR Scanner Container with Enhanced Frame --}}
-                <div class="relative mb-4">
-                    {{-- Decorative scanning frame --}}
-                    <div class="absolute inset-0 pointer-events-none z-10">
-                        <div class="absolute top-4 left-4 w-12 h-12 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
-                        <div class="absolute top-4 right-4 w-12 h-12 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
-                        <div class="absolute bottom-4 left-4 w-12 h-12 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
-                        <div class="absolute bottom-4 right-4 w-12 h-12 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
-                    </div>
-                    
-                    <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner" style="min-height: 350px;"></div>
-                </div>
+                {{-- File Upload Mode --}}
+                <div x-show="scanMode === 'file'" x-transition>
+                    <button @click="reset()" class="btn btn-sm btn-ghost mb-4">
+                        <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
+                        Back to selection
+                    </button>
 
-                {{-- File Upload Fallback --}}
-                <div id="qr-file-upload" class="hidden">
-                    <div class="alert alert-warning mb-4">
-                        <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5"/>
-                        <div>
-                            <p class="font-semibold">Camera not available</p>
-                            <p class="text-sm">Upload QR code image instead</p>
-                        </div>
+                    <div class="border-2 border-dashed border-primary/30 rounded-xl p-8 bg-base-200/50 mb-4">
+                        <div id="file-qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900" style="min-height: 400px;"></div>
                     </div>
-                    <input type="file" id="qr-input-file" accept="image/*" 
-                           class="file-input file-input-bordered w-full" />
-                </div>
 
-                {{-- Instructions --}}
-                <div class="bg-info/10 border border-info/20 rounded-lg p-4">
-                    <div class="flex gap-3">
-                        <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0"/>
-                        <div class="text-sm space-y-2">
-                            <p class="font-semibold text-info">Scanning Tips:</p>
-                            <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
-                                <li>Hold QR code steady within the frame</li>
-                                <li>Ensure good lighting on the QR code</li>
-                                <li>Keep QR code flat and avoid glare</li>
-                                <li>Try moving closer or farther if not scanning</li>
-                            </ul>
+                    <div class="bg-base-200 border border-base-300 rounded-lg p-4 mb-4">
+                        <label class="label">
+                            <span class="label-text font-semibold flex items-center gap-2">
+                                <x-mary-icon name="o-photo" class="w-5 h-5 text-primary"/>
+                                Select QR Code Image:
+                            </span>
+                        </label>
+                        <input type="file" id="qr-input-file" accept="image/*" 
+                               class="file-input file-input-bordered file-input-primary w-full" />
+                        <p class="text-xs text-base-content/60 mt-2">Supports PNG, JPG, and other image formats</p>
+                    </div>
+
+                    {{-- Instructions --}}
+                    <div class="bg-info/10 border border-info/20 rounded-lg p-4">
+                        <div class="flex gap-3">
+                            <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0"/>
+                            <div class="text-sm space-y-2">
+                                <p class="font-semibold text-info">Upload Tips:</p>
+                                <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
+                                    <li>Upload a clear image of the QR code</li>
+                                    <li>Ensure the QR code is not blurry or damaged</li>
+                                    <li>The entire QR code should be visible in the image</li>
+                                    <li>Avoid images with heavy shadows or reflections</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -117,6 +213,7 @@
         @script
         <script>
             let html5QrCode = null;
+            let fileQrCode = null;
             let isInitialized = false;
             let isInitializing = false;
             let availableCameras = [];
@@ -143,42 +240,24 @@
                 console.log(`[QR Scanner] ${message}`);
             }
 
-            // Initialize scanner when modal opens
-            async function initScanner() {
-                console.log('initScanner called, isInitialized:', isInitialized, 'isInitializing:', isInitializing);
+            // Initialize CAMERA scanner (only when camera mode is selected)
+            window.initCameraScanner = async function() {
+                console.log('initCameraScanner called');
                 
-                // Prevent concurrent initialization
                 if (isInitializing) {
                     console.log('Already initializing, skipping...');
                     return;
                 }
                 
-                // Force cleanup if already initialized
                 if (isInitialized || html5QrCode) {
                     console.log('Forcing cleanup before reinitializing');
                     isInitializing = true;
                     try {
                         await stopScanner();
-                        // Check if modal is still open
-                        if (!document.getElementById('qr-reader')) {
-                            console.log('Modal closed during cleanup, aborting reinit');
-                            isInitializing = false;
-                            return;
-                        }
                         await new Promise(resolve => setTimeout(resolve, 200));
-                        // Check again after delay
-                        if (!document.getElementById('qr-reader')) {
-                            console.log('Modal closed during delay, aborting reinit');
-                            isInitializing = false;
-                            return;
-                        }
-                        await initScannerImpl();
+                        await initCameraScannerImpl();
                     } catch (error) {
                         console.error('Error during reinitialization:', error);
-                        // Handle fallback mode gracefully - don't show error to user
-                        if (!error.isFallback) {
-                            console.error('Non-fallback error during reinitialization');
-                        }
                         isInitializing = false;
                     }
                     return;
@@ -186,21 +265,15 @@
                 
                 isInitializing = true;
                 try {
-                    await initScannerImpl();
+                    await initCameraScannerImpl();
                 } catch (error) {
-                    // Handle fallback mode gracefully - don't show error to user
-                    if (error.isFallback) {
-                        console.log('Scanner in fallback mode (file upload)');
-                    } else {
-                        console.error('Error during initialization:', error);
-                    }
+                    console.error('Error during initialization:', error);
                     isInitializing = false;
                 }
             }
 
-            function initScannerImpl() {
+            function initCameraScannerImpl() {
                 return new Promise((resolve, reject) => {
-                    // Wait for DOM to be ready
                     setTimeout(() => {
                         const readerElement = document.getElementById('qr-reader');
                         console.log('QR reader element:', readerElement);
@@ -213,12 +286,12 @@
                         }
 
                         try {
-                            console.log('Creating Html5Qrcode instance');
+                            console.log('Creating Html5Qrcode instance for camera');
                             html5QrCode = new Html5Qrcode("qr-reader");
                         
                         scannerConfig = {
                             fps: 10,
-                            qrbox: { width: 250, height: 250 }
+                            qrbox: { width: 400, height: 400 }  // Larger scanning area
                         };
 
                         successCallback = (decodedText) => {
@@ -226,6 +299,14 @@
                             updateDebugInfo(`✓ QR Code scanned successfully! (Scan #${scanCount})`, false);
                             updateDebugInfo(`Data length: ${decodedText.length} characters`, false);
                             console.log('QR Code scanned:', decodedText);
+                            
+                            // Validation result logging
+                            console.group('📋 QR Code Validation');
+                            console.log('Source: Camera Scan');
+                            console.log('Timestamp:', new Date().toISOString());
+                            console.log('Data Length:', decodedText.length);
+                            console.log('Scan Count:', scanCount);
+                            console.groupEnd();
                             
                             // Stop scanning immediately
                             stopScanner().then(() => {
@@ -473,6 +554,15 @@
                 isInitialized = false;
                 isInitializing = false;
                 
+                // Also cleanup file scanner if needed
+                try {
+                    if (fileQrCode) {
+                        fileQrCode.clear();
+                    }
+                } catch(e) {
+                    console.debug('File scanner clear error:', e);
+                }
+                fileQrCode = null;
                 // Reset camera selector
                 const cameraSelector = document.getElementById('camera-selector');
                 if (cameraSelector) {
@@ -494,23 +584,103 @@
                 stopScanner();
             };
 
-            // Make reinitScanner available globally
-            window.reinitScanner = function() {
-                console.log('Reinit scanner triggered');
-                // Only reinit if not already initialized and element exists
-                const elem = document.getElementById('qr-reader');
-                if (elem && !isInitialized) {
-                    initScanner();
-                } else if (elem && isInitialized) {
-                    console.log('Already initialized, skipping reinit');
-                } else {
-                    console.log('Element not found, cannot reinit');
+            // Initialize file upload scanner (called when file mode is selected)
+            window.initFileUploadScanner = function() {
+                console.log('Initializing file upload scanner');
+                
+                const fileInput = document.getElementById('qr-input-file');
+                const fileReaderElement = document.getElementById('file-qr-reader');
+                
+                if (!fileInput) {
+                    console.error('qr-input-file element not found');
+                    return;
                 }
+                
+                if (!fileReaderElement) {
+                    console.error('file-qr-reader element not found');
+                    return;
+                }
+                
+                console.log('File upload scanner elements found, setting up handler');
+                
+                // Remove any existing listeners by cloning
+                const newFileInput = fileInput.cloneNode(true);
+                fileInput.parentNode.replaceChild(newFileInput, fileInput);
+                    
+                    newFileInput.addEventListener('change', function(e) {
+                        if (e.target.files.length === 0) return;
+                        
+                        const imageFile = e.target.files[0];
+                        console.log('File upload selected:', imageFile.name);
+                        console.log('File size:', imageFile.size, 'bytes');
+                        console.log('File type:', imageFile.type);
+                        
+                        // Check if file-qr-reader element exists
+                        const fileReaderElement = document.getElementById('file-qr-reader');
+                        if (!fileReaderElement) {
+                            console.error('file-qr-reader element not found. File upload mode may not be active.');
+                            $wire.call('scannerError', 'Scanner not ready. Please select "Upload QR Image" mode first.', 'Scanner Error');
+                            e.target.value = '';
+                            return;
+                        }
+                        
+                        // Show loading feedback
+                        fileReaderElement.innerHTML = '<div class="flex items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span></div>';
+                        
+                        // Create SEPARATE Html5Qrcode instance for file scanning
+                        if (!fileQrCode) {
+                            try {
+                                fileQrCode = new Html5Qrcode("file-qr-reader");
+                                console.log('Created file scanner instance');
+                            } catch (error) {
+                                console.error('Error creating file scanner:', error);
+                                fileReaderElement.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Scanner initialization failed</p></div>';
+                                $wire.call('scannerError', 'Could not initialize QR scanner.', 'Scanner Error');
+                                e.target.value = '';
+                                return;
+                            }
+                        }
+                        
+                        console.log('Scanning file...');
+                        fileQrCode.scanFile(imageFile, true)
+                            .then(decodedText => {
+                                console.log('✓ QR Code decoded from file');
+                                console.log('Decoded text length:', decodedText.length);
+                                console.log('Decoded text preview:', decodedText.substring(0, 100) + '...');
+                                
+                                // Show success feedback
+                                fileReaderElement.innerHTML = '<div class="flex items-center justify-center h-full text-success"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';
+                                
+                                // Validation result logging
+                                console.group('📋 QR Code Validation');
+                                console.log('Source: File Upload');
+                                console.log('Timestamp:', new Date().toISOString());
+                                console.log('Data Length:', decodedText.length);
+                                console.groupEnd();
+                                
+                                // Send to backend for processing
+                                $wire.call('handleFileUploadScan', decodedText);
+                                
+                                // Reset file input
+                                e.target.value = '';
+                            })
+                            .catch(err => {
+                                console.error('❌ Error scanning file:', err);
+                                console.log('File name:', imageFile.name);
+                                console.log('Error details:', err.message || err);
+                                
+                                // Show error feedback
+                                fileReaderElement.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Could not scan QR code</p></div>';
+                                
+                                $wire.call('scannerError', 'Could not scan QR code from image. Please ensure the image contains a valid, clear QR code.', 'Scan Failed');
+                                
+                                // Reset file input
+                                e.target.value = '';
+                            });
+                    });
+                    
+                console.log('File upload scanner initialized successfully');
             };
-
-            // Initialize on mount
-            console.log('Calling initScanner');
-            initScanner();
 
             // Listen for when isScanning becomes false (modal closes)
             Livewire.hook('morph.updated', ({ el, component }) => {
@@ -518,12 +688,6 @@
                 if (!document.getElementById('qr-reader')) {
                     console.log('Scanner modal closed, stopping camera');
                     stopScanner();
-                }
-                
-                const scannerElement = document.getElementById('qr-reader');
-                if (scannerElement && !isInitialized) {
-                    console.log('Scanner element detected after morph, reinitializing');
-                    setTimeout(() => initScanner(), 100);
                 }
             });
 

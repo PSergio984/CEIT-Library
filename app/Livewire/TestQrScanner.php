@@ -18,8 +18,9 @@ class TestQrScanner extends Component
     public $testQrData = null;
     public $lastScanResult = null;
     public $validationResult = null;
+    public bool $isScanning = false;
 
-    protected $listeners = ['startScanning', 'handleScanTest'];
+    protected $listeners = ['startScanning', 'stopScanning', 'handleScanTest', 'handleFileUploadScan'];
 
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
@@ -94,20 +95,40 @@ class TestQrScanner extends Component
         $this->testQrData = substr($encryptedData, 0, 100) . '... (' . strlen($encryptedData) . ' chars total)';
 
         // Generate QR code
-        $this->testQrCode = 'data:image/png;base64,' . base64_encode(
-            QrCode::format('png')
-                ->size(300)
-                ->errorCorrection('H')
-                ->margin(1)
-                ->generate($encryptedData)
-        );
+        try {
+            $qrCodeSvg = QrCode::size(300)->generate($encryptedData);
+            $this->testQrCode = 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg);
+        } catch (\Exception $e) {
+            $this->testQrCode = null;
+            $this->error('Failed to generate QR code: ' . $e->getMessage());
+            return;
+        }
 
         $this->success('Test QR code generated successfully!');
     }
 
     public function openScanner()
     {
+        $this->isScanning = true;
         $this->dispatch('startScanning');
+    }
+
+    public function stopScanning()
+    {
+        $this->isScanning = false;
+        $this->dispatch('scanner-stopped');
+    }
+
+    public function handleFileUploadScan(string $data)
+    {
+        // Use the same validation logic as handleScanTest
+        $this->handleScanTest($data);
+        $this->stopScanning();
+    }
+
+    public function scannerError($message, $title = 'Scanner Error')
+    {
+        $this->error($message, $title);
     }
 
     public function handleScanTest($data)

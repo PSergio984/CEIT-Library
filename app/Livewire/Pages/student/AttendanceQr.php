@@ -13,8 +13,8 @@ use Carbon\Carbon;
 
 class AttendanceQr extends Component
 {
-    // Use in-memory cache for the QR code PNG bytes
-    private ?string $cachedQrCodePng = null;
+    // Use in-memory cache for the QR code SVG data
+    private ?string $cachedQrCodePng = null; // TODO: Rename to cachedQrCodeSvg in future refactor
 
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
@@ -91,11 +91,12 @@ class AttendanceQr extends Component
     }
 
     /**
-     * Generate QR code as PNG bytes (centralized generator)
+     * Generate QR code as SVG (centralized generator)
+     * SVG format is more reliable for scanning and works better with Html5QrcodeScanner
      * 
-     * @return string PNG binary data
+     * @return string SVG data
      */
-    private function generateQrCodePng(): string
+    private function generateQrCodeSvg(): string
     {
         // Return cached value if already generated in this request
         if ($this->cachedQrCodePng !== null) {
@@ -105,12 +106,9 @@ class AttendanceQr extends Component
         // Generate encrypted attendance data
         $attendanceData = $this->generateAttendanceData();
 
-        // Generate QR code as PNG with consistent parameters
-        $this->cachedQrCodePng = QrCode::format('png')
-            ->size(300)
-            ->errorCorrection('H')
-            ->margin(1)
-            ->generate($attendanceData);
+        // Generate QR code as SVG (more reliable for scanning than PNG)
+        // Using simple generation like TestQrScanner for better compatibility
+        $this->cachedQrCodePng = QrCode::size(300)->generate($attendanceData);
 
         return $this->cachedQrCodePng;
     }
@@ -119,20 +117,27 @@ class AttendanceQr extends Component
     public function qrCodeDataUri(): string
     {
         // Delegate to centralized generator
-        $pngBytes = $this->generateQrCodePng();
+        $svgData = $this->generateQrCodeSvg();
 
-        return 'data:image/png;base64,' . base64_encode($pngBytes);
+        return 'data:image/svg+xml;base64,' . base64_encode($svgData);
     }
 
     /**
-     * Download QR code as PNG file
+     * Download QR code as PNG file (better for printing and sharing)
      */
     public function downloadQrCode()
     {
-        // Use centralized generator
-        $pngBytes = $this->generateQrCodePng();
+        // Generate the encrypted data
+        $attendanceData = $this->generateAttendanceData();
 
-        $fileName = 'attendance-qrcode.png';
+        // Generate QR code as PNG for download (better compatibility for printing)
+        $pngData = QrCode::format('png')
+            ->size(500)  // Larger size for better print quality
+            ->errorCorrection('H')
+            ->margin(2)
+            ->generate($attendanceData);
+
+        $fileName = 'attendance-qrcode-' . now()->format('Y-m-d-His') . '.png';
         $tempFilePath = 'temp/' . $fileName;
 
         // Ensure temp directory exists using Laravel Storage
@@ -140,8 +145,8 @@ class AttendanceQr extends Component
             Storage::makeDirectory('temp');
         }
 
-        // Write PNG bytes using Laravel Storage
-        Storage::put($tempFilePath, $pngBytes);
+        // Write PNG data using Laravel Storage
+        Storage::put($tempFilePath, $pngData);
 
         // Get filesystem path for download response
         $fullPath = Storage::path($tempFilePath);

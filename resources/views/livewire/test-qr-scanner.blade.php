@@ -57,7 +57,8 @@
                 <div class="card-body">
                     <h2 class="card-title">3. Validation Result</h2>
                     <div class="overflow-x-auto">
-                        <pre class="text-xs bg-base-300 p-4 rounded">{!! json_encode($validationResult, JSON_PRETTY_PRINT) !!}</pre>                    </div>
+                          <pre class="text-xs bg-base-300 p-4 rounded">{{ json_encode($validationResult, JSON_PRETTY_PRINT) }}</pre>
+                    </div>
                 </div>
             </div>
         @endif
@@ -84,6 +85,181 @@
         </div>
     </div>
     
-    {{-- Include QR Scanner Component --}}
+    {{-- File Upload Scanner Modal --}}
+    @if($isScanning)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm">
+            <div class="bg-base-100 rounded-2xl shadow-2xl p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                {{-- Header --}}
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-primary/10 p-2 rounded-lg">
+                            <x-mary-icon name="o-qr-code" class="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Scan QR Code (File Upload)</h3>
+                            <p class="text-xs text-base-content/60">Upload a QR code image to test scanning</p>
+                        </div>
+                    </div>
+                    <button wire:click="stopScanning" class="btn btn-sm btn-circle btn-ghost">
+                        <x-mary-icon name="o-x-mark" class="w-5 h-5" />
+                    </button>
+                </div>
+
+                {{-- Scanner Status --}}
+                <div class="mb-4">
+                    <div class="flex items-center justify-between bg-base-200 rounded-lg p-3">
+                        <div class="flex items-center gap-2">
+                            <span class="loading loading-ring loading-sm text-success"></span>
+                            <span class="text-sm font-medium">Scanner Ready</span>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- QR Scanner Container with File Upload --}}
+                <div class="relative mb-4">
+                    {{-- Decorative frame --}}
+                    <div class="border-2 border-dashed border-primary/30 rounded-xl p-8 bg-base-200/50">
+                        <div id="test-qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900" style="min-height: 350px;"></div>
+                    </div>
+                </div>
+
+                {{-- File Upload --}}
+                <div class="mb-4">
+                    <label class="label">
+                        <span class="label-text font-semibold flex items-center gap-2">
+                            <x-mary-icon name="o-photo" class="w-4 h-4"/>
+                            Upload QR Code Image:
+                        </span>
+                    </label>
+                    <input type="file" id="test-qr-input-file" accept="image/*" 
+                           class="file-input file-input-bordered w-full file-input-primary" />
+                </div>
+
+                {{-- Instructions --}}
+                <div class="bg-info/10 border border-info/20 rounded-lg p-4">
+                    <div class="flex gap-3">
+                        <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0"/>
+                        <div class="text-sm space-y-2">
+                            <p class="font-semibold text-info">Testing Tips:</p>
+                            <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
+                                <li>Upload a screenshot of the generated QR code</li>
+                                <li>Or take a photo of QR code from another device</li>
+                                <li>Supports PNG, JPG, and other image formats</li>
+                                <li>The scanner will automatically decode and validate</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @script
+        <script>
+
+            // Use a stable namespace for scanner state
+            window.__qrTest = window.__qrTest || {
+                testHtml5QrCode: null,
+                isTestInitialized: false
+            };
+
+            console.log('Test QR Scanner script loaded');
+
+
+            // Named handler for file input change
+            function testQrFileChangeHandler(e) {
+                const readerElement = document.getElementById('test-qr-reader');
+                if (e.target.files.length === 0) {
+                    return;
+                }
+                const imageFile = e.target.files[0];
+                console.log('File selected:', imageFile.name);
+                readerElement.innerHTML = '<div class="flex items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span></div>';
+                window.__qrTest.testHtml5QrCode.scanFile(imageFile, true)
+                    .then(decodedText => {
+                        // Unicode-safe truncate for logging
+                        let preview = decodedText;
+                        if ([...decodedText].length > 100) {
+                            preview = [...decodedText].slice(0, 100).join('') + '...';
+                        }
+                        console.log('QR Code decoded from file:', preview);
+                        readerElement.innerHTML = '<div class="flex items-center justify-center h-full text-success"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';
+                        $wire.call('handleFileUploadScan', decodedText);
+                    })
+                    .catch(err => {
+                        console.error('Error scanning file:', err);
+                        readerElement.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Could not scan QR code</p></div>';
+                        $wire.call('scannerError', 'Could not scan QR code from image. Please try another image.', 'Scan Failed');
+                    });
+            }
+
+            function initTestScanner() {
+                console.log('Initializing test scanner');
+                const readerElement = document.getElementById('test-qr-reader');
+                const fileInput = document.getElementById('test-qr-input-file');
+                if (!readerElement || !fileInput) {
+                    console.error('Test scanner elements not found');
+                    return;
+                }
+                // Defensive: cleanup any previous instance before initializing
+                cleanupTestScanner();
+                try {
+                    window.__qrTest.testHtml5QrCode = new Html5Qrcode("test-qr-reader");
+                    window.__qrTest.isTestInitialized = true;
+                    // Attach named handler
+                    fileInput.addEventListener('change', testQrFileChangeHandler);
+                    console.log('Test scanner initialized successfully');
+                } catch (error) {
+                    console.error('Test scanner initialization error:', error);
+                }
+            }
+
+            function cleanupTestScanner() {
+                try {
+                    if (window.__qrTest.testHtml5QrCode) {
+                        window.__qrTest.testHtml5QrCode.clear();
+                        window.__qrTest.testHtml5QrCode = null;
+                    }
+                    window.__qrTest.isTestInitialized = false;
+                    const readerElement = document.getElementById('test-qr-reader');
+                    if (readerElement) {
+                        readerElement.innerHTML = '';
+                    }
+                    const fileInput = document.getElementById('test-qr-input-file');
+                    if (fileInput) {
+                        fileInput.value = '';
+                        // Remove named handler
+                        fileInput.removeEventListener('change', testQrFileChangeHandler);
+                    }
+                    console.log('Test scanner cleanup complete');
+                } catch (error) {
+                    console.error('Error during test scanner cleanup:', error);
+                }
+            }
+
+            // Initialize reliably after Livewire DOM update
+            Livewire.hook('message.processed', () => {
+                const isScanning = @js($isScanning);
+                if (isScanning && !window.__qrTest.isTestInitialized) {
+                    requestAnimationFrame(() => {
+                        initTestScanner();
+                    });
+                }
+            });
+
+            // Cleanup when scanning stops (Livewire event)
+            window.addEventListener('scanner-stopped', () => {
+                console.log('Test scanner stopped (event)');
+                cleanupTestScanner();
+            });
+
+            // Cleanup on navigation
+            document.addEventListener('livewire:navigating', () => {
+                cleanupTestScanner();
+            });
+        </script>
+        @endscript
+    @endif
+    
+    {{-- Include QR Scanner Component (for reference/comparison) --}}
     <livewire:qr-scanner />
 </div>
