@@ -167,10 +167,38 @@
 
             // Named handler for file input change
             function testQrFileChangeHandler(e) {
-                const readerElement = document.getElementById('test-qr-reader');
-                if (e.target.files.length === 0) {
+                // Defensive: verify event and target exist
+                if (!e || !e.target) {
+                    console.error('Invalid event object in file change handler');
                     return;
                 }
+                
+                // Defensive: verify files exist
+                if (!e.target.files || e.target.files.length === 0) {
+                    return;
+                }
+                
+                // Defensive: verify readerElement exists
+                const readerElement = document.getElementById('test-qr-reader');
+                if (!readerElement) {
+                    console.error('Test scanner reader element not found');
+                    if (typeof $wire !== 'undefined') {
+                        $wire.call('scannerError', 'Scanner element not found. Please refresh the page.', 'Scanner Error');
+                    }
+                    return;
+                }
+                
+                // Defensive: verify scanner instance exists
+                if (!window.__qrTest || !window.__qrTest.testHtml5QrCode) {
+                    const errorMsg = 'Scanner not initialized. Please refresh the page.';
+                    console.error(errorMsg);
+                    readerElement.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Could not scan QR code</p></div>';
+                    if (typeof $wire !== 'undefined') {
+                        $wire.call('scannerError', errorMsg, 'Scanner Error');
+                    }
+                    return;
+                }
+
                 const imageFile = e.target.files[0];
                 console.log('File selected:', imageFile.name);
                 readerElement.innerHTML = '<div class="flex items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span></div>';

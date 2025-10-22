@@ -21,6 +21,9 @@ class QrScanner extends Component
     private const VALIDATION_INVALID = 'invalid';
     private const VALIDATION_REPLAY = 'replay_attack';
 
+    // QR code nonce TTL (24 hours in seconds)
+    private const NONCE_TTL_SECONDS = 86400;
+
     public bool $isScanning = false;
     public ?string $scannedData = null;
 
@@ -165,17 +168,17 @@ class QrScanner extends Component
             $nonce = $data['nonce'];
             $cacheKey = 'qr_nonce:' . hash('sha256', $nonce);
 
-            // Atomically increment and check the usage count to prevent TOCTOU race condition
+            // Atomically initialize the nonce counter with TTL if it doesn't exist
+            // Cache::add() only sets the value if the key doesn't exist (atomic operation)
+            Cache::add($cacheKey, 0, self::NONCE_TTL_SECONDS);
+
+            // Atomically increment the usage count
             $usageCount = Cache::increment($cacheKey, 1);
 
-            // Set TTL if this is the first use
-            if ($usageCount === 1) {
-                Cache::put($cacheKey, 1, 86400);
-            }
-
+            // Check if exceeded limit
             if ($usageCount > 2) {
-                // QR code already used twice, rollback this increment
-                Cache::decrement($cacheKey, 1);
+                // QR code already used twice (check-in and check-out)
+                // Don't decrement - keep the accurate count for logging/monitoring
                 Log::warning('QR code exhausted - already used for check-in and check-out', [
                     'nonce_hash' => hash('sha256', $nonce),
                     'user_id' => $data['user_id'],
@@ -193,7 +196,7 @@ class QrScanner extends Component
             $qrTimestamp = (int)$qrTimestamp;
             $now = Carbon::now()->timestamp;
             $maxFuture = $now + 600; // 10 minutes in future
-            $minPast = $now - (24 * 3600); // 24 hours ago
+            $minPast = $now - self::NONCE_TTL_SECONDS; // 24 hours ago
             $minAllowed = $now - 600; // 10 minutes in past
 
             if ($qrTimestamp < $minPast || $qrTimestamp > $maxFuture) {
