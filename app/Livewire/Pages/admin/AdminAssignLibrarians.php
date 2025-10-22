@@ -274,18 +274,19 @@ class AdminAssignLibrarians extends AdminComponent
             'editingSelectedStudents.min' => 'A batch must have at least 1 student.',
         ]);
 
-        $conflictingBatch = Librarian::where('batch_no', '!=', $this->editingBatchNo)
-            ->whereNotNull('date_start')
-            ->where('date_start', $this->editingDateStart)
-            ->first();
+        $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
+        $currentBatchDate = $currentBatch ? $currentBatch->date_start : null;
 
-        if ($conflictingBatch) {
-            $currentBatchDate = Librarian::where('batch_no', $this->editingBatchNo)
-                ->first()
-                ->date_start ?? null;
+        $isDateChanging = $currentBatchDate != $this->editingDateStart;
 
-            if ($currentBatchDate != $this->editingDateStart) {
-                $this->error("There is already a batch assigned on this date: Batch No. {$conflictingBatch->batch_no}");
+        if ($isDateChanging) {
+            $conflictingBatch = Librarian::where('batch_no', '!=', $this->editingBatchNo)
+                ->whereNotNull('date_start')
+                ->where('date_start', $this->editingDateStart)
+                ->first();
+
+            if ($conflictingBatch) {
+                $this->error("Cannot assign to this date. Batch No. {$conflictingBatch->batch_no} is already assigned to " . date('F j, Y', strtotime($this->editingDateStart)));
                 return;
             }
         }
@@ -336,7 +337,7 @@ class AdminAssignLibrarians extends AdminComponent
             'status' => 'active',
         ]);
 
-        $this->success('Batch assignment and members updated successfully! 🎉');
+        $this->success('Batch assignment and members updated successfully! ');
         $this->showEditModal = false;
         $this->reset(['editingBatchNo', 'editingDateStart', 'editingShiftNotes', 'editingSelectedStudents']);
     }

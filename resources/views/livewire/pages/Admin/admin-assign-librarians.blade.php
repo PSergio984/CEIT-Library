@@ -1,9 +1,9 @@
     <div>
-        <header class="p-5 bg-slate-800 shadow-md">
+        <header class="p-5  shadow-md">
             <h1 class="text-2xl font-bold text-white">Admin - Assign Librarians to Batches</h1>
         </header>
 
-        <div class="p-5 min-h-screen bg-slate-900/90">
+        <div class="p-5 min-h-screen ">
             <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
                 <div class="flex flex-col space-y-6 lg:h-[calc(100vh-100px)]">
@@ -336,7 +336,7 @@
 
                                     @if (count($editingSelectedStudents) >= 5)
                                         <div class="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 mb-3">
-                                            <p class="text-yellow-300 text-sm">⚠️ Maximum of 5 students reached.
+                                            <p class="text-yellow-300 text-sm">Maximum of 5 students reached.
                                                 Uncheck a student to select another.</p>
                                         </div>
                                     @endif
@@ -418,12 +418,51 @@
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Serving Date</label>
-                                    <input type="date" wire:model="editingDateStart"
+                                    <input type="date" wire:model.live="editingDateStart"
                                         class="w-full border border-slate-600 bg-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     @error('editingDateStart')
                                         <span class="text-red-400 text-xs">{{ $message }}</span>
                                     @enderror
+
+                                    @if ($editingDateStart)
+                                        @php
+                                            $currentBatchDate =
+                                                \App\Models\Librarian::where('batch_no', $editingBatchNo)->first()
+                                                    ->date_start ?? null;
+                                            $isDateChanging = $currentBatchDate != $editingDateStart;
+
+                                            if ($isDateChanging) {
+                                                $conflictingBatch = \App\Models\Librarian::where(
+                                                    'batch_no',
+                                                    '!=',
+                                                    $editingBatchNo,
+                                                )
+                                                    ->whereNotNull('date_start')
+                                                    ->where('date_start', $editingDateStart)
+                                                    ->first();
+                                            } else {
+                                                $conflictingBatch = null;
+                                            }
+                                        @endphp
+
+                                        @if ($conflictingBatch)
+                                            <div class="mt-2 bg-red-900/50 border border-red-600 rounded-lg p-3">
+                                                <p class="text-red-300 text-sm">
+                                                    <strong>Date Conflict:</strong> Batch No. <span
+                                                        class="font-mono">{{ $conflictingBatch->batch_no }}</span> is
+                                                    already assigned to this date.
+                                                </p>
+                                            </div>
+                                        @elseif($isDateChanging)
+                                            <div class="mt-2 bg-green-900/50 border border-green-600 rounded-lg p-3">
+                                                <p class="text-green-300 text-sm">
+                                                    This date is available
+                                                </p>
+                                            </div>
+                                        @endif
+                                    @endif
                                 </div>
+
 
                                 <div>
                                     <label class="block text-sm font-medium text-slate-300 mb-2">Shift Notes</label>
