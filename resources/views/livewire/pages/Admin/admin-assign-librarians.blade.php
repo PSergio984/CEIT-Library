@@ -130,15 +130,16 @@
 
                                 <div class="w-full md:w-1/3">
                                     <label for="filterDateStart"
-                                        class="block text-sm font-medium text-slate-400 mb-1">Serving
-                                        Date (On or After)</label>
+                                        class="block text-sm font-medium text-slate-400 mb-1">Date</label>
                                     <input type="date" id="filterDateStart" wire:model.live="filterDateStart"
                                         class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
                                 </div>
 
                                 <div class="w-full md:w-1/3 hidden md:block"></div>
                             </div>
-                            >
+
+                            <label for="filterDateStart"
+                                class="block text-sm font-medium text-slate-400 mb-1">Search</label>
                             <div class="flex space-x-4">
                                 <div class="relative flex-1">
                                     <input type="text" wire:model.live.debounce.300ms="batchSearch"
