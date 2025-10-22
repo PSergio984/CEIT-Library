@@ -28,28 +28,6 @@ class AdminAssignLibrarians extends AdminComponent
     public $filterStatus = '';
     public $filterDateStart = null;
 
-    public array $allBatchesHeaders = [
-        ['key' => 'number', 'label' => '#'],
-        ['key' => 'batch_no', 'label' => 'Batch no.'],
-        ['key' => 'date_range', 'label' => 'Date to Serve?'],
-        ['key' => 'shift_notes', 'label' => 'Shift notes'],
-        ['key' => 'created_by', 'label' => 'Created by'],
-        ['key' => 'status', 'label' => 'Status'],
-        ['key' => 'actions', 'label' => '', 'class' => 'w-20'],
-    ];
-
-    public array $simpleBatchHeaders = [
-        ['key' => 'batch_no', 'label' => 'Batch no.'],
-        ['key' => 'members', 'label' => 'Section & Year'],
-    ];
-
-    public array $assignedBatchHeaders = [
-        ['key' => 'batch_no', 'label' => 'Batch no.'],
-        ['key' => 'members', 'label' => 'Section & Year'],
-        ['key' => 'date_assigned', 'label' => 'Date Assigned'],
-        ['key' => 'actions', 'label' => '', 'class' => 'w-20'],
-    ];
-
     public function getLibrariansQueryProperty()
     {
         return Librarian::with(['user', 'createdBy'])
