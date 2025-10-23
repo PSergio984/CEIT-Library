@@ -76,7 +76,7 @@
                 <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
                 <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" />
                 @can('Admin-access')
-                    <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/academic-papers" />
+                    <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" />
                 @endcan
 
             </x-mary-menu>
