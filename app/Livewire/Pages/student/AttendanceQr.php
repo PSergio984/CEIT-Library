@@ -70,8 +70,10 @@ class AttendanceQr extends Component
                 is_array($cachedData)
                 && array_key_exists('valid_until', $cachedData)
                 && array_key_exists('encrypted_data', $cachedData)
+                && array_key_exists('created_at', $cachedData)
                 && is_string($cachedData['valid_until'])
                 && is_string($cachedData['encrypted_data'])
+                && is_string($cachedData['created_at'])
             ) {
                 // Update validity timestamp for display
                 $this->qrValidUntil = Carbon::parse($cachedData['valid_until'])->toIso8601String();
@@ -86,6 +88,7 @@ class AttendanceQr extends Component
 
         $timestamp = Carbon::now()->timestamp;
         $validUntil = Carbon::now()->addHours(24); // QR valid for 24 hours
+        $createdAt = Carbon::now()->format('Y-m-d-His'); // Fixed creation timestamp for filename
 
         // Generate unique nonce for replay attack protection
         $nonce = Str::random(32);
@@ -120,6 +123,7 @@ class AttendanceQr extends Component
             Cache::put($cacheKey, [
                 'encrypted_data' => $encryptedData,
                 'valid_until' => $validUntil->toIso8601String(),
+                'created_at' => $createdAt,
             ], 86400); // Cache for 24 hours
         }
 
@@ -138,11 +142,13 @@ class AttendanceQr extends Component
             return;
         }
 
-        // Clear cached QR data
+        // Clear cached QR data and PNG cache
         $activeSession = Attendance::getActiveSession($user->id);
         if ($activeSession) {
             $cacheKey = "qr_data:user:{$user->id}:session:{$activeSession->id}";
+            $pngCacheKey = "qr_png:user:{$user->id}:session:{$activeSession->id}";
             Cache::forget($cacheKey);
+            Cache::forget($pngCacheKey);
         }
 
         // Clear in-memory cache
@@ -165,11 +171,11 @@ class AttendanceQr extends Component
             return $this->cachedQrCodePng;
         }
 
-        // Generate encrypted attendance data
+        // Use CACHED encrypted attendance data (don't regenerate)
         $attendanceData = $this->generateAttendanceData();
 
-        // Generate QR code as SVG (more reliable for scanning than PNG)
-        // Using simple generation like TestQrScanner for better compatibility
+        // Generate QR code as SVG using SIMPLE generation like TestQrScanner
+        // Simple QR codes are smaller, more scannable, and work reliably
         $this->cachedQrCodePng = QrCode::size(300)->generate($attendanceData);
 
         return $this->cachedQrCodePng;
@@ -181,25 +187,85 @@ class AttendanceQr extends Component
         // Delegate to centralized generator
         $svgData = $this->generateQrCodeSvg();
 
-        return 'data:image/svg+xml;base64,' . base64_encode($svgData);
+        // Clean up SVG for proper data URI encoding
+        $svgData = trim($svgData);
+        // Remove XML declaration if present for better browser compatibility
+        $svgData = preg_replace('/<\?xml.*?\?>/', '', $svgData);
+        $svgData = trim($svgData);
+
+        // Use UTF-8 encoding instead of base64 for better compatibility
+        return 'data:image/svg+xml;charset=utf-8,' . rawurlencode($svgData);
+    }
+
+    /**
+     * Check if refresh button should be disabled
+     */
+    #[Computed]
+    public function canRefreshQr(): bool
+    {
+        // Disable refresh if there's an active session or QR hasn't expired
+        if ($this->activeSessionId) {
+            return false; // Active session - don't allow refresh
+        }
+
+        // Check if QR is still valid (hasn't timed out)
+        if ($this->qrValidUntil) {
+            $validUntil = Carbon::parse($this->qrValidUntil);
+            if ($validUntil->isFuture()) {
+                return false; // QR still valid - don't allow refresh
+            }
+        }
+
+        return true; // Allow refresh
     }
 
     /**
      * Download QR code as PNG file (better for printing and sharing)
+     * Uses the SAME cached QR data to prevent regeneration
      */
     public function downloadQrCode()
     {
-        // Generate the encrypted data
-        $attendanceData = $this->generateAttendanceData();
+        $user = Auth::user();
+        if (!$user) {
+            abort(401, 'Unauthenticated');
+        }
 
-        // Generate QR code as PNG for download (better compatibility for printing)
-        $pngData = QrCode::format('png')
-            ->size(500)  // Larger size for better print quality
-            ->errorCorrection('H')
-            ->margin(2)
-            ->generate($attendanceData);
+        // Check for active session to get cache key
+        $activeSession = Attendance::getActiveSession($user->id);
+        $cacheKey = $activeSession ? "qr_data:user:{$user->id}:session:{$activeSession->id}" : null;
+        $cachedData = $cacheKey ? Cache::get($cacheKey) : null;
 
-        $fileName = 'attendance-qrcode-' . now()->format('Y-m-d-His') . '.png';
+        // Get creation timestamp from cache, or use current time as fallback
+        $createdAt = 'now';
+        if (is_array($cachedData) && isset($cachedData['created_at'])) {
+            $createdAt = $cachedData['created_at'];
+        }
+
+        // Check if PNG is already cached to avoid regeneration
+        $pngCacheKey = $activeSession ? "qr_png:user:{$user->id}:session:{$activeSession->id}" : null;
+        $cachedPng = $pngCacheKey ? Cache::get($pngCacheKey) : null;
+
+        if ($cachedPng && is_string($cachedPng)) {
+            // Use cached PNG data - no regeneration!
+            $pngData = $cachedPng;
+        } else {
+            // Generate PNG only if not cached
+            $attendanceData = $this->generateAttendanceData();
+
+            $pngData = QrCode::format('png')
+                ->size(600)  // Larger size for better scanning reliability
+                ->errorCorrection('H')  // High error correction (30% recovery)
+                ->margin(4)  // Adequate margin for scanning (4 modules recommended)
+                ->generate($attendanceData);
+
+            // Cache the PNG data for future downloads (24 hours)
+            if ($pngCacheKey) {
+                Cache::put($pngCacheKey, $pngData, 86400);
+            }
+        }
+
+        // Use the original creation timestamp for consistent filename
+        $fileName = 'attendance-qrcode-' . $createdAt . '.png';
         $tempFilePath = 'temp/' . $fileName;
 
         // Ensure temp directory exists using Laravel Storage

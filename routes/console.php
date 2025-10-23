@@ -57,11 +57,11 @@ Artisan::command('attendance:check-missing-timeouts', function () {
     $count = 0;
     foreach ($missingSessions as $session) {
         try {
-            DB::beginTransaction();
             $key = $session->user_id . '-' . $violation->id . '-' . $session->id;
             $existingViolation = in_array($key, $existingViolations);
 
             if (!$existingViolation) {
+                DB::beginTransaction();
                 ViolationTransaction::create([
                     'user_id' => $session->user_id,
                     'violation_id' => $violation->id,

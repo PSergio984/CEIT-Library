@@ -73,7 +73,7 @@ class ViolationTransaction extends Model
                 throw new \InvalidArgumentException("Invalid date format: {$date}", 0, $e);
             }
         }
-        return "Failed to check out from session on {$dateStr}. Attendance ID: {$attendanceId}";
+        return "Failed to check out from session on {$dateStr}.";
     }
 
     protected static function booted()

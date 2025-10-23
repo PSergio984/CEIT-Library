@@ -98,11 +98,22 @@
                     </div>
                 </div>
 
-                @if ($attendance['duration_minutes'])
+                @if ($attendance['duration_minutes'] !== null && $attendance['duration_minutes'] >= 0)
                     <div class="mt-3 pt-3 border-t border-base-300">
                         <p class="text-base-content/50 font-medium text-xs">Duration</p>
                         <p class="font-medium">
-                            {{ floor($attendance['duration_minutes'] / 60) }}h {{ $attendance['duration_minutes'] % 60 }}m
+                            @php
+                                $mins = (int)$attendance['duration_minutes'];
+                                $hours = floor($mins / 60);
+                                $remainingMins = $mins % 60;
+                            @endphp
+                            @if($mins < 1)
+                                <span class="text-warning">< 1m</span>
+                            @elseif($hours > 0)
+                                {{ $hours }}h {{ $remainingMins }}m
+                            @else
+                                {{ $mins }}m
+                            @endif
                         </p>
                     </div>
                 @endif
@@ -150,9 +161,20 @@
             @endscope
 
             @scope('cell_duration_minutes', $row)
-            @if ($row['duration_minutes'])
+            @if ($row['duration_minutes'] !== null && $row['duration_minutes'] >= 0)
                 <div class="text-sm font-medium">
-                    {{ floor($row['duration_minutes'] / 60) }}h {{ $row['duration_minutes'] % 60 }}m
+                    @php
+                        $mins = (int)$row['duration_minutes'];
+                        $hours = floor($mins / 60);
+                        $remainingMins = $mins % 60;
+                    @endphp
+                    @if($mins < 1)
+                        <span class="text-warning">< 1m</span>
+                    @elseif($hours > 0)
+                        {{ $hours }}h {{ $remainingMins }}m
+                    @else
+                        {{ $mins }}m
+                    @endif
                 </div>
             @else
                 <span class="text-base-content/50">—</span>

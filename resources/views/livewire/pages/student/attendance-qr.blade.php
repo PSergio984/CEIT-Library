@@ -152,7 +152,8 @@
                     wire:loading.attr="disabled"
                     wire:target="refreshQrCode"
                     wire:loading.attr="aria-busy"
-                    class="btn btn-outline btn-warning w-full gap-2">
+                    @if(!$this->canRefreshQr) disabled @endif
+                    class="btn btn-outline btn-warning w-full gap-2 @if(!$this->canRefreshQr) opacity-50 cursor-not-allowed @endif">
                 <span wire:loading.remove wire:target="refreshQrCode" class="flex items-center gap-2">
                     <x-mary-icon name="o-arrow-path" class="w-5 h-5"/>
                     Refresh QR Code
@@ -163,7 +164,15 @@
                 </span>
             </button>
             <p class="text-xs text-center text-base-content/60 mt-2">
-                Click to generate a new QR code if needed
+                @if(!$this->canRefreshQr)
+                    @if($activeSessionId)
+                        Refresh disabled while you have an active library session
+                    @else
+                        Refresh disabled - QR code is still valid
+                    @endif
+                @else
+                    Click to generate a new QR code if needed
+                @endif
             </p>
         </div>
         

@@ -237,7 +237,7 @@ class QrScanner extends Component
             $rateLimitKey = 'qr_rate_limit:' . $data['user_id'];
             $recentScans = Cache::get($rateLimitKey, 0);
 
-            if ($recentScans >= 5) { // Max 5 scans per minute
+            if ($recentScans >= 60) { // Max 60 scans per minute for testing
                 Log::warning('Rate limit exceeded for user', [
                     'user_id' => $data['user_id'],
                     'scan_count' => $recentScans,
@@ -275,6 +275,27 @@ class QrScanner extends Component
     }
 
     /**
+     * Format duration in a human-readable way
+     * Handles edge cases like < 1 minute
+     */
+    private function formatDuration(int $minutes): string
+    {
+        if ($minutes < 1) {
+            return 'less than 1 minute';
+        } elseif ($minutes < 60) {
+            return $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes');
+        } else {
+            $hours = floor($minutes / 60);
+            $remainingMinutes = $minutes % 60;
+            $hoursText = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
+            if ($remainingMinutes > 0) {
+                return $hoursText . ' and ' . $remainingMinutes . ' ' . ($remainingMinutes === 1 ? 'minute' : 'minutes');
+            }
+            return $hoursText;
+        }
+    }
+
+    /**
      * Process the attendance based on scanned QR data
      */
     private function processAttendance(array $data): array
@@ -295,9 +316,13 @@ class QrScanner extends Component
                     $activeSession->calculateDuration();
                     $activeSession->save();
 
+                    // Format duration message properly
+                    $minutes = (int)$activeSession->duration_minutes;
+                    $durationText = $this->formatDuration($minutes);
+
                     return [
                         'success' => true,
-                        'message' => "Goodbye, {$user->first_name}! You stayed for {$activeSession->duration_minutes} minutes.",
+                        'message' => "Goodbye, {$user->first_name}! You stayed for {$durationText}.",
                         'title' => 'Check-out Successful',
                         'attendance' => $activeSession,
                         'action' => 'checkout',
