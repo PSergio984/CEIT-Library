@@ -71,8 +71,14 @@
                 </div>
             @endguest
             @auth
+                @php
+                    // Determine the proper route based on user role
+                    $dashboardRoute = auth()->user()->can('Admin-access') 
+                        ? route('admin.dashboard') 
+                        : route('student.dashboard');
+                @endphp
                 <div class="flex justify-center items-center w-full max-w-md sm:max-w-none">
-                    <a href="{{ route('dashboard') }}" wire:navigate
+                    <a href="{{ $dashboardRoute }}" wire:navigate
                         class="bg-slate-700 hover:bg-slate-800 text-white font-bold py-2 px-4 sm:py-3 sm:px-6 md:py-4 md:px-8 rounded-lg text-sm sm:text-base md:text-lg transition duration-300 min-w-[120px] sm:min-w-[140px] md:min-w-[150px] flex items-center justify-center gap-2 w-full sm:w-auto">
                         GO TO DASHBOARD
                     </a>
