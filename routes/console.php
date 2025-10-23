@@ -45,15 +45,21 @@ Artisan::command('attendance:check-missing-timeouts', function () {
         ]
     );
 
+    // Preload all existing violation transactions for these sessions
+    $existingViolations = ViolationTransaction::where('violation_id', $violation->id)
+        ->whereIn('user_id', $missingSessions->pluck('user_id'))
+        ->whereIn('attendance_id', $missingSessions->pluck('id'))
+        ->get()
+        ->map(function ($vt) {
+            return $vt->user_id . '-' . $vt->violation_id . '-' . $vt->attendance_id;
+        })->toArray();
+
     $count = 0;
     foreach ($missingSessions as $session) {
         try {
             DB::beginTransaction();
-            // Check if violation already created for this session (inside transaction for atomicity)
-            $existingViolation = ViolationTransaction::where('user_id', $session->user_id)
-                ->where('violation_id', $violation->id)
-                ->where('attendance_id', $session->id)
-                ->exists();
+            $key = $session->user_id . '-' . $violation->id . '-' . $session->id;
+            $existingViolation = in_array($key, $existingViolations);
 
             if (!$existingViolation) {
                 ViolationTransaction::create([

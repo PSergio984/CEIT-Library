@@ -27,19 +27,22 @@ return new class extends Migration {
                 }
                 if (!empty($idAttendanceMap)) {
                     DB::transaction(function () use ($idAttendanceMap) {
-                        // Sanitize all IDs and attendance values to integers to prevent SQL injection
                         $sanitizedMap = [];
                         foreach ($idAttendanceMap as $id => $attendanceId) {
                             $sanitizedMap[(int)$id] = (int)$attendanceId;
                         }
                         $ids = array_keys($sanitizedMap);
                         $cases = '';
+                        $bindings = [];
                         foreach ($sanitizedMap as $id => $attendanceId) {
-                            $cases .= "WHEN id = {$id} THEN {$attendanceId} ";
+                            $cases .= "WHEN id = ? THEN ? ";
+                            $bindings[] = $id;
+                            $bindings[] = $attendanceId;
                         }
-                        $idsList = implode(',', $ids);
-                        $sql = "UPDATE violation_transactions SET attendance_id = CASE {$cases} END WHERE id IN ({$idsList})";
-                        DB::statement($sql);
+                        $inPlaceholders = implode(',', array_fill(0, count($ids), '?'));
+                        $bindings = array_merge($bindings, $ids);
+                        $sql = "UPDATE violation_transactions SET attendance_id = CASE {$cases} END WHERE id IN ({$inPlaceholders})";
+                        DB::statement($sql, $bindings);
                     });
                 }
             });

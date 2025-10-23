@@ -18,7 +18,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     public $selectedDate = '';
 
     // Listeners for QR scanner events
-    protected $listeners = ['qrScanned', 'attendanceRecorded'];
+    protected $listeners = ['attendanceRecorded'];
 
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],

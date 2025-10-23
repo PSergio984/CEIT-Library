@@ -347,15 +347,15 @@
                                         option.text = device.label || `Camera ${index + 1}`;
                                         cameraSelect.appendChild(option);
                                     });
-                                    
-                                    // Remove old listener if exists
-                                    const newSelect = cameraSelect.cloneNode(true);
-                                    cameraSelect.parentNode.replaceChild(newSelect, cameraSelect);
-                                    
-                                    // Handle camera change
-                                    newSelect.addEventListener('change', function() {
+
+                                    // Store and cleanup event listener
+                                    if (window._cameraChangeListenerRef) {
+                                        cameraSelect.removeEventListener('change', window._cameraChangeListenerRef);
+                                    }
+                                    window._cameraChangeListenerRef = function() {
                                         switchCamera(this.value, scannerConfig, successCallback, errorCallback);
-                                    });
+                                    };
+                                    cameraSelect.addEventListener('change', window._cameraChangeListenerRef);
                                 }
                                 
                                 // Filter out virtual cameras and prefer real cameras
