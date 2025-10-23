@@ -97,7 +97,7 @@ class AdminAssignLibrarians extends AdminComponent
                     'batch_no' => $batchNo,
                     'members' => $librarians->map(function ($lib) {
                         return $lib->user->first_name . ' ' . $lib->user->last_name;
-                    })->join('<br>'),
+                    })->toArray(),
                     'date_assigned' => $first->date_start ? date('Y-m-d', strtotime($first->date_start)) : 'N/A',
                     'librarians' => $librarians
                 ];
