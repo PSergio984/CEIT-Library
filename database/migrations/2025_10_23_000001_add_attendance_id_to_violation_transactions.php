@@ -13,18 +13,29 @@ return new class extends Migration {
             $table->index(['user_id', 'violation_id', 'attendance_id'], 'violation_user_violation_attendance_idx');
         });
 
-        // Backfill attendance_id from remarks if possible, chunked for memory efficiency
+        // Backfill attendance_id from remarks if possible, chunked for memory efficiency and bulk update
         DB::table('violation_transactions')
             ->whereNotNull('remarks')
             ->where('remarks', 'LIKE', '%Attendance ID:%')
             ->orderBy('id')
             ->chunk(1000, function ($rows) {
+                $idAttendanceMap = [];
                 foreach ($rows as $vt) {
                     if (preg_match('/Attendance ID: (\d+)/', $vt->remarks, $matches)) {
-                        DB::table('violation_transactions')->where('id', $vt->id)->update([
-                            'attendance_id' => $matches[1]
-                        ]);
+                        $idAttendanceMap[$vt->id] = $matches[1];
                     }
+                }
+                if (!empty($idAttendanceMap)) {
+                    DB::transaction(function () use ($idAttendanceMap) {
+                        $ids = array_keys($idAttendanceMap);
+                        $cases = '';
+                        foreach ($idAttendanceMap as $id => $attendanceId) {
+                            $cases .= "WHEN id = {$id} THEN {$attendanceId} ";
+                        }
+                        $idsList = implode(',', $ids);
+                        $sql = "UPDATE violation_transactions SET attendance_id = CASE {$cases} END WHERE id IN ({$idsList})";
+                        DB::statement($sql);
+                    });
                 }
             });
     }

@@ -47,7 +47,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
     $count = 0;
     foreach ($missingSessions as $session) {
         try {
-            \DB::beginTransaction();
+            DB::beginTransaction();
             try {
                 // Check if violation already created for this session (inside transaction for atomicity)
                 $existingViolation = ViolationTransaction::where('user_id', $session->user_id)
@@ -62,7 +62,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
                         'attendance_id' => $session->id,
                         'date_occurred' => $session->time_in->toDateString(),
                         'severity' => 'Minor',
-                        'remarks' => "Failed to check out from session on {$session->time_in->format('M d, Y')}. Attendance ID: {$session->id}",
+                        'remarks' => ViolationTransaction::buildMissingTimeoutRemarks($session->id, $session->time_in),
                     ]);
 
                     $session->time_out = $session->time_in->copy()->endOfDay();
@@ -70,14 +70,12 @@ Artisan::command('attendance:check-missing-timeouts', function () {
                     $session->calculateDuration();
                     $session->save();
 
-                    \DB::commit();
+                    DB::commit();
                     $count++;
                     $this->line("Created violation for user {$session->user->email} (Session ID: {$session->id})");
-                } else {
-                    \DB::rollBack();
                 }
             } catch (\Exception $txErr) {
-                \DB::rollBack();
+                DB::rollBack();
                 $this->error("Transaction failed for session {$session->id}: {$txErr->getMessage()}");
             }
         } catch (\Exception $e) {

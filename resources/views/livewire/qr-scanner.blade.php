@@ -222,6 +222,7 @@
             let successCallback = null;
             let errorCallback = null;
             let scanCount = 0;
+            let hasLoggedInitialMessage = false;
 
             console.log('QR Scanner script loaded');
             
@@ -318,9 +319,9 @@
                         errorCallback = (errorMessage) => {
                             // Silently handle scanning errors (too verbose otherwise)
                             // Only log periodically to avoid spam
-                            if (scanCount === 0) {
+                            if (!hasLoggedInitialMessage && scanCount === 0) {
                                 updateDebugInfo('Scanning... waiting for QR code', false);
-                                scanCount = -1; // Flag to show we've logged initial message
+                                hasLoggedInitialMessage = true;
                             }
                         };
 
