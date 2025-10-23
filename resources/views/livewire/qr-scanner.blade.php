@@ -606,9 +606,29 @@
                 // Remove any existing listeners by cloning
                 const newFileInput = fileInput.cloneNode(true);
                 fileInput.parentNode.replaceChild(newFileInput, fileInput);
+                
+                // Add click event to ensure file dialog opens properly
+                newFileInput.addEventListener('click', function(e) {
+                    console.log('File input clicked');
+                    // Ensure the input is ready
+                    this.value = '';
+                });
                     
                     newFileInput.addEventListener('change', function(e) {
-                        if (e.target.files.length === 0) return;
+                        console.log('File input change event triggered');
+                        console.log('Event target:', e.target);
+                        console.log('Files:', e.target.files);
+                        
+                        // Defensive checks
+                        if (!e || !e.target) {
+                            console.error('Invalid event object');
+                            return;
+                        }
+                        
+                        if (!e.target.files || e.target.files.length === 0) {
+                            console.log('No files selected');
+                            return;
+                        }
                         
                         const imageFile = e.target.files[0];
                         console.log('File upload selected:', imageFile.name);
@@ -627,18 +647,28 @@
                         // Show loading feedback
                         fileReaderElement.innerHTML = '<div class="flex items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span></div>';
                         
-                        // Create SEPARATE Html5Qrcode instance for file scanning
-                        if (!fileQrCode) {
-                            try {
-                                fileQrCode = new Html5Qrcode("file-qr-reader");
-                                console.log('Created file scanner instance');
-                            } catch (error) {
-                                console.error('Error creating file scanner:', error);
-                                fileReaderElement.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Scanner initialization failed</p></div>';
-                                $wire.call('scannerError', 'Could not initialize QR scanner.', 'Scanner Error');
-                                e.target.value = '';
-                                return;
+                        // Always create a fresh Html5Qrcode instance for file scanning to avoid state issues
+                        try {
+                            // Clean up existing instance if any
+                            if (fileQrCode) {
+                                try {
+                                    fileQrCode.clear().catch((cleanupErr) => {
+                                        console.warn('File QR scanner cleanup failed:', cleanupErr);
+                                    });
+                                } catch (err) {
+                                    console.warn('File QR scanner cleanup threw:', err);
+                                }
                             }
+                            
+                            // Create new instance
+                            fileQrCode = new Html5Qrcode("file-qr-reader");
+                            console.log('Created fresh file scanner instance');
+                        } catch (error) {
+                            console.error('Error creating file scanner:', error);
+                            fileReaderElement.innerHTML = '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Scanner initialization failed</p></div>';
+                            $wire.call('scannerError', 'Could not initialize QR scanner.', 'Scanner Error');
+                            e.target.value = '';
+                            return;
                         }
                         
                         console.log('Scanning file...');

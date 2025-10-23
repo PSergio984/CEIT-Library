@@ -2,7 +2,9 @@
 
 namespace App\Livewire\Pages\Student;
 
+use App\Models\Attendance;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Livewire\Attributes\Computed;
@@ -15,6 +17,9 @@ class AttendanceQr extends Component
 {
     // Use in-memory cache for the QR code SVG data
     private ?string $cachedQrCodePng = null; // TODO: Rename to cachedQrCodeSvg in future refactor
+
+    public ?string $qrValidUntil = null;
+    public ?int $activeSessionId = null;
 
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
@@ -43,6 +48,7 @@ class AttendanceQr extends Component
     /**
      * Generate encrypted attendance data for QR code
      * Format: encrypted JSON with user_id, timestamp, and hash for tamper protection
+     * Persists QR data based on active session to prevent unnecessary regeneration
      */
     private function generateAttendanceData(): string
     {
@@ -51,12 +57,35 @@ class AttendanceQr extends Component
             abort(401, 'Unauthenticated');
         }
 
+        // Check for active attendance session
+        $activeSession = Attendance::getActiveSession($user->id);
+        $this->activeSessionId = $activeSession?->id;
+
+        // If there's an active session, try to reuse the cached QR data
+        if ($activeSession) {
+            $cacheKey = "qr_data:user:{$user->id}:session:{$activeSession->id}";
+            $cachedData = Cache::get($cacheKey);
+
+            if (
+                is_array($cachedData)
+                && array_key_exists('valid_until', $cachedData)
+                && array_key_exists('encrypted_data', $cachedData)
+                && is_string($cachedData['valid_until'])
+                && is_string($cachedData['encrypted_data'])
+            ) {
+                // Update validity timestamp for display
+                $this->qrValidUntil = Carbon::parse($cachedData['valid_until'])->toIso8601String();
+                return $cachedData['encrypted_data'];
+            }
+        }
+
         $secret = config('app.qr_hmac_secret');
         if (!is_string($secret) || strlen($secret) < 16) {
             throw new \RuntimeException('QR HMAC secret is missing or insecure.');
         }
 
         $timestamp = Carbon::now()->timestamp;
+        $validUntil = Carbon::now()->addHours(24); // QR valid for 24 hours
 
         // Generate unique nonce for replay attack protection
         $nonce = Str::random(32);
@@ -85,7 +114,42 @@ class AttendanceQr extends Component
         // Encrypt the data to prevent tampering
         $encryptedData = Crypt::encryptString(json_encode($data));
 
+        // Cache the QR data if there's an active session
+        if ($activeSession) {
+            $cacheKey = "qr_data:user:{$user->id}:session:{$activeSession->id}";
+            Cache::put($cacheKey, [
+                'encrypted_data' => $encryptedData,
+                'valid_until' => $validUntil->toIso8601String(),
+            ], 86400); // Cache for 24 hours
+        }
+
+        $this->qrValidUntil = $validUntil->toIso8601String();
+
         return $encryptedData;
+    }
+
+    /**
+     * Manually refresh the QR code (invalidate cache and generate new one)
+     */
+    public function refreshQrCode()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return;
+        }
+
+        // Clear cached QR data
+        $activeSession = Attendance::getActiveSession($user->id);
+        if ($activeSession) {
+            $cacheKey = "qr_data:user:{$user->id}:session:{$activeSession->id}";
+            Cache::forget($cacheKey);
+        }
+
+        // Clear in-memory cache
+        $this->cachedQrCodePng = null;
+
+        // Force re-render
+        $this->dispatch('qr-refreshed');
     }
 
     /**
