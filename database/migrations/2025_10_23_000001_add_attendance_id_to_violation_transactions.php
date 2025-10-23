@@ -27,9 +27,14 @@ return new class extends Migration {
                 }
                 if (!empty($idAttendanceMap)) {
                     DB::transaction(function () use ($idAttendanceMap) {
-                        $ids = array_keys($idAttendanceMap);
-                        $cases = '';
+                        // Sanitize all IDs and attendance values to integers to prevent SQL injection
+                        $sanitizedMap = [];
                         foreach ($idAttendanceMap as $id => $attendanceId) {
+                            $sanitizedMap[(int)$id] = (int)$attendanceId;
+                        }
+                        $ids = array_keys($sanitizedMap);
+                        $cases = '';
+                        foreach ($sanitizedMap as $id => $attendanceId) {
                             $cases .= "WHEN id = {$id} THEN {$attendanceId} ";
                         }
                         $idsList = implode(',', $ids);

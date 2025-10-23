@@ -677,7 +677,12 @@
                             .then(decodedText => {
                                 console.log('✓ QR Code decoded from file');
                                 console.log('Decoded text length:', decodedText.length);
-                                console.log('Decoded text preview:', decodedText.substring(0, 100) + '...');
+                                // Unicode-safe truncate for logging
+                                let preview = decodedText;
+                                if ([...decodedText].length > 100) {
+                                    preview = [...decodedText].slice(0, 100).join('') + '...';
+                                }
+                                console.log('Decoded text preview:', preview);
                                 
                                 // Show success feedback
                                 fileReaderElement.innerHTML = '<div class="flex items-center justify-center h-full text-success"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';

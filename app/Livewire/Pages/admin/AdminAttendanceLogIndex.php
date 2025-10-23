@@ -145,7 +145,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->dispatch('startScanning');
     }
 
-    public function attendanceRecorded($attendance)
+    public function attendanceRecorded()
     {
         // Refresh the attendance list after successful recording
         $this->resetPage();

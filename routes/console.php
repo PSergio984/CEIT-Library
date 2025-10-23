@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\DB;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -48,37 +49,33 @@ Artisan::command('attendance:check-missing-timeouts', function () {
     foreach ($missingSessions as $session) {
         try {
             DB::beginTransaction();
-            try {
-                // Check if violation already created for this session (inside transaction for atomicity)
-                $existingViolation = ViolationTransaction::where('user_id', $session->user_id)
-                    ->where('violation_id', $violation->id)
-                    ->where('attendance_id', $session->id)
-                    ->exists();
+            // Check if violation already created for this session (inside transaction for atomicity)
+            $existingViolation = ViolationTransaction::where('user_id', $session->user_id)
+                ->where('violation_id', $violation->id)
+                ->where('attendance_id', $session->id)
+                ->exists();
 
-                if (!$existingViolation) {
-                    ViolationTransaction::create([
-                        'user_id' => $session->user_id,
-                        'violation_id' => $violation->id,
-                        'attendance_id' => $session->id,
-                        'date_occurred' => $session->time_in->toDateString(),
-                        'severity' => 'Minor',
-                        'remarks' => ViolationTransaction::buildMissingTimeoutRemarks($session->id, $session->time_in),
-                    ]);
+            if (!$existingViolation) {
+                ViolationTransaction::create([
+                    'user_id' => $session->user_id,
+                    'violation_id' => $violation->id,
+                    'attendance_id' => $session->id,
+                    'date_occurred' => $session->time_in->toDateString(),
+                    'severity' => 'Minor',
+                    'remarks' => ViolationTransaction::buildMissingTimeoutRemarks($session->id, $session->time_in),
+                ]);
 
-                    $session->time_out = $session->time_in->copy()->endOfDay();
-                    $session->status = 'completed';
-                    $session->calculateDuration();
-                    $session->save();
+                $session->time_out = $session->time_in->copy()->endOfDay();
+                $session->status = 'completed';
+                $session->calculateDuration();
+                $session->save();
 
-                    DB::commit();
-                    $count++;
-                    $this->line("Created violation for user {$session->user->email} (Session ID: {$session->id})");
-                }
-            } catch (\Exception $txErr) {
-                DB::rollBack();
-                $this->error("Transaction failed for session {$session->id}: {$txErr->getMessage()}");
+                DB::commit();
+                $count++;
+                $this->line("Created violation for user {$session->user->email} (Session ID: {$session->id})");
             }
         } catch (\Exception $e) {
+            DB::rollBack();
             $this->error("Failed to process session {$session->id}: {$e->getMessage()}");
         }
     }
