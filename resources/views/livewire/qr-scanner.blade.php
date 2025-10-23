@@ -46,8 +46,8 @@
                      }
                  }
              }">
-            <div class="bg-base-100 rounded-2xl shadow-2xl p-6 w-full mx-4 max-h-[90vh] overflow-y-auto"
-                 :class="scanMode === null ? 'max-w-md' : 'max-w-4xl'">
+            <div class="bg-base-100 rounded-2xl shadow-2xl p-4 sm:p-6 w-full mx-4 max-h-[90vh] overflow-y-auto"
+                 :class="scanMode === null ? 'max-w-md' : 'max-w-full sm:max-w-4xl'">
                 {{-- Header --}}
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
@@ -142,13 +142,13 @@
                     <div class="relative mb-4">
                         {{-- Decorative scanning frame --}}
                         <div class="absolute inset-0 pointer-events-none z-10">
-                            <div class="absolute top-4 left-4 w-16 h-16 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
-                            <div class="absolute top-4 right-4 w-16 h-16 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
-                            <div class="absolute bottom-4 left-4 w-16 h-16 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
-                            <div class="absolute bottom-4 right-4 w-16 h-16 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+                            <div class="absolute top-2 left-2 sm:top-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+                            <div class="absolute top-2 right-2 sm:top-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+                            <div class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+                            <div class="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
                         </div>
                         
-                        <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner" style="min-height: 500px;"></div>
+                        <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner aspect-video sm:aspect-auto" style="min-height: 300px;"></div>
                     </div>
 
                     {{-- Instructions --}}
@@ -175,8 +175,8 @@
                         Back to selection
                     </button>
 
-                    <div class="border-2 border-dashed border-primary/30 rounded-xl p-8 bg-base-200/50 mb-4">
-                        <div id="file-qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900" style="min-height: 400px;"></div>
+                    <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 sm:p-8 bg-base-200/50 mb-4">
+                        <div id="file-qr-reader" class="w-full rounded-xl overflow-hidden bg-gray-900 aspect-video sm:aspect-auto" style="min-height: 300px;"></div>
                     </div>
 
                     <div class="bg-base-200 border border-base-300 rounded-lg p-4 mb-4">
@@ -290,9 +290,16 @@
                             console.log('Creating Html5Qrcode instance for camera');
                             html5QrCode = new Html5Qrcode("qr-reader");
                         
+                        // Responsive QR box sizing
+                        const isMobile = window.innerWidth < 640;
+                        const qrBoxSize = isMobile ? 
+                            Math.min(250, window.innerWidth - 80) : 
+                            Math.min(350, window.innerWidth - 100);
+                        
                         scannerConfig = {
                             fps: 10,
-                            qrbox: { width: 400, height: 400 }  // Larger scanning area
+                            qrbox: { width: qrBoxSize, height: qrBoxSize },
+                            aspectRatio: isMobile ? 1.0 : 1.777778  // 1:1 for mobile, 16:9 for desktop
                         };
 
                         successCallback = (decodedText) => {

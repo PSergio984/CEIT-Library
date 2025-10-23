@@ -139,11 +139,6 @@
                     Preparing download...
                 </span>
             </button>
-            <button onclick="window.print()"
-                    class="btn btn-outline btn-primary flex-1 gap-2">
-                <x-mary-icon name="o-printer" class="w-5 h-5"/>
-                Print
-            </button>
         </div>
         
         {{-- Refresh QR Button --}}

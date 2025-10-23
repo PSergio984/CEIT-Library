@@ -42,18 +42,15 @@ class TestQrScanner extends Component
         // Generate unique nonce for replay attack protection
         $nonce = Str::random(32);
 
-        // Build user payload
+        // Build serializable user representation for QR payload
+        // Keep it minimal for better QR scanning reliability
         $userPayload = [
             'id' => $user->id,
             'email' => $user->email,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
         ];
 
         $data = [
             'user_id' => $user->id,
-            'email' => $user->email,
-            'name' => $user->first_name . ' ' . $user->last_name,
             'timestamp' => $timestamp,
             'nonce' => $nonce,
             'user' => $userPayload,
@@ -69,9 +66,11 @@ class TestQrScanner extends Component
         // Store for display
         $this->testQrData = substr($encryptedData, 0, 100) . '... (' . strlen($encryptedData) . ' chars total)';
 
-        // Generate QR code
+        // Generate QR code with LOW error correction for simpler, more scannable codes
         try {
-            $qrCodeSvg = QrCode::size(300)->generate($encryptedData);
+            $qrCodeSvg = QrCode::size(300)
+                ->errorCorrection('L')  // Low error correction for simplicity
+                ->generate($encryptedData);
             $this->testQrCode = 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg);
         } catch (\Exception $e) {
             $this->testQrCode = null;

@@ -93,17 +93,14 @@ class AttendanceQr extends Component
         $nonce = Str::random(32);
 
         // Build serializable user representation for QR payload
+        // Keep it minimal for better QR scanning reliability
         $userPayload = [
             'id' => $user->id,
             'email' => $user->email,
-            'first_name' => $user->first_name,
-            'last_name' => $user->last_name,
         ];
 
         $data = [
             'user_id' => $user->id,
-            'email' => $user->email,
-            'name' => $user->first_name . ' ' . $user->last_name,
             'timestamp' => $timestamp,
             'nonce' => $nonce,
             'user' => $userPayload,
@@ -206,9 +203,11 @@ class AttendanceQr extends Component
         // Generate SVG only if not cached
         $attendanceData = $this->generateAttendanceData();
 
-        // Generate QR code as SVG using SIMPLE generation like TestQrScanner
-        // Simple QR codes are smaller, more scannable, and work reliably
-        $svg = QrCode::size(300)->generate($attendanceData);
+        // Generate QR code as SVG with LOW error correction for simpler, more scannable codes
+        // Low error correction = simpler patterns = easier to scan
+        $svg = QrCode::size(300)
+            ->errorCorrection('L')  // Low error correction for simplicity
+            ->generate($attendanceData);
 
         // Always cache the SVG for future renders (24 hours)
         Cache::put($svgCacheKey, $svg, self::QR_CACHE_TTL);
@@ -302,9 +301,10 @@ class AttendanceQr extends Component
             // Generate PNG only if not cached
             $attendanceData = $this->generateAttendanceData();
 
-            // Use SIMPLE generation like SVG for consistency
+            // Use LOW error correction like SVG for consistency and simplicity
             $pngData = QrCode::format('png')
                 ->size(600)  // Larger size for better scanning reliability
+                ->errorCorrection('L')  // Low error correction for simpler patterns
                 ->generate($attendanceData);
 
             // Cache the PNG data with explicit encoding flag to prevent ambiguity
