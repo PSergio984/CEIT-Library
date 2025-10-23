@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -12,7 +13,7 @@ use Mary\Traits\Toast;
 
 class TestQrScanner extends Component
 {
-    use Toast;
+    use Toast, CreatesQrCanonicalMessage;
 
     public $testQrCode = null;
     public $testQrData = null;
@@ -21,29 +22,6 @@ class TestQrScanner extends Component
     public bool $isScanning = false;
 
     protected $listeners = ['startScanning', 'stopScanning', 'handleScanTest', 'handleFileUploadScan'];
-
-    /**
-     * Create a canonical message for HMAC that covers all sensitive fields
-     * Note: Validates user_id, timestamp, and nonce for tamper detection
-     * The user object (containing PII) is also included in the HMAC     */
-    private function createCanonicalMessage(array $data): string
-    {
-        // Sort keys to ensure consistent ordering
-        $fields = [
-            'user_id' => $data['user_id'] ?? '',
-            'timestamp' => $data['timestamp'] ?? '',
-            'nonce' => $data['nonce'] ?? '',
-            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
-        ];
-
-        // Create deterministic string representation
-        return implode('|', [
-            $fields['user_id'],
-            $fields['timestamp'],
-            $fields['nonce'],
-            $fields['user'],
-        ]);
-    }
 
     public function generateTestQr()
     {

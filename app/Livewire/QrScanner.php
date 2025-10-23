@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Attendance;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +16,7 @@ use Mary\Traits\Toast;
 
 class QrScanner extends Component
 {
-    use Toast;
+    use Toast, CreatesQrCanonicalMessage;
 
     private const VALIDATION_EXPIRED = 'expired';
     private const VALIDATION_INVALID = 'invalid';
@@ -29,30 +30,6 @@ class QrScanner extends Component
 
     // Listeners for parent components to control the scanner
     protected $listeners = ['startScanning', 'stopScanning', 'scannerError', 'handleFileUploadScan'];
-
-    /**
-     * Create a canonical message for HMAC that covers all sensitive fields
-     * Note: Excludes email and name as they are PII and not needed for validation
-     * Uses user_id, timestamp, nonce, and user object for tamper detection
-     */
-    private function createCanonicalMessage(array $data): string
-    {
-        // Sort keys to ensure consistent ordering
-        $fields = [
-            'user_id' => $data['user_id'] ?? '',
-            'timestamp' => $data['timestamp'] ?? '',
-            'nonce' => $data['nonce'] ?? '',
-            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
-        ];
-
-        // Create deterministic string representation
-        return implode('|', [
-            $fields['user_id'],
-            $fields['timestamp'],
-            $fields['nonce'],
-            $fields['user'],
-        ]);
-    }
 
     public function startScanning()
     {
