@@ -15,6 +15,7 @@ use Carbon\Carbon;
 
 class AttendanceQr extends Component
 {
+    private const QR_CACHE_TTL = 86400; // 24 hours in seconds
     // Use in-memory cache for the QR code SVG data
     private ?string $cachedQrCodePng = null; // TODO: Rename to cachedQrCodeSvg in future refactor
 
@@ -75,9 +76,13 @@ class AttendanceQr extends Component
                 && is_string($cachedData['encrypted_data'])
                 && is_string($cachedData['created_at'])
             ) {
-                // Update validity timestamp for display
-                $this->qrValidUntil = Carbon::parse($cachedData['valid_until'])->toIso8601String();
-                return $cachedData['encrypted_data'];
+                $validUntilCarbon = Carbon::parse($cachedData['valid_until']);
+                if ($validUntilCarbon->isFuture()) {
+                    // Update validity timestamp for display
+                    $this->qrValidUntil = $validUntilCarbon->toIso8601String();
+                    return $cachedData['encrypted_data'];
+                }
+                // If expired, fall through to regenerate
             }
         }
 
@@ -124,7 +129,7 @@ class AttendanceQr extends Component
                 'encrypted_data' => $encryptedData,
                 'valid_until' => $validUntil->toIso8601String(),
                 'created_at' => $createdAt,
-            ], 86400); // Cache for 24 hours
+            ], self::QR_CACHE_TTL); // Cache for 24 hours
         }
 
         $this->qrValidUntil = $validUntil->toIso8601String();
@@ -142,13 +147,15 @@ class AttendanceQr extends Component
             return;
         }
 
-        // Clear cached QR data and PNG cache
+        // Clear all cached QR data (data, PNG, and SVG)
         $activeSession = Attendance::getActiveSession($user->id);
         if ($activeSession) {
             $cacheKey = "qr_data:user:{$user->id}:session:{$activeSession->id}";
             $pngCacheKey = "qr_png:user:{$user->id}:session:{$activeSession->id}";
+            $svgCacheKey = "qr_svg:user:{$user->id}:session:{$activeSession->id}";
             Cache::forget($cacheKey);
             Cache::forget($pngCacheKey);
+            Cache::forget($svgCacheKey);
         }
 
         // Clear in-memory cache
@@ -171,14 +178,36 @@ class AttendanceQr extends Component
             return $this->cachedQrCodePng;
         }
 
-        // Use CACHED encrypted attendance data (don't regenerate)
+        $user = Auth::user();
+        if (!$user) {
+            return '';
+        }
+
+        // Check for active session to get SVG from cache
+        $activeSession = Attendance::getActiveSession($user->id);
+        $svgCacheKey = $activeSession ? "qr_svg:user:{$user->id}:session:{$activeSession->id}" : null;
+        $cachedSvg = $svgCacheKey ? Cache::get($svgCacheKey) : null;
+
+        if ($cachedSvg && is_string($cachedSvg)) {
+            // Use cached SVG - no regeneration!
+            $this->cachedQrCodePng = $cachedSvg;
+            return $cachedSvg;
+        }
+
+        // Generate SVG only if not cached
         $attendanceData = $this->generateAttendanceData();
 
         // Generate QR code as SVG using SIMPLE generation like TestQrScanner
         // Simple QR codes are smaller, more scannable, and work reliably
-        $this->cachedQrCodePng = QrCode::size(300)->generate($attendanceData);
+        $svg = QrCode::size(300)->generate($attendanceData);
 
-        return $this->cachedQrCodePng;
+        // Cache the SVG for future renders (24 hours)
+        if ($svgCacheKey) {
+            Cache::put($svgCacheKey, $svg, self::QR_CACHE_TTL);
+        }
+
+        $this->cachedQrCodePng = $svg;
+        return $svg;
     }
 
     #[Computed]
@@ -187,14 +216,13 @@ class AttendanceQr extends Component
         // Delegate to centralized generator
         $svgData = $this->generateQrCodeSvg();
 
-        // Clean up SVG for proper data URI encoding
-        $svgData = trim($svgData);
-        // Remove XML declaration if present for better browser compatibility
-        $svgData = preg_replace('/<\?xml.*?\?>/', '', $svgData);
-        $svgData = trim($svgData);
+        if (empty($svgData)) {
+            return '';
+        }
 
-        // Use UTF-8 encoding instead of base64 for better compatibility
-        return 'data:image/svg+xml;charset=utf-8,' . rawurlencode($svgData);
+        // Use base64 encoding for reliable SVG data URI
+        // This avoids UTF-8 encoding issues with rawurlencode
+        return 'data:image/svg+xml;base64,' . base64_encode($svgData);
     }
 
     /**
@@ -236,7 +264,7 @@ class AttendanceQr extends Component
         $cachedData = $cacheKey ? Cache::get($cacheKey) : null;
 
         // Get creation timestamp from cache, or use current time as fallback
-        $createdAt = 'now';
+        $createdAt = Carbon::now()->format('Y-m-d-His');
         if (is_array($cachedData) && isset($cachedData['created_at'])) {
             $createdAt = $cachedData['created_at'];
         }
@@ -252,15 +280,14 @@ class AttendanceQr extends Component
             // Generate PNG only if not cached
             $attendanceData = $this->generateAttendanceData();
 
+            // Use SIMPLE generation like SVG for consistency
             $pngData = QrCode::format('png')
                 ->size(600)  // Larger size for better scanning reliability
-                ->errorCorrection('H')  // High error correction (30% recovery)
-                ->margin(4)  // Adequate margin for scanning (4 modules recommended)
                 ->generate($attendanceData);
 
             // Cache the PNG data for future downloads (24 hours)
             if ($pngCacheKey) {
-                Cache::put($pngCacheKey, $pngData, 86400);
+                Cache::put($pngCacheKey, $pngData, self::QR_CACHE_TTL);
             }
         }
 
