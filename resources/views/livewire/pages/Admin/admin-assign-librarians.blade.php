@@ -8,7 +8,6 @@
 
             <div class="flex flex-col space-y-6 lg:h-[calc(100vh-100px)]">
 
-                {{-- Create a Batch Card --}}
                 <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-shrink-0">
                     <h2 class="text-white text-xl font-semibold mb-4">Create a Batch</h2>
                     <div class="space-y-4">
@@ -19,7 +18,6 @@
                     </div>
                 </div>
 
-                {{-- Available Batches (Unassigned) Card --}}
                 <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-grow flex flex-col min-h-0">
                     <h2 class="text-white text-xl font-semibold mb-4">Available Batches (Unassigned)</h2>
                     <div class="overflow-y-auto flex-1 rounded-lg">
@@ -32,13 +30,11 @@
                                 </tr>
                             </thead>
                             <tbody class="text-white text-sm">
-                                {{-- Accessing component property $availableBatches --}}
                                 @forelse($availableBatches as $batch)
                                     <tr
                                         class="border-b border-slate-600 hover:bg-slate-600/30 transition cursor-pointer">
                                         <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
                                         <td class="py-3 px-3">
-                                            {{-- Joining members for display --}}
                                             <div class="text-sm text-slate-300">
                                                 {{ implode(', ', $batch['members']) }}
                                             </div>
@@ -67,7 +63,6 @@
                     </div>
                 </div>
 
-                {{-- Assigned Batches Card --}}
                 <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-grow flex flex-col min-h-0">
                     <h2 class="text-white text-xl font-semibold mb-4">Assigned Batches</h2>
                     <div class="overflow-y-auto flex-1 rounded-lg">
@@ -81,12 +76,10 @@
                                 </tr>
                             </thead>
                             <tbody class="text-white text-sm">
-                                {{-- Accessing component property $assignedBatches --}}
                                 @forelse($assignedBatches as $batch)
                                     <tr class="border-b border-slate-600 hover:bg-slate-600/30 transition">
                                         <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
                                         <td class="py-3 px-3">
-                                            {{-- Members is already a <br> separated string --}}
                                             <div class="text-sm text-slate-300">{!! $batch['members'] !!}</div>
                                         </td>
                                         <td class="py-3 px-3 text-xs text-blue-300">{{ $batch['date_assigned'] }}
@@ -116,7 +109,6 @@
                 </div>
             </div>
 
-            {{-- All Batches Card --}}
             <div class="lg:col-span-2">
                 <div
                     class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex flex-col lg:h-[calc(100vh-100px)]">
@@ -182,7 +174,6 @@
                                 </tr>
                             </thead>
                             <tbody class="text-white text-sm">
-                                {{-- Accessing component property $allBatches --}}
                                 @forelse($allBatches as $index => $batch)
                                     <tr class="border-b border-slate-600 hover:bg-slate-600/30 transition">
                                         <td class="py-3 px-3">{{ $index + 1 }}</td>
@@ -231,7 +222,6 @@
         </div>
     </div>
 
-    {{-- Create Modal --}}
     @if ($showCreateModal)
         <div class="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-70 flex items-center justify-center p-4">
             <div
@@ -263,7 +253,6 @@
                                 </div>
                             @endif
 
-                            {{-- Using the computed property $availableStudents directly --}}
                             @if ($this->availableStudents->isEmpty())
                                 <div class="bg-orange-900/50 border border-orange-600 rounded-lg p-4 mb-3">
                                     <p class="text-orange-300 text-sm font-medium">ℹ️ No available students</p>
@@ -274,7 +263,6 @@
 
                             <div
                                 class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3">
-                                {{-- Using the computed property $availableStudents directly --}}
                                 @forelse($this->availableStudents as $student)
                                     @php
                                         $isDisabled =
@@ -304,7 +292,7 @@
                 </div>
 
                 <div class="bg-slate-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2 rounded-b-lg">
-                    <button type="button" wire:click="createBatch" {{-- Used the computed property to disable the button --}}
+                    <button type="button" wire:click="createBatch"
                         {{ $this->availableStudents->isEmpty() || count($selectedStudents) === 0 ? 'disabled' : '' }}
                         class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                         Create Batch
@@ -318,7 +306,6 @@
         </div>
     @endif
 
-    {{-- Edit Modal --}}
     @if ($showEditModal)
         <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog"
             aria-modal="true">
@@ -355,21 +342,15 @@
 
                                 <div
                                     class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3">
-                                    {{-- Use the computed property to get the list of available students for editing --}}
                                     @forelse($this->availableStudentsForEdit as $student)
                                         @php
                                             $isSelected = in_array($student->id, $editingSelectedStudents);
-                                            // Determine if the checkbox should be disabled
                                             $shouldDisable = count($editingSelectedStudents) >= 5 && !$isSelected;
-
-                                            // Check if the student is a current member of the batch being edited
                                             $isCurrentBatchMember = collect(
                                                 $this->groupedLibrarians->get($editingBatchNo),
                                             )
                                                 ->pluck('user_id')
                                                 ->contains($student->id);
-
-                                            // Determine the background style if they are a current member and selected
                                             $memberClass =
                                                 $isCurrentBatchMember && $isSelected
                                                     ? 'bg-blue-900/20 border border-blue-600/30'
@@ -422,7 +403,6 @@
                                     <span class="text-red-400 text-xs">{{ $message }}</span>
                                 @enderror
 
-                                {{-- The complex date conflict logic that was inline PHP is now simplified/moved --}}
                                 @if ($editingDateStart)
                                     @if ($this->conflictingBatch)
                                         <div class="mt-2 bg-red-900/50 border border-red-600 rounded-lg p-3">

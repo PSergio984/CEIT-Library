@@ -285,7 +285,8 @@ class AdminAssignLibrarians extends AdminComponent
             'editingSelectedStudents.min' => 'A batch must have at least 1 student.',
         ]);
 
-        DB::transaction(function () {
+        try {
+            DB::transaction(function () {
             $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
             $currentBatchDate = $currentBatch ? $currentBatch->date_start : null;
 
@@ -347,9 +348,6 @@ class AdminAssignLibrarians extends AdminComponent
                 'status' => 'active',
             ]);
         });
-
-        try {
-            DB::transaction(fn() => null);
         } catch (\Exception $e) {
             $this->error($e->getMessage());
             return;
@@ -370,9 +368,7 @@ class AdminAssignLibrarians extends AdminComponent
             'allBatches' => $this->allBatches,
             'availableStudents' => $this->availableStudents,
             'studentBatchAssignments' => $this->studentBatchAssignments,
-            // ConflictingBatch is made available for blade conditional rendering
             'conflictingBatch' => $this->conflictingBatch,
-            // isDateChanging is made available for blade conditional rendering
             'isDateChanging' => $this->isDateChanging
         ]);
     }

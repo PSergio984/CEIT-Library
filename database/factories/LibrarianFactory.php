@@ -7,7 +7,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-use function PHPUnit\Framework\isNull;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Librarian>
