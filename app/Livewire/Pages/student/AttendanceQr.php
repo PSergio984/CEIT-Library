@@ -295,9 +295,9 @@ class AttendanceQr extends Component
 
         $cachedPng = Cache::get($pngCacheKey);
 
-        if ($cachedPng && is_string($cachedPng)) {
-            // Use cached PNG data - no regeneration!
-            $pngData = $cachedPng;
+        if (is_array($cachedPng) && isset($cachedPng['data']) && isset($cachedPng['encoded'])) {
+            // Use cached PNG data with explicit encoding flag
+            $pngData = $cachedPng['encoded'] ? base64_decode($cachedPng['data']) : $cachedPng['data'];
         } else {
             // Generate PNG only if not cached
             $attendanceData = $this->generateAttendanceData();
@@ -307,13 +307,11 @@ class AttendanceQr extends Component
                 ->size(600)  // Larger size for better scanning reliability
                 ->generate($attendanceData);
 
-            // Cache the PNG data as base64 to prevent UTF-8 encoding issues
-            Cache::put($pngCacheKey, base64_encode($pngData), self::QR_CACHE_TTL);
-        }
-
-        // Decode base64 if it's encoded
-        if (base64_decode($pngData, true) !== false) {
-            $pngData = base64_decode($pngData);
+            // Cache the PNG data with explicit encoding flag to prevent ambiguity
+            Cache::put($pngCacheKey, [
+                'data' => base64_encode($pngData),
+                'encoded' => true,
+            ], self::QR_CACHE_TTL);
         }
 
         // Use the original creation timestamp for consistent filename
