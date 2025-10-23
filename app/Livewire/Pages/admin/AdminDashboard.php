@@ -24,7 +24,9 @@ class AdminDashboard extends AdminComponent
             'total_copies' => Inventory::count(),
             'available_copies' => Inventory::where('status', 'Available')->count(),
             'active_librarians' => Librarian::active()->count(),
-            'active_sessions' => Attendance::where('status', 'active')->count(),
+            'active_sessions' => Attendance::where('status', 'active')
+                ->whereDate('time_in', today())
+                ->count(),
             'active_borrows' => BorrowTransaction::where('status', 'started')
                 ->whereDate('time_in', today())
                 ->count(),

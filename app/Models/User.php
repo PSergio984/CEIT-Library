@@ -157,6 +157,10 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ViolationTransaction::class);
     }
 
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
 
     // Check if user is currently in the library
     public function isInLibrary()

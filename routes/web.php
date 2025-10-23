@@ -6,6 +6,7 @@ use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
+use App\Livewire\Pages\Admin\AdminViolationLogIndex;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
 use App\Livewire\Pages\Student\CreditScoreHistory;
@@ -52,6 +53,7 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
         Route::get('/rule-and-regulation',  AdminRuleAndRegulationIndex::class)->name('rules-and-regulations.index');
         Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');
         Route::get('/attendance', AdminAttendanceLogIndex::class)->name('attendance-logs');
+        Route::get('/violation-logs', AdminViolationLogIndex::class)->name('violation-logs');
     });
 
 Route::view('profile', 'profile')
