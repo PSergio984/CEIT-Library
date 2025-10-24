@@ -231,7 +231,7 @@
                     <div class="space-y-2">
                         @forelse($selectedStudent->borrowTransactions as $transaction)
                             @php
-                                $dueDate = $transaction->time_in?->addDays(7);
+                                $dueDate = $transaction->time_in?->copy()->addDays(7);
                                 $isOverdue = $dueDate && $dueDate->isPast();
                                 $isDueSoon = $dueDate && $dueDate->diffInDays(now()) <= 2;
                             @endphp

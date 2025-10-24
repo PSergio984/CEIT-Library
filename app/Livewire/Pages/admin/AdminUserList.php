@@ -113,7 +113,7 @@ use WithPagination, Toast;
 
     public function getTotalStudentsProperty()
     {
-        return User::where('is_admin', false)->count();
+        return $this->getStudentsQuery()->count();
     }
 
     public function getTotalBorrowersProperty()
@@ -158,7 +158,6 @@ use WithPagination, Toast;
         ]);
 
         $user = User::findOrFail($this->studentId);
-        Log::info('Updating status to: ' . $this->accountStatus);
         $user->update([
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
@@ -167,7 +166,6 @@ use WithPagination, Toast;
             'account_status' => $this->accountStatus,
             'is_admin' => $this->isAdmin,
         ]);
-        Log::info('After update: ' . $user->fresh()->account_status);
 
         $this->showEditModal = false;
         $this->success('Student updated successfully!');
