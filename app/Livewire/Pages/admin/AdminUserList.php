@@ -7,10 +7,12 @@ use Livewire\WithPagination;
 use App\Models\User;
 use Log;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
 
+#[Title('Admin User List')]
 class AdminUserList extends AdminComponent
 {
-use WithPagination, Toast;
+    use WithPagination, Toast;
 
     public $perPage = 20;
     public $search = '';
@@ -33,7 +35,6 @@ use WithPagination, Toast;
 
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
-        ['key' => 'student_number', 'label' => 'Student No.', 'sortable' => true, 'class' => 'w-32'],
         ['key' => 'name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-48'],
         ['key' => 'email', 'label' => 'Email', 'sortable' => true, 'class' => 'min-w-48'],
         ['key' => 'credit_score', 'label' => 'Credit Score', 'sortable' => true, 'class' => 'w-32'],

@@ -206,10 +206,6 @@
                             {{ $selectedStudent->last_name }}</div>
                     </div>
                     <div>
-                        <div class="text-sm text-base-content/60 mb-1">Student Number</div>
-                        <div class="font-mono">23-XX{{ str_pad($selectedStudent->id, 2, '0', STR_PAD_LEFT) }}</div>
-                    </div>
-                    <div>
                         <div class="text-sm text-base-content/60 mb-1">Email</div>
                         <div>{{ $selectedStudent->email }}</div>
                     </div>
@@ -258,8 +254,10 @@
                 </div>
 
                 <x-slot:actions>
-                    <x-mary-button label="View Full Transaction History" class="btn-primary btn-block" />
-                    <x-mary-button label="Close" @click="$wire.closeModal()" />
+                    <div class="flex flex-col sm:flex-row gap-2 w-full">
+                            <x-mary-button label="Transaction History" class="btn-primary flex-1 min-w-[150px] max-w-xs mx-auto" icon="o-clock" />
+                        <x-mary-button label="Close" @click="$wire.closeModal()" class="flex-1 min-w-[120px] max-w-xs mx-auto" icon="o-x-mark" variant="outline" />
+                    </div>
                 </x-slot:actions>
             </div>
         </x-mary-modal>
