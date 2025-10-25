@@ -18,7 +18,7 @@
                             ['id' => 'Minor', 'name' => 'Minor'],
                             ['id' => 'Major', 'name' => 'Major'],
                             ['id' => 'Critical', 'name' => 'Critical']
-                        ]" placeholder="Filter by severity" icon="o-funnel"/>
+                        ]" icon="o-funnel"/>
                     </div>
                     <div>
                         <x-mary-datetime label="Filter by Date" wire:model.live="dateFilter" type="date"
@@ -78,8 +78,7 @@
                             </div>
 
                             <div class="card-actions justify-end mt-4">
-                                <x-mary-button wire:click="undoTransaction({{ $transaction->id }})"
-                                               wire:confirm="Are you sure you want to undo this violation? The penalty will be restored to the user's credit score."
+                                <x-mary-button wire:click="confirmUndo({{ $transaction->id }})"
                                                class="btn-error btn-sm" icon="o-arrow-uturn-left" spinner>
                                     Undo
                                 </x-mary-button>
@@ -96,7 +95,7 @@
             {{-- Desktop Table View --}}
             <div class="hidden lg:block overflow-x-auto">
                 <x-mary-table :headers="$transactionHeaders" :rows="$this->violationTransactions"
-                              :sort-by="$sortBy" with-pagination link="transactionsPage"
+                              :sort-by="$sortBy" with-pagination
                               :per-page="$perPageTransaction" :per-page-values="[10, 20, 50]" striped
                               row-class="hover:bg-base-200" header-class="text-base-content bg-base-200">
                     @scope('cell_user.name', $transaction)
@@ -137,8 +136,7 @@
                     @endscope
 
                     @scope('actions', $transaction)
-                    <x-mary-button wire:click="undoTransaction({{ $transaction->id }})"
-                                   wire:confirm="Are you sure you want to undo this violation? The penalty will be restored to the user's credit score."
+                    <x-mary-button wire:click="confirmUndo({{ $transaction->id }})"
                                    class="btn-error btn-sm" icon="o-arrow-uturn-left" spinner
                                    tooltip-left="Undo Violation"/>
                     @endscope
@@ -157,4 +155,19 @@
             @endif
         </div>
     </x-mary-tab>
+
+    {{-- Undo Confirmation Modal --}}
+    <x-mary-modal wire:model="confirmUndoModal" position="center" centered>
+        <div class="p-4">
+            <h3 class="text-lg font-semibold mb-2">Undo Violation Transaction</h3>
+            <p class="text-sm text-base-content/70">
+                Are you sure you want to undo this violation transaction? This action cannot be undone.
+            </p>
+            <div class="flex justify-end gap-2 mt-4">
+                <x-mary-button type="button" label="Cancel" @click="$wire.confirmUndoModal = false"/>
+                <x-mary-button type="button" class="btn-error" label="Undo" wire:click="undoConfirmed" spinner/>
+            </div>
+        </div>
+    </x-mary-modal>
+
 </div>

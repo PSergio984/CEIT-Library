@@ -15,6 +15,11 @@ class ActiveUsersTab extends AdminComponent
 {
     use WithPagination, Toast;
 
+    // Refresh the table when a violation is recorded on ViolationTransactionsTab
+    protected $listeners = [
+        'refreshActiveUsers' => '$refresh',
+    ];
+
     public $search = '';
     public $perPage = 10;
 
@@ -25,6 +30,9 @@ class ActiveUsersTab extends AdminComponent
     public $violationRemarks = '';
     public $searchActiveUsers = '';
     public $perPageActiveUsers = 10;
+
+    public $confirmForgotTimeoutModal = false;
+    public $attendanceToDeclare = null;
 
     public array $activeUsersHeaders = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-20'],
@@ -51,11 +59,19 @@ class ActiveUsersTab extends AdminComponent
             ->whereNull('time_out')
             ->whereDate('time_in', today())
             ->when($search, function ($query) use ($search) {
-                $query->whereHas('user', function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                        ->orWhere('last_name', 'like', "%{$search}%");
+                // Split the search into words
+                $terms = preg_split('/\s+/', $search);
+
+                $query->whereHas('user', function ($q) use ($terms) {
+                    foreach ($terms as $term) {
+                        $q->where(function ($sub) use ($term) {
+                            $sub->where('first_name', 'like', "%{$term}%")
+                                ->orWhere('last_name', 'like', "%{$term}%");
+                        });
+                    }
                 });
             });
+
 
         if (isset($this->sortBy['column']) && isset($this->sortBy['direction'])) {
             $query->orderBy($this->sortBy['column'], $this->sortBy['direction']);
@@ -99,7 +115,7 @@ class ActiveUsersTab extends AdminComponent
         $this->validate([
             'selectedUserForViolation' => 'required|exists:users,id',
             'selectedViolationId'      => 'required|exists:violations,id',
-            'violationSeverity'        => 'required|in:Minor,Moderate,Major,Critical',
+            'violationSeverity'        => 'required|in:Minor,Major,Critical',
             'violationRemarks'         => 'nullable|string|max:500',
         ]);
 
@@ -117,12 +133,78 @@ class ActiveUsersTab extends AdminComponent
             $user = User::find($this->selectedUserForViolation);
             $violation = Violation::find($this->selectedViolationId);
 
+            // refresh table and reset pagination after change
+            $this->dispatch('refreshViolationTransactionsTab');
+            $this->resetPage('activeUsersPage');
+
             $this->success("Violation '{$violation->name}' recorded for {$user->first_name} {$user->last_name}. Credit score updated to {$user->credit_score}.");
-            $this->openViolationDrawer = false;
+            $this->ViolationDrawer = false;
+
             $this->reset(['selectedUserForViolation', 'selectedViolationId', 'violationSeverity', 'violationRemarks']);
         } catch (\Exception $e) {
             $this->error('An error occurred: ' . $e->getMessage());
         }
+    }
+
+    public function declareForgotTimeout($attendanceId)
+    {
+        try {
+            DB::transaction(function () use ($attendanceId) {
+                $attendance = Attendance::lockForUpdate()->find($attendanceId);
+
+                if (!$attendance || !$attendance->isActive()) {
+                    throw new \Exception('Attendance not found or not active.');
+                }
+
+                // Close attendance now
+                $attendance->time_out = now();
+                $attendance->duration_minutes = 0;
+                $attendance->status = 'completed';
+                $attendance->save();
+
+                // Create or find the "Forgot to time out" violation (uses config penalty if missing)
+                $defaultPenalty = (int)config('attendance.forgot_timeout_penalty', 5);
+                $violation = Violation::firstOrCreate(
+                    ['name' => 'Forgot to time out'],
+                    ['description' => 'Marked by admin as forgot to time out', 'penalty_score' => $defaultPenalty]
+                );
+
+                // Record violation transaction for audit
+                ViolationTransaction::create([
+                    'user_id'       => $attendance->user_id,
+                    'violation_id'  => $violation->id,
+                    'severity'      => 'Minor',
+                    'remarks'       => 'Declared by admin: forgot to time out',
+                    'date_occurred' => now(),
+                ]);
+
+            });
+
+            $this->dispatch('refreshViolationTransactionsTab');
+            $this->success('Attendance closed and penalty applied.');
+        } catch (\Exception $e) {
+            $this->error('Failed to declare forgot-timeout: ' . $e->getMessage());
+        }
+    }
+
+    public function openDeclareForgotTimeoutModal($attendanceId)
+    {
+        $this->attendanceToDeclare = $attendanceId;
+        $this->confirmForgotTimeoutModal = true;
+    }
+
+    public function confirmDeclareForgotTimeout()
+    {
+        if (!$this->attendanceToDeclare) {
+            $this->error('No attendance selected.');
+            return;
+        }
+
+        $attendanceId = $this->attendanceToDeclare;
+        $this->confirmForgotTimeoutModal = false;
+        $this->attendanceToDeclare = null;
+
+        $this->declareForgotTimeout($attendanceId);
     }
 
     public function render()

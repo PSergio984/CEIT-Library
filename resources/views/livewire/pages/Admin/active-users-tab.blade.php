@@ -7,13 +7,16 @@
 
             <div class="bg-base-200 p-4 rounded-lg mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-mary-input wire:model.live="searchActiveUsers" placeholder="Search users..."
-                                  icon="o-magnifying-glass" clearable/>
-
-                    <x-mary-button wire:click="clearActiveUsersFilters" class="btn-outline btn-sm"
-                                   icon="o-x-mark">
-                        Clear Filters
-                    </x-mary-button>
+                    <div>
+                        <x-mary-input label="search" wire:model.live="searchActiveUsers" placeholder="Search users..."
+                                      icon="o-magnifying-glass" clearable/>
+                    </div>
+                    <div class="flex justify-end items-end">
+                        <x-mary-button wire:click="clearActiveUsersFilters" class="btn-outline btn-sm"
+                                       icon="o-x-mark">
+                            Clear Filters
+                        </x-mary-button>
+                    </div>
                 </div>
             </div>
 
@@ -37,7 +40,8 @@
                                 </div>
                                 <div>
                                     <span class="font-semibold">Credit Score:</span>
-                                    <span class="badge badge-lg {{ $attendance->user->credit_score >= 70 ? 'badge-success' : ($attendance->user->credit_score >= 40 ? 'badge-warning' : 'badge-error') }}">
+                                    <span
+                                        class="badge badge-lg {{ $attendance->user->credit_score >= 70 ? 'badge-success' : ($attendance->user->credit_score >= 40 ? 'badge-warning' : 'badge-error') }}">
                             {{ $attendance->user->credit_score }}/100
                         </span>
                                 </div>
@@ -51,6 +55,15 @@
                                 <x-mary-button wire:click="openViolationDrawer({{ $attendance->user->id }})"
                                                class="btn-error btn-sm" icon="o-exclamation-triangle">
                                     Record Violation
+                                </x-mary-button>
+
+                                <x-mary-button
+                                    wire:click="openDeclareForgotTimeoutModal({{ $attendance->id }})"
+                                    class="btn-warning btn-sm"
+                                    icon="o-clock"
+                                    tooltip-left="Declare forgot timeout"
+                                >
+                                    Declare Forgot Timeout
                                 </x-mary-button>
                             </div>
                         </div>
@@ -70,7 +83,8 @@
                     @endscope
 
                     @scope('cell_user.credit_score', $attendance)
-                    <div class="badge badge-lg {{ $attendance->user->credit_score >= 70 ? 'badge-success' : ($attendance->user->credit_score >= 40 ? 'badge-warning' : 'badge-error') }}">
+                    <div
+                        class="badge badge-lg {{ $attendance->user->credit_score >= 70 ? 'badge-success' : ($attendance->user->credit_score >= 40 ? 'badge-warning' : 'badge-error') }}">
                         {{ $attendance->user->credit_score }}/100
                     </div>
                     @endscope
@@ -82,18 +96,31 @@
                     @endscope
 
                     @scope('actions', $attendance)
-                    <x-mary-button wire:click="openViolationDrawer({{ $attendance->user->id }})"
-                                   class="btn-error btn-sm" icon="o-exclamation-triangle"
-                                   tooltip-left="Record Violation">
-                        Violation
-                    </x-mary-button>
+                    <div class="flex gap-2">
+                        <x-mary-button wire:click="openViolationDrawer({{ $attendance->user->id }})"
+                                       class="btn-error btn-sm" icon="o-exclamation-triangle"
+                                       spinner
+                                       tooltip-left="Record Violation">
+                            Violation
+                        </x-mary-button>
+
+                        <x-mary-button
+                            wire:click="openDeclareForgotTimeoutModal({{ $attendance->id }})"
+                            wire:loading.attr="disabled"
+                            class="btn-warning btn-sm"
+                            icon="o-clock"
+                            spinner
+                            tooltip-left="Declare forgot timeout"
+                        >
+                            Declare Forgot Timeout
+                        </x-mary-button>
+                    </div>
                     @endscope>
                 </x-mary-table>
             </div>
 
 
-
-        @if ($this->activeUsers->isEmpty())
+            @if ($this->activeUsers->isEmpty())
                 <div class="text-center py-12">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30"
                          fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -117,8 +144,10 @@
                 @endphp
 
                 <div class="alert alert-info mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                         class="stroke-current shrink-0 w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <div>
                         <div class="font-bold">{{ $user->first_name }} {{ $user->last_name }}</div>
@@ -152,11 +181,25 @@
                     />
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <x-mary-button type="button" label="Cancel" @click="$wire.openViolationDrawer = false"/>
-                        <x-mary-button type="submit" class="btn-error" label="Record Violation" spinner />
+                        <x-mary-button type="button" label="Cancel" @click="$wire.ViolationDrawer = false"/>
+                        <x-mary-button type="submit" class="btn-error" label="Record Violation" spinner/>
                     </div>
                 </x-mary-form>
             @endif
         </div>
     </x-mary-drawer>
+
+    {{-- Confirmation Modal for Forgot Timeout --}}
+    <x-mary-modal wire:model="confirmForgotTimeoutModal" title="Confirm Declare Forgot Timeout">
+        <div class="p-4">
+            <p>Declare this user as forgot-to-timeout and apply the penalty?</p>
+
+            <div class="flex justify-end gap-2 mt-4">
+                <x-mary-button type="button" label="Cancel" class="btn-outline" @click="$wire.confirmForgotTimeoutModal = false"/>
+                <x-mary-button type="button" class="btn-warning" wire:click="confirmDeclareForgotTimeout" spinner>
+                    Confirm
+                </x-mary-button>
+            </div>
+        </div>
+    </x-mary-modal>
 </div>

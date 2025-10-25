@@ -10,11 +10,13 @@ use App\Models\ViolationTransaction;
 class ViolationTransactionsTab extends AdminComponent
 {
     use WithPagination, Toast;
-
+    protected $listeners = ['refreshViolationTransactionsTab' => 'getViolationTransactionsProperty'];
     public $searchTransaction = '';
     public $perPageTransaction = 10;
     public $severityFilter = '';
     public $dateFilter = '';
+    public $confirmUndoModal = false;
+    public $editingId = null;
 
     public array $sortBy = ['column' => 'date_occurred', 'direction' => 'desc'];
 
@@ -71,11 +73,18 @@ class ViolationTransactionsTab extends AdminComponent
         return $query->paginate($this->perPageTransaction, ['*'], 'transactionsPage');
     }
 
-    public function undoTransaction(int $id)
-    {
-        $transaction = ViolationTransaction::findOrFail($id);
-        $transaction->delete();
 
+    public function confirmUndo(int $id)
+    {
+        $this->editingId = $id;
+        $this->confirmUndoModal = true;
+    }
+
+    public function undoConfirmed()
+    {
+        $transaction = ViolationTransaction::findOrFail($this->editingId);
+        $transaction->delete();
+        $this->confirmUndoModal = false;
         $this->success("Violation for {$transaction->user->name} undone.");
     }
 
