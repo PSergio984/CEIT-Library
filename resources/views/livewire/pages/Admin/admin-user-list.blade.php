@@ -198,7 +198,7 @@
 
     @if ($showStudentModal && $selectedStudent)
         <x-mary-modal wire:model="showStudentModal" title="Student Details" class="backdrop-blur">
-            <div class="space-y-6">
+            <div class="space-y-6 pb-28 sm:pb-0">
                 <div class="grid grid-cols-2 gap-6">
                     <div>
                         <div class="text-sm text-base-content/60 mb-1">Student Name</div>
@@ -254,9 +254,11 @@
                 </div>
 
                 <x-slot:actions>
-                    <div class="flex flex-col sm:flex-row gap-2 w-full">
-                            <x-mary-button label="Transaction History" class="btn-primary flex-1 min-w-[150px] max-w-xs mx-auto" icon="o-clock" />
-                        <x-mary-button label="Close" @click="$wire.closeModal()" class="flex-1 min-w-[120px] max-w-xs mx-auto" icon="o-x-mark" variant="outline" />
+                    <div class="sticky bottom-0 left-0 right-0 px-2 pb-4 bg-white/90 sm:bg-transparent z-50">
+                        <div class="flex flex-row gap-2 w-full">
+                            <x-mary-button label="Close" @click="$wire.closeModal()" class="w-1/2 sm:w-auto" icon="o-x-mark" variant="outline" />
+                            <x-mary-button label="Transaction History" class="btn-primary w-1/2 sm:w-auto" icon="o-clock" />
+                        </div>
                     </div>
                 </x-slot:actions>
             </div>
