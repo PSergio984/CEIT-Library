@@ -6,6 +6,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use App\Models\ViolationTransaction;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class ViolationTransactionsTab extends AdminComponent
 {
@@ -90,10 +91,16 @@ class ViolationTransactionsTab extends AdminComponent
 
     public function undoConfirmed()
     {
-        $transaction = ViolationTransaction::findOrFail($this->editingId);
-        $transaction->delete();
-        $this->confirmUndoModal = false;
-        $this->success("Violation for {$transaction->user->name} undone.");
+        try {
+            $transaction = ViolationTransaction::findOrFail($this->editingId);
+            $transaction->delete();
+            $this->success("Violation for {$transaction->user->name} undone.");
+        } catch (ModelNotFoundException $e) {
+            $this->error('Violation transaction not found or already undone.');
+        } finally {
+            $this->confirmUndoModal = false;
+            $this->resetPage('transactionsPage');
+        }
     }
 
     public function clearTransactionFilters()
