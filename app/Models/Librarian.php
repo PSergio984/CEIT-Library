@@ -51,6 +51,7 @@ class Librarian extends Model
     protected $casts = [
         'expires_at' => 'datetime',
         'last_login_at' => 'datetime',
+        'date_start' => 'date',
     ];
 
     // Relationship with the student user account

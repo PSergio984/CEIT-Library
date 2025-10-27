@@ -5,7 +5,6 @@ namespace App\Livewire\Pages\Student;
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use Auth;
-use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
@@ -111,41 +110,46 @@ class AcademicPaperIndex extends Component
     }
 
     public function requestQr(int $inventoryId): void
-{
-    // 1. grab the copy (inventory row)
-    $copy = Inventory::with('academicPaper')
-                     ->where('id', $inventoryId)
-                     ->first();
+    {
+        // 1. grab the copy (inventory row)
+        $copy = Inventory::with('academicPaper')->find($inventoryId);
 
-    if (!$copy) {
-        session()->flash('error', 'Copy not found.');
-        return;
+        if (!$copy) {
+            session()->flash('error', 'Copy not found.');
+            return;
+        }
+
+        // 2. must be available
+        if (!$copy->isAvailable()) {
+            session()->flash('error', 'This copy is not available.');
+            return;
+        }
+
+        // Store the entire copy object, not just the ID
+        $this->selectedCopy = $copy;
+
+        // 3) Build signed payload with TTL (e.g., 5 minutes)
+        $issuedAt = now();
+        $expiresAt = $issuedAt->copy()->addMinutes(5);
+        $payload = [
+            'inventory_id' => $copy->id,
+            'paper_id'     => $copy->academic_paper_id,
+            'catalog_code' => $copy->academicPaper->catalog_code,
+            'title'        => $copy->academicPaper->title,
+            'requested_by' => Auth::id(),
+            'iat'          => $issuedAt->timestamp,
+            'exp'          => $expiresAt->timestamp,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $sig  = hash_hmac('sha256', $json, config('qr.secret', config('app.key')));
+        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+
+        // 4) Create SVG and base64 for modal
+        $svg = QrCode::size(300)->generate($qrPayload);
+        $this->qrCode = base64_encode($svg);
+
+        $this->showQrModal = true;
     }
-
-    // 2. must be available
-    if (!$copy->isAvailable()) {
-        session()->flash('error', 'This copy is not available.');
-        return;
-    }
-
-    $this->selectedCopy = $copy;
-
-    // 3. build QR payload
-    $qrPayload = json_encode([
-        'inventory_id' => $copy->id,
-        'paper_id'     => $copy->academic_paper_id,
-        'catalog_code' => $copy->academicPaper->catalog_code,
-        'title'        => $copy->academicPaper->title,
-        'requested_by' => Auth::id(),
-        'timestamp'    => now()->toDateTimeString(),
-    ]);
-
-    // 4. create SVG and base-64 it for the modal
-    $svg = QrCode::size(300)->generate($qrPayload);
-    $this->qrCode = base64_encode($svg);
-
-    $this->showQrModal = true;
-}
 
     public function closeQrModal(): void
     {
@@ -157,25 +161,37 @@ class AcademicPaperIndex extends Component
     public function downloadQr()
     {
         if (!$this->selectedCopy) {
-            return null;
+            abort(400, 'No selected copy.');
+        }
+        abort_unless(Auth::check(), 403);
+
+        // Get the copy ID from the object
+        $copyId = is_object($this->selectedCopy) ? $this->selectedCopy->id : $this->selectedCopy;
+        $copy = Inventory::with('academicPaper')->findOrFail($copyId);
+
+        if (!$copy->isAvailable()) {
+            abort(409, 'Copy no longer available.');
         }
 
-        $copy = $this->selectedCopy;        // Inventory instance
-        $paper = $copy->academicPaper;      // already eager-loaded
+        $paper = $copy->academicPaper;
 
-        $qrPayload = json_encode([
+        $payload = [
             'inventory_id' => $copy->id,
             'paper_id'     => $paper->id,
             'catalog_code' => $paper->catalog_code,
             'title'        => $paper->title,
             'requested_by' => Auth::id(),
-            'timestamp'    => now()->toDateTimeString(),
-        ]);
+            'iat'          => now()->timestamp,
+            'exp'          => now()->addMinutes(5)->timestamp,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $sig  = hash_hmac('sha256', $json, config('qr.secret', config('app.key')));
+        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
 
         $filename = 'qr-code-inv-' . $copy->id . '.png';
 
         return response()->streamDownload(
-            fn () => print QrCode::format('png')->size(500)->generate($qrPayload),
+            fn () => print QrCode::size(500)->format('png')->generate($qrPayload),
             $filename,
             ['Content-Type' => 'image/png']
         );

@@ -5,12 +5,13 @@ namespace App\Livewire\Pages\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
+use Auth;
 use Log;
 use Mary\Traits\Toast;
 
 class AdminUserList extends AdminComponent
 {
-use WithPagination, Toast;
+    use WithPagination, Toast;
 
     public $perPage = 20;
     public $search = '';
@@ -158,14 +159,20 @@ use WithPagination, Toast;
         ]);
 
         $user = User::findOrFail($this->studentId);
+        if ($user->id === Auth::id() && $user->is_admin && !$this->isAdmin) {
+            return $this->error('You cannot remove your own admin access.');
+        }
         $user->update([
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
             'email' => $this->email,
             'credit_score' => $this->creditScore,
             'account_status' => $this->accountStatus,
-            'is_admin' => $this->isAdmin,
         ]);
+        if ($user->id !== Auth::id()) {
+                    $user->is_admin = (bool) $this->isAdmin;
+                    $user->save();
+            }
 
         $this->showEditModal = false;
         $this->success('Student updated successfully!');
@@ -181,6 +188,9 @@ use WithPagination, Toast;
     public function deleteUser()
     {
         if ($this->selectedStudent) {
+            if ($this->selectedStudent->id === Auth::id()) {
+                return $this->error('You cannot delete your own account.');
+            }
             $this->selectedStudent->delete();
             $this->showDeleteModal = false;
             $this->selectedStudent = null;
