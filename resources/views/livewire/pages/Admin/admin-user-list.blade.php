@@ -151,9 +151,13 @@
             @endscope
 
             @scope('cell_credit_score', $row)
+                @php
+                    $allowedColors = ['success', 'warning', 'error'];
+                    $color = in_array($row['credit_score_color'], $allowedColors) ? $row['credit_score_color'] : 'success';
+                @endphp
                 <div class="flex items-center gap-2">
                     <span class="font-bold text-lg">{{ $row['credit_score'] }}</span>
-                           <div class="radial-progress text-{{ $row['credit_score_color'] }}"
+                    <div class="radial-progress text-{{ $color }}"
                         style="--value:{{ $row['credit_score'] }}; --size:2rem; --thickness: 3px;">
                     </div>
                 </div>

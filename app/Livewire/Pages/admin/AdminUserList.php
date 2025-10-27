@@ -205,7 +205,7 @@ class AdminUserList extends AdminComponent
             $hasActiveBorrows = $this->selectedStudent->borrowTransactions()
                 ->where(function ($q) {
                     $q->where('status', 'started')
-                        ->whereNull('time_out');
+                        ->orWhereNull('time_out');
                 })
                 ->exists();
 
