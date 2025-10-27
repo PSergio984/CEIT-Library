@@ -69,7 +69,7 @@ class ViolationTransactionsTab extends AdminComponent
             });
 
         if (isset($this->sortBy['column']) && isset($this->sortBy['direction'])) {
-            $query->orderBy($this->getSanitizedSortColumn(), $this->sortBy['direction']);;
+            $query->orderBy($this->getSanitizedSortColumn(), $this->sortBy['direction']);
         }
 
         return $query->paginate($this->perPageTransaction, ['*'], 'transactionsPage');
