@@ -209,10 +209,7 @@
                         <div class="text-sm text-base-content/60 mb-1">Credit Score</div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-xl">{{ $selectedStudent->credit_score }}</span>
-                            <span
-                                class="badge badge-{{ $selectedStudent->credit_score >= 75 ? 'success' : 'error' }}">
-                                {{ $selectedStudent->credit_score >= 75 ? 'Available' : 'Suspended' }}
-                            </span>
+                            <x-student-status-badge :status="$selectedStudent->account_status" />
                         </div>
                     </div>
                 </div>

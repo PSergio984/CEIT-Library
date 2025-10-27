@@ -90,7 +90,7 @@ class User extends Authenticatable implements MustVerifyEmail
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'credit_score' => 'integer',
-            'account_status' => 'string', // Use enum class here if you have one
+            'account_status' => 'string',
         ];
     }
 

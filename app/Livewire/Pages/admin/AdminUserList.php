@@ -4,7 +4,6 @@ namespace App\Livewire\Pages\Admin;
 
 use Livewire\WithPagination;
 use App\Models\User;
-use Log;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Title;
 
@@ -197,6 +196,20 @@ class AdminUserList extends AdminComponent
     public function deleteUser()
     {
         if ($this->selectedStudent) {
+            // Check for active borrow transactions (status = 'started' or returned_at/time_out is null)
+            $hasActiveBorrows = $this->selectedStudent->borrowTransactions()
+                ->where(function ($q) {
+                    $q->where('status', 'started')
+                        ->orWhereNull('time_out');
+                })
+                ->exists();
+
+            if ($hasActiveBorrows) {
+                $this->error('Cannot delete student: active borrow transactions exist.');
+                return;
+            }
+
+            // If using SoftDeletes, prefer soft delete here
             $this->selectedStudent->delete();
             $this->showDeleteModal = false;
             $this->selectedStudent = null;
