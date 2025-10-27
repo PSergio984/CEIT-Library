@@ -2,7 +2,6 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
 use Log;
@@ -42,7 +41,27 @@ class AdminUserList extends AdminComponent
         ['key' => 'actions', 'label' => 'Actions', 'class' => 'w-32'],
     ];
 
-    public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
+    // Default sort configuration
+    public const DEFAULT_SORT = ['column' => 'created_at', 'direction' => 'desc'];
+
+    public array $sortBy = self::DEFAULT_SORT;
+
+    // Credit score thresholds
+    public const CREDIT_SCORE_HIGH = 75;
+    public const CREDIT_SCORE_MEDIUM = 50;
+
+    /**
+     * Get the color for a given credit score ('success', 'warning', 'error')
+     */
+    public function getCreditScoreColor($score): string
+    {
+        if ($score >= self::CREDIT_SCORE_HIGH) {
+            return 'success';
+        } elseif ($score >= self::CREDIT_SCORE_MEDIUM) {
+            return 'warning';
+        }
+        return 'error';
+    }
 
     protected function getStudentsQuery()
     {
@@ -63,13 +82,13 @@ class AdminUserList extends AdminComponent
             ->when($this->creditScoreFilter, function ($query) {
                 switch ($this->creditScoreFilter) {
                     case 'high':
-                        $query->where('credit_score', '>=', 75);
+                        $query->where('credit_score', '>=', self::CREDIT_SCORE_HIGH);
                         break;
                     case 'medium':
-                        $query->whereBetween('credit_score', [50, 74]);
+                        $query->whereBetween('credit_score', [self::CREDIT_SCORE_MEDIUM, self::CREDIT_SCORE_HIGH - 1]);
                         break;
                     case 'low':
-                        $query->where('credit_score', '<', 50);
+                        $query->where('credit_score', '<', self::CREDIT_SCORE_MEDIUM);
                         break;
                 }
             });
@@ -88,9 +107,6 @@ class AdminUserList extends AdminComponent
                     $query->orderBy('first_name', $direction)
                         ->orderBy('last_name', $direction);
                     break;
-                case 'student_number':
-                    $query->orderBy('id', $direction);
-                    break;
                 default:
                     $query->orderBy($column, $direction);
             }
@@ -100,7 +116,6 @@ class AdminUserList extends AdminComponent
             ->through(function ($user) {
                 return [
                     'id' => $user->id,
-                    'student_number' => '23-XX' . str_pad($user->id, 2, '0', STR_PAD_LEFT),
                     'name' => trim($user->first_name . ' ' . $user->last_name),
                     'email' => $user->email,
                     'credit_score' => $user->credit_score,
@@ -225,7 +240,7 @@ class AdminUserList extends AdminComponent
         $this->statusFilter = '';
         $this->creditScoreFilter = '';
         $this->roleFilter = '';
-        $this->sortBy = ['column' => 'created_at', 'direction' => 'desc'];
+        $this->sortBy = self::DEFAULT_SORT;
         $this->resetPage();
     }
 

@@ -16,6 +16,7 @@ use Illuminate\Notifications\Notifiable;
  * @property string $email
  * @property \Illuminate\Support\Carbon|null $email_verified_at
  * @property int $credit_score
+ * @property string $account_status
  * @property string $password
  * @property int $is_admin
  * @property string|null $remember_token
@@ -88,6 +89,8 @@ class User extends Authenticatable implements MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'credit_score' => 'integer',
+            'account_status' => 'string', // Use enum class here if you have one
         ];
     }
 

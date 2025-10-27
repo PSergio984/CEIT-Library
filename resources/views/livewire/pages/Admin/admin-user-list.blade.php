@@ -81,7 +81,6 @@
                     <div class="flex items-center gap-3 flex-1">
                         <div>
                             <h3 class="font-semibold text-base">{{ $student['name'] }}</h3>
-                            <p class="text-sm text-base-content/70">{{ $student['student_number'] }}</p>
                         </div>
                     </div>
                     @if ($student['is_admin'])
@@ -138,9 +137,6 @@
                 <span class="text-base-content/70">{{ $row['id'] }}</span>
             @endscope
 
-            @scope('cell_student_number', $row)
-                <span class="font-mono text-sm">{{ $row['student_number'] }}</span>
-            @endscope
 
             @scope('cell_name', $row)
                 <div class="flex items-center gap-3">
