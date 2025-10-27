@@ -6,11 +6,12 @@ use Livewire\WithPagination;
 use App\Models\User;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Title;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 #[Title('Admin User List')]
 class AdminUserList extends AdminComponent
 {
-    use WithPagination, Toast;
+    use WithPagination, Toast, AuthorizesRequests;
 
     public $perPage = 20;
     public $search = '';
@@ -106,6 +107,9 @@ class AdminUserList extends AdminComponent
                     $query->orderBy('first_name', $direction)
                         ->orderBy('last_name', $direction);
                     break;
+                case 'status':
+                    $query->orderBy('account_status', $direction);
+                    break;
                 default:
                     $query->orderBy($column, $direction);
             }
@@ -118,6 +122,7 @@ class AdminUserList extends AdminComponent
                     'name' => trim($user->first_name . ' ' . $user->last_name),
                     'email' => $user->email,
                     'credit_score' => $user->credit_score,
+                    'credit_score_color' => $this->getCreditScoreColor($user->credit_score),
                     'status' => $user->account_status,
                     'account_status_label' => $user->account_status === 'active' ? 'Available' : 'Suspended',
                     'is_admin' => $user->is_admin,
@@ -200,7 +205,7 @@ class AdminUserList extends AdminComponent
             $hasActiveBorrows = $this->selectedStudent->borrowTransactions()
                 ->where(function ($q) {
                     $q->where('status', 'started')
-                        ->orWhereNull('time_out');
+                        ->whereNull('time_out');
                 })
                 ->exists();
 

@@ -99,10 +99,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-base-content/50 font-medium mb-1">Status</p>
-                        <span
-                            class="badge badge-{{ $student['account_status_label'] == 'Available' ? 'success' : 'error' }} badge-sm">
-                            {{ $student['account_status_label'] }}
-                        </span>
+                          <x-student-status-badge :status="$student['account_status_label']" size="sm" />
                     </div>
                 </div>
 
@@ -156,7 +153,7 @@
             @scope('cell_credit_score', $row)
                 <div class="flex items-center gap-2">
                     <span class="font-bold text-lg">{{ $row['credit_score'] }}</span>
-                    <div class="radial-progress text-{{ $row['credit_score'] >= 75 ? 'success' : ($row['credit_score'] >= 50 ? 'warning' : 'error') }}"
+                           <div class="radial-progress text-{{ $row['credit_score_color'] }}"
                         style="--value:{{ $row['credit_score'] }}; --size:2rem; --thickness: 3px;">
                     </div>
                 </div>
@@ -172,10 +169,12 @@
                 <div class="flex gap-1">
                     <x-mary-button wire:click="showTransactionDetails({{ $row['id'] }})" class="btn-sm btn-ghost"
                         icon="o-eye" tooltip="View Details" />
+                     @can('Admin-access')
                     <x-mary-button wire:click="editStudent({{ $row['id'] }})" class="btn-sm btn-ghost" icon="o-pencil"
                         tooltip="Edit Student" />
                     <x-mary-button wire:click="confirmDelete({{ $row['id'] }})" class="btn-sm btn-ghost text-error"
                         icon="o-trash" tooltip="Delete Student" />
+                    @endcan
                 </div>
             @endscope
         </x-mary-table>
