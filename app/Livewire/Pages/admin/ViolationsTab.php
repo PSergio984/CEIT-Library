@@ -35,8 +35,12 @@ class ViolationsTab extends AdminComponent
         $query = Violation::query()
             ->when($this->search, fn($q) => $q
                 ->where('name', 'like', "%{$this->search}%")
-                ->orWhere('description', 'like', "%{$this->search}%"))
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction']);
+                ->orWhere('description', 'like', "%{$this->search}%"));
+
+        $allowed = ['id', 'name', 'description', 'penalty_score', 'updated_at'];
+        $column = in_array($this->sortBy['column'] ?? 'name', $allowed, true) ? $this->sortBy['column'] : 'name';
+        $direction = in_array(strtolower($this->sortBy['direction'] ?? 'asc'), ['asc', 'desc'], true) ? $this->sortBy['direction'] : 'asc';
+        $query->orderBy($column, $direction);
 
         return $query->paginate($this->perPage);
     }

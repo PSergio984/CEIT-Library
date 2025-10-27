@@ -10,6 +10,7 @@ use App\Models\ViolationTransaction;
 class ViolationTransactionsTab extends AdminComponent
 {
     use WithPagination, Toast;
+
     protected $listeners = ['refreshViolationTransactionsTab' => 'getViolationTransactionsProperty'];
     public $searchTransaction = '';
     public $perPageTransaction = 10;
@@ -67,12 +68,19 @@ class ViolationTransactionsTab extends AdminComponent
             });
 
         if (isset($this->sortBy['column']) && isset($this->sortBy['direction'])) {
-            $query->orderBy($this->sortBy['column'], $this->sortBy['direction']);
+            $query->orderBy($this->getSanitizedSortColumn(), $this->sortBy['direction']);;
         }
 
         return $query->paginate($this->perPageTransaction, ['*'], 'transactionsPage');
     }
 
+    protected function getSanitizedSortColumn(): string
+    {
+        $allowed = ['id', 'violation_penalty', 'severity', 'date_occurred'];
+        return in_array($this->sortBy['column'], $allowed)
+            ? $this->sortBy['column']
+            : 'date_occurred';
+    }
 
     public function confirmUndo(int $id)
     {

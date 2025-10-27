@@ -24,6 +24,7 @@ class ActiveUsersTab extends AdminComponent
     public $perPage = 10;
 
     public $ViolationDrawer = false;
+    public ?User $selectedUser = null;
     public $selectedUserForViolation = null;
     public $selectedViolationId = null;
     public $violationSeverity = 'Minor';
@@ -72,10 +73,10 @@ class ActiveUsersTab extends AdminComponent
                 });
             });
 
-
-        if (isset($this->sortBy['column']) && isset($this->sortBy['direction'])) {
-            $query->orderBy($this->sortBy['column'], $this->sortBy['direction']);
-        }
+        $allowed = ['time_in'];
+        $col = in_array($this->sortBy['column'] ?? 'time_in', $allowed, true) ? $this->sortBy['column'] : 'time_in';
+        $dir = in_array(strtolower($this->sortBy['direction'] ?? 'desc'), ['asc', 'desc'], true) ? $this->sortBy['direction'] : 'desc';
+        $query->orderBy($col, $dir);
 
         return $query->paginate($this->perPageActiveUsers, ['*'], 'activeUsersPage');
     }
@@ -104,6 +105,7 @@ class ActiveUsersTab extends AdminComponent
     public function openViolationDrawer($userId)
     {
         $this->selectedUserForViolation = $userId;
+        $this->selectedUser = User::findOrFail($userId);
         $this->selectedViolationId = null;
         $this->violationSeverity = 'Minor';
         $this->violationRemarks = '';
@@ -140,7 +142,7 @@ class ActiveUsersTab extends AdminComponent
             $this->success("Violation '{$violation->name}' recorded for {$user->first_name} {$user->last_name}. Credit score updated to {$user->credit_score}.");
             $this->ViolationDrawer = false;
 
-            $this->reset(['selectedUserForViolation', 'selectedViolationId', 'violationSeverity', 'violationRemarks']);
+            $this->reset(['selectedUser', 'selectedUserForViolation', 'selectedViolationId', 'violationSeverity', 'violationRemarks']);
         } catch (\Exception $e) {
             $this->error('An error occurred: ' . $e->getMessage());
         }

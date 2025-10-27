@@ -115,7 +115,7 @@
                             Declare Forgot Timeout
                         </x-mary-button>
                     </div>
-                    @endscope>
+                    @endscope
                 </x-mary-table>
             </div>
 
@@ -138,10 +138,7 @@
         <div class="px-2 py-3">
             <h3 class="text-lg font-semibold mb-4">Record Violation</h3>
 
-            @if($selectedUserForViolation)
-                @php
-                    $user = \App\Models\User::find($selectedUserForViolation);
-                @endphp
+            @if($selectedUser)
 
                 <div class="alert alert-info mb-4">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -150,8 +147,8 @@
                               d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <div>
-                        <div class="font-bold">{{ $user->first_name }} {{ $user->last_name }}</div>
-                        <div class="text-xs">Current Credit: {{ $user->credit_score }}/100</div>
+                        <div class="font-bold">{{ $selectedUser->first_name }} {{ $selectedUser->last_name }}</div>
+                        <div class="text-xs">Current Credit: {{ $selectedUser->credit_score }}/100</div>
                     </div>
                 </div>
 
@@ -195,7 +192,8 @@
             <p>Declare this user as forgot-to-timeout and apply the penalty?</p>
 
             <div class="flex justify-end gap-2 mt-4">
-                <x-mary-button type="button" label="Cancel" class="btn-outline" @click="$wire.confirmForgotTimeoutModal = false"/>
+                <x-mary-button type="button" label="Cancel" class="btn-outline"
+                               @click="$wire.confirmForgotTimeoutModal = false"/>
                 <x-mary-button type="button" class="btn-warning" wire:click="confirmDeclareForgotTimeout" spinner>
                     Confirm
                 </x-mary-button>
