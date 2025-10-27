@@ -1,6 +1,8 @@
 <?php
 
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminAssignLibrarian;
+use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
@@ -15,10 +17,18 @@ use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
 use App\Livewire\Pages\Student\StudentDashboard;
 use App\Livewire\Pages\Student\Transaction;
+use App\Livewire\TestQrScanner;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+
+// Test route for QR code system (only available in non-production environments)
+if (config('app.env') !== 'production') {
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::get('/test-qr', TestQrScanner::class)->name('test-qr');
+    });
+}
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -54,6 +64,7 @@ Route::middleware(['auth', 'can:Admin-access', 'verified'])
         Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');
         Route::get('/attendance', AdminAttendanceLogIndex::class)->name('attendance-logs');
         Route::get('/violation-logs', AdminViolationLogIndex::class)->name('violation-logs');
+        Route::get('/librarians', AdminAssignLibrarians::class)->name('librarians');
     });
 
 Route::view('profile', 'profile')

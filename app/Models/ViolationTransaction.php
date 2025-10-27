@@ -10,6 +10,7 @@ use Carbon\Carbon;
  * @property int $id
  * @property int $user_id
  * @property int $violation_id
+ * @property int|null $attendance_id
  * @property \Illuminate\Support\Carbon $date_occurred
  * @property string $severity
  * @property string|null $remarks
@@ -41,6 +42,7 @@ class ViolationTransaction extends Model
     protected $fillable = [
         'user_id',
         'violation_id',
+        'attendance_id',
         'violation_penalty',
         'date_occurred',
         'severity',
@@ -50,6 +52,29 @@ class ViolationTransaction extends Model
     protected $casts = [
         'date_occurred' => 'date',
     ];
+    /**
+     * Build the remarks string for a missing timeout violation.
+     * @param int $attendanceId
+     * @param Carbon|string $date
+     * @return string
+     */
+    public static function buildMissingTimeoutRemarks($attendanceId, $date): string
+    {
+        if (empty($date)) {
+            throw new \InvalidArgumentException('Date parameter cannot be empty');
+        }
+
+        if ($date instanceof Carbon) {
+            $dateStr = $date->format('M d, Y');
+        } else {
+            try {
+                $dateStr = Carbon::parse($date)->format('M d, Y');
+            } catch (\Exception $e) {
+                throw new \InvalidArgumentException("Invalid date format: {$date}", 0, $e);
+            }
+        }
+        return "Failed to check out from session on {$dateStr}.";
+    }
 
     protected static function booted()
     {

@@ -6,20 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>{{ $title ?? config('app.name') }}</title>
+    <title>{{ $title ?? config('app.name') }}</title>
 
-        <!-- Favicon -->
-        <link rel="icon" type="image/png" href="{{ asset('images/ceit-logo.png') }}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/ceit-logo.png') }}">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-        @livewireStyles
-    </head>
-    <body class="min-h-screen font-sans antialiased bg-background text-foreground">
+    @livewireStyles
+</head>
+
+<body class="min-h-screen font-sans antialiased bg-background text-foreground">
 
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
@@ -68,23 +69,22 @@
 
                 <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
                     <x-mary-menu-item title="All Academic Paper" icon="o-document-text" link="/admin/academic-papers" />
-                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/admin/academic-papers/it" />
-                    <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/admin/academic-papers/ce" />
+                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop"
+                        link="/admin/academic-papers/it" />
+                    <x-mary-menu-item title="Civil Engineering" icon="o-building-office"
+                        link="/admin/academic-papers/ce" />
                     <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/ee" />
                 </x-mary-menu-sub>
 
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
 
                 <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
-                <x-mary-menu-sub title="Librarians" icon="o-building-library">
-                    <x-mary-menu-item title="Current" icon="o-user" link="/admin/librarians" />
-                    <x-mary-menu-item title="Assign New" icon="o-user-plus" link="/admin/librarians/assign" />
-                </x-mary-menu-sub>
-
-                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/admin/rule-and-regulation" />
+                <x-mary-menu-item title="Librarians" icon="o-building-library" link="/admin/librarians" />
+                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
+                    link="/admin/rule-and-regulation" />
                 <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
                 <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs" />
-                <x-mary-menu-item title="View as Student" icon="o-eye" link="/academic-papers" />
+                <x-mary-menu-item title="View as Student" icon="o-eye" link="/dashboard" />
 
             </x-mary-menu>
 

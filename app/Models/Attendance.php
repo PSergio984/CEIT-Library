@@ -121,7 +121,7 @@ class Attendance extends Model
     // Complete the session (time out)
     public function complete()
     {
-        $this->time_out = Carbon::now();
+        $this->time_out = Carbon::now('Asia/Manila');
         $this->status = 'completed';
         $this->calculateDuration();
         $this->save();
