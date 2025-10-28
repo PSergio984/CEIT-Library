@@ -124,7 +124,7 @@ class AcademicPaperIndex extends Component
             return;
         }
 
-        // Store the entire copy object, not just the ID
+        // Store only the copy ID to avoid serializing models in Livewire state
         $this->selectedCopyId = $copy->id;
 
         // 3) Build signed payload with TTL (e.g., 5 minutes)
@@ -140,7 +140,12 @@ class AcademicPaperIndex extends Component
             'exp'          => $expiresAt->timestamp,
         ];
         $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig  = hash_hmac('sha256', $json, config('qr.secret', config('app.key')));
+        $secret = config('app.qr_hmac_secret');
+        if (empty($secret)) {
+            abort(500, 'QR signing secret not configured.');
+        }
+        $raw = hash_hmac('sha256', $json, $secret, true);
+        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
         $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
 
         // 4) Create SVG and base64 for modal
@@ -181,7 +186,12 @@ class AcademicPaperIndex extends Component
             'exp'          => now()->addMinutes(5)->timestamp,
         ];
         $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig  = hash_hmac('sha256', $json, config('qr.secret', config('app.key')));
+        $secret = config('app.qr_hmac_secret');
+        if (empty($secret)) {
+            abort(500, 'QR signing secret not configured.');
+        }
+        $raw = hash_hmac('sha256', $json, $secret, true);
+        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
         $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
 
         $filename = 'qr-code-inv-' . $copy->id . '.png';
