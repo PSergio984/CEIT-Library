@@ -114,6 +114,7 @@
                         class="btn-sm btn-ghost flex-1" icon="o-eye">
                         View
                     </x-mary-button>
+                    @can('Admin-access')
                     <x-mary-button wire:click="editStudent({{ $student['id'] }})" class="btn-sm btn-ghost flex-1"
                         icon="o-pencil">
                         Edit
@@ -122,6 +123,7 @@
                         class="btn-sm btn-ghost text-error flex-1" icon="o-trash">
                         Delete
                     </x-mary-button>
+                    @endcan
                 </div>
             </div>
         @endforeach
@@ -160,13 +162,17 @@
                 @php
                     $allowedColors = ['success', 'warning', 'error'];
                     $color = in_array($row['credit_score_color'], $allowedColors) ? $row['credit_score_color'] : 'success';
+                    $colorClass = match($color) {
+                        'success' => 'text-success',
+                        'warning' => 'text-warning',
+                        'error' => 'text-error',
+                        default => 'text-success'
+                    };
                 @endphp
                 <div class="flex items-center gap-2">
-                    <span class="font-bold text-lg">{{ $row['credit_score'] }}</span>
-                    <div class="radial-progress text-{{ $color }}"
-                        style="--value:{{ $row['credit_score'] }}; --size:2rem; --thickness: 3px;">
-                    </div>
-                </div>
+                    <span class="font-bold text-lg {{ $colorClass }}">{{ $row['credit_score'] }}</span>
+
+            </div>
             @endscope
 
             @scope('cell_status', $row)
