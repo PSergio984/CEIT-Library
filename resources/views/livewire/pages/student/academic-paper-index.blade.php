@@ -69,8 +69,8 @@
                 <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
                     <h3 class="text-lg sm:text-xl font-bold flex-1 pr-4">{{ $selectedPaper->title }}</h3>
                     <div class="flex items-center gap-3">
-                        @if ($this->departmentIcon)
-                            <img src="{{ $this->departmentIcon }}" alt="{{ $selectedPaper->department }} Logo"
+                        @if ($this->departmentIcon())
+                            <img src="{{ $this->departmentIcon() }}" alt="{{ $selectedPaper->department }} Logo"
                                 class="w-20 h-20 sm:w-24 sm:h-24 object-contain">
                         @endif
                     </div>

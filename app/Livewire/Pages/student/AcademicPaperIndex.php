@@ -30,7 +30,6 @@ class AcademicPaperIndex extends Component
     public bool $showQrModal = false;
     public ?string $qrCode = null;
     public ?int $selectedCopyId = null;
-    public ?Inventory $selectedCopy = null;
 
     public function updatingPerPage(): void
     {
@@ -110,6 +109,27 @@ class AcademicPaperIndex extends Component
         $this->selectedPaper = null;
     }
 
+    private function buildSignedQrPayload(Inventory $copy): string
+    {
+        $issuedAt  = now();
+        $expiresAt = $issuedAt->copy()->addMinutes(5);
+
+        $payload = [
+            'inventory_id' => $copy->id,
+            'paper_id'     => $copy->academic_paper_id,
+            'catalog_code' => optional($copy->academicPaper)->catalog_code,
+            'requested_by' => Auth::id(),
+            'iat'          => $issuedAt->timestamp,
+            'exp'          => $expiresAt->timestamp,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $secret = config('qr.secret');
+
+        $raw = hash_hmac('sha256', $json, $secret, true);
+        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
+        return json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+    }
+
     public function requestQr(int $inventoryId): void
     {
         // 1. grab the copy (inventory row)
@@ -125,26 +145,12 @@ class AcademicPaperIndex extends Component
             return;
         }
 
-        $this->selectedCopy = $copy;
 
         // Store the entire copy object, not just the ID
         $this->selectedCopyId = $copy->id;
 
         // 3) Build signed payload with TTL (e.g., 5 minutes)
-        $issuedAt = now();
-        $expiresAt = $issuedAt->copy()->addMinutes(5);
-        $payload = [
-            'inventory_id' => $copy->id,
-            'paper_id'     => $copy->academic_paper_id,
-            'catalog_code' => $copy->academicPaper->catalog_code,
-            'title'        => $copy->academicPaper->title,
-            'requested_by' => Auth::id(),
-            'iat'          => $issuedAt->timestamp,
-            'exp'          => $expiresAt->timestamp,
-        ];
-        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $sig  = hash_hmac('sha256', $json, config('qr.secret', config('app.key')));
-        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+        $qrPayload = $this->buildSignedQrPayload($copy);
 
         // 4) Create SVG and base64 for modal
         $svg = QrCode::size(300)->generate($qrPayload);
@@ -157,7 +163,7 @@ class AcademicPaperIndex extends Component
     {
         $this->showQrModal = false;
         $this->qrCode = null;
-        $this->selectedCopy = null;
+       $this->selectedCopyId = null;
     }
 
     public function downloadQr()
