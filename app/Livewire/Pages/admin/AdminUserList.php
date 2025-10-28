@@ -6,7 +6,9 @@ use Livewire\WithPagination;
 use App\Models\User;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Computed;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Cache;
 
 #[Title('Admin User List')]
 class AdminUserList extends AdminComponent
@@ -66,6 +68,7 @@ class AdminUserList extends AdminComponent
     protected function getStudentsQuery()
     {
         return User::query()
+            ->select(['id', 'first_name', 'last_name', 'email', 'credit_score', 'account_status', 'is_admin'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('first_name', 'like', "%{$this->search}%")
@@ -94,7 +97,8 @@ class AdminUserList extends AdminComponent
             });
     }
 
-    public function getStudentsProperty()
+    #[Computed]
+    public function students()
     {
         $query = $this->getStudentsQuery();
 
@@ -131,17 +135,30 @@ class AdminUserList extends AdminComponent
             });
     }
 
-    public function getTotalStudentsProperty()
+    #[Computed]
+    public function totalStudents()
     {
-        return $this->getStudentsQuery()->count();
+        $cacheKey = 'admin_user_list_total_students_' . md5(serialize([
+            $this->search,
+            $this->statusFilter,
+            $this->roleFilter,
+            $this->creditScoreFilter,
+        ]));
+
+        return Cache::remember($cacheKey, 60, function () {
+            return $this->getStudentsQuery()->count();
+        });
     }
 
-    public function getTotalBorrowersProperty()
+    #[Computed]
+    public function totalBorrowers()
     {
-        return User::where('is_admin', false)
-            ->whereHas('borrowTransactions', function ($query) {
-                $query->where('status', 'started');
-            })->count();
+        return Cache::remember('admin_user_list_total_borrowers', 60, function () {
+            return User::where('is_admin', false)
+                ->whereHas('borrowTransactions', function ($query) {
+                    $query->where('status', 'started');
+                })->count();
+        });
     }
 
     public function showTransactionDetails($userId)
@@ -187,6 +204,10 @@ class AdminUserList extends AdminComponent
             'is_admin' => $this->isAdmin,
         ]);
 
+        // Clear cache after update
+        Cache::forget('admin_user_list_total_borrowers');
+        $this->clearStatsCaches();
+
         $this->showEditModal = false;
         $this->success('Student updated successfully!');
         $this->reset(['studentId', 'firstName', 'lastName', 'email', 'creditScore', 'accountStatus', 'isAdmin']);
@@ -216,9 +237,33 @@ class AdminUserList extends AdminComponent
 
             // If using SoftDeletes, prefer soft delete here
             $this->selectedStudent->delete();
+
+            // Clear cache after deletion
+            Cache::forget('admin_user_list_total_borrowers');
+            $this->clearStatsCaches();
+
             $this->showDeleteModal = false;
             $this->selectedStudent = null;
             $this->success('Student deleted successfully!');
+        }
+    }
+
+    protected function clearStatsCaches()
+    {
+        // If using a taggable cache store, use tags for broad invalidation
+        if (method_exists(Cache::getStore(), 'tags')) {
+            Cache::tags(['admin_user_list_stats'])->flush();
+        } else {
+            // Fallback: clear known keys (not perfect, but avoids getIterator error)
+            foreach (
+                [
+                    'admin_user_list_total_borrowers',
+                    'admin_user_list_total_students_' . md5(serialize(['', '', '', ''])),
+                    'admin_user_list_total_students_' . md5(serialize([$this->search, $this->statusFilter, $this->roleFilter, $this->creditScoreFilter])),
+                ] as $key
+            ) {
+                Cache::forget($key);
+            }
         }
     }
 

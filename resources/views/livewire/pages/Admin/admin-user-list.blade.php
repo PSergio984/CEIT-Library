@@ -2,14 +2,17 @@
     <x-mary-header title="Student List" subtitle="Manage all students and their accounts" separator />
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" wire:loading.class="opacity-50">
         <div class="stats shadow bg-base-200">
             <div class="stat">
                 <div class="stat-figure text-primary">
                     <x-mary-icon name="o-user-group" class="w-8 h-8" />
                 </div>
                 <div class="stat-title">Total Students</div>
-                <div class="stat-value text-primary">{{ $this->totalStudents }}</div>
+                <div class="stat-value text-primary" wire:loading.remove>{{ $this->totalStudents }}</div>
+                <div class="stat-value text-primary" wire:loading>
+                    <span class="loading loading-spinner loading-sm"></span>
+                </div>
                 <div class="stat-desc">Registered in the system</div>
             </div>
         </div>
@@ -20,7 +23,10 @@
                     <x-mary-icon name="o-book-open" class="w-8 h-8" />
                 </div>
                 <div class="stat-title">Active Borrowers</div>
-                <div class="stat-value text-secondary">{{ $this->totalBorrowers }}</div>
+                <div class="stat-value text-secondary" wire:loading.remove>{{ $this->totalBorrowers }}</div>
+                <div class="stat-value text-secondary" wire:loading>
+                    <span class="loading loading-spinner loading-sm"></span>
+                </div>
                 <div class="stat-desc">Currently borrowing books</div>
             </div>
         </div>
@@ -74,9 +80,9 @@
         Showing {{ $this->students->count() }} of {{ $this->students->total() }} results
     </div>
 
-    <div class="block lg:hidden space-y-4">
+    <div class="block lg:hidden space-y-4" wire:loading.class="opacity-50">
         @foreach ($this->students as $student)
-            <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" wire:key="mobile-student-{{ $student['id'] }}">
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex items-center gap-3 flex-1">
                         <div>
@@ -125,7 +131,7 @@
         </div>
     </div>
 
-    <div class="hidden lg:block overflow-x-auto">
+    <div class="hidden lg:block overflow-x-auto" wire:loading.class="opacity-50">
         <x-mary-table :headers="$headers" :rows="$this->students" :sort-by="$sortBy" with-pagination striped
             row-class="hover:bg-base-200" header-class="text-base-content bg-base-200"
             class="w-full min-w-fit table-auto">
