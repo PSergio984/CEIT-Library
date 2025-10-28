@@ -29,7 +29,8 @@ class AcademicPaperIndex extends Component
     // QR Code Modal properties
     public bool $showQrModal = false;
     public ?string $qrCode = null;
-    public $selectedCopy = null; // Use generic type since we don't know the exact copy structure
+    public ?int $selectedCopyId = null;
+    public ?Inventory $selectedCopy = null;
 
     public function updatingPerPage(): void
     {
@@ -119,14 +120,15 @@ class AcademicPaperIndex extends Component
             return;
         }
 
-        // 2. must be available
         if (!$copy->isAvailable()) {
             session()->flash('error', 'This copy is not available.');
             return;
         }
 
-        // Store the entire copy object, not just the ID
         $this->selectedCopy = $copy;
+
+        // Store the entire copy object, not just the ID
+        $this->selectedCopyId = $copy->id;
 
         // 3) Build signed payload with TTL (e.g., 5 minutes)
         $issuedAt = now();
@@ -163,11 +165,8 @@ class AcademicPaperIndex extends Component
         if (!$this->selectedCopy) {
             abort(400, 'No selected copy.');
         }
-        abort_unless(Auth::check(), 403);
 
-        // Get the copy ID from the object
-        $copyId = is_object($this->selectedCopy) ? $this->selectedCopy->id : $this->selectedCopy;
-        $copy = Inventory::with('academicPaper')->findOrFail($copyId);
+        $copy = $this->selectedCopy;
 
         if (!$copy->isAvailable()) {
             abort(409, 'Copy no longer available.');
@@ -215,6 +214,16 @@ class AcademicPaperIndex extends Component
         }
 
         return null;
+    }
+
+    #[Computed]
+    public function selectedCopy()
+    {
+        if (!$this->selectedCopyId) {
+            return null;
+        }
+
+        return Inventory::with('academicPaper')->find($this->selectedCopyId);
     }
 
     #[Computed]

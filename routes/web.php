@@ -7,6 +7,7 @@ use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
+use App\Livewire\Pages\Admin\AdminUserList;
 use App\Livewire\Pages\Admin\AdminViolationLogIndex;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;

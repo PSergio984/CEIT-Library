@@ -158,7 +158,7 @@
 
     <!-- QR Code Modal -->
     <x-mary-modal wire:model="showQrModal" title="QR Code for Borrowing" box-class="max-w-md w-full">
-        @if ($selectedCopy && $qrCode)
+        @if ($this->selectedCopy && $qrCode)
             <div class="space-y-6">
                 <!-- QR Code Display -->
                 <div class="flex flex-col items-center justify-center p-6 bg-base-200 rounded-lg">
@@ -169,13 +169,13 @@
 
                 <!-- Copy Information -->
                 <div class="space-y-2 text-center">
-                    <h4 class="font-semibold text-lg">{{ $selectedCopy->academicPaper->title }}</h4>
+                    <h4 class="font-semibold text-lg">{{ $this->selectedCopy->academicPaper->title }}</h4>
                     <p class="text-sm text-base-content/70">
-                        <span class="font-semibold">Copy ID:</span> {{ $selectedCopy->id }}
+                        <span class="font-semibold">Copy ID:</span> {{ $this->selectedCopy->id }}
                     </p>
                     <p class="text-sm text-base-content/70">
                         <span class="font-semibold">Catalog Code:</span>
-                        {{ $selectedCopy->academicPaper->catalog_code }}
+                        {{ $this->selectedCopy->academicPaper->catalog_code }}
                     </p>
                 </div>
 
