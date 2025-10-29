@@ -44,7 +44,6 @@ class Attendance extends Model
         'status',
         'scanned_by',
         'duration_minutes',
-        'notes',
     ];
 
     protected $casts = [

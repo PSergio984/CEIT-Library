@@ -193,7 +193,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUserId($value)
  * @mixin \Eloquent
  * @property int|null $batch_no
- * @property string|null $date_start
+ * @property \Illuminate\Support\Carbon|null $date_start
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereBatchNo($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereDateStart($value)
  */
@@ -383,6 +383,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationId($value)
  * @mixin \Eloquent
  * @property int $violation_penalty
+ * @property-read \App\Models\Attendance|null $attendance
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationPenalty($value)
  */
 	class ViolationTransaction extends \Eloquent {}

@@ -57,6 +57,9 @@
             @endif
             @endscope
 
+            @scope('cell_updated_at', $rule)
+            {{ $rule->updated_at ? $rule->updated_at->format('M d, Y H:i A') : '—' }}
+            @endscope
 
             @scope('actions', $rule)
             <div class="flex gap-2">

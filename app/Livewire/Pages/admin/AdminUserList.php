@@ -9,6 +9,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Computed;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
 #[Title('Admin User List')]
 class AdminUserList extends AdminComponent
@@ -195,14 +196,20 @@ class AdminUserList extends AdminComponent
         ]);
 
         $user = User::findOrFail($this->studentId);
+        if ($user->id === Auth::id() && $user->is_admin && !$this->isAdmin) {
+            return $this->error('You cannot remove your own admin access.');
+        }
         $user->update([
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
             'email' => $this->email,
             'credit_score' => $this->creditScore,
             'account_status' => $this->accountStatus,
-            'is_admin' => $this->isAdmin,
         ]);
+        if ($user->id !== Auth::id()) {
+            $user->is_admin = (bool) $this->isAdmin;
+            $user->save();
+        }
 
         // Clear cache after update
         Cache::forget('admin_user_list_total_borrowers');
