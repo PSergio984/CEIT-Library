@@ -80,7 +80,8 @@
                                     <tr class="border-b border-slate-600 hover:bg-slate-600/30 transition">
                                         <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
                                         <td class="py-3 px-3">
-                                            <div class="text-sm text-slate-300">{!! $batch['members'] !!}</div>
+                                            <div class="text-sm text-slate-300">{{ implode(', ', $batch['members']) }}
+                                            </div>
                                         </td>
                                         <td class="py-3 px-3 text-xs text-blue-300">{{ $batch['date_assigned'] }}
                                         </td>

@@ -51,6 +51,7 @@ class ViolationTransaction extends Model
 
     protected $casts = [
         'date_occurred' => 'date',
+        'violation_penalty' => 'integer',
     ];
     /**
      * Build the remarks string for a missing timeout violation.
@@ -190,5 +191,10 @@ class ViolationTransaction extends Model
     public function scopeRecent($query, $days = 30)
     {
         return $query->where('date_occurred', '>=', Carbon::now()->subDays($days));
+    }
+
+    public function attendance()
+    {
+        return $this->belongsTo(Attendance::class);
     }
 }

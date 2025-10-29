@@ -193,9 +193,54 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUserId($value)
  * @mixin \Eloquent
  * @property int|null $batch_no
+ * @property \Illuminate\Support\Carbon|null $date_start
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereBatchNo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereDateStart($value)
  */
 	class Librarian extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property string $title
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\RuleRegulation> $ruleRegulations
+ * @property-read int|null $rule_regulations_count
+ * @method static \Database\Factories\RuleHeaderFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereUpdatedAt($value)
+ */
+	class RuleHeader extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property int $rule_header_id
+ * @property string $content
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\RuleHeader $ruleHeader
+ * @method static \Database\Factories\RuleRegulationFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereRuleHeaderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereUpdatedAt($value)
+ */
+	class RuleRegulation extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -223,6 +268,12 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUserId($value)
  * @mixin \Eloquent
+ * @property int|null $related_attendance_id
+ * @property int|null $related_borrow_transaction_id
+ * @property-read \App\Models\Attendance|null $attendance
+ * @property-read \App\Models\BorrowTransaction|null $borrowTransaction
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereRelatedAttendanceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereRelatedBorrowTransactionId($value)
  */
 	class ScoreIncrement extends \Eloquent {}
 }
@@ -230,7 +281,6 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
- * @property string $student_no
  * @property string $first_name
  * @property string $last_name
  * @property string $email
@@ -265,7 +315,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User wherePassword($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStudentNo($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @mixin \Eloquent
  * @property string $account_status
@@ -308,6 +357,7 @@ namespace App\Models{
  * @property int $id
  * @property int $user_id
  * @property int $violation_id
+ * @property int|null $attendance_id
  * @property \Illuminate\Support\Carbon $date_occurred
  * @property string $severity
  * @property string|null $remarks
@@ -331,6 +381,9 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationId($value)
  * @mixin \Eloquent
+ * @property int $violation_penalty
+ * @property-read \App\Models\Attendance|null $attendance
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationPenalty($value)
  */
 	class ViolationTransaction extends \Eloquent {}
 }

@@ -3,10 +3,13 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
+use App\Models\Inventory;
+use Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Title('Academic Paper List')]
 class AcademicPaperIndex extends Component
@@ -22,6 +25,11 @@ class AcademicPaperIndex extends Component
     // Modal properties
     public bool $showModal = false;
     public ?AcademicPaper $selectedPaper = null;
+
+    // QR Code Modal properties
+    public bool $showQrModal = false;
+    public ?string $qrCode = null;
+    public ?int $selectedCopyId = null;
 
     public function updatingPerPage(): void
     {
@@ -44,19 +52,16 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function academicPapers()
     {
-
         $query = AcademicPaper::query()
             ->with(['copies' => function ($query) {
                 $query->select('academic_paper_id', 'status');
             }])
-            // filter by department if provided via route slug
             ->when($this->dept, function ($q) {
                 $departmentName = $this->resolveDepartmentName($this->dept);
                 if ($departmentName) {
                     $q->where('department', $departmentName);
                 }
             })
-            // search functionality
             ->when($this->search, function ($q) {
                 $q->where('title', 'like', '%' . $this->search . '%');
             })
@@ -66,7 +71,6 @@ class AcademicPaperIndex extends Component
                 }
             ]);
 
-        // Handle sorting - if sorting by status, sort by available_copies instead
         if ($this->sortBy['column'] === 'status') {
             $query->orderBy('available_copies', $this->sortBy['direction']);
         } else {
@@ -75,7 +79,6 @@ class AcademicPaperIndex extends Component
 
         $paginated = $query->paginate($this->perPage, pageName: 'academic-papers-index');
 
-        // Transform items to include status as a direct property
         $paginated->getCollection()->transform(function ($paper) {
             $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
             return $paper;
@@ -84,13 +87,11 @@ class AcademicPaperIndex extends Component
         return $paginated;
     }
 
-    // Reset pagination when dept changes
     public function updatedDept(): void
     {
         $this->resetPage('academic-papers-index');
     }
 
-    // Reset pagination when search changes
     public function updatedSearch(): void
     {
         $this->resetPage('academic-papers-index');
@@ -108,17 +109,100 @@ class AcademicPaperIndex extends Component
         $this->selectedPaper = null;
     }
 
-    public function requestQr(): void
+    public function requestQr(int $inventoryId): void
     {
+        // 1. grab the copy (inventory row)
+        $copy = Inventory::with('academicPaper')->find($inventoryId);
 
-        // TODO: Implement QR code request functionality
-        // This could generate a QR code for the specific copy
-        // or redirect to a QR generation page
+        if (!$copy) {
+            session()->flash('error', 'Copy not found.');
+            return;
+        }
+
+        if (!$copy->isAvailable()) {
+            session()->flash('error', 'This copy is not available.');
+            return;
+        }
+
+        // Store only the copy ID to avoid serializing models in Livewire state
+        $this->selectedCopyId = $copy->id;
+
+        // 3) Build signed payload with TTL (e.g., 5 minutes)
+        $issuedAt = now();
+        $expiresAt = $issuedAt->copy()->addMinutes(5);
+        $payload = [
+            'inventory_id' => $copy->id,
+            'paper_id'     => $copy->academic_paper_id,
+            'catalog_code' => $copy->academicPaper->catalog_code,
+            'title'        => $copy->academicPaper->title,
+            'requested_by' => Auth::id(),
+            'iat'          => $issuedAt->timestamp,
+            'exp'          => $expiresAt->timestamp,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $secret = config('app.qr_hmac_secret');
+        if (empty($secret)) {
+            abort(500, 'QR signing secret not configured.');
+        }
+        $raw = hash_hmac('sha256', $json, $secret, true);
+        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
+        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+
+        // 4) Create SVG and base64 for modal
+        $svg = QrCode::size(300)->generate($qrPayload);
+        $this->qrCode = base64_encode($svg);
+
+        $this->showQrModal = true;
     }
 
-    /**
-     * Resolve department name from slug or validate existing name
-     */
+    public function closeQrModal(): void
+    {
+        $this->showQrModal = false;
+        $this->qrCode = null;
+       $this->selectedCopyId = null;
+    }
+
+    public function downloadQr()
+    {
+        if (!$this->selectedCopy) {
+            abort(400, 'No selected copy.');
+        }
+
+        $copy = $this->selectedCopy;
+
+        if (!$copy->isAvailable()) {
+            abort(409, 'Copy no longer available.');
+        }
+
+        $paper = $copy->academicPaper;
+
+        $payload = [
+            'inventory_id' => $copy->id,
+            'paper_id'     => $paper->id,
+            'catalog_code' => $paper->catalog_code,
+            'title'        => $paper->title,
+            'requested_by' => Auth::id(),
+            'iat'          => now()->timestamp,
+            'exp'          => now()->addMinutes(5)->timestamp,
+        ];
+        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
+        $secret = config('app.qr_hmac_secret');
+        if (empty($secret)) {
+            abort(500, 'QR signing secret not configured.');
+        }
+        $raw = hash_hmac('sha256', $json, $secret, true);
+        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
+        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+
+        $filename = 'qr-code-inv-' . $copy->id . '.png';
+
+        return response()->streamDownload(
+            fn () => print QrCode::size(500)->format('png')->generate($qrPayload),
+            $filename,
+            ['Content-Type' => 'image/png']
+        );
+    }
+
     private function resolveDepartmentName(?string $dept): ?string
     {
         if (!$dept) {
@@ -128,18 +212,25 @@ class AcademicPaperIndex extends Component
         $mapping = config('departments.mapping', []);
         $validNames = config('departments.valid_names', []);
 
-        // Check if it's a known slug
         if (isset($mapping[$dept])) {
             return $mapping[$dept];
         }
 
-        // Check if it's already a valid department name
         if (in_array($dept, $validNames)) {
             return $dept;
         }
 
-        // Invalid input, return null to skip filtering
         return null;
+    }
+
+    #[Computed]
+    public function selectedCopy()
+    {
+        if (!$this->selectedCopyId) {
+            return null;
+        }
+
+        return Inventory::with('academicPaper')->find($this->selectedCopyId);
     }
 
     #[Computed]
@@ -155,9 +246,6 @@ class AcademicPaperIndex extends Component
         return isset($icons[$department]) ? asset($icons[$department]) : '';
     }
 
-    /**
-     * Get the appropriate badge class for a given status.
-     */
     public function getStatusBadgeClass(string $status): string
     {
         return match ($status) {
