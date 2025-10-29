@@ -64,92 +64,185 @@
     <!-- Modal for Academic Paper Details -->
     <x-mary-modal wire:model="showModal" title="" box-class="max-w-5xl w-full">
         @if ($selectedPaper)
-            <div class="space-y-6">
-                <!-- Title Section -->
-                <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
-                    <h3 class="text-lg sm:text-xl font-bold flex-1 pr-4">{{ $selectedPaper->title }}</h3>
-                    <div class="flex items-center gap-3">
+            <div class="space-y-8">
+                <!-- Header Section with Enhanced Design -->
+                <div
+                    class="bg-gradient-to-r from-primary/10 to-secondary/10 -mx-6 -mt-6 px-6 pt-6 pb-8 rounded-t-xl border-b-2 border-primary/20">
+                    <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+                        <div class="flex-1">
+                            <h3 class="text-2xl sm:text-3xl font-bold text-base-content leading-tight mb-2">
+                                {{ $selectedPaper->title }}
+                            </h3>
+                            <div class="flex flex-wrap gap-2 mt-3">
+                                <span class="badge badge-primary badge-lg">{{ $selectedPaper->catalog_code }}</span>
+                                <span class="badge badge-ghost badge-lg">{{ $selectedPaper->publication_year }}</span>
+                            </div>
+                        </div>
                         @if ($this->departmentIcon())
-                            <img src="{{ $this->departmentIcon() }}" alt="{{ $selectedPaper->department }} Logo"
-                                class="w-20 h-20 sm:w-24 sm:h-24 object-contain">
+                            <div class="flex-shrink-0">
+                                <img src="{{ $this->departmentIcon() }}" alt="{{ $selectedPaper->department }} Logo"
+                                    class="w-20 h-20 sm:w-24 sm:h-24 object-contain">
+                            </div>
                         @endif
                     </div>
                 </div>
 
-                <!-- Details Grid -->
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-                    <div class="space-y-2 sm:space-y-3">
-                        <div>
-                            <span class="font-semibold">Catalog Code:</span> {{ $selectedPaper->catalog_code }}
-                        </div>
-                        <div>
-                            <span class="font-semibold">Department:</span> {{ $selectedPaper->department }}
-                        </div>
-                        <div>
-                            <span class="font-semibold">Members:</span>
-                            @forelse($selectedPaper->authors as $author)
-                                {{ $author->name }}@if (!$loop->last)
-                                    ,
-                                @endif
-                            @empty
-                                No authors listed
-                            @endforelse
+                <!-- Information Cards Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Left Card -->
+                    <div class="card bg-base-200/50 shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <div class="card-body p-6">
+                            <h4 class="card-title text-lg mb-4 text-primary flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                Project Details
+                            </h4>
+                            <div class="space-y-4">
+                                <div class="flex flex-col">
+                                    <span
+                                        class="text-xs uppercase tracking-wide text-base-content/60 font-semibold mb-1">Department</span>
+                                    <span class="text-base font-medium">{{ $selectedPaper->department }}</span>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span
+                                        class="text-xs uppercase tracking-wide text-base-content/60 font-semibold mb-1">Research
+                                        Adviser</span>
+                                    <span
+                                        class="text-base font-medium">{{ $selectedPaper->research_project_adviser }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="space-y-2 sm:space-y-3">
-                        <div>
-                            <span class="font-semibold">Adviser:</span> {{ $selectedPaper->research_project_adviser }}
-                        </div>
-                        <div>
-                            <span class="font-semibold">Year:</span> {{ $selectedPaper->publication_year }}
+                    <!-- Right Card -->
+                    <div class="card bg-base-200/50 shadow-md hover:shadow-lg transition-shadow duration-300">
+                        <div class="card-body p-6">
+                            <h4 class="card-title text-lg mb-4 text-secondary flex items-center gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                                </svg>
+                                Research Team
+                            </h4>
+                            <div class="flex flex-col">
+                                <span
+                                    class="text-xs uppercase tracking-wide text-base-content/60 font-semibold mb-2">Team
+                                    Members</span>
+                                <div class="flex flex-wrap gap-2">
+                                    @forelse($selectedPaper->authors as $author)
+                                        <span class="badge badge-outline badge-lg">{{ $author->name }}</span>
+                                    @empty
+                                        <span class="text-base-content/60 italic">No authors listed</span>
+                                    @endforelse
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Copies Table -->
+                <!-- Copies Section with Enhanced Table -->
                 @if ($selectedPaper->copies->count() > 0)
-                    <div class="overflow-x-auto -mx-2 sm:mx-0">
-                        <table
-                            class="table table-sm w-full text-sm sm:text-base border-collapse border border-base-300 rounded-lg overflow-hidden shadow-sm">
-                            <thead>
-                                <tr class="bg-base-200">
-                                    <th
-                                        class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">
-                                        Copy Id</th>
-                                    <th
-                                        class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">
-                                        Availability</th>
-                                    <th
-                                        class="border-b border-base-300 px-4 py-3 text-left font-semibold text-base-content">
-                                        Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach ($selectedPaper->copies as $copy)
-                                    <tr
-                                        class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
-                                        <td class="px-4 py-3 text-base-content font-medium">{{ $copy->id }}</td>
-                                        <td class="px-4 py-3">
-                                            <span
-                                                class="badge px-4 py-1 {{ $this->getStatusBadgeClass($copy->status) }}">
-                                                {{ $copy->status }}
-                                            </span>
-                                        </td>
-                                        <td class="px-4 py-3">
-                                            @if ($copy->status === 'Available')
-                                                <x-mary-button icon="o-qr-code" class="btn-sm btn-success"
-                                                    wire:click="requestQr({{ $copy->id }})"
-                                                    tooltip="Request QR Code">
-                                                </x-mary-button>
-                                            @else
-                                                <span class="text-error text-sm font-bold">Not Available</span>
-                                            @endif
-                                        </td>
+                    <div class="space-y-4">
+                        <div class="flex items-center gap-3">
+                            <h4 class="text-xl font-bold text-base-content">Available Copies</h4>
+                            <div class="badge badge-neutral">{{ $selectedPaper->copies->count() }}
+                                {{ Str::plural('copy', $selectedPaper->copies->count()) }}</div>
+                        </div>
+
+                        <div class="overflow-x-auto rounded-xl border border-base-300 shadow-md">
+                            <table class="table w-full text-sm sm:text-base">
+                                <thead>
+                                    <tr class="bg-base-300">
+                                        <th class="px-6 py-4 text-left font-bold text-base-content">
+                                            <div class="flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                                                </svg>
+                                                Copy ID
+                                            </div>
+                                        </th>
+                                        <th class="px-6 py-4 text-left font-bold text-base-content">
+                                            <div class="flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                                    viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                </svg>
+                                                Status
+                                            </div>
+                                        </th>
+                                        <th class="px-6 py-4 text-left font-bold text-base-content">
+                                            <div class="flex items-center gap-2">
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                                </svg>
+                                                Action
+                                            </div>
+                                        </th>
                                     </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach ($selectedPaper->copies as $copy)
+                                        <tr
+                                            class="hover:bg-base-200/50 transition-all duration-200 border-b border-base-200 last:border-b-0">
+                                            <td class="px-6 py-4">
+                                                <span
+                                                    class="font-mono font-semibold text-primary">{{ $copy->id }}</span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <span
+                                                    class="badge badge-lg {{ $this->getStatusBadgeClass($copy->status) }} gap-2">
+                                                    @if ($copy->status === 'Available')
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    @endif
+                                                    {{ $copy->status }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($copy->status === 'Available')
+                                                    <x-mary-button icon="o-qr-code"
+                                                        class="btn-sm btn-success gap-2 shadow-sm hover:shadow-md transition-shadow"
+                                                        wire:click="requestQr({{ $copy->id }})"
+                                                        tooltip="Request QR Code">
+                                                        Request QR
+                                                    </x-mary-button>
+                                                @else
+                                                    <div class="flex items-center gap-2 text-error">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5"
+                                                            fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                                        </svg>
+                                                        <span class="text-sm font-semibold">Not Available</span>
+                                                    </div>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 @endif
             </div>
