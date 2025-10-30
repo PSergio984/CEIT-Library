@@ -19,6 +19,17 @@ class AdminBorrowTransactions extends AdminComponent
     public $statusFilter = '';
     public $selectedDate = '';
 
+    // Edit modal properties
+    public $showEditModal = false;
+    public $editingTransactionId = null;
+    public $editStatus = '';
+    public $editTimeOut = '';
+
+    // QR Scanner modal properties
+    public $showQrModal = false;
+    public $scannedQrData = '';
+    public $qrUploadedFile = null;
+
     // MaryUI table headers - Optimized for responsive display
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
@@ -30,6 +41,7 @@ class AdminBorrowTransactions extends AdminComponent
         ['key' => 'time_out', 'label' => 'Time Out', 'sortable' => true, 'class' => 'w-28'],
         ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'class' => 'w-20'],
         ['key' => 'notes', 'label' => 'Notes', 'class' => 'min-w-40'],
+        ['key' => 'actions', 'label' => 'Actions', 'class' => 'w-24', 'sortable' => false],
     ];
 
     // Sort configuration for MaryUI
@@ -122,6 +134,94 @@ class AdminBorrowTransactions extends AdminComponent
     public function getPaperTypesProperty()
     {
         return AcademicPaper::distinct()->pluck('paper_type')->filter();
+    }
+
+    // Edit modal methods
+    public function openEditModal($transactionId)
+    {
+        $transaction = BorrowTransaction::find($transactionId);
+
+        if (!$transaction) {
+            $this->error("Transaction not found!");
+            return;
+        }
+
+        $this->editingTransactionId = $transactionId;
+        $this->editStatus = $transaction->status ?? 'started';
+        $this->editTimeOut = $transaction->time_out ? $transaction->time_out->format('Y-m-d\TH:i') : '';
+        $this->showEditModal = true;
+    }
+
+    public function closeEditModal()
+    {
+        $this->showEditModal = false;
+        $this->editingTransactionId = null;
+        $this->editStatus = '';
+        $this->editTimeOut = '';
+    }
+
+    public function saveTransaction()
+    {
+        $this->validate([
+            'editStatus' => 'required|in:started,completed',
+            'editTimeOut' => 'nullable|date',
+        ]);
+
+        $transaction = BorrowTransaction::find($this->editingTransactionId);
+
+        if (!$transaction) {
+            $this->error("Transaction not found!");
+            return;
+        }
+
+        // If status is completed, time_out is required
+        if ($this->editStatus === 'completed' && empty($this->editTimeOut)) {
+            $this->error("Time Out is required when status is completed!");
+            return;
+        }
+
+        // Update transaction
+        $transaction->update([
+            'status' => $this->editStatus,
+            'time_out' => $this->editTimeOut ? \Carbon\Carbon::parse($this->editTimeOut) : null,
+        ]);
+
+        $this->success("Transaction #$this->editingTransactionId updated successfully!");
+        $this->closeEditModal();
+    }
+
+    // QR Scanner methods
+    public function openQrModal()
+    {
+        $this->showQrModal = true;
+        $this->scannedQrData = '';
+        $this->qrUploadedFile = null;
+        $this->dispatch('qr-modal-opened');
+    }
+
+    public function closeQrModal()
+    {
+        $this->showQrModal = false;
+        $this->scannedQrData = '';
+        $this->qrUploadedFile = null;
+        $this->dispatch('qr-modal-closed');
+    }
+
+    public function processScannedQr($qrData)
+    {
+        $this->scannedQrData = $qrData;
+
+        // Try to find transaction by QR data
+        // Assuming QR contains transaction ID or some identifier
+        $transaction = BorrowTransaction::find($qrData);
+
+        if ($transaction) {
+            $this->openEditModal($transaction->id);
+            $this->closeQrModal();
+            $this->success("Transaction found! Opening editor...");
+        } else {
+            $this->error("No transaction found with this QR code.");
+        }
     }
 
     // Action methods
