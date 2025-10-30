@@ -177,7 +177,6 @@
                             </span>
                         </div>
                         <div class="flex-1 min-w-0">
-                            <div class="font-medium text-sm">{{ $history['reason'] }}</div>
                             <div class="text-xs text-base-content/60">
                                 {{ $history['date']->format('M d, Y') }}
                             </div>
@@ -251,7 +250,7 @@
         </a>
         <a href="/rule-and-regulation" class="btn btn-outline gap-2">
             <x-mary-icon name="o-clipboard-document-list" class="w-5 h-5"/>
-            Rules & Policies
+            Rules & Regulations
         </a>
     </div>
 </div>

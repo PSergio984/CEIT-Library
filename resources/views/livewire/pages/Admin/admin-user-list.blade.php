@@ -2,14 +2,17 @@
     <x-mary-header title="Student List" subtitle="Manage all students and their accounts" separator />
 
     <!-- Stats Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" wire:loading.class="opacity-50">
         <div class="stats shadow bg-base-200">
             <div class="stat">
                 <div class="stat-figure text-primary">
                     <x-mary-icon name="o-user-group" class="w-8 h-8" />
                 </div>
                 <div class="stat-title">Total Students</div>
-                <div class="stat-value text-primary">{{ $this->totalStudents }}</div>
+                <div class="stat-value text-primary" wire:loading.remove>{{ $this->totalStudents }}</div>
+                <div class="stat-value text-primary" wire:loading>
+                    <span class="loading loading-spinner loading-sm"></span>
+                </div>
                 <div class="stat-desc">Registered in the system</div>
             </div>
         </div>
@@ -20,7 +23,10 @@
                     <x-mary-icon name="o-book-open" class="w-8 h-8" />
                 </div>
                 <div class="stat-title">Active Borrowers</div>
-                <div class="stat-value text-secondary">{{ $this->totalBorrowers }}</div>
+                <div class="stat-value text-secondary" wire:loading.remove>{{ $this->totalBorrowers }}</div>
+                <div class="stat-value text-secondary" wire:loading>
+                    <span class="loading loading-spinner loading-sm"></span>
+                </div>
                 <div class="stat-desc">Currently borrowing books</div>
             </div>
         </div>
@@ -74,14 +80,13 @@
         Showing {{ $this->students->count() }} of {{ $this->students->total() }} results
     </div>
 
-    <div class="block lg:hidden space-y-4">
+    <div class="block lg:hidden space-y-4" wire:loading.class="opacity-50">
         @foreach ($this->students as $student)
-            <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" wire:key="mobile-student-{{ $student['id'] }}">
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex items-center gap-3 flex-1">
                         <div>
                             <h3 class="font-semibold text-base">{{ $student['name'] }}</h3>
-                            <p class="text-sm text-base-content/70">{{ $student['student_number'] }}</p>
                         </div>
                     </div>
                     @if ($student['is_admin'])
@@ -100,10 +105,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-base-content/50 font-medium mb-1">Status</p>
-                        <span
-                            class="badge badge-{{ $student['account_status_label'] == 'Available' ? 'success' : 'error' }} badge-sm">
-                            {{ $student['account_status_label'] }}
-                        </span>
+                          <x-student-status-badge :status="$student['account_status_label']" size="sm" />
                     </div>
                 </div>
 
@@ -112,6 +114,7 @@
                         class="btn-sm btn-ghost flex-1" icon="o-eye">
                         View
                     </x-mary-button>
+                    @can('Admin-access')
                     <x-mary-button wire:click="editStudent({{ $student['id'] }})" class="btn-sm btn-ghost flex-1"
                         icon="o-pencil">
                         Edit
@@ -120,6 +123,7 @@
                         class="btn-sm btn-ghost text-error flex-1" icon="o-trash">
                         Delete
                     </x-mary-button>
+                    @endcan
                 </div>
             </div>
         @endforeach
@@ -129,7 +133,7 @@
         </div>
     </div>
 
-    <div class="hidden lg:block overflow-x-auto">
+    <div class="hidden lg:block overflow-x-auto" wire:loading.class="opacity-50">
         <x-mary-table :headers="$headers" :rows="$this->students" :sort-by="$sortBy" with-pagination striped
             row-class="hover:bg-base-200" header-class="text-base-content bg-base-200"
             class="w-full min-w-fit table-auto">
@@ -138,9 +142,6 @@
                 <span class="text-base-content/70">{{ $row['id'] }}</span>
             @endscope
 
-            @scope('cell_student_number', $row)
-                <span class="font-mono text-sm">{{ $row['student_number'] }}</span>
-            @endscope
 
             @scope('cell_name', $row)
                 <div class="flex items-center gap-3">
@@ -158,12 +159,20 @@
             @endscope
 
             @scope('cell_credit_score', $row)
+                @php
+                    $allowedColors = ['success', 'warning', 'error'];
+                    $color = in_array($row['credit_score_color'], $allowedColors) ? $row['credit_score_color'] : 'success';
+                    $colorClass = match($color) {
+                        'success' => 'text-success',
+                        'warning' => 'text-warning',
+                        'error' => 'text-error',
+                        default => 'text-success'
+                    };
+                @endphp
                 <div class="flex items-center gap-2">
-                    <span class="font-bold text-lg">{{ $row['credit_score'] }}</span>
-                    <div class="radial-progress text-{{ $row['credit_score'] >= 75 ? 'success' : ($row['credit_score'] >= 50 ? 'warning' : 'error') }}"
-                        style="--value:{{ $row['credit_score'] }}; --size:2rem; --thickness: 3px;">
-                    </div>
-                </div>
+                    <span class="font-bold text-lg {{ $colorClass }}">{{ $row['credit_score'] }}</span>
+
+            </div>
             @endscope
 
             @scope('cell_status', $row)
@@ -176,10 +185,12 @@
                 <div class="flex gap-1">
                     <x-mary-button wire:click="showTransactionDetails({{ $row['id'] }})" class="btn-sm btn-ghost"
                         icon="o-eye" tooltip="View Details" />
+                     @can('Admin-access')
                     <x-mary-button wire:click="editStudent({{ $row['id'] }})" class="btn-sm btn-ghost" icon="o-pencil"
                         tooltip="Edit Student" />
                     <x-mary-button wire:click="confirmDelete({{ $row['id'] }})" class="btn-sm btn-ghost text-error"
                         icon="o-trash" tooltip="Delete Student" />
+                    @endcan
                 </div>
             @endscope
         </x-mary-table>
@@ -198,16 +209,12 @@
 
     @if ($showStudentModal && $selectedStudent)
         <x-mary-modal wire:model="showStudentModal" title="Student Details" class="backdrop-blur">
-            <div class="space-y-6">
+            <div class="space-y-6 pb-28 sm:pb-0">
                 <div class="grid grid-cols-2 gap-6">
                     <div>
                         <div class="text-sm text-base-content/60 mb-1">Student Name</div>
                         <div class="font-semibold">{{ $selectedStudent->first_name }}
                             {{ $selectedStudent->last_name }}</div>
-                    </div>
-                    <div>
-                        <div class="text-sm text-base-content/60 mb-1">Student Number</div>
-                        <div class="font-mono">23-XX{{ str_pad($selectedStudent->id, 2, '0', STR_PAD_LEFT) }}</div>
                     </div>
                     <div>
                         <div class="text-sm text-base-content/60 mb-1">Email</div>
@@ -217,10 +224,7 @@
                         <div class="text-sm text-base-content/60 mb-1">Credit Score</div>
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-xl">{{ $selectedStudent->credit_score }}</span>
-                            <span
-                                class="badge badge-{{ $selectedStudent->credit_score >= 75 ? 'success' : 'error' }}">
-                                {{ $selectedStudent->credit_score >= 75 ? 'Available' : 'Suspended' }}
-                            </span>
+                            <x-student-status-badge :status="$selectedStudent->account_status" />
                         </div>
                     </div>
                 </div>
@@ -258,8 +262,12 @@
                 </div>
 
                 <x-slot:actions>
-                    <x-mary-button label="View Full Transaction History" class="btn-primary btn-block" />
-                    <x-mary-button label="Close" @click="$wire.closeModal()" />
+                    <div class="sticky bottom-0 left-0 right-0 px-2 pb-4 bg-white/90 sm:bg-transparent z-50">
+                        <div class="flex flex-row gap-2 w-full">
+                            <x-mary-button label="Close" @click="$wire.closeModal()" class="w-1/2 sm:w-auto" icon="o-x-mark" variant="outline" />
+                            <x-mary-button label="Transaction History" class="btn-primary w-1/2 sm:w-auto" icon="o-clock" />
+                        </div>
+                    </div>
                 </x-slot:actions>
             </div>
         </x-mary-modal>

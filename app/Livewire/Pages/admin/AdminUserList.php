@@ -2,16 +2,19 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
-use Auth;
-use Log;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Computed;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Auth;
 
+#[Title('Admin User List')]
 class AdminUserList extends AdminComponent
 {
-    use WithPagination, Toast;
+    use WithPagination, Toast, AuthorizesRequests;
 
     public $perPage = 20;
     public $search = '';
@@ -34,7 +37,6 @@ class AdminUserList extends AdminComponent
 
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
-        ['key' => 'student_number', 'label' => 'Student No.', 'sortable' => true, 'class' => 'w-32'],
         ['key' => 'name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-48'],
         ['key' => 'email', 'label' => 'Email', 'sortable' => true, 'class' => 'min-w-48'],
         ['key' => 'credit_score', 'label' => 'Credit Score', 'sortable' => true, 'class' => 'w-32'],
@@ -42,11 +44,32 @@ class AdminUserList extends AdminComponent
         ['key' => 'actions', 'label' => 'Actions', 'class' => 'w-32'],
     ];
 
-    public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
+    // Default sort configuration
+    public const DEFAULT_SORT = ['column' => 'created_at', 'direction' => 'desc'];
+
+    public array $sortBy = self::DEFAULT_SORT;
+
+    // Credit score thresholds
+    public const CREDIT_SCORE_HIGH = 75;
+    public const CREDIT_SCORE_MEDIUM = 50;
+
+    /**
+     * Get the color for a given credit score ('success', 'warning', 'error')
+     */
+    public function getCreditScoreColor($score): string
+    {
+        if ($score >= self::CREDIT_SCORE_HIGH) {
+            return 'success';
+        } elseif ($score >= self::CREDIT_SCORE_MEDIUM) {
+            return 'warning';
+        }
+        return 'error';
+    }
 
     protected function getStudentsQuery()
     {
         return User::query()
+            ->select(['id', 'first_name', 'last_name', 'email', 'credit_score', 'account_status', 'is_admin'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('first_name', 'like', "%{$this->search}%")
@@ -63,19 +86,20 @@ class AdminUserList extends AdminComponent
             ->when($this->creditScoreFilter, function ($query) {
                 switch ($this->creditScoreFilter) {
                     case 'high':
-                        $query->where('credit_score', '>=', 75);
+                        $query->where('credit_score', '>=', self::CREDIT_SCORE_HIGH);
                         break;
                     case 'medium':
-                        $query->whereBetween('credit_score', [50, 74]);
+                        $query->whereBetween('credit_score', [self::CREDIT_SCORE_MEDIUM, self::CREDIT_SCORE_HIGH - 1]);
                         break;
                     case 'low':
-                        $query->where('credit_score', '<', 50);
+                        $query->where('credit_score', '<', self::CREDIT_SCORE_MEDIUM);
                         break;
                 }
             });
     }
 
-    public function getStudentsProperty()
+    #[Computed]
+    public function students()
     {
         $query = $this->getStudentsQuery();
 
@@ -88,8 +112,8 @@ class AdminUserList extends AdminComponent
                     $query->orderBy('first_name', $direction)
                         ->orderBy('last_name', $direction);
                     break;
-                case 'student_number':
-                    $query->orderBy('id', $direction);
+                case 'status':
+                    $query->orderBy('account_status', $direction);
                     break;
                 default:
                     $query->orderBy($column, $direction);
@@ -100,10 +124,10 @@ class AdminUserList extends AdminComponent
             ->through(function ($user) {
                 return [
                     'id' => $user->id,
-                    'student_number' => '23-XX' . str_pad($user->id, 2, '0', STR_PAD_LEFT),
                     'name' => trim($user->first_name . ' ' . $user->last_name),
                     'email' => $user->email,
                     'credit_score' => $user->credit_score,
+                    'credit_score_color' => $this->getCreditScoreColor($user->credit_score),
                     'status' => $user->account_status,
                     'account_status_label' => $user->account_status === 'active' ? 'Available' : 'Suspended',
                     'is_admin' => $user->is_admin,
@@ -112,17 +136,30 @@ class AdminUserList extends AdminComponent
             });
     }
 
-    public function getTotalStudentsProperty()
+    #[Computed]
+    public function totalStudents()
     {
-        return $this->getStudentsQuery()->count();
+        $cacheKey = 'admin_user_list_total_students_' . md5(serialize([
+            $this->search,
+            $this->statusFilter,
+            $this->roleFilter,
+            $this->creditScoreFilter,
+        ]));
+
+        return Cache::remember($cacheKey, 60, function () {
+            return $this->getStudentsQuery()->count();
+        });
     }
 
-    public function getTotalBorrowersProperty()
+    #[Computed]
+    public function totalBorrowers()
     {
-        return User::where('is_admin', false)
-            ->whereHas('borrowTransactions', function ($query) {
-                $query->where('status', 'started');
-            })->count();
+        return Cache::remember('admin_user_list_total_borrowers', 60, function () {
+            return User::where('is_admin', false)
+                ->whereHas('borrowTransactions', function ($query) {
+                    $query->where('status', 'started');
+                })->count();
+        });
     }
 
     public function showTransactionDetails($userId)
@@ -170,9 +207,13 @@ class AdminUserList extends AdminComponent
             'account_status' => $this->accountStatus,
         ]);
         if ($user->id !== Auth::id()) {
-                    $user->is_admin = (bool) $this->isAdmin;
-                    $user->save();
-            }
+            $user->is_admin = (bool) $this->isAdmin;
+            $user->save();
+        }
+
+        // Clear cache after update
+        Cache::forget('admin_user_list_total_borrowers');
+        $this->clearStatsCaches();
 
         $this->showEditModal = false;
         $this->success('Student updated successfully!');
@@ -188,13 +229,48 @@ class AdminUserList extends AdminComponent
     public function deleteUser()
     {
         if ($this->selectedStudent) {
-            if ($this->selectedStudent->id === Auth::id()) {
-                return $this->error('You cannot delete your own account.');
+            // Check for active borrow transactions (status = 'started' or returned_at/time_out is null)
+            $hasActiveBorrows = $this->selectedStudent->borrowTransactions()
+                ->where(function ($q) {
+                    $q->where('status', 'started')
+                        ->orWhereNull('time_out');
+                })
+                ->exists();
+
+            if ($hasActiveBorrows) {
+                $this->error('Cannot delete student: active borrow transactions exist.');
+                return;
             }
+
+            // If using SoftDeletes, prefer soft delete here
             $this->selectedStudent->delete();
+
+            // Clear cache after deletion
+            Cache::forget('admin_user_list_total_borrowers');
+            $this->clearStatsCaches();
+
             $this->showDeleteModal = false;
             $this->selectedStudent = null;
             $this->success('Student deleted successfully!');
+        }
+    }
+
+    protected function clearStatsCaches()
+    {
+        // If using a taggable cache store, use tags for broad invalidation
+        if (method_exists(Cache::getStore(), 'tags')) {
+            Cache::tags(['admin_user_list_stats'])->flush();
+        } else {
+            // Fallback: clear known keys (not perfect, but avoids getIterator error)
+            foreach (
+                [
+                    'admin_user_list_total_borrowers',
+                    'admin_user_list_total_students_' . md5(serialize(['', '', '', ''])),
+                    'admin_user_list_total_students_' . md5(serialize([$this->search, $this->statusFilter, $this->roleFilter, $this->creditScoreFilter])),
+                ] as $key
+            ) {
+                Cache::forget($key);
+            }
         }
     }
 
@@ -234,7 +310,7 @@ class AdminUserList extends AdminComponent
         $this->statusFilter = '';
         $this->creditScoreFilter = '';
         $this->roleFilter = '';
-        $this->sortBy = ['column' => 'created_at', 'direction' => 'desc'];
+        $this->sortBy = self::DEFAULT_SORT;
         $this->resetPage();
     }
 

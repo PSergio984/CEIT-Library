@@ -358,6 +358,7 @@ namespace App\Models{
  * @property int $user_id
  * @property int $violation_id
  * @property int|null $attendance_id
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereAttendanceId($value)
  * @property \Illuminate\Support\Carbon $date_occurred
  * @property string $severity
  * @property string|null $remarks
