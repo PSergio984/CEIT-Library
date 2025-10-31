@@ -4,6 +4,8 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
+use App\Models\Inventory;
+use App\Models\User;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Title;
@@ -28,7 +30,12 @@ class AdminBorrowTransactions extends AdminComponent
     // QR Scanner modal properties
     public $showQrModal = false;
     public $scannedQrData = '';
-    public $qrUploadedFile = null;
+    public $isProcessingQr = false;
+
+    // Borrow confirmation modal properties
+    public $showConfirmBorrowModal = false;
+    public $pendingBorrowData = [];
+    public $borrowNotes = '';
 
     // MaryUI table headers - Optimized for responsive display
     public array $headers = [
@@ -126,7 +133,7 @@ class AdminBorrowTransactions extends AdminComponent
                     'time_out' => $transaction->time_out,
                     'status' => $transaction->status ?? 'active',
                     'notes' => $transaction->notes ?? 'N/A',
-                    'original' => $transaction, // Keep original for actions
+                    'original' => $transaction,
                 ];
             });
     }
@@ -174,16 +181,16 @@ class AdminBorrowTransactions extends AdminComponent
             return;
         }
 
-        // If status is completed, time_out is required
         if ($this->editStatus === 'completed' && empty($this->editTimeOut)) {
             $this->error("Time Out is required when status is completed!");
             return;
         }
 
-        // Update transaction
         $transaction->update([
             'status' => $this->editStatus,
-            'time_out' => $this->editTimeOut ? \Carbon\Carbon::parse($this->editTimeOut) : null,
+            'time_out' => $this->editStatus === 'completed'
+                ? \Carbon\Carbon::parse($this->editTimeOut)
+                : null,
         ]);
 
         $this->success("Transaction #$this->editingTransactionId updated successfully!");
@@ -195,7 +202,7 @@ class AdminBorrowTransactions extends AdminComponent
     {
         $this->showQrModal = true;
         $this->scannedQrData = '';
-        $this->qrUploadedFile = null;
+        $this->isProcessingQr = false;
         $this->dispatch('qr-modal-opened');
     }
 
@@ -203,52 +210,171 @@ class AdminBorrowTransactions extends AdminComponent
     {
         $this->showQrModal = false;
         $this->scannedQrData = '';
-        $this->qrUploadedFile = null;
+        $this->isProcessingQr = false;
         $this->dispatch('qr-modal-closed');
     }
 
     public function processScannedQr($qrData)
-    {
+{
+    \Log::info('=== QR Processing Started ===');
+    \Log::info('Raw QR Data:', ['data' => $qrData]);
+
+    $this->isProcessingQr = true;
+
+    try {
         $this->scannedQrData = $qrData;
 
-        // Try to find transaction by QR data
-        // Assuming QR contains transaction ID or some identifier
-        $transaction = BorrowTransaction::find($qrData);
+        // Parse the JSON data from QR code
+        $data = json_decode($qrData, true);
+        \Log::info('Decoded JSON:', ['data' => $data]);
 
-        if ($transaction) {
-            $this->openEditModal($transaction->id);
-            $this->closeQrModal();
-            $this->success("Transaction found! Opening editor...");
-        } else {
-            $this->error("No transaction found with this QR code.");
+        if (!$data || !isset($data['p'])) {
+            \Log::error('Invalid QR format - missing p key');
+            $this->error("Invalid QR code format!");
+            return ['found' => false];
         }
-    }
 
-    // Action methods
-    public function viewTransaction($id)
-    {
-        $this->info("Viewing transaction #$id");
-        // Add your view logic here
-    }
+        // Extract the nested data
+        $borrowData = $data['p'];
+        \Log::info('Borrow Data:', ['borrowData' => $borrowData]);
 
-    public function markCompleted($id)
-    {
-        $transaction = BorrowTransaction::find($id);
-        if ($transaction && $transaction->status !== 'completed') {
-            $transaction->update([
-                'status' => 'completed',
-                'time_out' => now()
+        // Validate required fields
+        if (!isset($borrowData['inventory_id']) || !isset($borrowData['paper_id'])) {
+            \Log::error('Missing required fields', [
+                'has_inventory_id' => isset($borrowData['inventory_id']),
+                'has_paper_id' => isset($borrowData['paper_id'])
             ]);
-            $this->success("Transaction #$id marked as completed!");
+            $this->error("Missing required data in QR code!");
+            return ['found' => false];
         }
+
+        // Find the inventory and paper
+        $inventory = Inventory::with('academicPaper')->find($borrowData['inventory_id']);
+        $paper = AcademicPaper::find($borrowData['paper_id']);
+        $userEmail = $borrowData['lat'] ?? null;
+        \Log::info('Looking for user with email:', ['email' => $userEmail]);
+        $user = User::where('email', $userEmail)->first();
+
+        \Log::info('Database lookups:', [
+            'inventory_found' => !!$inventory,
+            'paper_found' => !!$paper,
+            'user_found' => !!$user,
+            'user_email' => $userEmail
+        ]);
+
+        if (!$inventory || !$paper) {
+            \Log::error('Invalid inventory or paper', [
+                'inventory_id' => $borrowData['inventory_id'],
+                'paper_id' => $borrowData['paper_id']
+            ]);
+            $this->error("Invalid inventory or paper ID!");
+            return ['found' => false];
+        }
+
+        if (!$user) {
+            \Log::error('User not found', ['email' => $userEmail]);
+            $this->error("User not found with email: {$userEmail}");
+            return ['found' => false];
+        }
+
+        // Check if inventory is available
+        \Log::info('Inventory status:', ['status' => $inventory->status]);
+        if ($inventory->status !== 'Available') {
+            \Log::warning('Inventory not available', [
+                'inventory_id' => $inventory->id,
+                'status' => $inventory->status
+            ]);
+            $this->error("This copy is not available for borrowing! Current status: {$inventory->status}");
+            return ['found' => false];
+        }
+
+        // Store the pending borrow data
+        $this->pendingBorrowData = [
+            'user_id' => $user->id,
+            'user_name' => $user->first_name . ' ' . $user->last_name,
+            'user_email' => $user->email,
+            'inventory_id' => $inventory->id,
+            'paper_id' => $paper->id,
+            'copy_number' => $inventory->copy_number,
+            'catalog_code' => $paper->catalog_code,
+            'title' => $paper->title,
+            'paper_type' => $paper->paper_type,
+            'publication_year' => $paper->publication_year,
+            'department' => $paper->department,
+            'requested_by' => $borrowData['requested_by'] ?? null,
+            'expires_at' => $borrowData['exp'] ?? null,
+        ];
+
+        \Log::info('Pending borrow data prepared:', $this->pendingBorrowData);
+
+        // Close QR modal and open confirmation modal
+        $this->closeQrModal();
+        $this->showConfirmBorrowModal = true;
+        $this->borrowNotes = '';
+
+        \Log::info('=== QR Processing Successful ===');
+        return ['found' => true];
+
+    } catch (\Exception $e) {
+        \Log::error('QR Processing Exception:', [
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+        $this->error("Error processing QR code: " . $e->getMessage());
+        return ['found' => false];
+    } finally {
+        $this->isProcessingQr = false;
+        \Log::info('=== QR Processing Ended ===');
+    }
+}
+
+    public function closeConfirmBorrowModal()
+    {
+        $this->showConfirmBorrowModal = false;
+        $this->pendingBorrowData = [];
+        $this->borrowNotes = '';
     }
 
-    public function extendTransaction($id)
+    public function confirmBorrow()
     {
-        $transaction = BorrowTransaction::find($id);
-        if (!$transaction) {
-            $this->error("Transaction #$id not found!");
-            return;
+        try {
+            if (empty($this->pendingBorrowData)) {
+                $this->error("No pending borrow request!");
+                return;
+            }
+
+            // Start database transaction
+            \DB::beginTransaction();
+
+            // Create borrow transaction
+            $transaction = BorrowTransaction::create([
+                'user_id' => $this->pendingBorrowData['user_id'],
+                'academic_paper_id' => $this->pendingBorrowData['paper_id'],
+                'inventory_id' => $this->pendingBorrowData['inventory_id'],
+                'time_in' => now(),
+                'time_out' => null,
+                'status' => 'started',
+                'expires_at' => $this->pendingBorrowData['expires_at']
+                    ? \Carbon\Carbon::createFromTimestamp($this->pendingBorrowData['expires_at'])
+                    : now()->addHours(2),
+                'session_token' => bin2hex(random_bytes(32)),
+                'notes' => $this->borrowNotes ?: null,
+            ]);
+
+            // Update inventory status to Unavailable
+            $inventory = Inventory::find($this->pendingBorrowData['inventory_id']);
+            $inventory->update(['status' => 'Unavailable']);
+
+            \DB::commit();
+
+            $this->success("Borrow transaction created successfully! Copy #{$inventory->copy_number} is now unavailable.");
+            $this->closeConfirmBorrowModal();
+            $this->reset(['borrowNotes', 'pendingBorrowData']);
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            \Log::error('Borrow Confirmation Error: ' . $e->getMessage());
+            $this->error("Failed to create borrow transaction: " . $e->getMessage());
         }
     }
 

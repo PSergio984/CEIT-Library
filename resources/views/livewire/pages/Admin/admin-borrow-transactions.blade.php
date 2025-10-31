@@ -217,178 +217,319 @@
         </x-slot:actions>
     </x-mary-modal>
 
+    {{-- Borrow Confirmation Modal --}}
+    <x-mary-modal wire:model="showConfirmBorrowModal" title="Confirm Borrow Request" persistent class="backdrop-blur"
+        box-class="max-w-3xl">
+        @if (!empty($pendingBorrowData))
+            <div class="space-y-6">
+                {{-- User Information --}}
+                <div class="bg-base-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-lg mb-3 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                        Student Information
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <p class="text-sm text-base-content/60">Name</p>
+                            <p class="font-medium">{{ $pendingBorrowData['user_name'] ?? 'N/A' }}</p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-base-content/60">Email</p>
+                            <p class="font-medium">{{ $pendingBorrowData['user_email'] ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Paper Information --}}
+                <div class="bg-base-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-lg mb-3 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                        </svg>
+                        Paper Details
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <p class="text-sm text-base-content/60">Title</p>
+                            <p class="font-medium">{{ $pendingBorrowData['title'] ?? 'N/A' }}</p>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                            <div>
+                                <p class="text-sm text-base-content/60">Catalog Code</p>
+                                <p class="font-medium">
+                                    <span
+                                        class="badge badge-primary">{{ $pendingBorrowData['catalog_code'] ?? 'N/A' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-base-content/60">Copy Number</p>
+                                <p class="font-medium">
+                                    <span class="badge badge-info">Copy
+                                        #{{ $pendingBorrowData['copy_number'] ?? 'N/A' }}</span>
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-base-content/60">Type</p>
+                                <p class="font-medium">{{ $pendingBorrowData['paper_type'] ?? 'N/A' }}</p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-base-content/60">Year</p>
+                                <p class="font-medium">{{ $pendingBorrowData['publication_year'] ?? 'N/A' }}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="text-sm text-base-content/60">Department</p>
+                            <p class="font-medium">{{ $pendingBorrowData['department'] ?? 'N/A' }}</p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Notes Field --}}
+                <div>
+                    <x-mary-textarea label="Notes (Optional)" wire:model="borrowNotes"
+                        placeholder="Add any notes about this transaction..." rows="3" />
+                </div>
+
+                {{-- Warning --}}
+                <div class="alert alert-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>Confirming this will mark <strong>Copy
+                            #{{ $pendingBorrowData['copy_number'] ?? 'N/A' }}</strong> as <strong>Unavailable</strong>
+                        and create a borrow transaction.</span>
+                </div>
+            </div>
+        @endif
+
+        <x-slot:actions>
+            <x-mary-button label="Cancel" wire:click="closeConfirmBorrowModal" />
+            <x-mary-button label="Confirm Borrow" wire:click="confirmBorrow" class="btn-success"
+                icon="o-check-circle">
+            </x-mary-button>
+        </x-slot:actions>
+    </x-mary-modal>
+
     {{-- QR Scanner Modal --}}
     <x-mary-modal wire:model="showQrModal" title="Scan QR Code" class="backdrop-blur" box-class="max-w-2xl">
-        <div class="space-y-4">
-            {{-- Camera Scanner --}}
-            <div id="qr-scanner-container">
-                <div id="camera-status" class="text-center mb-4">
-                    <div class="loading loading-spinner loading-lg text-primary"></div>
-                    <p class="mt-2">Initializing camera...</p>
+        <div class="space-y-4" x-data="qrScanner()" x-init="init()">
+            {{-- Processing Indicator --}}
+            @if ($isProcessingQr)
+                <div class="bg-primary/10 border border-primary rounded-lg p-6 text-center">
+                    <div class="flex flex-col items-center gap-4">
+                        <div class="loading loading-spinner loading-lg text-primary"></div>
+                        <div>
+                            <p class="font-semibold text-lg">Processing QR Code...</p>
+                            <p class="text-sm text-base-content/70 mt-1">Please wait while we validate the request</p>
+                        </div>
+                        <progress class="progress progress-primary w-full max-w-xs"></progress>
+                    </div>
                 </div>
-                <div id="qr-reader" class="w-full rounded-lg overflow-hidden bg-black"></div>
-            </div>
+            @else
+                {{-- File Upload (Primary Method) --}}
+                <div id="qr-upload-container" x-show="!cameraMode">
+                    <div class="alert alert-info mb-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            class="stroke-current shrink-0 w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>Upload an image containing the QR code or use your camera.</span>
+                    </div>
 
-            {{-- Fallback File Upload --}}
-            <div id="qr-upload-container" class="hidden">
-                <div class="alert alert-info mb-4">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
-                        class="stroke-current shrink-0 w-6 h-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
-                    <span>No camera found. Please upload an image containing the QR code.</span>
+                    <input type="file" accept="image/*" @change="handleFileUpload($event)"
+                        class="file-input file-input-bordered w-full mb-4" />
+
+                    {{-- Camera Button --}}
+                    <button type="button" @click="startCamera()" class="btn btn-outline w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
+                        </svg>
+                        Use Camera Instead
+                    </button>
                 </div>
-                <input type="file" accept="image/*" id="qr-file-input"
-                    class="file-input file-input-bordered w-full" />
-            </div>
 
-            @if ($scannedQrData)
+                {{-- Camera Scanner --}}
+                <div x-show="cameraMode" style="display: none;">
+                    <div x-show="cameraStatus === 'starting'" class="text-center mb-4">
+                        <div class="loading loading-spinner loading-lg text-primary"></div>
+                        <p class="mt-2">Starting camera...</p>
+                    </div>
+
+                    <div x-show="cameraStatus === 'ready'" class="mb-4">
+                        <p class="text-success font-semibold text-center">Camera ready! Point at QR code</p>
+                    </div>
+
+                    <div id="qr-reader" wire:ignore class="w-full rounded-lg overflow-hidden bg-black mb-4"></div>
+
+                    {{-- Back to Upload Button --}}
+                    <button type="button" @click="stopCamera()" class="btn btn-outline btn-sm w-full">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                            stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M9 15L3 9m0 0l6-6M3 9h12a6 6 0 010 12h-3" />
+                        </svg>
+                        Back to File Upload
+                    </button>
+                </div>
+            @endif
+
+            @if ($scannedQrData && !$isProcessingQr)
                 <div class="alert alert-success">
                     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
                         viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <span>QR Code detected: {{ $scannedQrData }}</span>
+                    <span>QR Code detected successfully!</span>
                 </div>
             @endif
         </div>
 
         <x-slot:actions>
-            <x-mary-button label="Close" wire:click="closeQrModal" />
+            <x-mary-button label="Close" wire:click="closeQrModal" :disabled="$isProcessingQr" />
         </x-slot:actions>
     </x-mary-modal>
 
     @push('scripts')
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"
-            integrity="sha512-r6rDA7W6ZeQhvl8S7yRVQUKVHdexq+GAlNkNNqVC7YyIV+NwqCTJe2hDWCiffTyRNOeGEzRRJ9ifvRm/HCzGYg=="
-            crossorigin="anonymous"></script>
+        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
         <script>
-            let html5QrCode = null;
-            let fileInputInitialized = false;
-            let cameraStarted = false;
+            function qrScanner() {
+                return {
+                    cameraMode: false,
+                    cameraStatus: 'stopped', // stopped, starting, ready
+                    html5QrCode: null,
 
-            document.addEventListener('livewire:initialized', () => {
-                Livewire.on('qr-modal-opened', () => setTimeout(initializeQrScanner, 100));
-                Livewire.on('qr-modal-closed', cleanupScanner);
-            });
+                    init() {
+                        console.log('QR Scanner Alpine component initialized');
+                    },
 
-            /* 1️⃣  runs as soon as the modal opens */
-            async function initializeQrScanner() {
-                const statusEl = document.getElementById('camera-status');
-                const readerEl = document.getElementById('qr-reader');
-                const uploadEl = document.getElementById('qr-upload-container');
+                    async handleFileUpload(event) {
+                        const file = event.target.files[0];
+                        console.log('File selected:', file?.name);
 
-                if (!statusEl || !readerEl || !uploadEl) return;
-
-                try {
-                    /* camera hardware? */
-                    const devices = await navigator.mediaDevices.enumerateDevices();
-                    const camList = devices.filter(d => d.kind === 'videoinput');
-                    if (camList.length === 0) throw new Error('No camera');
-
-                    // camera exists — start immediately
-                    statusEl.innerHTML =
-                        '<div class="text-sm text-base-content/70">Camera detected, starting...</div>';
-
-                    readerEl.style.display = 'block';
-                    uploadEl.classList.add('hidden');
-                    startCameraOnUserClick();
-
-                } catch (err) {
-                    /* no camera – show fallback immediately */
-                    console.warn('Camera unavailable:', err);
-                    showUploadFallback();
-                }
-            }
-
-
-            /* 2️⃣  user clicked the fallback – start real camera */
-            async function startCameraOnUserClick() {
-                if (cameraStarted) return;
-                cameraStarted = true;
-
-                const statusEl = document.getElementById('camera-status');
-                const readerEl = document.getElementById('qr-reader');
-                const uploadEl = document.getElementById('qr-upload-container');
-
-                statusEl.innerHTML =
-                    '<div class="loading loading-spinner loading-lg text-primary"></div>' +
-                    '<p class="mt-2">Starting camera…</p>';
-                readerEl.style.display = 'block'; /* reveal preview */
-                uploadEl.classList.add('hidden'); /* hide fallback while camera starts */
-
-                try {
-                    html5QrCode = new Html5Qrcode('qr-reader');
-                    await html5QrCode.start({
-                            facingMode: 'environment'
-                        }, {
-                            fps: 10,
-                            qrbox: {
-                                width: 250,
-                                height: 250
-                            },
-                            aspectRatio: 1.0
-                        },
-                        decodedText => {
-                            console.log('QR:', decodedText);
-                            cleanupScanner();
-                            @this.call('processScannedQr', decodedText);
-                        },
-                        /* ignore parse errors */
-                        () => {}
-                    );
-                    statusEl.innerHTML =
-                        '<p class="text-success font-semibold">Camera ready!  Point at QR code</p>';
-                } catch (err) {
-                    console.error('Camera start failed:', err);
-                    showUploadFallback(); /* back to fallback */
-                }
-            }
-
-            /* 3️⃣  file-upload fallback (unchanged) */
-            function showUploadFallback() {
-                const statusEl = document.getElementById('camera-status');
-                const readerEl = document.getElementById('qr-reader');
-                const uploadEl = document.getElementById('qr-upload-container');
-
-                if (statusEl) {
-                    statusEl.innerHTML =
-                        '<div class="alert alert-info mb-4">' +
-                        '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" ' +
-                        'class="stroke-current shrink-0 w-6 h-6">' +
-                        '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" ' +
-                        'd="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>' +
-                        '<span>No camera found.  Please upload an image containing the QR code.</span>' +
-                        '</div>';
-                }
-                if (readerEl) readerEl.style.display = 'none';
-                if (uploadEl) uploadEl.classList.remove('hidden');
-
-                if (!fileInputInitialized) {
-                    document.getElementById('qr-file-input')?.addEventListener('change', async e => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        try {
-                            const temp = new Html5Qrcode('qr-reader');
-                            const text = await temp.scanFile(file, true);
-                            @this.call('processScannedQr', text);
-                        } catch {
-                            alert('Could not read QR code from this image.');
+                        if (!file) {
+                            console.log('No file selected');
+                            return;
                         }
-                    });
-                    fileInputInitialized = true;
-                }
-            }
 
-            /* 4️⃣  tidy up */
-            function cleanupScanner() {
-                if (html5QrCode) {
-                    html5QrCode.stop().then(() => html5QrCode.clear()).catch(() => {});
-                    html5QrCode = null;
+                        // Show processing state
+                        console.log('Setting processing state...');
+                        @this.set('isProcessingQr', true);
+
+                        try {
+                            console.log('Creating scanner instance...');
+                            const scanner = new Html5Qrcode('qr-reader');
+
+                            console.log('Scanning file...');
+                            const qrText = await scanner.scanFile(file, true);
+                            console.log('QR Code detected:', qrText);
+
+                            // Call Livewire method
+                            console.log('Calling processScannedQr...');
+                            const result = await @this.call('processScannedQr', qrText);
+                            console.log('Process result:', result);
+
+                            if (!result?.found) {
+                                console.log('QR not found, hiding processing state');
+                                @this.set('isProcessingQr', false);
+                            }
+                        } catch (error) {
+                            console.error('QR scanning error:', error);
+                            @this.set('isProcessingQr', false);
+                            alert('Could not read QR code from this image.\nError: ' + error.message);
+                        }
+
+                        // Reset file input
+                        event.target.value = '';
+                    },
+
+                    async startCamera() {
+                        console.log('Starting camera...');
+
+                        try {
+                            // Check for camera
+                            const devices = await navigator.mediaDevices.enumerateDevices();
+                            const cameras = devices.filter(d => d.kind === 'videoinput');
+                            console.log('Cameras found:', cameras.length);
+
+                            if (cameras.length === 0) {
+                                alert('No camera found. Please use file upload.');
+                                return;
+                            }
+
+                            this.cameraMode = true;
+                            this.cameraStatus = 'starting';
+
+                            // Wait for DOM update
+                            await this.$nextTick();
+
+                            console.log('Initializing Html5Qrcode...');
+                            this.html5QrCode = new Html5Qrcode('qr-reader');
+
+                            await this.html5QrCode.start({
+                                    facingMode: 'environment'
+                                }, {
+                                    fps: 10,
+                                    qrbox: {
+                                        width: 250,
+                                        height: 250
+                                    }
+                                },
+                                async (decodedText) => {
+                                    console.log('QR detected from camera:', decodedText);
+
+                                    @this.set('isProcessingQr', true);
+                                    const result = await @this.call('processScannedQr', decodedText);
+                                    console.log('Camera QR result:', result);
+
+                                    if (result?.found) {
+                                        this.stopCamera();
+                                    } else {
+                                        @this.set('isProcessingQr', false);
+                                    }
+                                }
+                            );
+
+                            this.cameraStatus = 'ready';
+                            console.log('Camera started successfully');
+
+                        } catch (error) {
+                            console.error('Camera error:', error);
+                            alert('Failed to start camera: ' + error.message);
+                            this.stopCamera();
+                        }
+                    },
+
+                    stopCamera() {
+                        console.log('Stopping camera...');
+
+                        if (this.html5QrCode) {
+                            this.html5QrCode.stop()
+                                .then(() => {
+                                    console.log('Camera stopped');
+                                    this.html5QrCode.clear();
+                                    this.html5QrCode = null;
+                                })
+                                .catch(err => console.warn('Stop error:', err));
+                        }
+
+                        this.cameraMode = false;
+                        this.cameraStatus = 'stopped';
+                    }
                 }
-                cameraStarted = false;
             }
         </script>
     @endpush
