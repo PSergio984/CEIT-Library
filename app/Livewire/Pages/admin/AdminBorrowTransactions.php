@@ -186,12 +186,22 @@ class AdminBorrowTransactions extends AdminComponent
             return;
         }
 
-        $transaction->update([
-            'status' => $this->editStatus,
-            'time_out' => $this->editStatus === 'completed'
-                ? \Carbon\Carbon::parse($this->editTimeOut)
-                : null,
-        ]);
+        \DB::transaction(function () use ($transaction) {
+            $transaction->update([
+                'status' => $this->editStatus,
+                'time_out' => $this->editStatus === 'completed'
+                    ? \Carbon\Carbon::parse($this->editTimeOut)
+                    : null,
+            ]);
+
+            $inventory = $transaction->inventory()->lockForUpdate()->first();
+
+            if ($inventory) {
+                $inventory->update([
+                    'status' => $this->editStatus === 'completed' ? 'Available' : 'Unavailable',
+                ]);
+            }
+        });
 
         $this->success("Transaction #$this->editingTransactionId updated successfully!");
         $this->closeEditModal();
