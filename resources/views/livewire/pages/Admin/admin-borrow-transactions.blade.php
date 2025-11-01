@@ -1,4 +1,8 @@
 <div class="p-6">
+    {{-- Load QR libraries first --}}
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+
     <x-mary-header title="Borrow Transactions" subtitle="all borrow transactions" separator>
         <x-slot:actions>
             <x-mary-button wire:click="openQrModal" class="btn-primary" icon="o-qr-code">
@@ -403,13 +407,12 @@
         </x-slot:actions>
     </x-mary-modal>
 
-    @push('scripts')
-        <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    @script
         <script>
-            function qrScanner() {
+            window.qrScanner = function() {
                 return {
                     cameraMode: false,
-                    cameraStatus: 'stopped', // stopped, starting, ready
+                    cameraStatus: 'stopped',
                     html5QrCode: null,
 
                     init() {
@@ -418,49 +421,162 @@
 
                     async handleFileUpload(event) {
                         const file = event.target.files[0];
-                        console.log('File selected:', file?.name);
+                        console.log('File selected:', file?.name, 'Type:', file?.type, 'Size:', file?.size);
 
                         if (!file) {
                             console.log('No file selected');
                             return;
                         }
 
-                        // Show processing state
-                        console.log('Setting processing state...');
-                        @this.set('isProcessingQr', true);
-
-                        try {
-                            console.log('Creating scanner instance...');
-                            const scanner = new Html5Qrcode('qr-reader');
-
-                            console.log('Scanning file...');
-                            const qrText = await scanner.scanFile(file, true);
-                            console.log('QR Code detected:', qrText);
-
-                            // Call Livewire method
-                            console.log('Calling processScannedQr...');
-                            const result = await @this.call('processScannedQr', qrText);
-                            console.log('Process result:', result);
-
-                            if (!result?.found) {
-                                console.log('QR not found, hiding processing state');
-                                @this.set('isProcessingQr', false);
-                            }
-                        } catch (error) {
-                            console.error('QR scanning error:', error);
-                            @this.set('isProcessingQr', false);
-                            alert('Could not read QR code from this image.\nError: ' + error.message);
+                        // Validate file type
+                        if (!file.type.startsWith('image/')) {
+                            alert('Please select an image file');
+                            event.target.value = '';
+                            return;
                         }
 
-                        // Reset file input
+                        console.log('Setting processing state...');
+                        $wire.set('isProcessingQr', true);
+
+                        try {
+                            // Try method 1: Html5Qrcode
+                            console.log('Trying Html5Qrcode library...');
+                            try {
+                                const tempDiv = document.createElement('div');
+                                tempDiv.id = 'temp-qr-reader';
+                                tempDiv.style.display = 'none';
+                                document.body.appendChild(tempDiv);
+
+                                const scanner = new Html5Qrcode('temp-qr-reader');
+                                const qrText = await scanner.scanFile(file, true);
+
+                                await scanner.clear();
+                                document.body.removeChild(tempDiv);
+
+                                console.log('✓ Html5Qrcode succeeded:', qrText);
+                                await this.processQrResult(qrText);
+                                return;
+                            } catch (html5Error) {
+                                console.log('✗ Html5Qrcode failed:', html5Error.message);
+
+                                // Clean up
+                                const tempDiv = document.getElementById('temp-qr-reader');
+                                if (tempDiv) document.body.removeChild(tempDiv);
+                            }
+
+                            // Try method 2: jsQR (fallback)
+                            console.log('Trying jsQR library as fallback...');
+                            console.log('jsQR available?', typeof jsQR !== 'undefined', 'window.jsQR?', typeof window
+                                .jsQR !== 'undefined');
+
+                            if (typeof jsQR !== 'undefined' || typeof window.jsQR !== 'undefined') {
+                                const qrText = await this.scanWithJsQR(file);
+                                if (qrText) {
+                                    console.log('jsQR succeeded:', qrText);
+                                    await this.processQrResult(qrText);
+                                    return;
+                                } else {
+                                    console.log('jsQR returned null - no QR code detected');
+                                }
+                            } else {
+                                console.error('jsQR library is not loaded!');
+                            }
+
+                            // Both methods failed
+                            throw new Error(
+                                'QR code could not be detected. Please ensure the image is clear and contains a valid QR code.'
+                            );
+
+                        } catch (error) {
+                            console.error('All QR scanning methods failed:', error);
+                            $wire.set('isProcessingQr', false);
+
+                            alert('Could not read QR code from this image.\n\n' +
+                                'Please try:\n' +
+                                '• Taking a clearer, higher resolution photo\n' +
+                                '• Ensuring good lighting\n' +
+                                '• Getting closer to the QR code\n' +
+                                '• Using the camera option instead\n\n' +
+                                'Error: ' + error.message);
+                        }
+
                         event.target.value = '';
                     },
 
+                    async scanWithJsQR(file) {
+                        console.log('scanWithJsQR called with file:', file.name);
+                        return new Promise((resolve) => {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const img = new Image();
+                                img.onload = () => {
+                                    const jsQRFunc = window.jsQR || jsQR;
+
+                                    // Try multiple scales for better detection
+                                    const scales = [1, 0.5, 1.5, 2, 0.25];
+
+                                    for (const scale of scales) {
+                                        const canvas = document.createElement('canvas');
+                                        const ctx = canvas.getContext('2d');
+
+                                        canvas.width = img.width * scale;
+                                        canvas.height = img.height * scale;
+
+                                        ctx.imageSmoothingEnabled = true;
+                                        ctx.imageSmoothingQuality = 'high';
+                                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                                        const imageData = ctx.getImageData(0, 0, canvas.width, canvas
+                                            .height);
+
+                                        console.log(
+                                            `Attempting jsQR scan at scale ${scale}: ${canvas.width}x${canvas.height}`
+                                        );
+
+                                        const code = jsQRFunc(imageData.data, imageData.width, imageData
+                                            .height, {
+                                                inversionAttempts: 'attemptBoth',
+                                            });
+
+                                        if (code) {
+                                            console.log('✓ jsQR detected code at scale', scale, ':',
+                                                code.data);
+                                            resolve(code.data);
+                                            return;
+                                        }
+                                    }
+
+                                    console.log('✗ jsQR could not detect QR code at any scale');
+                                    resolve(null);
+                                };
+                                img.onerror = (err) => {
+                                    console.error('Image load error:', err);
+                                    resolve(null);
+                                };
+                                img.src = e.target.result;
+                            };
+                            reader.onerror = (err) => {
+                                console.error('File read error:', err);
+                                resolve(null);
+                            };
+                            reader.readAsDataURL(file);
+                        });
+                    },
+
+                    async processQrResult(qrText) {
+                        console.log('Processing QR result:', qrText);
+                        const result = await $wire.call('processScannedQr', qrText);
+                        console.log('Process result:', result);
+
+                        if (!result?.found) {
+                            console.log('QR not found in database, hiding processing state');
+                            $wire.set('isProcessingQr', false);
+                        }
+                    },
                     async startCamera() {
                         console.log('Starting camera...');
 
                         try {
-                            // Check for camera
                             const devices = await navigator.mediaDevices.enumerateDevices();
                             const cameras = devices.filter(d => d.kind === 'videoinput');
                             console.log('Cameras found:', cameras.length);
@@ -473,7 +589,6 @@
                             this.cameraMode = true;
                             this.cameraStatus = 'starting';
 
-                            // Wait for DOM update
                             await this.$nextTick();
 
                             console.log('Initializing Html5Qrcode...');
@@ -482,25 +597,45 @@
                             await this.html5QrCode.start({
                                     facingMode: 'environment'
                                 }, {
-                                    fps: 10,
-                                    qrbox: {
-                                        width: 250,
-                                        height: 250
-                                    }
+                                    fps: 20, // Scan 20 times per second
+                                    qrbox: function(viewfinderWidth, viewfinderHeight) {
+                                        // Make scan box 90% of the smaller dimension
+                                        let minEdgePercentage = 0.9;
+                                        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                                        let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                                        return {
+                                            width: qrboxSize,
+                                            height: qrboxSize
+                                        };
+                                    },
+                                    aspectRatio: 1.0,
+                                    disableFlip: false,
                                 },
                                 async (decodedText) => {
-                                    console.log('QR detected from camera:', decodedText);
+                                        console.log('QR detected from camera:', decodedText);
 
-                                    @this.set('isProcessingQr', true);
-                                    const result = await @this.call('processScannedQr', decodedText);
-                                    console.log('Camera QR result:', result);
+                                        // Prevent multiple scans while processing
+                                        if ($wire.get('isProcessingQr')) {
+                                            console.log('Already processing a QR code, skipping...');
+                                            return;
+                                        }
 
-                                    if (result?.found) {
-                                        this.stopCamera();
-                                    } else {
-                                        @this.set('isProcessingQr', false);
+                                        $wire.set('isProcessingQr', true);
+                                        const result = await $wire.call('processScannedQr', decodedText);
+                                        console.log('Camera QR result:', result);
+
+                                        // Don't stop camera - allow continuous scanning for borrow/return workflow
+                                        // The camera will keep running so you can scan again to return the book
+                                        if (!result?.found) {
+                                            $wire.set('isProcessingQr', false);
+                                        }
+                                        // If result.action === 'returned', processing flag is cleared in backend
+                                        // If result.action === 'borrow_prepared', modal opens and processing continues
+                                    },
+                                    (errorMessage) => {
+                                        // Error callback for scanning errors (can be ignored for continuous scanning)
+                                        // console.log('Scan error:', errorMessage);
                                     }
-                                }
                             );
 
                             this.cameraStatus = 'ready';
@@ -532,5 +667,5 @@
                 }
             }
         </script>
-    @endpush
+    @endscript
 </div>
