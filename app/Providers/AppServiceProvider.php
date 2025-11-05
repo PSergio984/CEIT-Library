@@ -26,11 +26,6 @@ class AppServiceProvider extends ServiceProvider
             return $user->is_admin;
         });
 
-        // Librarian or Admin access gate (general access to admin area)
-        Gate::define('librarian-or-admin-access', function ($user) {
-            return $user->is_admin || $user->isLibrarian();
-        });
-
         // Gate to check if user can assign librarian role (Admin only)
         Gate::define('assign-librarian-role', function ($user) {
             return $user->is_admin;
@@ -41,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
             return !$user->is_admin && $user->isLibrarian();
         });
 
-        // Gate to check if user can access privileged pages
+        // Gate to check if user can access privileged pages (Librarian or Admin)
         Gate::define('privileged-access', function ($user) {
             return $user->is_admin || $user->isLibrarian();
         });

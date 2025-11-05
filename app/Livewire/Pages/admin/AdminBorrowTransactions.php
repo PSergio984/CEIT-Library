@@ -58,7 +58,7 @@ class AdminBorrowTransactions extends AdminComponent
     // Check if user can edit transactions (admin only)
     public function getCanEditProperty(): bool
     {
-        return Gate::allows('Admin-access');
+        return Gate::allows('manage-borrow-logs');
     }
 
     protected function getTransactionsQuery()

@@ -16,7 +16,11 @@ class AdminOnly
     public function handle(Request $request, Closure $next): Response
     {
         // Check if user is authenticated and is an admin
-        if (!$request->user() || !$request->user()->is_admin) {
+        if (!$request->user()) {
+            return redirect()->route('login');
+        }
+
+        if (!$request->user()->is_admin) {
             abort(403, 'Access denied. This action requires administrator privileges.');
         }
 

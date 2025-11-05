@@ -19,7 +19,7 @@ class LibrarianOrAdmin
 
         // Check if user is authenticated
         if (!$user) {
-            abort(403, 'Access denied. Authentication required.');
+            return redirect()->route('login');
         }
 
         // Allow access if user is admin or has active librarian role
