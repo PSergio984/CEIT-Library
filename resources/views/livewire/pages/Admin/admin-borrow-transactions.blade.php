@@ -100,10 +100,14 @@
                 @endif
 
                 <div class="flex justify-end mt-3">
-                    <x-mary-button wire:click="openEditModal({{ $transaction['id'] }})" class="btn-sm btn-outline"
-                        icon="o-pencil">
-                        Edit
-                    </x-mary-button>
+                    @if ($this->canEdit)
+                        <x-mary-button wire:click="openEditModal({{ $transaction['id'] }})" class="btn-sm btn-outline"
+                            icon="o-pencil">
+                            Edit
+                        </x-mary-button>
+                    @else
+                        <span class="text-xs text-base-content/50">View Only</span>
+                    @endif
                 </div>
             </div>
         @endforeach
@@ -173,9 +177,14 @@
             @endscope
 
             @scope('cell_actions', $row)
-                <x-mary-button wire:click="openEditModal({{ $row['id'] }})" class="btn-xs btn-outline" icon="o-pencil">
-                    Edit
-                </x-mary-button>
+                @if ($this->canEdit)
+                    <x-mary-button wire:click="openEditModal({{ $row['id'] }})" class="btn-xs btn-outline"
+                        icon="o-pencil">
+                        Edit
+                    </x-mary-button>
+                @else
+                    <span class="text-xs text-base-content/50">View Only</span>
+                @endif
             @endscope
         </x-mary-table>
     </div>

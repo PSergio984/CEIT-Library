@@ -6,11 +6,12 @@ use App\Models\Librarian;
 use App\Models\User;
 use Auth;
 use DB;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Mary\Traits\Toast;
 
 class AdminAssignLibrarians extends AdminComponent
 {
-    use Toast;
+    use Toast, AuthorizesRequests;
 
     public $search = '';
     public $batchSearch = '';
@@ -29,6 +30,12 @@ class AdminAssignLibrarians extends AdminComponent
     public $filterDateStart = null;
 
     protected $listeners = ['batchUpdated' => 'render'];
+
+    public function mount()
+    {
+        // Authorize that only admins can access this page
+        $this->authorize('assign-librarian-role');
+    }
 
 
     public function getGroupedLibrariansProperty()
@@ -218,6 +225,9 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function createBatch()
     {
+        // Ensure only admins can create batches and assign librarians
+        $this->authorize('assign-librarian-role');
+
         $this->validate([
             'newBatchNo' => 'required|unique:librarians,batch_no',
             'selectedStudents' => 'required|array|min:1|max:5',
@@ -276,6 +286,9 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function saveBatchAssignment()
     {
+        // Ensure only admins can modify batch assignments
+        $this->authorize('assign-librarian-role');
+
         $this->validate([
             'editingBatchNo' => 'required',
             'editingDateStart' => 'required|date',

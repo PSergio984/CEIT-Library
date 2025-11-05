@@ -6,6 +6,7 @@ use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Title;
@@ -53,6 +54,12 @@ class AdminBorrowTransactions extends AdminComponent
 
     // Sort configuration for MaryUI
     public array $sortBy = ['column' => 'time_in', 'direction' => 'desc'];
+
+    // Check if user can edit transactions (admin only)
+    public function getCanEditProperty(): bool
+    {
+        return Gate::allows('Admin-access');
+    }
 
     protected function getTransactionsQuery()
     {

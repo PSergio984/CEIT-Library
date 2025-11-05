@@ -6,6 +6,9 @@ use App\Livewire\Forms\RuleAndRegulationForm;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -15,7 +18,7 @@ use Livewire\Attributes\Title;
 #[Title('Rules and Regulations')]
 class AdminRuleAndRegulationIndex extends AdminComponent
 {
-    use WithPagination, Toast;
+    use WithPagination, Toast, AuthorizesRequests;
 
     public RuleAndRegulationForm $form;
 
@@ -34,8 +37,17 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     public ?int $deletingRuleId = null;
     public bool $myModal1 = false;
 
+    // Check if user can edit (admin only)
+    public function getCanEditProperty(): bool
+    {
+        return Gate::allows('manage-rules');
+    }
+
     public function mount(): void
     {
+        // Anyone with view-rules permission can access (Librarian or Admin)
+        $this->authorize('view-rules');
+
         $this->headers = [
             ['key' => 'id', 'label' => '#', 'class' => 'w-16', 'sortable' => false],
             ['key' => 'ruleHeader.title', 'label' => 'Header', 'sortable' => true],
@@ -47,6 +59,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
 
     public function openCreateDrawer(): void
     {
+        // Only admins can create rules
+        $this->authorize('manage-rules');
+
         $this->isEdit = false;
         $this->editingRuleId = null;
         $this->form->reset();
@@ -55,6 +70,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
 
     public function openEditDrawer(int $id): void
     {
+        // Only admins can edit rules
+        $this->authorize('manage-rules');
+
         $rule = RuleRegulation::findOrFail($id);
         $this->isEdit = true;
         $this->editingRuleId = $id;
@@ -65,6 +83,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
 
     public function save(): void
     {
+        // Only admins can save rules
+        $this->authorize('manage-rules');
+
         if ($this->isEdit && $this->editingRuleId) {
             $this->form->update($this->editingRuleId);
             $this->success('Rule updated successfully');
@@ -113,6 +134,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
 
     public function edit(int $id): void
     {
+        // Only admins can edit rules
+        $this->authorize('manage-rules');
+
         $rule = RuleRegulation::findOrFail($id);
 
         $this->isEdit = true;
@@ -125,6 +149,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
 
     public function update(): void
     {
+        // Only admins can update rules
+        $this->authorize('manage-rules');
+
         $this->form->update($this->editingRuleId);
 
         $this->success('Rule updated successfully');
@@ -136,6 +163,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     // Open confirmation modal
     public function confirmDelete(int $id): void
     {
+        // Only admins can delete rules
+        $this->authorize('manage-rules');
+
         $this->deletingRuleId = $id;
         $this->confirmDeleteModal = true;
     }
@@ -143,6 +173,9 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     // Perform deletion after confirmation
     public function deleteConfirmed(): void
     {
+        // Only admins can delete rules
+        $this->authorize('manage-rules');
+
         if ($this->deletingRuleId) {
             $rule = RuleRegulation::findOrFail($this->deletingRuleId);
             $rule->delete();

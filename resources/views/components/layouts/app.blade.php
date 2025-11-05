@@ -6,20 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-        <title>@yield('title', $title ?? config('app.name'))</title>
+    <title>@yield('title', $title ?? config('app.name'))</title>
 
-        <!-- Favicon -->
-        <link rel="icon" type="image/png" href="{{ asset('images/ceit-logo.png') }}">
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ asset('images/ceit-logo.png') }}">
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet"/>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
 
-        <!-- Scripts -->
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
-        @livewireStyles
-    </head>
-    <body class="min-h-screen font-sans antialiased bg-background text-foreground flex flex-col">
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @livewireStyles
+</head>
+
+<body class="min-h-screen font-sans antialiased bg-background text-foreground flex flex-col">
 
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
@@ -44,7 +45,7 @@
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
-                      <a href="/dashboard">
+                        <a href="/dashboard">
                             <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
                         </a>
                     </div>
@@ -66,16 +67,18 @@
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" />
                 <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
                     <x-mary-menu-item title="All" icon="o-document-text" link="/academic-papers" />
-                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop" link="/academic-papers/it" />
+                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop"
+                        link="/academic-papers/it" />
                     <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/academic-papers/ce" />
                     <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/academic-papers/ee" />
                 </x-mary-menu-sub>
 
-                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list" link="/rule-and-regulation" />
+                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
+                    link="/rule-and-regulation" />
                 <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />
                 <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
                 <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" />
-                @can('Admin-access')
+                @can('access-admin-dashboard')
                     <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" />
                 @endcan
 

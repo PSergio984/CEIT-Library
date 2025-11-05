@@ -11,7 +11,11 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // Register custom middleware aliases
+        $middleware->alias([
+            'admin.only' => \App\Http\Middleware\AdminOnly::class,
+            'librarian.or.admin' => \App\Http\Middleware\LibrarianOrAdmin::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

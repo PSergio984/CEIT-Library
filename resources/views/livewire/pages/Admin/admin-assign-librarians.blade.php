@@ -1,15 +1,15 @@
 <div>
-    <header class="p-5 shadow-md">
+    <header class="px-6 py-4 shadow-md">
         <h1 class="text-2xl font-bold text-white">Admin - Assign Librarians to Batches</h1>
     </header>
 
-    <div class="p-5 min-h-screen ">
-        <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <div class="px-4 py-5 min-h-screen">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
 
-            <div class="flex flex-col space-y-6 lg:h-[calc(100vh-100px)]">
+            <div class="flex flex-col space-y-4 lg:h-[calc(100vh-100px)]">
 
-                <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-shrink-0">
-                    <h2 class="text-white text-xl font-semibold mb-4">Create a Batch</h2>
+                <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-4 flex-shrink-0">
+                    <h2 class="text-white text-lg font-semibold mb-3">Create a Batch</h2>
                     <div class="space-y-4">
                         <button wire:click.prevent="openCreateModal"
                             class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md transform hover:scale-[1.01]">
@@ -18,110 +18,112 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-grow flex flex-col min-h-0">
-                    <h2 class="text-white text-xl font-semibold mb-4">Available Batches (Unassigned)</h2>
+                <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-4 flex-grow flex flex-col min-h-0">
+                    <h2 class="text-white text-lg font-semibold mb-3">Available Batches (Unassigned)</h2>
                     <div class="overflow-y-auto flex-1 rounded-lg">
-                        <table class="w-full">
-                            <thead class="sticky top-0 bg-slate-700/90 backdrop-blur-sm z-10">
-                                <tr class="text-slate-300 text-sm border-b border-slate-600">
-                                    <th class="text-left py-2 px-3">Batch no.</th>
-                                    <th class="text-left py-2 px-3">Members</th>
-                                    <th class="text-left py-2 px-3"></th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-white text-sm">
-                                @forelse($availableBatches as $batch)
-                                    <tr
-                                        class="border-b border-slate-600 hover:bg-slate-600/30 transition cursor-pointer">
-                                        <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
-                                        <td class="py-3 px-3">
-                                            <div class="text-sm text-slate-300">
-                                                {{ implode(', ', $batch['members']) }}
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-3 text-center">
-                                            <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
-                                                class="text-blue-400 hover:text-blue-300 p-1 rounded-full hover:bg-slate-600/50 transition"
-                                                title="Assign Date">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                    viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                                </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="3" class="py-3 px-3 text-center text-slate-400">No available
-                                            batches</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                        <div class="space-y-3">
+                            @forelse($availableBatches as $batch)
+                                <div class="border border-slate-600 rounded-lg p-4 hover:bg-slate-600/30 transition">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <span
+                                            class="font-mono font-bold text-blue-400 text-lg">{{ $batch['batch_no'] }}</span>
+                                        <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
+                                            class="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-slate-600/50 transition"
+                                            title="Assign Date">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($batch['members'] as $member)
+                                            <span class="px-2 py-1 bg-slate-600/50 text-slate-200 rounded text-xs">
+                                                {{ $member }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-12">
+                                    <svg class="w-16 h-16 mx-auto mb-3 text-slate-500" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                                    </svg>
+                                    <p class="text-slate-400">No unassigned batches</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
 
-                <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex-grow flex flex-col min-h-0">
-                    <h2 class="text-white text-xl font-semibold mb-4">Assigned Batches</h2>
+                <div class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-4 flex-grow flex flex-col min-h-0">
+                    <h2 class="text-white text-lg font-semibold mb-3">Assigned Batches</h2>
                     <div class="overflow-y-auto flex-1 rounded-lg">
-                        <table class="w-full">
-                            <thead class="sticky top-0 bg-slate-700/90 backdrop-blur-sm z-10">
-                                <tr class="text-slate-300 text-sm border-b border-slate-600">
-                                    <th class="text-left py-2 px-3">Batch no.</th>
-                                    <th class="text-left py-2 px-3">Members</th>
-                                    <th class="text-left py-2 px-3">Date</th>
-                                    <th class="text-center py-2 px-3">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="text-white text-sm">
-                                @forelse($assignedBatches as $batch)
-                                    <tr class="border-b border-slate-600 hover:bg-slate-600/30 transition">
-                                        <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
-                                        <td class="py-3 px-3">
-                                            <div class="text-sm text-slate-300">{{ implode(', ', $batch['members']) }}
-                                            </div>
-                                        </td>
-                                        <td class="py-3 px-3 text-xs text-blue-300">{{ $batch['date_assigned'] }}
-                                        </td>
-                                        <td class="py-3 px-3 text-center">
-                                            <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
-                                                class="text-blue-400 hover:text-blue-300 p-1 rounded-full hover:bg-slate-600/50 transition"
-                                                title="Edit Assignment">
-                                                <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                        <div class="space-y-3">
+                            @forelse($assignedBatches as $batch)
+                                <div class="border border-slate-600 rounded-lg p-4 hover:bg-slate-600/30 transition">
+                                    <div class="flex items-start justify-between mb-2">
+                                        <div>
+                                            <span
+                                                class="font-mono font-bold text-blue-400 text-lg block">{{ $batch['batch_no'] }}</span>
+                                            <span class="text-xs text-green-400 flex items-center gap-1 mt-1">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                                 </svg>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="py-3 px-3 text-center text-slate-400">No assigned
-                                            batches</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+                                                {{ $batch['date_assigned'] }}
+                                            </span>
+                                        </div>
+                                        <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
+                                            class="text-blue-400 hover:text-blue-300 p-2 rounded-lg hover:bg-slate-600/50 transition"
+                                            title="Edit Assignment">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        @foreach ($batch['members'] as $member)
+                                            <span class="px-2 py-1 bg-slate-600/50 text-slate-200 rounded text-xs">
+                                                {{ $member }}
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-12">
+                                    <svg class="w-16 h-16 mx-auto mb-3 text-slate-500" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                    </svg>
+                                    <p class="text-slate-400">No assigned batches</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="lg:col-span-2">
                 <div
-                    class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-6 flex flex-col lg:h-[calc(100vh-100px)]">
-                    <h2 class="text-white text-xl font-semibold mb-4">All Batches</h2>
+                    class="bg-slate-700/50 backdrop-blur-sm rounded-xl shadow-lg p-4 flex flex-col lg:h-[calc(100vh-100px)]">
+                    <h2 class="text-white text-lg font-semibold mb-3">All Batches</h2>
 
-                    <div class="mb-6 space-y-4 flex-shrink-0">
-                        <div class="flex flex-col md:flex-row gap-4">
-                            <div class="w-full md:w-1/3">
+                    <div class="mb-4 space-y-3 flex-shrink-0">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
                                 <label for="filterStatus"
-                                    class="block text-sm font-medium text-slate-400 mb-1">Status</label>
+                                    class="block text-xs font-medium text-slate-400 mb-1">Status</label>
                                 <select id="filterStatus" wire:model.live="filterStatus"
-                                    class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
+                                    class="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
                                     <option value="">All</option>
                                     <option value="active">Active</option>
                                     <option value="inactive">Inactive</option>
@@ -129,24 +131,20 @@
                                 </select>
                             </div>
 
-                            <div class="w-full md:w-1/3">
+                            <div>
                                 <label for="filterDateStart"
-                                    class="block text-sm font-medium text-slate-400 mb-1">Date</label>
+                                    class="block text-xs font-medium text-slate-400 mb-1">Date</label>
                                 <input type="date" id="filterDateStart" wire:model.live="filterDateStart"
-                                    class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
+                                    class="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
                             </div>
-
-                            <div class="w-full md:w-1/3 hidden md:block"></div>
                         </div>
 
-                        <label for="filterDateStart"
-                            class="block text-sm font-medium text-slate-400 mb-1">Search</label>
-                        <div class="flex space-x-4">
+                        <div class="flex gap-2">
                             <div class="relative flex-1">
                                 <input type="text" wire:model.live.debounce.300ms="batchSearch"
                                     placeholder="Search Batch no., notes, creator, or student name..."
-                                    class="w-full bg-slate-800 text-white rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
-                                <svg class="absolute right-3 top-2.5 w-5 h-5 text-slate-400" fill="none"
+                                    class="w-full bg-slate-800 text-white text-sm rounded-lg px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 border border-slate-600">
+                                <svg class="absolute right-3 top-2.5 w-4 h-4 text-slate-400" fill="none"
                                     stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -154,64 +152,84 @@
                             </div>
 
                             <button wire:click="resetFilters"
-                                class="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md flex items-center justify-center whitespace-nowrap">
-                                Clear Filters
+                                class="bg-red-600 hover:bg-red-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition duration-200 shadow-md whitespace-nowrap">
+                                Clear
                             </button>
                         </div>
                     </div>
 
 
                     <div class="overflow-y-auto flex-1 rounded-lg">
-                        <table class="w-full">
+                        <table class="w-full table-auto">
                             <thead class="sticky top-0 bg-slate-700/90 backdrop-blur-sm z-10">
                                 <tr class="text-slate-300 text-sm border-b border-slate-600">
-                                    <th class="text-left py-2 px-3">#</th>
-                                    <th class="text-left py-2 px-3">Batch no.</th>
-                                    <th class="text-left py-2 px-3">Date to Serve?</th>
-                                    <th class="text-left py-2 px-3">Shift notes</th>
-                                    <th class="text-left py-2 px-3">Created by</th>
-                                    <th class="text-left py-2 px-3">Status</th>
-                                    <th class="text-center py-2 px-3">Actions</th>
+                                    <th class="text-left py-2 px-2 w-8">#</th>
+                                    <th class="text-left py-2 px-2">Batch no.</th>
+                                    <th class="text-left py-2 px-2">Date</th>
+                                    <th class="text-left py-2 px-2">Notes</th>
+                                    <th class="text-left py-2 px-2">Created by</th>
+                                    <th class="text-left py-2 px-2">Status</th>
+                                    <th class="text-center py-2 px-2 w-16">Action</th>
                                 </tr>
                             </thead>
                             <tbody class="text-white text-sm">
                                 @forelse($allBatches as $index => $batch)
                                     <tr class="border-b border-slate-600 hover:bg-slate-600/30 transition">
-                                        <td class="py-3 px-3">{{ $index + 1 }}</td>
-                                        <td class="py-3 px-3 font-mono">{{ $batch['batch_no'] }}</td>
-                                        <td class="py-3 px-2 text-blue-400">{{ $batch['date_range'] }}</td>
-                                        <td class="py-3 px-2 text-xs truncate max-w-xs text-slate-400">
-                                            {{ $batch['shift_notes'] }}</td>
-                                        <td class="py-3 px-3 text-slate-300">{{ $batch['created_by'] }}</td>
-                                        <td class="py-3 px-3">
+                                        <td class="py-2.5 px-2 text-slate-400">{{ $index + 1 }}</td>
+                                        <td class="py-2.5 px-2">
+                                            <span
+                                                class="font-mono font-semibold text-blue-400">{{ $batch['batch_no'] }}</span>
+                                        </td>
+                                        <td class="py-2.5 px-2">
+                                            @if ($batch['date_range'] !== 'N/A')
+                                                <span class="text-green-400">{{ $batch['date_range'] }}</span>
+                                            @else
+                                                <span class="text-slate-500 italic">Not set</span>
+                                            @endif
+                                        </td>
+                                        <td class="py-2.5 px-2 max-w-[200px]">
+                                            <div class="truncate text-slate-400" title="{{ $batch['shift_notes'] }}">
+                                                {{ $batch['shift_notes'] }}
+                                            </div>
+                                        </td>
+                                        <td class="py-2.5 px-2 text-slate-300">{{ $batch['created_by'] }}</td>
+                                        <td class="py-2.5 px-2">
                                             <span
                                                 class="px-2 py-1 rounded-full text-xs font-semibold
-                                                        {{ $batch['status'] === 'active'
-                                                            ? 'bg-green-500/20 text-green-400'
-                                                            : ($batch['status'] === 'inactive'
-                                                                ? 'bg-red-500/20 text-red-400'
-                                                                : 'bg-slate-500/20 text-slate-400') }}">
+                                                {{ $batch['status'] === 'active'
+                                                    ? 'bg-green-500/20 text-green-400'
+                                                    : ($batch['status'] === 'inactive'
+                                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                                        : 'bg-red-500/20 text-red-400') }}">
                                                 {{ ucfirst($batch['status']) }}
                                             </span>
                                         </td>
-                                        <td class="py-3 px-3 text-center">
+                                        <td class="py-2.5 px-2 text-center">
                                             <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
-                                                class="text-blue-400 hover:text-blue-300 p-1 rounded-full hover:bg-slate-600/50 transition"
-                                                title="Assign/Edit Date">
-                                                <svg class="w-4 h-4 inline" fill="none" stroke="currentColor"
+                                                class="text-blue-400 hover:text-blue-300 p-1.5 rounded-lg hover:bg-slate-600/50 transition"
+                                                title="Edit">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
                                                     viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round"
                                                         stroke-width="2"
-                                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
-                                                    </path>
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                                 </svg>
                                             </button>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7" class="py-3 px-3 text-center text-slate-400">No batches
-                                            found</td>
+                                        <td colspan="7" class="py-8 px-3 text-center">
+                                            <div class="flex flex-col items-center gap-2">
+                                                <svg class="w-12 h-12 text-slate-500" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                </svg>
+                                                <p class="text-sm text-slate-400">No batches found</p>
+                                            </div>
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>

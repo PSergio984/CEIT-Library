@@ -46,26 +46,58 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/transactions', Transaction::class)->name('transactions');
 });
 
-// Admin routes
-Route::middleware(['auth', 'can:Admin-access', 'verified'])
+// Admin routes - Granular permission control
+// Librarians can access some pages but not all
+Route::middleware(['auth', 'verified', 'librarian.or.admin'])
     ->prefix('admin')
     ->name('admin.')
     ->group(function () {
-        Route::get('/dashboard', AdminDashboard::class)->name('dashboard');
-        Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
-        Route::get('/academic-papers/{dept?}', AdminAcademicPaperIndex::class)
-            ->where('dept', 'it|ce|ee')
-            ->name('academic-paper.index');
-        Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
-            ->whereNumber('academicPaper')
-            ->name('academic-paper.show');
-        Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
-        Route::get('/rule-and-regulation',  AdminRuleAndRegulationIndex::class)->name('rules-and-regulations.index');
-        Route::get('/logs', AdminBorrowTransactions::class)->name('borrow-logs');
-        Route::get('/attendance', AdminAttendanceLogIndex::class)->name('attendance-logs');
-        Route::get('/violation-logs', AdminViolationLogIndex::class)->name('violation-logs');
-        Route::get('/librarians', AdminAssignLibrarians::class)->name('librarians');
-        Route::get('/students', AdminUserList::class)->name('user-list');
+        // Pages accessible by both Admin and Librarian
+        Route::get('/dashboard', AdminDashboard::class)
+            ->middleware('can:access-admin-dashboard')
+            ->name('dashboard');
+
+        Route::get('/logs', AdminBorrowTransactions::class)
+            ->middleware('can:view-borrow-logs')
+            ->name('borrow-logs');
+
+        Route::get('/violation-logs', AdminViolationLogIndex::class)
+            ->middleware('can:view-violation-logs')
+            ->name('violation-logs');
+
+        // Rules and Regulations - Librarians can VIEW but not EDIT
+        Route::get('/rule-and-regulation', AdminRuleAndRegulationIndex::class)
+            ->middleware('can:view-rules')
+            ->name('rules-and-regulations.index');
+
+        // ADMIN ONLY ROUTES - Librarians CANNOT access these
+
+        // Academic Papers management (Admin only)
+        Route::middleware('can:manage-academic-papers')->group(function () {
+            Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
+            Route::get('/academic-papers/{dept?}', AdminAcademicPaperIndex::class)
+                ->where('dept', 'it|ce|ee')
+                ->name('academic-paper.index');
+            Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
+                ->whereNumber('academicPaper')
+                ->name('academic-paper.show');
+            Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
+        });
+
+        // Attendance logs (Admin only)
+        Route::get('/attendance', AdminAttendanceLogIndex::class)
+            ->middleware('can:view-attendance-logs')
+            ->name('attendance-logs');
+
+        // Librarian assignment (Admin only)
+        Route::get('/librarians', AdminAssignLibrarians::class)
+            ->middleware('can:assign-librarian-role')
+            ->name('librarians');
+
+        // Student management (Admin only)
+        Route::get('/students', AdminUserList::class)
+            ->middleware('can:manage-students')
+            ->name('user-list');
     });
 
 Route::view('profile', 'profile')
