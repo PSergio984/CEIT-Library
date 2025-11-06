@@ -49,9 +49,9 @@ class AcademicPaper extends Model
         'title',
         'publication_year',
         'paper_type',
-        'research_project_adviser',
+        'adviser_id',
         'department',
-        'dean',
+        'dean_id',
     ];
 
     protected $casts = [
@@ -87,8 +87,13 @@ class AcademicPaper extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'LIKE', "%{$search}%")
-                ->orWhere('research_project_adviser', 'LIKE', "%{$search}%")
                 ->orWhere('catalog_code', 'LIKE', "%{$search}%")
+                ->orWhereHas('adviser', function ($adviserQuery) use ($search) {
+                    $adviserQuery->where('name', 'LIKE', "%{$search}%");
+                })
+                ->orWhereHas('dean', function ($deanQuery) use ($search) {
+                    $deanQuery->where('name', 'LIKE', "%{$search}%");
+                })
                 ->orWhereHas('authors', function ($authorQuery) use ($search) {
                     $authorQuery->where('name', 'LIKE', "%{$search}%");
                 });
@@ -105,6 +110,22 @@ class AcademicPaper extends Model
     public function authors()
     {
         return $this->belongsToMany(Author::class, 'academic_paper_authors')->withTimestamps();
+    }
+
+    /**
+     * Get the adviser for this academic paper.
+     */
+    public function adviser()
+    {
+        return $this->belongsTo(Adviser::class);
+    }
+
+    /**
+     * Get the dean for this academic paper.
+     */
+    public function dean()
+    {
+        return $this->belongsTo(Dean::class);
     }
 
     protected static function boot()

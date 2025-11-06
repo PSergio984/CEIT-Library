@@ -21,6 +21,13 @@
 /* daisyUI plugin with themes */
 
 /* ===================================
+   Alpine.js Cloak - Hide elements until Alpine loads
+   =================================== */
+[x-cloak] {
+    display: none !important;
+}
+
+/* ===================================
    Enhanced Table Styling
    =================================== */
 

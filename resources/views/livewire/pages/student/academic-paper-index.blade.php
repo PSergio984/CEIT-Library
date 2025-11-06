@@ -111,7 +111,7 @@
                                         class="text-xs uppercase tracking-wide text-base-content/60 font-semibold mb-1">Research
                                         Adviser</span>
                                     <span
-                                        class="text-base font-medium">{{ $selectedPaper->research_project_adviser }}</span>
+                                        class="text-base font-medium">{{ $selectedPaper->adviser?->name ?? 'N/A' }}</span>
                                 </div>
                             </div>
                         </div>

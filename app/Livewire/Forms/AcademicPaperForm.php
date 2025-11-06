@@ -21,10 +21,10 @@ class AcademicPaperForm extends Form
     public ?int $publication_year = null;
     #[Validate('required')]
     public string $paper_type = '';
-    public ?string $research_project_adviser = '';
+    public ?int $adviser_id = null;
     #[Validate('required')]
     public string $department = '';
-    public ?string $dean = '';
+    public ?int $dean_id = null;
     #[Validate('required|array|min:1')]
     public array $author_names = [];
     #[Validate('required|integer|min:1|max:100')]
@@ -183,9 +183,9 @@ class AcademicPaperForm extends Form
         $this->title = $academicPaper->title;
         $this->publication_year = $academicPaper->publication_year;
         $this->paper_type = $academicPaper->paper_type;
-        $this->research_project_adviser = $academicPaper->research_project_adviser ?? '';
+        $this->adviser_id = $academicPaper->adviser_id;
         $this->department = $academicPaper->department;
-        $this->dean = $academicPaper->dean ?? '';
+        $this->dean_id = $academicPaper->dean_id;
 
         // Use already loaded relationships to avoid N+1 queries
         $this->author_names = $academicPaper->relationLoaded('authors')
@@ -222,8 +222,8 @@ class AcademicPaperForm extends Form
             'department' => 'required',
             'author_names' => 'required|array|min:1',
             'number_of_copies' => 'required|integer|min:1|max:100',
-            'research_project_adviser' => 'required|string',
-            'dean' => 'required|string',
+            'adviser_id' => 'nullable|exists:advisers,id',
+            'dean_id' => 'nullable|exists:deans,id',
         ];
     }
 
@@ -243,10 +243,8 @@ class AcademicPaperForm extends Form
             'number_of_copies.integer' => 'The number of copies must be a valid number.',
             'number_of_copies.min' => 'The number of copies must be at least 1.',
             'number_of_copies.max' => 'The number of copies cannot exceed 100.',
-            'research_project_adviser.required' => 'The research project adviser field is required.',
-            'research_project_adviser.string' => 'The research project adviser must be a valid text.',
-            'dean.required' => 'The dean field is required.',
-            'dean.string' => 'The dean must be a valid text.',
+            'adviser_id.exists' => 'The selected adviser is invalid.',
+            'dean_id.exists' => 'The selected dean is invalid.',
         ];
     }
 
@@ -260,8 +258,8 @@ class AcademicPaperForm extends Form
             'publication_year' => $this->publication_year,
             'paper_type' => $this->paper_type,
             'department' => $this->department,
-            'research_project_adviser' => $this->research_project_adviser,
-            'dean' => $this->dean,
+            'adviser_id' => $this->adviser_id,
+            'dean_id' => $this->dean_id,
             'author_names' => $this->author_names,
             'number_of_copies' => $this->number_of_copies,
         ];
@@ -291,9 +289,9 @@ class AcademicPaperForm extends Form
                 'title' => $this->title,
                 'publication_year' => $this->publication_year,
                 'paper_type' => $this->paper_type,
-                'research_project_adviser' => $this->research_project_adviser,
+                'adviser_id' => $this->adviser_id,
                 'department' => $this->department,
-                'dean' => $this->dean,
+                'dean_id' => $this->dean_id,
             ]);
 
             // Sync authors
@@ -318,8 +316,8 @@ class AcademicPaperForm extends Form
 
         return DB::transaction(function () use ($paper) {
             $updateData = $this->only(['title', 'publication_year', 'paper_type', 'department']);
-            $updateData['research_project_adviser'] = $this->research_project_adviser ?? '';
-            $updateData['dean'] = $this->dean ?? '';
+            $updateData['adviser_id'] = $this->adviser_id;
+            $updateData['dean_id'] = $this->dean_id;
             $paper->update($updateData);
 
             // Sync authors
@@ -345,9 +343,9 @@ class AcademicPaperForm extends Form
             $this->title = '';
             $this->publication_year = null;
             $this->paper_type = '';
-            $this->research_project_adviser = '';
+            $this->adviser_id = null;
             $this->department = '';
-            $this->dean = '';
+            $this->dean_id = null;
             $this->author_names = [];
             $this->number_of_copies = 1;
         } else {
@@ -363,14 +361,14 @@ class AcademicPaperForm extends Form
                     case 'paper_type':
                         $this->paper_type = '';
                         break;
-                    case 'research_project_adviser':
-                        $this->research_project_adviser = '';
+                    case 'adviser_id':
+                        $this->adviser_id = null;
                         break;
                     case 'department':
                         $this->department = '';
                         break;
-                    case 'dean':
-                        $this->dean = '';
+                    case 'dean_id':
+                        $this->dean_id = null;
                         break;
                     case 'author_names':
                         $this->author_names = [];

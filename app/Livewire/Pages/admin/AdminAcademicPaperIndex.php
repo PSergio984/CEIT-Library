@@ -4,9 +4,11 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -17,6 +19,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 {
     use WithPagination;
     use Toast;
+    use AuthorizesRequests;
 
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
@@ -33,18 +36,21 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
     public ?string $dept = null;
-    public bool $deleteModal = false;
+
+    // Only store IDs, not boolean states (Alpine handles modal visibility)
+    #[Locked]
     public ?int $deleteId = null;
+
     public bool $formDrawer = false;
     public bool $isEditing = false;
     public AcademicPaperForm $form;
 
-    // Modal properties
-    public bool $showModal = false;
-    public ?AcademicPaper $selectedPaper = null;
+    // Only store ID, not modal state (Alpine handles visibility)
+    #[Locked]
+    public ?int $selectedPaperId = null;
 
-    // Copy deletion modal properties
-    public bool $copyDeleteModal = false;
+    // Copy deletion - only store ID (Alpine handles modal visibility)
+    #[Locked]
     public ?int $copyToDelete = null;
 
     // Cache properties for memoization
@@ -125,6 +131,8 @@ class AdminAcademicPaperIndex extends AdminComponent
                 'authors' => function ($query) {
                     $query->select('authors.id', 'authors.name');
                 },
+                'adviser:id,name',
+                'dean:id,name',
                 'copies' => function ($query) {
                     $query->select('id', 'academic_paper_id', 'status');
                 }
@@ -141,8 +149,13 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $search = '%' . $this->search . '%';
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
-                        ->orWhere('research_project_adviser', 'like', $search)
-                        ->orWhere('catalog_code', 'like', $search);
+                        ->orWhere('catalog_code', 'like', $search)
+                        ->orWhereHas('adviser', function ($adviserQuery) use ($search) {
+                            $adviserQuery->where('name', 'like', $search);
+                        })
+                        ->orWhereHas('dean', function ($deanQuery) use ($search) {
+                            $deanQuery->where('name', 'like', $search);
+                        });
                 });
             })
             ->withCount([
@@ -164,29 +177,29 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetPage('academic-papers-index');
     }
 
-
-    // Open confirmation modal
-    public function confirmDelete(int $id): void
-    {
-        $this->deleteId = $id;
-        $this->deleteModal = true;
-    }
-
-    // Perform deletion after confirmation
+    // Perform deletion (called from Alpine modal)
     public function performDelete(): void
     {
-        if ($this->deleteId) {
-            $academicPaper = AcademicPaper::find($this->deleteId);
-            if ($academicPaper) {
-                $title = $academicPaper->title;
-                $academicPaper->delete();
-                $this->invalidateSearchCaches();
-                $this->warning("$title deleted", 'Good bye!');
-            }
+        if (!$this->deleteId) {
+            return;
         }
-        $this->deleteModal = false;
+
+        $academicPaper = AcademicPaper::findOrFail($this->deleteId);
+
+        // Authorization check
+        $this->authorize('delete', $academicPaper);
+
+        $academicPaper->delete();
+        $this->success('Academic paper deleted successfully');
+
+        // Invalidate caches
+        $this->incrementAcademicPapersVersion();
+
         $this->deleteId = null;
         $this->resetPage('academic-papers-index');
+
+        // Dispatch event to close modal on frontend
+        $this->dispatch('close-modals');
     }
 
     // Open drawer for creating new academic paper
@@ -281,18 +294,18 @@ class AdminAcademicPaperIndex extends AdminComponent
             if ($cachedData !== null) {
                 $advisers = collect($cachedData);
             } else {
-                // Get search results from database
-                $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+                // Get search results from database - now from Adviser model
+                $advisers = \App\Models\Adviser::query()
                     ->when($value !== '', function ($query) use ($value) {
-                        $query->where('research_project_adviser', 'like', "%{$value}%");
+                        $query->where('name', 'like', "%{$value}%");
                     })
-                    ->distinct()
-                    ->pluck('research_project_adviser')
-                    ->filter()
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->take(10)
+                    ->get()
                     ->map(function ($adviser) {
-                        return ['id' => $adviser, 'name' => $adviser];
-                    })
-                    ->take(10);
+                        return ['id' => $adviser->id, 'name' => $adviser->name];
+                    });
 
                 // Cache empty search results for 5 minutes
                 if ($value === '') {
@@ -301,23 +314,26 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+            $advisers = \App\Models\Adviser::query()
                 ->when($value !== '', function ($query) use ($value) {
-                    $query->where('research_project_adviser', 'like', "%{$value}%");
+                    $query->where('name', 'like', "%{$value}%");
                 })
-                ->distinct()
-                ->pluck('research_project_adviser')
-                ->filter()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->take(10)
+                ->get()
                 ->map(function ($adviser) {
-                    return ['id' => $adviser, 'name' => $adviser];
-                })
-                ->take(10);
+                    return ['id' => $adviser->id, 'name' => $adviser->name];
+                });
         }
 
         // Include selected option if it exists and is not in search results
-        if (!empty($this->form->research_project_adviser)) {
-            $selectedOption = collect([['id' => $this->form->research_project_adviser, 'name' => $this->form->research_project_adviser]]);
-            $advisers = $advisers->merge($selectedOption)->unique('id');
+        if (!empty($this->form->adviser_id)) {
+            $selectedAdviser = \App\Models\Adviser::find($this->form->adviser_id);
+            if ($selectedAdviser) {
+                $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
+                $advisers = $advisers->merge($selectedOption)->unique('id');
+            }
         }
 
         // Cache the results for this request
@@ -355,18 +371,18 @@ class AdminAcademicPaperIndex extends AdminComponent
             if ($cachedData !== null) {
                 $deans = collect($cachedData);
             } else {
-                // Get search results from database
-                $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+                // Get search results from database - now from Dean model
+                $deans = \App\Models\Dean::query()
                     ->when($value !== '', function ($query) use ($value) {
-                        $query->where('dean', 'like', "%{$value}%");
+                        $query->where('name', 'like', "%{$value}%");
                     })
-                    ->distinct()
-                    ->pluck('dean')
-                    ->filter()
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->take(10)
+                    ->get()
                     ->map(function ($dean) {
-                        return ['id' => $dean, 'name' => $dean];
-                    })
-                    ->take(10);
+                        return ['id' => $dean->id, 'name' => $dean->name];
+                    });
 
                 // Cache empty search results for 5 minutes
                 if ($value === '') {
@@ -375,23 +391,26 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+            $deans = \App\Models\Dean::query()
                 ->when($value !== '', function ($query) use ($value) {
-                    $query->where('dean', 'like', "%{$value}%");
+                    $query->where('name', 'like', "%{$value}%");
                 })
-                ->distinct()
-                ->pluck('dean')
-                ->filter()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->take(10)
+                ->get()
                 ->map(function ($dean) {
-                    return ['id' => $dean, 'name' => $dean];
-                })
-                ->take(10);
+                    return ['id' => $dean->id, 'name' => $dean->name];
+                });
         }
 
         // Include selected option if it exists and is not in search results
-        if (!empty($this->form->dean)) {
-            $selectedOption = collect([['id' => $this->form->dean, 'name' => $this->form->dean]]);
-            $deans = $deans->merge($selectedOption)->unique('id');
+        if (!empty($this->form->dean_id)) {
+            $selectedDean = \App\Models\Dean::find($this->form->dean_id);
+            if ($selectedDean) {
+                $selectedOption = collect([['id' => $selectedDean->id, 'name' => $selectedDean->name]]);
+                $deans = $deans->merge($selectedOption)->unique('id');
+            }
         }
 
         // Cache the results for this request
@@ -451,6 +470,24 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
     /**
+     * Get selected paper by ID with relationships (computed to avoid payload bloat)
+     */
+    #[Computed]
+    public function selectedPaper(): ?AcademicPaper
+    {
+        if (!$this->selectedPaperId) {
+            return null;
+        }
+
+        return AcademicPaper::with([
+            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'adviser:id,name',
+            'dean:id,name',
+            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status')
+        ])->find($this->selectedPaperId);
+    }
+
+    /**
      * Get department name from slug with caching
      */
     private function getDepartmentName(string $dept): string
@@ -474,65 +511,49 @@ class AdminAcademicPaperIndex extends AdminComponent
         });
     }
 
-    public function showPaperDetails(AcademicPaper $academicPaper): void
+    public function showPaperDetails(int $paperId): void
     {
-        // Only load relationships if they're not already loaded
-        if (!$academicPaper->relationLoaded('authors') || !$academicPaper->relationLoaded('copies')) {
-            $this->selectedPaper = $academicPaper->load([
-                'authors' => function ($query) {
-                    $query->select('authors.id', 'authors.name');
-                },
-                'copies' => function ($query) {
-                    $query->select('id', 'academic_paper_id', 'status');
-                }
-            ]);
-        } else {
-            $this->selectedPaper = $academicPaper;
-        }
-        $this->showModal = true;
+        $this->selectedPaperId = $paperId;
+        // Dispatch event for Alpine to open modal
+        $this->dispatch('open-paper-modal');
     }
 
-    public function closeModal(): void
-    {
-        $this->showModal = false;
-        $this->selectedPaper = null;
-    }
-
-    public function requestQr(): void
+    public function requestQr(int $copyId): void
     {
         // TODO: Implement QR code request functionality
         // This could generate a QR code for the specific copy
         // or redirect to a QR generation page
-    }
-
-    public function confirmCopyDelete(int $copyId): void
-    {
-        $this->copyToDelete = $copyId;
-        $this->copyDeleteModal = true;
+        $this->info("QR generation for copy #{$copyId} is not yet implemented");
     }
 
     public function performCopyDelete(): void
     {
-        if ($this->copyToDelete) {
-            $copy = \App\Models\Inventory::find($this->copyToDelete);
-            if ($copy && $copy->status === 'Available') {
-                $copy->delete();
-                $this->success("Copy #{$this->copyToDelete} deleted successfully", 'Copy Deleted!');
-
-                // Refresh the selected paper data
-                if ($this->selectedPaper) {
-                    $this->selectedPaper = $this->selectedPaper->fresh(['authors', 'copies']);
-                }
-
-                // Invalidate caches to reflect the change
-                $this->invalidateSearchCaches();
-            } else {
-                $this->error("Cannot delete copy #{$this->copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
-            }
+        if (!$this->copyToDelete) {
+            return;
         }
 
-        $this->copyDeleteModal = false;
+        $copy = \App\Models\Inventory::findOrFail($this->copyToDelete);
+
+        // Authorization check - verify user can manage academic papers
+        $this->authorize('update', $copy->academicPaper);
+
+        if ($copy->status !== 'Available') {
+            $this->error("Cannot delete copy #{$this->copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
+            $this->copyToDelete = null;
+            // Close modal via event
+            $this->dispatch('close-modals');
+            return;
+        }
+
+        $copy->delete();
+        $this->success("Copy #{$this->copyToDelete} deleted successfully", 'Copy Deleted!');
+
+        // Invalidate caches to reflect the change
+        $this->invalidateSearchCaches();
+
         $this->copyToDelete = null;
+        // Close modal via event
+        $this->dispatch('close-modals');
     }
 
     #[Computed]
