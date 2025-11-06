@@ -66,10 +66,9 @@ class TestQrScanner extends Component
         // Store for display
         $this->testQrData = substr($encryptedData, 0, 100) . '... (' . strlen($encryptedData) . ' chars total)';
 
-        // Generate QR code with LOW error correction for simpler, more scannable codes
+        // Generate QR code
         try {
             $qrCodeSvg = QrCode::size(300)
-                ->errorCorrection('L')  // Low error correction for simplicity
                 ->generate($encryptedData);
             $this->testQrCode = 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg);
         } catch (\Exception $e) {
