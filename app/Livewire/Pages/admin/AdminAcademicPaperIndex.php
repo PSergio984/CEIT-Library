@@ -698,6 +698,22 @@ class AdminAcademicPaperIndex extends AdminComponent
             // Clear copy count cache for this paper
             if ($copy->academic_paper_id) {
                 Cache::forget("academic_paper_{$copy->academic_paper_id}_copy_count");
+
+                // If the deleted copy belongs to the currently loaded form paper, rehydrate the form
+                if ($this->isEditing && $this->form->academicPaperId === $copy->academic_paper_id) {
+                    $freshPaper = AcademicPaper::with([
+                        'authors' => function ($query) {
+                            $query->select('authors.id', 'authors.name');
+                        },
+                        'copies' => function ($query) {
+                            $query->select('id', 'academic_paper_id', 'status');
+                        }
+                    ])->find($copy->academic_paper_id);
+
+                    if ($freshPaper) {
+                        $this->form->setAcademicPaper($freshPaper);
+                    }
+                }
             }
 
             $this->copyToDelete = null;

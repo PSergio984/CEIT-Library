@@ -2,7 +2,7 @@
 
 <dialog 
     x-ref="paperModal" 
-    x-show="showPaperModal" 
+    x-cloak
     @click.self="showPaperModal = false" 
     @close="showPaperModal = false" 
     class="modal"

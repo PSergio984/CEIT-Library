@@ -5,7 +5,7 @@
     @click.self="showCopyDeleteModal = false" 
     @close="showCopyDeleteModal = false" 
     class="modal"
-    x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })">    x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })">
+    x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })">
     <div class="modal-box">
         <h3 class="font-bold text-lg mb-2">Delete Copy</h3>
         <p class="text-sm text-base-content/70 mb-4">Are you sure?</p>

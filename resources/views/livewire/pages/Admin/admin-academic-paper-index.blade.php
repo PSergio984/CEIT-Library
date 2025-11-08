@@ -237,7 +237,6 @@
         <x-admin.paper-details-modal :selectedPaper="$this->selectedPaper" :isAdmin="true" />
         <x-admin.delete-copy-modal :copyToDelete="$copyToDelete" />
     </div>
-  Z
     {{-- Create/Edit Academic Paper Drawer --}}
     <x-admin.academic-paper-form-drawer :formDrawer="$formDrawer" :isEditing="$isEditing" :form="$form" />
 </div>{{-- Close root div --}}
