@@ -209,6 +209,19 @@ class AcademicPaperIndex extends Component
         $this->resetPage('academic-papers-index');
     }
 
+    // Clear all filters and reset to default state
+    public function clearFilters(): void
+    {
+        $this->reset([
+            'statusFilter',
+            'paperTypeFilter',
+            'departmentFilter',
+            'yearFromFilter',
+            'yearToFilter',
+        ]);
+        $this->resetPage('academic-papers-index');
+    }
+
     public function showPaperDetails(int $paperId): void
     {
         $this->selectedPaperId = $paperId;

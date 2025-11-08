@@ -71,14 +71,7 @@
             
             <button 
                 x-show="hasActiveFilters"
-                @click="
-                    $wire.set('statusFilter', '');
-                    $wire.set('paperTypeFilter', '');
-                    $wire.set('departmentFilter', '');
-                    $wire.set('yearFromFilter', '');
-                    $wire.set('yearToFilter', '');
-                    showFilters = true;
-                "
+                @click="$wire.clearFilters(); showFilters = true;"
                 x-transition
                 class="btn btn-ghost btn-sm sm:btn-md gap-2 whitespace-nowrap"
                 title="Clear all filters"
@@ -129,16 +122,16 @@
             
             {{-- Year From Filter --}}
             <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
-                <option value="" disabled>Year From</option>
-                <template x-for="year in validYearsFrom" :key="'from-' + year">
+                <option value="" disabled selected>Year From</option>
+                <template x-for="year in validYearsFrom" :key="year">
                     <option :value="year" x-text="year"></option>
                 </template>
             </select>
             
             {{-- Year To Filter --}}
             <select wire:model.live="yearToFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
-                <option value="" disabled>Year To</option>
-                <template x-for="year in validYearsTo" :key="'to-' + year">
+                <option value="" disabled selected>Year To</option>
+                <template x-for="year in validYearsTo" :key="year">
                     <option :value="year" x-text="year"></option>
                 </template>
             </select>

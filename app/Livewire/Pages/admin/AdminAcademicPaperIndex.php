@@ -289,6 +289,19 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetPage('academic-papers-index');
     }
 
+    // Clear all filters and reset to default state
+    public function clearFilters(): void
+    {
+        $this->reset([
+            'statusFilter',
+            'paperTypeFilter',
+            'departmentFilter',
+            'yearFromFilter',
+            'yearToFilter',
+        ]);
+        $this->resetPage('academic-papers-index');
+    }
+
     // Perform deletion (called from modal)
     public function performDelete(?int $paperId = null): void
     {
