@@ -2,8 +2,9 @@
 
 <dialog 
     x-ref="copyDeleteModal" 
-    @click.self="showCopyDeleteModal = false" 
-    @close="showCopyDeleteModal = false" 
+    x-show="showCopyDeleteModal"
+    @cancel="showCopyDeleteModal = false"
+    @close-copy-delete-modal.window="showCopyDeleteModal = false"
     class="modal"
     x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })">
     <div class="modal-box">

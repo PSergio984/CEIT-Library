@@ -22,12 +22,10 @@ class AcademicPaperIndex extends Component
     public ?string $dept = null;
     public string $search = '';
 
-    // Modal properties
-    public bool $showModal = false;
-    public ?AcademicPaper $selectedPaper = null;
+    // Store IDs only (modals controlled by Alpine.js)
+    public ?int $selectedPaperId = null;
 
-    // QR Code Modal properties
-    public bool $showQrModal = false;
+    // QR Code properties
     public ?string $qrCode = null;
     public ?int $selectedCopyId = null;
 
@@ -97,16 +95,26 @@ class AcademicPaperIndex extends Component
         $this->resetPage('academic-papers-index');
     }
 
-    public function showPaperDetails(AcademicPaper $academicPaper): void
+    public function showPaperDetails(int $paperId): void
     {
-        $this->selectedPaper = $academicPaper->load('authors', 'copies');
-        $this->showModal = true;
+        $this->selectedPaperId = $paperId;
+        $this->dispatch('open-paper-modal');
     }
 
-    public function closeModal(): void
+    #[Computed]
+    public function selectedPaper(): ?AcademicPaper
     {
-        $this->showModal = false;
-        $this->selectedPaper = null;
+        if (!$this->selectedPaperId) {
+            return null;
+        }
+
+        return AcademicPaper::with([
+            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'researchAdviser:id,name',
+            'technicalAdviser:id,name',
+            'dean:id,name',
+            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status')
+        ])->find($this->selectedPaperId);
     }
 
     public function requestQr(int $inventoryId): void
@@ -152,14 +160,14 @@ class AcademicPaperIndex extends Component
         $svg = QrCode::size(300)->generate($qrPayload);
         $this->qrCode = base64_encode($svg);
 
-        $this->showQrModal = true;
+        $this->dispatch('open-qr-modal');
     }
 
     public function closeQrModal(): void
     {
-        $this->showQrModal = false;
         $this->qrCode = null;
-       $this->selectedCopyId = null;
+        $this->selectedCopyId = null;
+        $this->dispatch('close-qr-modal');
     }
 
     public function downloadQr()
@@ -197,7 +205,7 @@ class AcademicPaperIndex extends Component
         $filename = 'qr-code-inv-' . $copy->id . '.png';
 
         return response()->streamDownload(
-            fn () => print QrCode::size(500)->format('png')->generate($qrPayload),
+            fn() => print QrCode::size(500)->format('png')->generate($qrPayload),
             $filename,
             ['Content-Type' => 'image/png']
         );

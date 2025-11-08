@@ -11,17 +11,20 @@
     {{-- Header Actions --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <button 
-            wire:click="create" 
-            class="btn btn-primary" 
-            wire:loading.attr="disabled"
-            wire:target="create"
+            x-data="{ loading: false }"
+            @click="
+                loading = true;
+                $wire.create().finally(() => loading = false)
+            "
+            :disabled="loading"
+            class="btn btn-primary gap-2"
         >
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" wire:loading.remove wire:target="create">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" x-show="!loading">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
             </svg>
-            <span class="loading loading-spinner loading-sm" wire:loading wire:target="create"></span>
-            <span wire:loading.remove wire:target="create">Create Academic Paper</span>
-            <span wire:loading wire:target="create">Loading...</span>
+            <span x-show="!loading">Create Academic Paper</span>
+            <span x-show="loading" class="loading loading-spinner loading-sm"></span>
+            <span x-show="loading">Loading...</span>
         </button>
         
         <div class="flex-1 sm:max-w-md">
@@ -89,38 +92,50 @@
 
                 <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-base-300">
                     <button 
-                        wire:click="showPaperDetails({{ $paper->id }})"
-                        class="btn btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]" 
-                        wire:loading.attr="disabled"
-                        wire:target="showPaperDetails({{ $paper->id }})"
+                        x-data="{ loading: false }"
+                        @click="
+                            loading = true;
+                            $wire.showPaperDetails({{ $paper->id }}).finally(() => loading = false)
+                        "
+                        :disabled="loading"
+                        class="btn btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
                             <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        View
+                        <span x-show="!loading">View</span>
+                        <span x-show="loading" class="loading loading-spinner loading-xs"></span>
                     </button>
                     <button 
-                        wire:click="edit({{ $paper->id }})"
-                        class="btn btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]" 
-                        wire:loading.attr="disabled"
-                        wire:target="edit({{ $paper->id }})"
+                        x-data="{ loading: false }"
+                        @click="
+                            loading = true;
+                            $wire.edit({{ $paper->id }}).finally(() => loading = false)
+                        "
+                        :disabled="loading"
+                        class="btn btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                         </svg>
-                        Edit
+                        <span x-show="!loading">Edit</span>
+                        <span x-show="loading" class="loading loading-spinner loading-xs"></span>
                     </button>
                     <button 
-                        wire:click="confirmDelete({{ $paper->id }})"
+                        x-data="{ loading: false }"
+                        @click="
+                            loading = true;
+                            $wire.confirmDelete({{ $paper->id }}).finally(() => loading = false)
+                        "
+                        :disabled="loading"
                         class="btn btn-xs sm:btn-sm btn-ghost text-error flex-1 min-w-[80px]"
-                        wire:loading.attr="disabled"
-                        wire:target="confirmDelete({{ $paper->id }})"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
                         </svg>
-                        Delete
+                        <span x-show="!loading">Delete</span>
+                        <span x-show="loading" class="loading loading-spinner loading-xs"></span>
                     </button>
                 </div>
             </div>
@@ -190,30 +205,54 @@
 
             @scope('actions', $row)
             <div class="flex items-center gap-2">
-                <x-mary-button 
-                    wire:click="showPaperDetails({{ $row->id }})"
-                    icon="o-eye"
-                    class="btn-sm btn-ghost"
-                    tooltip="View Details"
-                    wire:loading.attr="disabled"
-                    wire:target="showPaperDetails({{ $row->id }})"
-                />
-                <x-mary-button 
-                    wire:click="edit({{ $row->id }})"
-                    icon="o-pencil"
-                    class="btn-sm btn-ghost"
-                    tooltip="Edit"
-                    wire:loading.attr="disabled"
-                    wire:target="edit({{ $row->id }})"
-                />
-                <x-mary-button 
-                    wire:click="confirmDelete({{ $row->id }})"
-                    icon="o-trash"
-                    class="btn-sm btn-ghost text-error"
-                    tooltip="Delete"
-                    wire:loading.attr="disabled"
-                    wire:target="confirmDelete({{ $row->id }})"
-                />
+                <button 
+                    x-data="{ loading: false }"
+                    @click="
+                        loading = true;
+                        $wire.showPaperDetails({{ $row->id }}).finally(() => loading = false)
+                    "
+                    :disabled="loading"
+                    class="btn btn-sm btn-ghost tooltip"
+                    data-tip="View Details"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span x-show="loading" class="loading loading-spinner loading-xs"></span>
+                </button>
+                
+                <button 
+                    x-data="{ loading: false }"
+                    @click="
+                        loading = true;
+                        $wire.edit({{ $row->id }}).finally(() => loading = false)
+                    "
+                    :disabled="loading"
+                    class="btn btn-sm btn-ghost tooltip"
+                    data-tip="Edit"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                    </svg>
+                    <span x-show="loading" class="loading loading-spinner loading-xs"></span>
+                </button>
+                
+                <button 
+                    x-data="{ loading: false }"
+                    @click="
+                        loading = true;
+                        $wire.confirmDelete({{ $row->id }}).finally(() => loading = false)
+                    "
+                    :disabled="loading"
+                    class="btn btn-sm btn-ghost text-error tooltip"
+                    data-tip="Delete"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                    </svg>
+                    <span x-show="loading" class="loading loading-spinner loading-xs"></span>
+                </button>
             </div>
             @endscope
         </x-mary-table>
