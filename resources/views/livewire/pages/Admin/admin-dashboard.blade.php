@@ -76,7 +76,7 @@
         {{-- Papers by Department --}}
         <x-mary-card title="Papers by Department" class="shadow-lg">
             <x-slot:menu>
-                <x-mary-button icon="o-academic-cap" link="#" class="btn-ghost btn-sm"/>
+                <x-mary-icon name="o-academic-cap" class="btn-ghost btn-sm"/>
             </x-slot:menu>
 
             <div class="space-y-4">
@@ -99,7 +99,7 @@
         <x-mary-card title="Academic Papers By Category" class="shadow-lg">
             {{-- Academic Papers By Categiry --}}
             <x-slot:menu>
-                <x-mary-button icon="o-document-chart-bar" link="#" class="btn-ghost btn-sm"/>
+                <x-mary-icon name="o-document-chart-bar" class="btn-ghost btn-sm"/>
             </x-slot:menu>
 
             <div class="space-y-4">
@@ -122,7 +122,7 @@
         {{-- Recent Borrowed Papers --}}
         <x-mary-card title="Recent Borrowed Papers" class="shadow-lg">
             <x-slot:menu>
-                <x-mary-button icon="o-book-open" link="#" class="btn-ghost btn-sm"/>
+                <x-mary-icon name="o-book-open" class="btn-ghost btn-sm"/>
             </x-slot:menu>
 
             <div class="space-y-3">
@@ -163,7 +163,7 @@
         {{-- Top Borrowers --}}
         <x-mary-card title="Top Borrowers" class="shadow-lg">
             <x-slot:menu>
-                <x-mary-button icon="o-trophy" link="#" class="btn-ghost btn-sm"/>
+                <x-mary-icon name="o-trophy" class="btn-ghost btn-sm"/>
             </x-slot:menu>
 
             <div class="space-y-3">
