@@ -14,7 +14,7 @@ return new class extends Migration
         // Create research_advisers table
         Schema::create('research_advisers', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->timestamps();
         });
 
@@ -28,7 +28,7 @@ return new class extends Migration
         // Create deans table
         Schema::create('deans', function (Blueprint $table) {
             $table->id();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->timestamps();
         });
     }

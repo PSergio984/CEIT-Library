@@ -84,6 +84,7 @@
                     debounce="300ms"
                     :options="$form->technical_adviser_options ?? []" 
                     hint="Start typing to search for a technical adviser"
+                    placeholder="Select Technical Adviser"
                     error-field="form.technical_adviser_id" />
             </div>
             

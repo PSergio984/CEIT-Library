@@ -153,7 +153,7 @@
             :rows="$this->academicPapers"
             with-pagination
             :sort-by="$sortBy"
-            :per-page="perPage"
+            per-page="perPage"
             :per-page-values="[5, 10, 25, 50]"
             striped
             row-class="hover:bg-base-200"
