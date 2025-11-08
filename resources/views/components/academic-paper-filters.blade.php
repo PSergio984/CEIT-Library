@@ -72,16 +72,12 @@
             <button 
                 x-show="hasActiveFilters"
                 @click="
-                    Promise.all([
-                        $wire.set('statusFilter', ''),
-                        $wire.set('paperTypeFilter', ''),
-                        $wire.set('departmentFilter', ''),
-                        $wire.set('yearFromFilter', ''),
-                        $wire.set('yearToFilter', '')
-                    ]).then(() => {
-                        showFilters = true;
-                        $wire.$refresh();
-                    });
+                    $wire.set('statusFilter', '');
+                    $wire.set('paperTypeFilter', '');
+                    $wire.set('departmentFilter', '');
+                    $wire.set('yearFromFilter', '');
+                    $wire.set('yearToFilter', '');
+                    showFilters = true;
                 "
                 x-transition
                 class="btn btn-ghost btn-sm sm:btn-md gap-2 whitespace-nowrap"
@@ -133,8 +129,6 @@
             
             {{-- Year From Filter --}}
             <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
-                <option value="" disabled :selected="!$wire.yearFromFilter">Year From</option>
-            <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
                 <option value="" disabled>Year From</option>
                 <template x-for="year in validYearsFrom" :key="'from-' + year">
                     <option :value="year" x-text="year"></option>
@@ -147,7 +141,10 @@
                 <template x-for="year in validYearsTo" :key="'to-' + year">
                     <option :value="year" x-text="year"></option>
                 </template>
-            </select>        {{-- Active Filters Display --}}
+            </select>
+        </div>
+        
+        {{-- Active Filters Display --}}
         <div x-show="hasActiveFilters" x-cloak class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-base-300">
             <span class="text-xs font-medium text-base-content/70">Active Filters:</span>
             <span x-show="$wire.statusFilter" x-cloak class="badge badge-sm gap-1">
