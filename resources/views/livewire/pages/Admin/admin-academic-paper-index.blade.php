@@ -26,30 +26,132 @@
             <span x-show="loading" class="loading loading-spinner loading-sm"></span>
             <span x-show="loading">Loading...</span>
         </button>
+    </div>
+
+    {{-- Search and Filters with Alpine.js --}}
+    <div x-data="{ 
+        showFilters: true,
+        get hasActiveFilters() {
+            return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter);
+        }
+    }" class="mb-6">
         
-        <div class="flex-1 sm:max-w-md">
-            <div class="form-control">
-                <label class="input input-bordered flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70">
-                        <path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" />
+        {{-- Search Bar and Filter Toggle --}}
+        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4">
+            <div class="flex-1">
+                <div class="form-control">
+                    <label class="input input-bordered flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70">
+                            <path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" />
+                        </svg>
+                        <input 
+                            type="text" 
+                            class="grow" 
+                            placeholder="Search by title, author, catalog code..." 
+                            wire:model.live.debounce.300ms="search"
+                        />
+                    </label>
+                </div>
+            </div>
+            
+            <div class="flex gap-2 flex-shrink-0">
+                <button 
+                    @click="showFilters = !showFilters" 
+                    class="btn btn-outline btn-sm sm:btn-md gap-2 whitespace-nowrap"
+                    :class="{ 'btn-active': showFilters }"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
                     </svg>
-                    <input 
-                        type="text" 
-                        class="grow" 
-                        placeholder="Search by title..." 
-                        wire:model.live.debounce.300ms="search"
-                    />
-                </label>
+                    <span class="hidden sm:inline" x-text="showFilters ? 'Hide Filters' : 'Show Filters'"></span>
+                    <span class="sm:hidden">Filters</span>
+                    <span x-show="hasActiveFilters && !showFilters" class="badge badge-primary badge-sm">Active</span>
+                </button>
+                
+                <button 
+                    x-show="hasActiveFilters"
+                    @click="$wire.set('statusFilter', ''); $wire.set('paperTypeFilter', ''); $wire.set('departmentFilter', ''); $wire.set('yearFromFilter', ''); $wire.set('yearToFilter', '')"
+                    x-transition
+                    class="btn btn-ghost btn-sm sm:btn-md gap-2 whitespace-nowrap"
+                    title="Clear all filters"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    <span class="hidden sm:inline">Clear Filters</span>
+                    <span class="sm:hidden">Clear</span>
+                </button>
+            </div>
+        </div>
+        
+        {{-- Collapsible Filter Section --}}
+        <div 
+            x-show="showFilters" 
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 transform -translate-y-2"
+            x-transition:enter-end="opacity-100 transform translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 transform translate-y-0"
+            x-transition:leave-end="opacity-0 transform -translate-y-2"
+            class="bg-base-200 rounded-lg p-4"
+        >
+            <div class="flex flex-wrap gap-2">
+                <select wire:model.live="statusFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
+                    <option value="">All Status</option>
+                    <option value="Available">Available</option>
+                    <option value="Unavailable">Unavailable</option>
+                </select>
+                
+                <select wire:model.live="paperTypeFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
+                    <option value="">All Types</option>
+                    @foreach($this->availablePaperTypes as $type)
+                        <option value="{{ $type }}">{{ $type }}</option>
+                    @endforeach
+                </select>
+                
+                <select wire:model.live="departmentFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
+                    <option value="">All Departments</option>
+                    @foreach($this->availableDepartments as $dept)
+                        <option value="{{ $dept }}">{{ $dept }}</option>
+                    @endforeach
+                </select>
+                
+                <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
+                    <option value="">Year From</option>
+                    @foreach($this->availableYears as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
+                    @endforeach
+                </select>
+                
+                <select wire:model.live="yearToFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
+                    <option value="">Year To</option>
+                    @foreach($this->availableYears as $year)
+                        <option value="{{ $year }}">{{ $year }}</option>
+                    @endforeach
+                </select>
+            </div>
+            
+            {{-- Active Filters Display --}}
+            <div x-show="hasActiveFilters" class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-base-300">
+                <span class="text-xs font-medium text-base-content/70">Active Filters:</span>
+                <span x-show="$wire.statusFilter" class="badge badge-sm gap-1">
+                    Status: <span x-text="$wire.statusFilter"></span>
+                </span>
+                <span x-show="$wire.paperTypeFilter" class="badge badge-sm gap-1">
+                    Type: <span x-text="$wire.paperTypeFilter"></span>
+                </span>
+                <span x-show="$wire.departmentFilter" class="badge badge-sm gap-1">
+                    Dept: <span x-text="$wire.departmentFilter"></span>
+                </span>
+                <span x-show="$wire.yearFromFilter" class="badge badge-sm gap-1">
+                    From: <span x-text="$wire.yearFromFilter"></span>
+                </span>
+                <span x-show="$wire.yearToFilter" class="badge badge-sm gap-1">
+                    To: <span x-text="$wire.yearToFilter"></span>
+                </span>
             </div>
         </div>
     </div>
-
-    @if($this->dept)
-        <div class="alert alert-info mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <span>Filtered by department: <strong>{{ strtoupper($this->dept) }}</strong></span>
-        </div>
-    @endif
 
     <div class="mb-4 text-xs sm:text-sm text-base-content/70">
         Showing {{ $this->academicPapers->count() }} of {{ $this->academicPapers->total() }} results
@@ -144,8 +246,8 @@
                 <x-mary-icon name="o-document-magnifying-glass" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-base-content/40 mb-4" />
                 <h3 class="text-base sm:text-lg font-medium text-base-content mb-2 px-4">No Academic Papers Found</h3>
                 <p class="text-xs sm:text-sm text-base-content/70 px-4">
-                    @if($search)
-                        There's no academic paper matching your query "{{ $search }}"
+                    @if($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                        No papers match your current filters
                     @else
                         No academic papers are available at the moment
                     @endif
@@ -180,8 +282,8 @@
                     <x-mary-icon name="o-document-magnifying-glass" class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
                     <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
                     <p class="text-sm text-base-content/70">
-                        @if($search)
-                            There's no academic paper matching your query "{{ $search }}"
+                        @if($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                            No papers match your current filters
                         @else
                             No academic papers are available at the moment
                         @endif

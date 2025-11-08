@@ -19,7 +19,6 @@ class AdminAcademicPaperIndex extends AdminComponent
     use WithPagination;
     use Toast;
 
-
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
     public array $headers = [];
     public int $perPage = 10;
@@ -27,6 +26,13 @@ class AdminAcademicPaperIndex extends AdminComponent
     #[Url]
     public string $search = '';
 
+    // Filters
+    public string $statusFilter = '';
+    public string $yearFilter = '';
+    public string $departmentFilter = '';
+    public string $paperTypeFilter = '';
+    public string $yearFromFilter = '';
+    public string $yearToFilter = '';
 
     public function updatingPerPage(): void
     {
@@ -92,9 +98,15 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Create a cache key based on current filters, pagination, and version
         $cacheKey = sprintf(
-            'academic_papers_%s_%s_%s_%s_%d_%d_v%d',
+            'academic_papers_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%d_%d_v%d',
             $this->dept ?? 'all',
             $this->search ?: 'no_search',
+            $this->statusFilter ?: 'all_status',
+            $this->yearFilter ?: 'all_years',
+            $this->departmentFilter ?: 'all_depts',
+            $this->paperTypeFilter ?: 'all_types',
+            $this->yearFromFilter ?: 'no_from',
+            $this->yearToFilter ?: 'no_to',
             $this->sortBy['column'],
             $this->sortBy['direction'],
             $this->perPage,
@@ -102,13 +114,13 @@ class AdminAcademicPaperIndex extends AdminComponent
             $version
         );
 
-        // Use cache for non-search queries (empty search) with short TTL
-        if (empty($this->search)) {
+        // Use cache for non-search/filter queries with short TTL
+        if (empty($this->search) && empty($this->statusFilter) && empty($this->yearFilter) && empty($this->departmentFilter) && empty($this->paperTypeFilter) && empty($this->yearFromFilter) && empty($this->yearToFilter)) {
             $paginated = Cache::remember($cacheKey, 60, function () {
                 return $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
             });
         } else {
-            // For search queries, don't cache as they're more dynamic
+            // For search/filter queries, don't cache as they're more dynamic
             $paginated = $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
         }
 
@@ -119,6 +131,41 @@ class AdminAcademicPaperIndex extends AdminComponent
         });
 
         return $paginated;
+    }
+
+    #[Computed]
+    public function availableYears()
+    {
+        // Get min and max years from database
+        $minYear = AcademicPaper::min('publication_year');
+        $maxYear = AcademicPaper::max('publication_year');
+
+        if (!$minYear || !$maxYear) {
+            return collect();
+        }
+
+        // Generate complete range from min to max (no gaps)
+        return collect(range($maxYear, $minYear))->values();
+    }
+
+    #[Computed]
+    public function availableDepartments()
+    {
+        return AcademicPaper::distinct()
+            ->orderBy('department')
+            ->pluck('department')
+            ->filter()
+            ->values();
+    }
+
+    #[Computed]
+    public function availablePaperTypes()
+    {
+        return AcademicPaper::distinct()
+            ->orderBy('paper_type')
+            ->pluck('paper_type')
+            ->filter()
+            ->values();
     }
 
     /**
@@ -151,6 +198,10 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
+                        ->orWhere('department', 'like', $search)
+                        ->orWhereHas('authors', function ($authorQuery) use ($search) {
+                            $authorQuery->where('name', 'like', $search);
+                        })
                         ->orWhereHas('researchAdviser', function ($adviserQuery) use ($search) {
                             $adviserQuery->where('name', 'like', $search);
                         })
@@ -161,6 +212,33 @@ class AdminAcademicPaperIndex extends AdminComponent
                             $deanQuery->where('name', 'like', $search);
                         });
                 });
+            })
+            ->when($this->yearFilter, function ($query) {
+                $query->where('publication_year', $this->yearFilter);
+            })
+            ->when($this->departmentFilter, function ($query) {
+                $query->where('department', $this->departmentFilter);
+            })
+            ->when($this->paperTypeFilter, function ($query) {
+                $query->where('paper_type', $this->paperTypeFilter);
+            })
+            ->when($this->yearFromFilter, function ($query) {
+                $query->where('publication_year', '>=', $this->yearFromFilter);
+            })
+            ->when($this->yearToFilter, function ($query) {
+                $query->where('publication_year', '<=', $this->yearToFilter);
+            })
+            // Apply status filter at query level for better performance
+            ->when($this->statusFilter, function ($query) {
+                if ($this->statusFilter === 'Available') {
+                    $query->whereHas('copies', function ($copyQuery) {
+                        $copyQuery->where('status', 'Available');
+                    });
+                } elseif ($this->statusFilter === 'Unavailable') {
+                    $query->whereDoesntHave('copies', function ($copyQuery) {
+                        $copyQuery->where('status', 'Available');
+                    });
+                }
             })
             ->withCount([
                 'copies as available_copies' => function ($query) {
@@ -177,6 +255,36 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
     public function updatedSearch(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedDepartmentFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedPaperTypeFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearFromFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearToFilter(): void
     {
         $this->resetPage('academic-papers-index');
     }

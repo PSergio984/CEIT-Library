@@ -38,9 +38,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('academic-paper.show');
     Route::get('/academic-papers', AcademicPaperIndex::class)
         ->name('academic-paper.index');
-    Route::get('/academic-papers/{dept}', AcademicPaperIndex::class)
-        ->where('dept', 'it|ce|ee')
-        ->name('academic-paper.index.dept');
     Route::get('/rule-and-regulation',  RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
     Route::get('/credit-score-history',  CreditScoreHistory::class)->name('CreditScoreHistory');
     Route::get('/transactions', Transaction::class)->name('transactions');
@@ -75,8 +72,7 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         // Academic Papers management (Admin only)
         Route::middleware('can:manage-academic-papers')->group(function () {
             Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
-            Route::get('/academic-papers/{dept?}', AdminAcademicPaperIndex::class)
-                ->where('dept', 'it|ce|ee')
+            Route::get('/academic-papers', AdminAcademicPaperIndex::class)
                 ->name('academic-paper.index');
             Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
                 ->whereNumber('academicPaper')

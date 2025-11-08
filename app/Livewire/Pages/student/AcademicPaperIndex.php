@@ -22,6 +22,14 @@ class AcademicPaperIndex extends Component
     public ?string $dept = null;
     public string $search = '';
 
+    // Filters
+    public string $statusFilter = '';
+    public string $yearFilter = '';
+    public string $departmentFilter = '';
+    public string $paperTypeFilter = '';
+    public string $yearFromFilter = '';
+    public string $yearToFilter = '';
+
     // Store IDs only (modals controlled by Alpine.js)
     public ?int $selectedPaperId = null;
 
@@ -51,9 +59,14 @@ class AcademicPaperIndex extends Component
     public function academicPapers()
     {
         $query = AcademicPaper::query()
-            ->with(['copies' => function ($query) {
-                $query->select('academic_paper_id', 'status');
-            }])
+            ->with([
+                'copies' => function ($query) {
+                    $query->select('academic_paper_id', 'status');
+                },
+                'authors' => function ($query) {
+                    $query->select('authors.id', 'authors.name');
+                }
+            ])
             ->when($this->dept, function ($q) {
                 $departmentName = $this->resolveDepartmentName($this->dept);
                 if ($departmentName) {
@@ -61,7 +74,42 @@ class AcademicPaperIndex extends Component
                 }
             })
             ->when($this->search, function ($q) {
-                $q->where('title', 'like', '%' . $this->search . '%');
+                $search = '%' . $this->search . '%';
+                $q->where(function ($query) use ($search) {
+                    $query->where('title', 'like', $search)
+                        ->orWhere('catalog_code', 'like', $search)
+                        ->orWhere('department', 'like', $search)
+                        ->orWhereHas('authors', function ($q) use ($search) {
+                            $q->where('name', 'like', $search);
+                        });
+                });
+            })
+            ->when($this->yearFilter, function ($q) {
+                $q->where('publication_year', $this->yearFilter);
+            })
+            ->when($this->departmentFilter, function ($q) {
+                $q->where('department', $this->departmentFilter);
+            })
+            ->when($this->paperTypeFilter, function ($q) {
+                $q->where('paper_type', $this->paperTypeFilter);
+            })
+            ->when($this->yearFromFilter, function ($q) {
+                $q->where('publication_year', '>=', $this->yearFromFilter);
+            })
+            ->when($this->yearToFilter, function ($q) {
+                $q->where('publication_year', '<=', $this->yearToFilter);
+            })
+            // Apply status filter at query level for better performance
+            ->when($this->statusFilter, function ($q) {
+                if ($this->statusFilter === 'Available') {
+                    $q->whereHas('copies', function ($copyQuery) {
+                        $copyQuery->where('status', 'Available');
+                    });
+                } elseif ($this->statusFilter === 'Unavailable') {
+                    $q->whereDoesntHave('copies', function ($copyQuery) {
+                        $copyQuery->where('status', 'Available');
+                    });
+                }
             })
             ->withCount([
                 'copies as available_copies' => function ($query) {
@@ -77,6 +125,7 @@ class AcademicPaperIndex extends Component
 
         $paginated = $query->paginate($this->perPage, pageName: 'academic-papers-index');
 
+        // Transform to add computed status property
         $paginated->getCollection()->transform(function ($paper) {
             $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
             return $paper;
@@ -85,12 +134,77 @@ class AcademicPaperIndex extends Component
         return $paginated;
     }
 
+    #[Computed]
+    public function availableYears()
+    {
+        // Get min and max years from database
+        $minYear = AcademicPaper::min('publication_year');
+        $maxYear = AcademicPaper::max('publication_year');
+
+        if (!$minYear || !$maxYear) {
+            return collect();
+        }
+
+        // Generate complete range from min to max (no gaps)
+        return collect(range($maxYear, $minYear))->values();
+    }
+
+    #[Computed]
+    public function availableDepartments()
+    {
+        return AcademicPaper::distinct()
+            ->orderBy('department')
+            ->pluck('department')
+            ->filter()
+            ->values();
+    }
+
+    #[Computed]
+    public function availablePaperTypes()
+    {
+        return AcademicPaper::distinct()
+            ->orderBy('paper_type')
+            ->pluck('paper_type')
+            ->filter()
+            ->values();
+    }
+
     public function updatedDept(): void
     {
         $this->resetPage('academic-papers-index');
     }
 
     public function updatedSearch(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedStatusFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedDepartmentFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedPaperTypeFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearFromFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearToFilter(): void
     {
         $this->resetPage('academic-papers-index');
     }
