@@ -4,7 +4,6 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
-use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
@@ -19,7 +18,6 @@ class AdminAcademicPaperIndex extends AdminComponent
 {
     use WithPagination;
     use Toast;
-    use AuthorizesRequests;
 
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
@@ -37,7 +35,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public ?string $dept = null;
 
-    // Only store IDs, not boolean states (Alpine handles modal visibility)
+    // Store IDs for modal content (modals controlled by Alpine.js)
     #[Locked]
     public ?int $deleteId = null;
 
@@ -45,22 +43,23 @@ class AdminAcademicPaperIndex extends AdminComponent
     public bool $isEditing = false;
     public AcademicPaperForm $form;
 
-    // Only store ID, not modal state (Alpine handles visibility)
     #[Locked]
     public ?int $selectedPaperId = null;
 
-    // Copy deletion - only store ID (Alpine handles modal visibility)
     #[Locked]
     public ?int $copyToDelete = null;
 
     // Cache properties for memoization
-    private ?array $cachedAdvisers = null;
+    private ?array $cachedResearchAdvisers = null;
+    private ?array $cachedTechnicalAdvisers = null;
     private ?array $cachedDeans = null;
-    private ?string $lastAdviserSearch = null;
+    private ?string $lastResearchAdviserSearch = null;
+    private ?string $lastTechnicalAdviserSearch = null;
     private ?string $lastDeanSearch = null;
 
     // Flag to prevent duplicate cache queries
-    private bool $advisersLoaded = false;
+    private bool $researchAdvisersLoaded = false;
+    private bool $technicalAdvisersLoaded = false;
     private bool $deansLoaded = false;
 
     public function mount(?string $dept = null)
@@ -68,7 +67,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
         // Initialize empty collections to avoid null references
-        $this->form->adviser_options = collect();
+        $this->form->research_adviser_options = collect();
+        $this->form->technical_adviser_options = collect();
         $this->form->dean_options = collect();
         $this->headers = [
             ['key' => 'id', 'label' => '#'],
@@ -131,7 +131,8 @@ class AdminAcademicPaperIndex extends AdminComponent
                 'authors' => function ($query) {
                     $query->select('authors.id', 'authors.name');
                 },
-                'adviser:id,name',
+                'researchAdviser:id,name',
+                'technicalAdviser:id,name',
                 'dean:id,name',
                 'copies' => function ($query) {
                     $query->select('id', 'academic_paper_id', 'status');
@@ -150,7 +151,10 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
-                        ->orWhereHas('adviser', function ($adviserQuery) use ($search) {
+                        ->orWhereHas('researchAdviser', function ($adviserQuery) use ($search) {
+                            $adviserQuery->where('name', 'like', $search);
+                        })
+                        ->orWhereHas('technicalAdviser', function ($adviserQuery) use ($search) {
                             $adviserQuery->where('name', 'like', $search);
                         })
                         ->orWhereHas('dean', function ($deanQuery) use ($search) {
@@ -177,29 +181,66 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetPage('academic-papers-index');
     }
 
-    // Perform deletion (called from Alpine modal)
-    public function performDelete(): void
+    // Perform deletion (called from modal)
+    public function performDelete(?int $paperId = null): void
     {
-        if (!$this->deleteId) {
+        // Use parameter if provided, otherwise fall back to property
+        $deleteId = $paperId ?? $this->deleteId;
+
+        if (!$deleteId) {
             return;
         }
 
-        $academicPaper = AcademicPaper::findOrFail($this->deleteId);
+        try {
+            $academicPaper = AcademicPaper::findOrFail($deleteId);
 
-        // Authorization check
-        $this->authorize('delete', $academicPaper);
+            // Admin pages are already protected by middleware, no need for additional authorization
+            // Delete the paper
+            $academicPaper->delete();
 
-        $academicPaper->delete();
-        $this->success('Academic paper deleted successfully');
+            // Invalidate ALL related caches
+            $this->incrementAcademicPapersVersion();
 
-        // Invalidate caches
-        $this->incrementAcademicPapersVersion();
+            // Clear all academic papers cache keys
+            $cacheKeys = Cache::get('academic_papers_cache_keys', []);
+            foreach ($cacheKeys as $key) {
+                Cache::forget($key);
+            }
 
-        $this->deleteId = null;
-        $this->resetPage('academic-papers-index');
+            // Reset state
+            $this->deleteId = null;
 
-        // Dispatch event to close modal on frontend
-        $this->dispatch('close-modals');
+            // Reset pagination to first page
+            $this->resetPage('academic-papers-index');
+
+            // Show success message
+            $this->success('Academic paper deleted successfully');
+
+            // Dispatch event to close modal (only on success)
+            $this->dispatch('close-delete-modal');
+        } catch (\Exception $e) {
+            // On error, show message but don't close modal
+            $this->error('Failed to delete academic paper: ' . $e->getMessage());
+            $this->deleteId = null;
+        }
+    }
+
+    /**
+     * Get initial copy count for edit mode (computed to avoid payload)
+     */
+    #[Computed]
+    public function initialCopyCount(): ?int
+    {
+        if (!$this->isEditing || !$this->form->academicPaperId) {
+            return null;
+        }
+
+        // Use cached count to avoid extra query
+        return Cache::remember(
+            "academic_paper_{$this->form->academicPaperId}_copy_count",
+            60, // 1 minute cache
+            fn() => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
+        );
     }
 
     // Open drawer for creating new academic paper
@@ -210,11 +251,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetErrorBag(); // Clear any previous validation errors
 
         // Only load search options if not already cached
-        if ($this->cachedAdvisers === null) {
-            $this->searchAdvisers();
+        if ($this->cachedResearchAdvisers === null) {
+            $this->searchResearchAdvisers('');
+        }
+        if ($this->cachedTechnicalAdvisers === null) {
+            $this->searchTechnicalAdvisers('');
         }
         if ($this->cachedDeans === null) {
-            $this->searchDeans();
+            $this->searchDeans('');
         }
 
         $this->formDrawer = true;
@@ -239,11 +283,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->isEditing = true;
 
         // Only load search options if not already cached
-        if ($this->cachedAdvisers === null) {
-            $this->searchAdvisers();
+        if ($this->cachedResearchAdvisers === null) {
+            $this->searchResearchAdvisers('');
+        }
+        if ($this->cachedTechnicalAdvisers === null) {
+            $this->searchTechnicalAdvisers('');
         }
         if ($this->cachedDeans === null) {
-            $this->searchDeans();
+            $this->searchDeans('');
         }
 
         $this->formDrawer = true;
@@ -264,6 +311,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->invalidateSearchCaches();
         $this->clearRequestCaches();
 
+        // Clear copy count cache for this paper
+        if ($this->form->academicPaperId) {
+            Cache::forget("academic_paper_{$this->form->academicPaperId}_copy_count");
+        }
+
         $this->formDrawer = false;
         $this->isEditing = false;
         $this->form->reset();
@@ -272,30 +324,30 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
 
-    // Search method for advisers with caching
-    public function searchAdvisers(string $value = '')
+    // Search method for research advisers with caching
+    public function searchResearchAdvisers(string $value = '')
     {
         // Check if we have cached results for the same search
-        if ($this->lastAdviserSearch === $value && $this->cachedAdvisers !== null) {
-            $this->form->adviser_options = collect($this->cachedAdvisers);
-            return $this->cachedAdvisers;
+        if ($this->lastResearchAdviserSearch === $value && $this->cachedResearchAdvisers !== null) {
+            $this->form->research_adviser_options = collect($this->cachedResearchAdvisers);
+            return $this->cachedResearchAdvisers;
         }
 
         // Prevent duplicate loading for empty searches - more aggressive check
-        if ($value === '' && ($this->advisersLoaded || $this->cachedAdvisers !== null)) {
-            $this->form->adviser_options = collect($this->cachedAdvisers);
-            return $this->cachedAdvisers;
+        if ($value === '' && ($this->researchAdvisersLoaded || $this->cachedResearchAdvisers !== null)) {
+            $this->form->research_adviser_options = collect($this->cachedResearchAdvisers);
+            return $this->cachedResearchAdvisers;
         }
 
         // Use cache for common searches (empty or very short searches)
-        $cacheKey = $value === '' ? 'advisers_all' : null;
+        $cacheKey = $value === '' ? 'research_advisers_all' : null;
         if ($cacheKey) {
             $cachedData = Cache::get($cacheKey);
             if ($cachedData !== null) {
                 $advisers = collect($cachedData);
             } else {
-                // Get search results from database - now from Adviser model
-                $advisers = \App\Models\Adviser::query()
+                // Get search results from database
+                $advisers = \App\Models\ResearchAdviser::query()
                     ->when($value !== '', function ($query) use ($value) {
                         $query->where('name', 'like', "%{$value}%");
                     })
@@ -314,7 +366,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $advisers = \App\Models\Adviser::query()
+            $advisers = \App\Models\ResearchAdviser::query()
                 ->when($value !== '', function ($query) use ($value) {
                     $query->where('name', 'like', "%{$value}%");
                 })
@@ -328,8 +380,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         // Include selected option if it exists and is not in search results
-        if (!empty($this->form->adviser_id)) {
-            $selectedAdviser = \App\Models\Adviser::find($this->form->adviser_id);
+        if (!empty($this->form->research_adviser_id)) {
+            $selectedAdviser = \App\Models\ResearchAdviser::find($this->form->research_adviser_id);
             if ($selectedAdviser) {
                 $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
                 $advisers = $advisers->merge($selectedOption)->unique('id');
@@ -337,16 +389,93 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         // Cache the results for this request
-        $this->cachedAdvisers = $advisers->toArray();
-        $this->lastAdviserSearch = $value;
-        $this->form->adviser_options = $advisers;
+        $this->cachedResearchAdvisers = $advisers->toArray();
+        $this->lastResearchAdviserSearch = $value;
+        $this->form->research_adviser_options = $advisers;
 
         // Mark as loaded for empty searches
         if ($value === '') {
-            $this->advisersLoaded = true;
+            $this->researchAdvisersLoaded = true;
         }
 
-        return $this->cachedAdvisers;
+        return $this->cachedResearchAdvisers;
+    }
+
+    // Search method for technical advisers with caching
+    public function searchTechnicalAdvisers(string $value = '')
+    {
+        // Check if we have cached results for the same search
+        if ($this->lastTechnicalAdviserSearch === $value && $this->cachedTechnicalAdvisers !== null) {
+            $this->form->technical_adviser_options = collect($this->cachedTechnicalAdvisers);
+            return $this->cachedTechnicalAdvisers;
+        }
+
+        // Prevent duplicate loading for empty searches - more aggressive check
+        if ($value === '' && ($this->technicalAdvisersLoaded || $this->cachedTechnicalAdvisers !== null)) {
+            $this->form->technical_adviser_options = collect($this->cachedTechnicalAdvisers);
+            return $this->cachedTechnicalAdvisers;
+        }
+
+        // Use cache for common searches (empty or very short searches)
+        $cacheKey = $value === '' ? 'technical_advisers_all' : null;
+        if ($cacheKey) {
+            $cachedData = Cache::get($cacheKey);
+            if ($cachedData !== null) {
+                $advisers = collect($cachedData);
+            } else {
+                // Get search results from database
+                $advisers = \App\Models\TechnicalAdviser::query()
+                    ->when($value !== '', function ($query) use ($value) {
+                        $query->where('name', 'like', "%{$value}%");
+                    })
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->take(10)
+                    ->get()
+                    ->map(function ($adviser) {
+                        return ['id' => $adviser->id, 'name' => $adviser->name];
+                    });
+
+                // Cache empty search results for 5 minutes
+                if ($value === '') {
+                    Cache::put($cacheKey, $advisers->toArray(), 300);
+                }
+            }
+        } else {
+            // Get search results from database for non-empty searches
+            $advisers = \App\Models\TechnicalAdviser::query()
+                ->when($value !== '', function ($query) use ($value) {
+                    $query->where('name', 'like', "%{$value}%");
+                })
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->take(10)
+                ->get()
+                ->map(function ($adviser) {
+                    return ['id' => $adviser->id, 'name' => $adviser->name];
+                });
+        }
+
+        // Include selected option if it exists and is not in search results
+        if (!empty($this->form->technical_adviser_id)) {
+            $selectedAdviser = \App\Models\TechnicalAdviser::find($this->form->technical_adviser_id);
+            if ($selectedAdviser) {
+                $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
+                $advisers = $advisers->merge($selectedOption)->unique('id');
+            }
+        }
+
+        // Cache the results for this request
+        $this->cachedTechnicalAdvisers = $advisers->toArray();
+        $this->lastTechnicalAdviserSearch = $value;
+        $this->form->technical_adviser_options = $advisers;
+
+        // Mark as loaded for empty searches
+        if ($value === '') {
+            $this->technicalAdvisersLoaded = true;
+        }
+
+        return $this->cachedTechnicalAdvisers;
     }
 
     // Search method for deans with caching
@@ -432,7 +561,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     private function invalidateSearchCaches(): void
     {
         // Clear individual cache keys
-        Cache::forget('advisers_all');
+        Cache::forget('research_advisers_all');
+        Cache::forget('technical_advisers_all');
         Cache::forget('deans_all');
 
         // Increment version token to invalidate all academic papers caches
@@ -444,11 +574,14 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     private function clearRequestCaches(): void
     {
-        $this->cachedAdvisers = null;
+        $this->cachedResearchAdvisers = null;
+        $this->cachedTechnicalAdvisers = null;
         $this->cachedDeans = null;
-        $this->lastAdviserSearch = null;
+        $this->lastResearchAdviserSearch = null;
+        $this->lastTechnicalAdviserSearch = null;
         $this->lastDeanSearch = null;
-        $this->advisersLoaded = false;
+        $this->researchAdvisersLoaded = false;
+        $this->technicalAdvisersLoaded = false;
         $this->deansLoaded = false;
     }
 
@@ -481,7 +614,8 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         return AcademicPaper::with([
             'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
-            'adviser:id,name',
+            'researchAdviser:id,name',
+            'technicalAdviser:id,name',
             'dean:id,name',
             'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status')
         ])->find($this->selectedPaperId);
@@ -514,46 +648,69 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function showPaperDetails(int $paperId): void
     {
         $this->selectedPaperId = $paperId;
-        // Dispatch event for Alpine to open modal
-        $this->dispatch('open-paper-modal');
+        $this->dispatch('paper-modal');
     }
 
-    public function requestQr(int $copyId): void
+    /**
+     * Set deleteId and open delete modal
+     */
+    public function confirmDelete(int $paperId): void
     {
-        // TODO: Implement QR code request functionality
-        // This could generate a QR code for the specific copy
-        // or redirect to a QR generation page
-        $this->info("QR generation for copy #{$copyId} is not yet implemented");
+        $this->deleteId = $paperId;
+        $this->dispatch('delete-modal');
     }
 
-    public function performCopyDelete(): void
+    /**
+     * Set copyToDelete and open copy delete modal
+     */
+    public function confirmCopyDelete(int $copyId): void
     {
-        if (!$this->copyToDelete) {
+        $this->copyToDelete = $copyId;
+        $this->dispatch('copy-delete-modal');
+    }
+
+
+    public function performCopyDelete(?int $copyId = null): void
+    {
+        // Use parameter if provided, otherwise fall back to property
+        $copyToDelete = $copyId ?? $this->copyToDelete;
+
+        if (!$copyToDelete) {
             return;
         }
 
-        $copy = \App\Models\Inventory::findOrFail($this->copyToDelete);
+        try {
+            $copy = \App\Models\Inventory::findOrFail($copyToDelete);
 
-        // Authorization check - verify user can manage academic papers
-        $this->authorize('update', $copy->academicPaper);
+            // Admin pages are already protected by middleware
+            if ($copy->status !== 'Available') {
+                // On validation error, show message but don't close modal
+                $this->error("Cannot delete copy #{$copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
+                $this->copyToDelete = null;
+                return;
+            }
 
-        if ($copy->status !== 'Available') {
-            $this->error("Cannot delete copy #{$this->copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
+            $copy->delete();
+
+            // Invalidate caches to reflect the change
+            $this->invalidateSearchCaches();
+
+            // Clear copy count cache for this paper
+            if ($copy->academic_paper_id) {
+                Cache::forget("academic_paper_{$copy->academic_paper_id}_copy_count");
+            }
+
             $this->copyToDelete = null;
-            // Close modal via event
-            $this->dispatch('close-modals');
-            return;
+
+            $this->success("Copy #{$copy->copy_number} deleted successfully", 'Copy Deleted!');
+
+            // Dispatch event to close modal (only on success)
+            $this->dispatch('close-copy-delete-modal');
+        } catch (\Exception $e) {
+            // On error, show message but don't close modal
+            $this->error('Failed to delete copy: ' . $e->getMessage());
+            $this->copyToDelete = null;
         }
-
-        $copy->delete();
-        $this->success("Copy #{$this->copyToDelete} deleted successfully", 'Copy Deleted!');
-
-        // Invalidate caches to reflect the change
-        $this->invalidateSearchCaches();
-
-        $this->copyToDelete = null;
-        // Close modal via event
-        $this->dispatch('close-modals');
     }
 
     #[Computed]

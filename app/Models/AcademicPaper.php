@@ -49,7 +49,8 @@ class AcademicPaper extends Model
         'title',
         'publication_year',
         'paper_type',
-        'adviser_id',
+        'research_adviser_id',
+        'technical_adviser_id',
         'department',
         'dean_id',
     ];
@@ -88,7 +89,10 @@ class AcademicPaper extends Model
         return $query->where(function ($q) use ($search) {
             $q->where('title', 'LIKE', "%{$search}%")
                 ->orWhere('catalog_code', 'LIKE', "%{$search}%")
-                ->orWhereHas('adviser', function ($adviserQuery) use ($search) {
+                ->orWhereHas('researchAdviser', function ($adviserQuery) use ($search) {
+                    $adviserQuery->where('name', 'LIKE', "%{$search}%");
+                })
+                ->orWhereHas('technicalAdviser', function ($adviserQuery) use ($search) {
                     $adviserQuery->where('name', 'LIKE', "%{$search}%");
                 })
                 ->orWhereHas('dean', function ($deanQuery) use ($search) {
@@ -113,11 +117,19 @@ class AcademicPaper extends Model
     }
 
     /**
-     * Get the adviser for this academic paper.
+     * Get the research adviser for this academic paper.
      */
-    public function adviser()
+    public function researchAdviser()
     {
-        return $this->belongsTo(Adviser::class);
+        return $this->belongsTo(ResearchAdviser::class);
+    }
+
+    /**
+     * Get the technical adviser for this academic paper.
+     */
+    public function technicalAdviser()
+    {
+        return $this->belongsTo(TechnicalAdviser::class);
     }
 
     /**

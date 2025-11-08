@@ -1,41 +1,43 @@
-{{-- Alpine state for client-side UI management --}}
-<div x-data="{
-    deleteModalOpen: false,
-    paperModalOpen: false,
-    copyDeleteModalOpen: false
-}" 
-@open-delete-modal.window="deleteModalOpen = true"
-@open-paper-modal.window="paperModalOpen = true"
-@open-copy-delete-modal.window="copyDeleteModalOpen = true"
-@close-modals.window="deleteModalOpen = false; paperModalOpen = false; copyDeleteModalOpen = false"
-class="p-6">
-    <x-mary-header 
-        title="Academic Paper Directory" 
-        subtitle="Browse and manage Academic Paper documents from the CEIT Library"
-        separator 
-        class="mb-6" 
-    />
+{{-- Academic Paper Directory - Livewire + Alpine.js + DaisyUI --}}
+<x-slot name="header">
+    <h2 class="font-semibold text-xl text-base-content leading-tight">
+        {{ __('Academic Paper Directory') }}
+    </h2>
+</x-slot>
+
+<div>
+    <div class="p-6">
 
     {{-- Header Actions --}}
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-        <x-mary-button 
+        <button 
             wire:click="create" 
-            class="btn-primary" 
-            icon="o-plus"
+            class="btn btn-primary" 
             wire:loading.attr="disabled"
             wire:target="create"
         >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" wire:loading.remove wire:target="create">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+            </svg>
+            <span class="loading loading-spinner loading-sm" wire:loading wire:target="create"></span>
             <span wire:loading.remove wire:target="create">Create Academic Paper</span>
             <span wire:loading wire:target="create">Loading...</span>
-        </x-mary-button>
+        </button>
+        
         <div class="flex-1 sm:max-w-md">
-            <x-mary-input 
-                label="Search Title" 
-                wire:model.live.debounce.300ms="search" 
-                placeholder="Search by title..." 
-                icon="o-magnifying-glass" 
-                clearable 
-            />
+            <div class="form-control">
+                <label class="input input-bordered flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="w-4 h-4 opacity-70">
+                        <path fill-rule="evenodd" d="M9.965 11.026a5 5 0 1 1 1.06-1.06l2.755 2.754a.75.75 0 1 1-1.06 1.06l-2.755-2.754ZM10.5 7a3.5 3.5 0 1 1-7 0 3.5 3.5 0 0 1 7 0Z" clip-rule="evenodd" />
+                    </svg>
+                    <input 
+                        type="text" 
+                        class="grow" 
+                        placeholder="Search by title..." 
+                        wire:model.live.debounce.300ms="search"
+                    />
+                </label>
+            </div>
         </div>
     </div>
 
@@ -86,29 +88,40 @@ class="p-6">
                 </div>
 
                 <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-base-300">
-                    <x-mary-button 
-                        icon="o-eye" 
+                    <button 
                         wire:click="showPaperDetails({{ $paper->id }})"
-                        class="btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]" 
-                        label="View"
+                        class="btn btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]" 
                         wire:loading.attr="disabled"
                         wire:target="showPaperDetails({{ $paper->id }})"
-                    />
-                    <x-mary-button 
-                        icon="o-pencil" 
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        View
+                    </button>
+                    <button 
                         wire:click="edit({{ $paper->id }})"
-                        class="btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]" 
-                        label="Edit"
+                        class="btn btn-xs sm:btn-sm btn-ghost flex-1 min-w-[80px]" 
                         wire:loading.attr="disabled"
                         wire:target="edit({{ $paper->id }})"
-                    />
-                    <x-mary-button 
-                        icon="o-trash" 
-                        wire:click="$set('deleteId', {{ $paper->id }})"
-                        @click="$dispatch('open-delete-modal')"
-                        class="btn-xs sm:btn-sm btn-ghost text-error flex-1 min-w-[80px]" 
-                        label="Delete"
-                    />
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                        </svg>
+                        Edit
+                    </button>
+                    <button 
+                        wire:click="confirmDelete({{ $paper->id }})"
+                        class="btn btn-xs sm:btn-sm btn-ghost text-error flex-1 min-w-[80px]"
+                        wire:loading.attr="disabled"
+                        wire:target="confirmDelete({{ $paper->id }})"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                        </svg>
+                        Delete
+                    </button>
                 </div>
             </div>
         @empty
@@ -125,6 +138,7 @@ class="p-6">
             </div>
         @endforelse
 
+        {{-- Mobile/Tablet Pagination --}}
         @if($this->academicPapers->hasPages())
             <div class="mt-6">
                 {{ $this->academicPapers->links() }}
@@ -180,7 +194,7 @@ class="p-6">
                     wire:click="showPaperDetails({{ $row->id }})"
                     icon="o-eye"
                     class="btn-sm btn-ghost"
-                    tooltip-left="View Details"
+                    tooltip="View Details"
                     wire:loading.attr="disabled"
                     wire:target="showPaperDetails({{ $row->id }})"
                 />
@@ -188,357 +202,42 @@ class="p-6">
                     wire:click="edit({{ $row->id }})"
                     icon="o-pencil"
                     class="btn-sm btn-ghost"
-                    tooltip-left="Edit"
+                    tooltip="Edit"
                     wire:loading.attr="disabled"
                     wire:target="edit({{ $row->id }})"
                 />
                 <x-mary-button 
-                    @click="$wire.deleteId = {{ $row->id }}; $dispatch('open-delete-modal')"
+                    wire:click="confirmDelete({{ $row->id }})"
                     icon="o-trash"
                     class="btn-sm btn-ghost text-error"
-                    tooltip-left="Delete"
+                    tooltip="Delete"
+                    wire:loading.attr="disabled"
+                    wire:target="confirmDelete({{ $row->id }})"
                 />
             </div>
             @endscope
         </x-mary-table>
         </div>
-
-        @if($this->academicPapers->hasPages())
-            <div class="mt-6">
-                {{ $this->academicPapers->links() }}
-            </div>
-        @endif
     </div>
 
-    {{-- Delete Confirmation Modal (Alpine + Livewire events) --}}
-    <div x-show="deleteModalOpen" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
-         @keydown.escape.window="deleteModalOpen = false"
-         @close-modals.window="deleteModalOpen = false">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            {{-- Backdrop --}}
-            <div x-show="deleteModalOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click="deleteModalOpen = false"
-                 class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
+    </div>{{-- Close p-6 div --}}
 
-            {{-- Modal Content --}}
-            <div x-show="deleteModalOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-base-100 rounded-lg shadow-xl max-w-md w-full p-6 z-50">
-                
-                <h3 class="text-lg font-bold mb-2">Delete Academic Paper</h3>
-                <p class="text-sm text-base-content/70 mb-4">Are you sure?</p>
-                <p class="mb-6">Are you sure you want to delete this academic paper? This action cannot be undone.</p>
-                
-                <div class="flex justify-end gap-2">
-                    <button @click="deleteModalOpen = false" class="btn btn-ghost">Cancel</button>
-                    <button 
-                        wire:click="performDelete"
-                        wire:loading.attr="disabled"
-                        wire:target="performDelete"
-                        class="btn btn-error">
-                        <span wire:loading.remove wire:target="performDelete">Delete</span>
-                        <span wire:loading wire:target="performDelete" class="loading loading-spinner loading-sm"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
+    {{-- Alpine.js State Management for Modals --}}
+    <div x-data="{
+        showDeleteModal: false,
+        showPaperModal: false,
+        showCopyDeleteModal: false
+    }" 
+    @delete-modal.window="showDeleteModal = true"
+    @paper-modal.window="showPaperModal = true"
+    @copy-delete-modal.window="showCopyDeleteModal = true">
+        
+        {{-- Modals --}}
+        <x-admin.delete-academic-paper-modal :deleteId="$deleteId" />
+        <x-admin.paper-details-modal :selectedPaper="$this->selectedPaper" :isAdmin="true" />
+        <x-admin.delete-copy-modal :copyToDelete="$copyToDelete" />
     </div>
-
-    {{-- Academic Paper Details Modal (Alpine + Livewire events) --}}
-    <div x-show="paperModalOpen" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
-         @keydown.escape.window="paperModalOpen = false">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            {{-- Backdrop --}}
-            <div x-show="paperModalOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click="paperModalOpen = false"
-                 class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-
-            {{-- Modal Content --}}
-            <div x-show="paperModalOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-base-100 rounded-lg shadow-xl w-11/12 max-w-5xl p-6 z-50 max-h-[90vh] overflow-y-auto">
-                
-                <h3 class="text-lg font-bold mb-4">{{ $this->selectedPaper->title ?? 'Academic Paper Details' }}</h3>
-                
-                @if($this->selectedPaper)
-                                    <div class="space-y-6">
-                                        <!-- Title Section -->
-                                        <div class="flex flex-col sm:flex-row items-start justify-between gap-4">
-                                            <div class="flex-1">
-                                                <h3 class="text-lg font-bold">{{ $this->selectedPaper->title }}</h3>
-                                            </div>
-                                            @if($this->departmentIcon)
-                                                <img src="{{ $this->departmentIcon }}" alt="{{ $this->selectedPaper->department }} Logo" class="w-20 h-20 object-contain">
-                                            @endif
-                                        </div>
-
-                                        <!-- Details Grid -->
-                                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                                            <div class="space-y-2">
-                                                <div><span class="font-semibold">Catalog Code:</span> {{ $this->selectedPaper->catalog_code }}</div>
-                                                <div><span class="font-semibold">Department:</span> {{ $this->selectedPaper->department }}</div>
-                                                <div>
-                                                    <span class="font-semibold">Members:</span>
-                                                    @forelse($this->selectedPaper->authors as $author)
-                                                        {{ $author->name }}{{ !$loop->last ? ', ' : '' }}
-                                                    @empty
-                                                        No authors listed
-                                                    @endforelse
-                                                </div>
-                                            </div>
-
-                                            <div class="space-y-2">
-                                                <div><span class="font-semibold">Adviser:</span> {{ $this->selectedPaper->adviser?->name ?? 'N/A' }}</div>
-                                                <div><span class="font-semibold">Dean:</span> {{ $this->selectedPaper->dean?->name ?? 'N/A' }}</div>
-                                                <div><span class="font-semibold">Year:</span> {{ $this->selectedPaper->publication_year }}</div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Copies Table -->
-                                        @if($this->selectedPaper->copies->count() > 0)
-                                            <div class="overflow-x-auto">
-                                                <table class="table table-sm w-full">
-                                                    <thead>
-                                                        <tr>
-                                                            <th>Copy ID</th>
-                                                            <th>Availability</th>
-                                                            <th>Action</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        @foreach($this->selectedPaper->copies as $copy)
-                                                            <tr wire:key="copy-{{ $copy->id }}">
-                                                                <td>{{ $copy->id }}</td>
-                                                                <td>
-                                                                    <span class="badge {{ $this->getStatusBadgeClass($copy->status) }}">
-                                                                        {{ $copy->status }}
-                                                                    </span>
-                                                                </td>
-                                                                <td>
-                                                                    @if($copy->status === 'Available')
-                                                                        <div class="flex gap-2">
-                                                                            <x-mary-button 
-                                                                                wire:click="requestQr({{ $copy->id }})"
-                                                                                icon="o-qr-code"
-                                                                                class="btn-success btn-sm"
-                                                                                tooltip="Generate QR"
-                                                                                wire:loading.attr="disabled"
-                                                                                wire:target="requestQr({{ $copy->id }})"
-                                                                            />
-                                                                            <x-mary-button 
-                                                                                wire:click="$set('copyToDelete', {{ $copy->id }})"
-                                                                                @click="$dispatch('open-copy-delete-modal')"
-                                                                                icon="o-trash"
-                                                                                class="btn-error btn-sm"
-                                                                                tooltip="Delete Copy"
-                                                                            />
-                                                                        </div>
-                                                                    @else
-                                                                        <span class="text-error text-sm">Not Available</span>
-                                                                    @endif
-                                                                </td>
-                                                            </tr>
-                                                        @endforeach
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        @endif
-                                    </div>
-                @endif
-                
-                <div class="flex justify-end mt-6">
-                    <button @click="paperModalOpen = false" class="btn btn-primary">Close</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
+  Z
     {{-- Create/Edit Academic Paper Drawer --}}
-    <x-mary-drawer wire:model="formDrawer" :title="$isEditing ? 'Edit Academic Paper' : 'Create Academic Paper'" right class="w-11/12 lg:w-1/3" separator>
-                                <x-mary-form wire:submit="saveAcademicPaper">
-                                    {{-- Validation Errors Display --}}
-                                    <x-mary-errors title="Please fix the following errors:" description="Review the fields below." icon="o-exclamation-triangle" class="mb-4" />
-                                    
-                                    {{-- Change Indicator Header --}}
-                                    @if($isEditing)
-                                        <div wire:dirty wire:target="form" class="alert alert-info mb-4">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                            <span>You have unsaved changes to academic paper ID {{ $form->id ?? 'N/A' }}</span>
-                                        </div>
-                                    @endif
-
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.title" @endif>
-                                        Title @if($isEditing) <span wire:dirty wire:target="form.title" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-input wire:model="form.title" required class="mb-4" placeholder="Enter title" />
-                                    
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.department" @endif>
-                                        Department @if($isEditing) <span wire:dirty wire:target="form.department" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-select icon="o-building-library" wire:model="form.department" :options="$form->department_choices" class="mb-4" placeholder="Select Department" required />
-                                    
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.publication_year" @endif>
-                                        Publication Year @if($isEditing) <span wire:dirty wire:target="form.publication_year" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-select icon="o-calendar" wire:model="form.publication_year" :options="$form->year_choices" required class="mb-4" placeholder="Select Year" />
-                                    
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.paper_type" @endif>
-                                        Paper Type @if($isEditing) <span wire:dirty wire:target="form.paper_type" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-select icon="o-document" wire:model="form.paper_type" :options="$form->type_choices" class="mb-4" placeholder="Select Paper Type" required />
-                                    
-                                                                        <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.adviser_id" @endif>
-                                        Research Project Adviser @if($isEditing) <span wire:dirty wire:target="form.adviser_id" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-choices 
-                                        wire:model="form.adviser_id" 
-                                        placeholder="Search Research Adviser..." 
-                                        single 
-                                        searchable 
-                                        search-function="searchAdvisers" 
-                                        icon="o-user"
-                                        min-chars="1"
-                                        debounce="300ms"
-                                        :options="$form->adviser_options ?? []" 
-                                        clearable
-                                        hint="Start typing to search for an adviser"
-                                        error-field="form.adviser_id" />
-                                   
-                                    
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean_id" @endif>
-                                        Dean @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-choices 
-                                        wire:model="form.dean_id" 
-                                        placeholder="Search dean..." 
-                                        single 
-                                        searchable 
-                                        search-function="searchDeans" 
-                                        icon="o-user-circle"
-                                        min-chars="1"
-                                        debounce="300ms"
-                                        :options="$form->dean_options ?? []"
-                                        clearable
-                                        hint="Start typing to search for a dean"
-                                        error-field="form.dean_id" />
-                                   
-
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_names" @endif>
-                                        Authors @if($isEditing) <span wire:dirty wire:target="form.author_names" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    <x-mary-tags 
-                                        wire:model="form.author_names" 
-                                        placeholder="Enter author names and hit enter" 
-                                        icon="o-user-group" 
-                                        clearable
-                                        hint="Press Enter after typing each author name"
-                                        error-field="form.author_names" />
-                                   
-
-                                    <label class="block text-sm font-medium text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.number_of_copies" @endif>
-                                        Number of Copies @if($isEditing) <span wire:dirty wire:target="form.number_of_copies" class="text-orange-400">*</span> @endif
-                                    </label>
-                                    @if($isEditing)
-                                        <div class="mb-4">
-                                            <x-mary-input type="number" wire:model="form.number_of_copies" min="1" max="100" placeholder="Enter number of copies" icon="o-document-duplicate" disabled />
-                                            <div class="text-sm text-warning mt-1 flex items-center gap-1">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                                                </svg>
-                                                Copies cannot be modified here. Manage individual copies in the view modal.
-                                            </div>
-                                        </div>
-                                    @else
-                                        <x-mary-input type="number" wire:model="form.number_of_copies" min="1" max="100" placeholder="Enter number of copies" icon="o-document-duplicate" hint="How many copies of this paper should be available" required />
-                                    @endif
-
-                                    <x-slot:actions>
-                                        <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
-                                        <button 
-                                            type="submit"
-                                            class="btn btn-primary disabled:opacity-75 disabled:bg-blue-300"
-                                            wire:dirty.class="hover:bg-blue-900"
-                                            wire:dirty.remove.attr="disabled"
-                                            wire:loading.attr="disabled"
-                                            wire:target="saveAcademicPaper"
-                                            @if(!$form->adviser_id || !$form->dean_id || $errors->has('form.adviser_id') || $errors->has('form.dean_id')) disabled @endif>
-                                            <span wire:loading.remove wire:target="saveAcademicPaper">{{ $isEditing ? 'Update' : 'Save' }}</span>
-                                            <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
-                                        </button>
-                                    </x-slot:actions>
-                                </x-mary-form>  
-                            </x-mary-drawer>
-
-    {{-- Copy Deletion Confirmation Modal (Alpine + Livewire events) --}}
-    <div x-show="copyDeleteModalOpen" 
-         x-cloak
-         class="fixed inset-0 z-50 overflow-y-auto"
-         @keydown.escape.window="copyDeleteModalOpen = false">
-        <div class="flex items-center justify-center min-h-screen px-4">
-            {{-- Backdrop --}}
-            <div x-show="copyDeleteModalOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0"
-                 x-transition:enter-end="opacity-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100"
-                 x-transition:leave-end="opacity-0"
-                 @click="copyDeleteModalOpen = false"
-                 class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm"></div>
-
-            {{-- Modal Content --}}
-            <div x-show="copyDeleteModalOpen"
-                 x-transition:enter="ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-95"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-95"
-                 class="relative bg-base-100 rounded-lg shadow-xl max-w-md w-full p-6 z-50">
-                
-                <h3 class="text-lg font-bold mb-2">Delete Copy</h3>
-                <p class="text-sm text-base-content/70 mb-4">Are you sure?</p>
-                <p class="mb-6">Are you sure you want to delete copy #{{ $copyToDelete ?? 'N/A' }}? This action cannot be undone. Only available copies can be deleted.</p>
-                
-                <div class="flex justify-end gap-2">
-                    <button @click="copyDeleteModalOpen = false" class="btn btn-ghost">Cancel</button>
-                    <button 
-                        wire:click="performCopyDelete"
-                        @click="copyDeleteModalOpen = false"
-                        wire:loading.attr="disabled"
-                        wire:target="performCopyDelete"
-                        class="btn btn-error">
-                        <span wire:loading.remove wire:target="performCopyDelete">Delete Copy</span>
-                        <span wire:loading wire:target="performCopyDelete" class="loading loading-spinner loading-sm"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <x-admin.academic-paper-form-drawer :formDrawer="$formDrawer" :isEditing="$isEditing" :form="$form" />
+</div>{{-- Close root div --}}

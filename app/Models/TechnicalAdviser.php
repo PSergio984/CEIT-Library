@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Dean extends Model
+class TechnicalAdviser extends Model
 {
     use HasFactory;
 
@@ -14,7 +14,7 @@ class Dean extends Model
     ];
 
     /**
-     * Get the academic papers for this dean.
+     * Get the academic papers for this technical adviser.
      */
     public function academicPapers()
     {
