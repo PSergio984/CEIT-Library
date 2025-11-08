@@ -89,11 +89,13 @@
             x-show="showPaperModal"
             @click.self="showPaperModal = false"
             class="modal backdrop-blur"
+          
             x-init="$watch('showPaperModal', value => { 
                 if (value) { $refs.paperModal.showModal() } 
                 else { $refs.paperModal.close() } 
             })">
-            <div class="modal-box w-11/12 max-w-5xl">
+            <div class="modal-box w-11/12 max-w-5xl"
+              
                 <form method="dialog">
                     <button @click="showPaperModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                 </form>
@@ -112,11 +114,23 @@
             x-show="showQrModal"
             @click.self="showQrModal = false"
             class="modal backdrop-blur"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
             x-init="$watch('showQrModal', value => { 
                 if (value) { $refs.qrModal.showModal() } 
                 else { $refs.qrModal.close() } 
             })">
-            <div class="modal-box max-w-md w-full">
+            <div class="modal-box max-w-md w-full"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform scale-95"
+                x-transition:enter-end="opacity-100 transform scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform scale-100"
+                x-transition:leave-end="opacity-0 transform scale-95">
         @if ($this->selectedCopy && $qrCode)
             <div class="space-y-6">
                 <!-- QR Code Display -->

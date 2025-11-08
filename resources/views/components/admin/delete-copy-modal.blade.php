@@ -6,8 +6,10 @@
     @cancel="showCopyDeleteModal = false"
     @close-copy-delete-modal.window="showCopyDeleteModal = false"
     class="modal"
+   
     x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })">
-    <div class="modal-box">
+    <div class="modal-box"
+    
         <h3 class="font-bold text-lg mb-2">Delete Copy</h3>
         <p class="text-sm text-base-content/70 mb-4">Are you sure?</p>
         @if($copyToDelete)
