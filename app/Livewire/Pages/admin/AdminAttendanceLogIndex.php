@@ -135,7 +135,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->search = '';
         $this->selectedDate = '';
         $this->statusFilter = '';
-        $this->sortBy = ['column' => 'time_in', 'direction' => 'desc'];
+        $this->sortBy = ['column' => 'status', 'direction' => 'desc'];
         $this->resetPage();
     }
 

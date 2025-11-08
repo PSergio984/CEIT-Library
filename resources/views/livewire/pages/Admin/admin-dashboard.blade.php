@@ -97,7 +97,7 @@
         </x-mary-card>
 
         <x-mary-card title="Academic Papers By Category" class="shadow-lg">
-            {{-- Academic Papers By Categiry --}}
+            {{-- Academic Papers By Category --}}
             <x-slot:menu>
                 <x-mary-icon name="o-document-chart-bar" class="btn-ghost btn-sm"/>
             </x-slot:menu>
