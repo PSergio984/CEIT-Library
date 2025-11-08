@@ -35,11 +35,22 @@
                     </svg>
                     <input 
                         type="text" 
-                        class="grow" 
+                        class="grow bg-transparent focus:outline-none"
                         placeholder="Search by title, author, catalog code..." 
                         wire:model.live.debounce.300ms="search"
+                        x-ref="searchInput"
                     />
-                </label>
+                    <button
+                        type="button"
+                        x-show="$wire.search"
+                        @click="$wire.set('search', ''); $refs.searchInput.focus();"
+                        class="btn btn-xs btn-circle btn-ghost"
+                        aria-label="Clear search"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3 h-3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>                </label>
             </div>
         </div>
         @endif
@@ -61,12 +72,16 @@
             <button 
                 x-show="hasActiveFilters"
                 @click="
-                    $wire.set('statusFilter', ''); 
-                    $wire.set('paperTypeFilter', ''); 
-                    $wire.set('departmentFilter', ''); 
-                    $wire.set('yearFromFilter', ''); 
-                    $wire.set('yearToFilter', '');
-                    showFilters = true;
+                    Promise.all([
+                        $wire.set('statusFilter', ''),
+                        $wire.set('paperTypeFilter', ''),
+                        $wire.set('departmentFilter', ''),
+                        $wire.set('yearFromFilter', ''),
+                        $wire.set('yearToFilter', '')
+                    ]).then(() => {
+                        showFilters = true;
+                        $wire.$refresh();
+                    });
                 "
                 x-transition
                 class="btn btn-ghost btn-sm sm:btn-md gap-2 whitespace-nowrap"
@@ -118,7 +133,9 @@
             
             {{-- Year From Filter --}}
             <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
-                <option value="" disabled selected>Year From</option>
+                <option value="" disabled :selected="!$wire.yearFromFilter">Year From</option>
+            <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
+                <option value="" disabled>Year From</option>
                 <template x-for="year in validYearsFrom" :key="'from-' + year">
                     <option :value="year" x-text="year"></option>
                 </template>
@@ -126,14 +143,11 @@
             
             {{-- Year To Filter --}}
             <select wire:model.live="yearToFilter" class="select select-bordered select-sm sm:select-md w-full sm:w-auto">
-                <option value="" disabled selected>Year To</option>
+                <option value="" disabled>Year To</option>
                 <template x-for="year in validYearsTo" :key="'to-' + year">
                     <option :value="year" x-text="year"></option>
                 </template>
-            </select>
-        </div>
-        
-        {{-- Active Filters Display --}}
+            </select>        {{-- Active Filters Display --}}
         <div x-show="hasActiveFilters" x-cloak class="flex flex-wrap gap-2 mt-3 pt-3 border-t border-base-300">
             <span class="text-xs font-medium text-base-content/70">Active Filters:</span>
             <span x-show="$wire.statusFilter" x-cloak class="badge badge-sm gap-1">
