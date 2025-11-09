@@ -65,14 +65,7 @@
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" />
-                <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
-                    <x-mary-menu-item title="All" icon="o-document-text" link="/academic-papers" />
-                    <x-mary-menu-item title="Information Technology" icon="o-computer-desktop"
-                        link="/academic-papers/it" />
-                    <x-mary-menu-item title="Civil Engineering" icon="o-building-office" link="/academic-papers/ce" />
-                    <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/academic-papers/ee" />
-                </x-mary-menu-sub>
-
+                <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/academic-papers" />
                 <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
                     link="/rule-and-regulation" />
                 <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />

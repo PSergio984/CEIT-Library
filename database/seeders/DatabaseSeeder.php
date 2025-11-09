@@ -77,8 +77,17 @@ class DatabaseSeeder extends Seeder
             Violation::create($violation);
         }
 
-        // Create academic papers
-        $academicPapers = AcademicPaper::factory(30)->create();
+        // Create research advisers, technical advisers, and deans first
+        $researchAdvisers = \App\Models\ResearchAdviser::factory(15)->create();
+        $technicalAdvisers = \App\Models\TechnicalAdviser::factory(15)->create();
+        $deans = \App\Models\Dean::factory(5)->create();
+
+        // Create academic papers with adviser and dean relationships
+        $academicPapers = AcademicPaper::factory(30)->create([
+            'research_adviser_id' => fn() => $researchAdvisers->random()->id,
+            'technical_adviser_id' => fn() => $technicalAdvisers->random()->id,
+            'dean_id' => fn() => $deans->random()->id,
+        ]);
 
         // Create authors
         $authors = \App\Models\Author::factory(20)->create();

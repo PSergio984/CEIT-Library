@@ -24,17 +24,17 @@ class AcademicPaperFactory extends Factory
 
         $department = $this->faker->randomElement($departments);
 
+        // Get random dean (expects to be seeded first)
+        $dean = \App\Models\Dean::inRandomOrder()->first();
+
         return [
             'title' => $this->faker->sentence(6, true),
             'publication_year' => $this->faker->numberBetween(2002, 2025),
             'paper_type' => $this->faker->randomElement(['Thesis', 'Feasib', 'Capstone', 'Research', 'Practicum', 'Report']),
-            'research_project_adviser' => $this->faker->name(),
+            'research_adviser_id' => \App\Models\ResearchAdviser::inRandomOrder()->first()?->id,
+            'technical_adviser_id' => \App\Models\TechnicalAdviser::inRandomOrder()->first()?->id,
             'department' => $department,
-            'dean' => $this->faker->randomElement([
-                'Dr. Maria Santos',
-                'Dr. Juan Dela Cruz',
-                'Dr. Ana Reyes'
-            ]),
+            'dean_id' => $dean?->id,
         ];
     }
 

@@ -7,6 +7,7 @@ use App\Models\AcademicPaper;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -18,7 +19,6 @@ class AdminAcademicPaperIndex extends AdminComponent
     use WithPagination;
     use Toast;
 
-
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
     public array $headers = [];
     public int $perPage = 10;
@@ -26,6 +26,13 @@ class AdminAcademicPaperIndex extends AdminComponent
     #[Url]
     public string $search = '';
 
+    // Filters
+    public string $statusFilter = '';
+    public string $yearFilter = '';
+    public string $departmentFilter = '';
+    public string $paperTypeFilter = '';
+    public string $yearFromFilter = '';
+    public string $yearToFilter = '';
 
     public function updatingPerPage(): void
     {
@@ -33,28 +40,32 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
     public ?string $dept = null;
-    public bool $deleteModal = false;
+
+    // Store IDs for modal content (modals controlled by Alpine.js)
+    #[Locked]
     public ?int $deleteId = null;
+
     public bool $formDrawer = false;
     public bool $isEditing = false;
     public AcademicPaperForm $form;
 
-    // Modal properties
-    public bool $showModal = false;
-    public ?AcademicPaper $selectedPaper = null;
+    #[Locked]
+    public ?int $selectedPaperId = null;
 
-    // Copy deletion modal properties
-    public bool $copyDeleteModal = false;
+    #[Locked]
     public ?int $copyToDelete = null;
 
     // Cache properties for memoization
-    private ?array $cachedAdvisers = null;
+    private ?array $cachedResearchAdvisers = null;
+    private ?array $cachedTechnicalAdvisers = null;
     private ?array $cachedDeans = null;
-    private ?string $lastAdviserSearch = null;
+    private ?string $lastResearchAdviserSearch = null;
+    private ?string $lastTechnicalAdviserSearch = null;
     private ?string $lastDeanSearch = null;
 
     // Flag to prevent duplicate cache queries
-    private bool $advisersLoaded = false;
+    private bool $researchAdvisersLoaded = false;
+    private bool $technicalAdvisersLoaded = false;
     private bool $deansLoaded = false;
 
     public function mount(?string $dept = null)
@@ -62,7 +73,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
         // Initialize empty collections to avoid null references
-        $this->form->adviser_options = collect();
+        $this->form->research_adviser_options = collect();
+        $this->form->technical_adviser_options = collect();
         $this->form->dean_options = collect();
         $this->headers = [
             ['key' => 'id', 'label' => '#'],
@@ -86,9 +98,15 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Create a cache key based on current filters, pagination, and version
         $cacheKey = sprintf(
-            'academic_papers_%s_%s_%s_%s_%d_%d_v%d',
+            'academic_papers_%s_%s_%s_%s_%s_%s_%s_%s_%s_%s_%d_%d_v%d',
             $this->dept ?? 'all',
             $this->search ?: 'no_search',
+            $this->statusFilter ?: 'all_status',
+            $this->yearFilter ?: 'all_years',
+            $this->departmentFilter ?: 'all_depts',
+            $this->paperTypeFilter ?: 'all_types',
+            $this->yearFromFilter ?: 'no_from',
+            $this->yearToFilter ?: 'no_to',
             $this->sortBy['column'],
             $this->sortBy['direction'],
             $this->perPage,
@@ -96,13 +114,13 @@ class AdminAcademicPaperIndex extends AdminComponent
             $version
         );
 
-        // Use cache for non-search queries (empty search) with short TTL
-        if (empty($this->search)) {
+        // Use cache for non-search/filter queries with short TTL
+        if (empty($this->search) && empty($this->statusFilter) && empty($this->yearFilter) && empty($this->departmentFilter) && empty($this->paperTypeFilter) && empty($this->yearFromFilter) && empty($this->yearToFilter)) {
             $paginated = Cache::remember($cacheKey, 60, function () {
                 return $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
             });
         } else {
-            // For search queries, don't cache as they're more dynamic
+            // For search/filter queries, don't cache as they're more dynamic
             $paginated = $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
         }
 
@@ -115,6 +133,41 @@ class AdminAcademicPaperIndex extends AdminComponent
         return $paginated;
     }
 
+    #[Computed]
+    public function availableYears()
+    {
+        // Get min and max years from database
+        $minYear = AcademicPaper::min('publication_year');
+        $maxYear = AcademicPaper::max('publication_year');
+
+        if (!$minYear || !$maxYear) {
+            return collect();
+        }
+
+        // Generate complete range from min to max (no gaps)
+        return collect(range($maxYear, $minYear))->values();
+    }
+
+    #[Computed]
+    public function availableDepartments()
+    {
+        return AcademicPaper::distinct()
+            ->orderBy('department')
+            ->pluck('department')
+            ->filter()
+            ->values();
+    }
+
+    #[Computed]
+    public function availablePaperTypes()
+    {
+        return AcademicPaper::distinct()
+            ->orderBy('paper_type')
+            ->pluck('paper_type')
+            ->filter()
+            ->values();
+    }
+
     /**
      * Build the academic papers query with filters and relationships
      */
@@ -125,6 +178,9 @@ class AdminAcademicPaperIndex extends AdminComponent
                 'authors' => function ($query) {
                     $query->select('authors.id', 'authors.name');
                 },
+                'researchAdviser:id,name',
+                'technicalAdviser:id,name',
+                'dean:id,name',
                 'copies' => function ($query) {
                     $query->select('id', 'academic_paper_id', 'status');
                 }
@@ -141,9 +197,48 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $search = '%' . $this->search . '%';
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
-                        ->orWhere('research_project_adviser', 'like', $search)
-                        ->orWhere('catalog_code', 'like', $search);
+                        ->orWhere('catalog_code', 'like', $search)
+                        ->orWhere('department', 'like', $search)
+                        ->orWhereHas('authors', function ($authorQuery) use ($search) {
+                            $authorQuery->where('name', 'like', $search);
+                        })
+                        ->orWhereHas('researchAdviser', function ($adviserQuery) use ($search) {
+                            $adviserQuery->where('name', 'like', $search);
+                        })
+                        ->orWhereHas('technicalAdviser', function ($adviserQuery) use ($search) {
+                            $adviserQuery->where('name', 'like', $search);
+                        })
+                        ->orWhereHas('dean', function ($deanQuery) use ($search) {
+                            $deanQuery->where('name', 'like', $search);
+                        });
                 });
+            })
+            ->when($this->yearFilter, function ($query) {
+                $query->where('publication_year', $this->yearFilter);
+            })
+            ->when($this->departmentFilter, function ($query) {
+                $query->where('department', $this->departmentFilter);
+            })
+            ->when($this->paperTypeFilter, function ($query) {
+                $query->where('paper_type', $this->paperTypeFilter);
+            })
+            ->when($this->yearFromFilter, function ($query) {
+                $query->where('publication_year', '>=', $this->yearFromFilter);
+            })
+            ->when($this->yearToFilter, function ($query) {
+                $query->where('publication_year', '<=', $this->yearToFilter);
+            })
+            // Apply status filter at query level for better performance
+            ->when($this->statusFilter, function ($query) {
+                if ($this->statusFilter === 'Available') {
+                    $query->whereHas('copies', function ($copyQuery) {
+                        $copyQuery->where('status', 'Available');
+                    });
+                } elseif ($this->statusFilter === 'Unavailable') {
+                    $query->whereDoesntHave('copies', function ($copyQuery) {
+                        $copyQuery->where('status', 'Available');
+                    });
+                }
             })
             ->withCount([
                 'copies as available_copies' => function ($query) {
@@ -164,29 +259,109 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetPage('academic-papers-index');
     }
 
-
-    // Open confirmation modal
-    public function confirmDelete(int $id): void
+    public function updatedStatusFilter(): void
     {
-        $this->deleteId = $id;
-        $this->deleteModal = true;
+        $this->resetPage('academic-papers-index');
     }
 
-    // Perform deletion after confirmation
-    public function performDelete(): void
+    public function updatedYearFilter(): void
     {
-        if ($this->deleteId) {
-            $academicPaper = AcademicPaper::find($this->deleteId);
-            if ($academicPaper) {
-                $title = $academicPaper->title;
-                $academicPaper->delete();
-                $this->invalidateSearchCaches();
-                $this->warning("$title deleted", 'Good bye!');
-            }
-        }
-        $this->deleteModal = false;
-        $this->deleteId = null;
         $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedDepartmentFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedPaperTypeFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearFromFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    public function updatedYearToFilter(): void
+    {
+        $this->resetPage('academic-papers-index');
+    }
+
+    // Clear all filters and reset to default state
+    public function clearFilters(): void
+    {
+        $this->reset([
+            'statusFilter',
+            'paperTypeFilter',
+            'departmentFilter',
+            'yearFromFilter',
+            'yearToFilter',
+        ]);
+        $this->resetPage('academic-papers-index');
+    }
+
+    // Perform deletion (called from modal)
+    public function performDelete(?int $paperId = null): void
+    {
+        // Use parameter if provided, otherwise fall back to property
+        $deleteId = $paperId ?? $this->deleteId;
+
+        if (!$deleteId) {
+            return;
+        }
+
+        try {
+            $academicPaper = AcademicPaper::findOrFail($deleteId);
+
+            // Admin pages are already protected by middleware, no need for additional authorization
+            // Delete the paper
+            $academicPaper->delete();
+
+            // Invalidate ALL related caches
+            $this->incrementAcademicPapersVersion();
+
+            // Clear all academic papers cache keys
+            $cacheKeys = Cache::get('academic_papers_cache_keys', []);
+            foreach ($cacheKeys as $key) {
+                Cache::forget($key);
+            }
+
+            // Reset state
+            $this->deleteId = null;
+
+            // Reset pagination to first page
+            $this->resetPage('academic-papers-index');
+
+            // Show success message
+            $this->success('Academic paper deleted successfully');
+
+            // Dispatch event to close modal (only on success)
+            $this->dispatch('close-delete-modal');
+        } catch (\Exception $e) {
+            // On error, show message but don't close modal
+            $this->error('Failed to delete academic paper: ' . $e->getMessage());
+            $this->deleteId = null;
+        }
+    }
+
+    /**
+     * Get initial copy count for edit mode (computed to avoid payload)
+     */
+    #[Computed]
+    public function initialCopyCount(): ?int
+    {
+        if (!$this->isEditing || !$this->form->academicPaperId) {
+            return null;
+        }
+
+        // Use cached count to avoid extra query
+        return Cache::remember(
+            "academic_paper_{$this->form->academicPaperId}_copy_count",
+            60, // 1 minute cache
+            fn() => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
+        );
     }
 
     // Open drawer for creating new academic paper
@@ -197,11 +372,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->resetErrorBag(); // Clear any previous validation errors
 
         // Only load search options if not already cached
-        if ($this->cachedAdvisers === null) {
-            $this->searchAdvisers();
+        if ($this->cachedResearchAdvisers === null) {
+            $this->searchResearchAdvisers('');
+        }
+        if ($this->cachedTechnicalAdvisers === null) {
+            $this->searchTechnicalAdvisers('');
         }
         if ($this->cachedDeans === null) {
-            $this->searchDeans();
+            $this->searchDeans('');
         }
 
         $this->formDrawer = true;
@@ -226,11 +404,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->isEditing = true;
 
         // Only load search options if not already cached
-        if ($this->cachedAdvisers === null) {
-            $this->searchAdvisers();
+        if ($this->cachedResearchAdvisers === null) {
+            $this->searchResearchAdvisers('');
+        }
+        if ($this->cachedTechnicalAdvisers === null) {
+            $this->searchTechnicalAdvisers('');
         }
         if ($this->cachedDeans === null) {
-            $this->searchDeans();
+            $this->searchDeans('');
         }
 
         $this->formDrawer = true;
@@ -251,6 +432,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->invalidateSearchCaches();
         $this->clearRequestCaches();
 
+        // Clear copy count cache for this paper
+        if ($this->form->academicPaperId) {
+            Cache::forget("academic_paper_{$this->form->academicPaperId}_copy_count");
+        }
+
         $this->formDrawer = false;
         $this->isEditing = false;
         $this->form->reset();
@@ -259,40 +445,40 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
 
-    // Search method for advisers with caching
-    public function searchAdvisers(string $value = '')
+    // Search method for research advisers with caching
+    public function searchResearchAdvisers(string $value = '')
     {
         // Check if we have cached results for the same search
-        if ($this->lastAdviserSearch === $value && $this->cachedAdvisers !== null) {
-            $this->form->adviser_options = collect($this->cachedAdvisers);
-            return $this->cachedAdvisers;
+        if ($this->lastResearchAdviserSearch === $value && $this->cachedResearchAdvisers !== null) {
+            $this->form->research_adviser_options = collect($this->cachedResearchAdvisers);
+            return $this->cachedResearchAdvisers;
         }
 
         // Prevent duplicate loading for empty searches - more aggressive check
-        if ($value === '' && ($this->advisersLoaded || $this->cachedAdvisers !== null)) {
-            $this->form->adviser_options = collect($this->cachedAdvisers);
-            return $this->cachedAdvisers;
+        if ($value === '' && ($this->researchAdvisersLoaded || $this->cachedResearchAdvisers !== null)) {
+            $this->form->research_adviser_options = collect($this->cachedResearchAdvisers);
+            return $this->cachedResearchAdvisers;
         }
 
         // Use cache for common searches (empty or very short searches)
-        $cacheKey = $value === '' ? 'advisers_all' : null;
+        $cacheKey = $value === '' ? 'research_advisers_all' : null;
         if ($cacheKey) {
             $cachedData = Cache::get($cacheKey);
             if ($cachedData !== null) {
                 $advisers = collect($cachedData);
             } else {
                 // Get search results from database
-                $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+                $advisers = \App\Models\ResearchAdviser::query()
                     ->when($value !== '', function ($query) use ($value) {
-                        $query->where('research_project_adviser', 'like', "%{$value}%");
+                        $query->where('name', 'like', "%{$value}%");
                     })
-                    ->distinct()
-                    ->pluck('research_project_adviser')
-                    ->filter()
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->take(10)
+                    ->get()
                     ->map(function ($adviser) {
-                        return ['id' => $adviser, 'name' => $adviser];
-                    })
-                    ->take(10);
+                        return ['id' => $adviser->id, 'name' => $adviser->name];
+                    });
 
                 // Cache empty search results for 5 minutes
                 if ($value === '') {
@@ -301,36 +487,116 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $advisers = \App\Models\AcademicPaper::whereNotNull('research_project_adviser')
+            $advisers = \App\Models\ResearchAdviser::query()
                 ->when($value !== '', function ($query) use ($value) {
-                    $query->where('research_project_adviser', 'like', "%{$value}%");
+                    $query->where('name', 'like', "%{$value}%");
                 })
-                ->distinct()
-                ->pluck('research_project_adviser')
-                ->filter()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->take(10)
+                ->get()
                 ->map(function ($adviser) {
-                    return ['id' => $adviser, 'name' => $adviser];
-                })
-                ->take(10);
+                    return ['id' => $adviser->id, 'name' => $adviser->name];
+                });
         }
 
         // Include selected option if it exists and is not in search results
-        if (!empty($this->form->research_project_adviser)) {
-            $selectedOption = collect([['id' => $this->form->research_project_adviser, 'name' => $this->form->research_project_adviser]]);
-            $advisers = $advisers->merge($selectedOption)->unique('id');
+        if (!empty($this->form->research_adviser_id)) {
+            $selectedAdviser = \App\Models\ResearchAdviser::find($this->form->research_adviser_id);
+            if ($selectedAdviser) {
+                $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
+                $advisers = $advisers->merge($selectedOption)->unique('id');
+            }
         }
 
         // Cache the results for this request
-        $this->cachedAdvisers = $advisers->toArray();
-        $this->lastAdviserSearch = $value;
-        $this->form->adviser_options = $advisers;
+        $this->cachedResearchAdvisers = $advisers->toArray();
+        $this->lastResearchAdviserSearch = $value;
+        $this->form->research_adviser_options = $advisers;
 
         // Mark as loaded for empty searches
         if ($value === '') {
-            $this->advisersLoaded = true;
+            $this->researchAdvisersLoaded = true;
         }
 
-        return $this->cachedAdvisers;
+        return $this->cachedResearchAdvisers;
+    }
+
+    // Search method for technical advisers with caching
+    public function searchTechnicalAdvisers(string $value = '')
+    {
+        // Check if we have cached results for the same search
+        if ($this->lastTechnicalAdviserSearch === $value && $this->cachedTechnicalAdvisers !== null) {
+            $this->form->technical_adviser_options = collect($this->cachedTechnicalAdvisers);
+            return $this->cachedTechnicalAdvisers;
+        }
+
+        // Prevent duplicate loading for empty searches - more aggressive check
+        if ($value === '' && ($this->technicalAdvisersLoaded || $this->cachedTechnicalAdvisers !== null)) {
+            $this->form->technical_adviser_options = collect($this->cachedTechnicalAdvisers);
+            return $this->cachedTechnicalAdvisers;
+        }
+
+        // Use cache for common searches (empty or very short searches)
+        $cacheKey = $value === '' ? 'technical_advisers_all' : null;
+        if ($cacheKey) {
+            $cachedData = Cache::get($cacheKey);
+            if ($cachedData !== null) {
+                $advisers = collect($cachedData);
+            } else {
+                // Get search results from database
+                $advisers = \App\Models\TechnicalAdviser::query()
+                    ->when($value !== '', function ($query) use ($value) {
+                        $query->where('name', 'like', "%{$value}%");
+                    })
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->take(10)
+                    ->get()
+                    ->map(function ($adviser) {
+                        return ['id' => $adviser->id, 'name' => $adviser->name];
+                    });
+
+                // Cache empty search results for 5 minutes
+                if ($value === '') {
+                    Cache::put($cacheKey, $advisers->toArray(), 300);
+                }
+            }
+        } else {
+            // Get search results from database for non-empty searches
+            $advisers = \App\Models\TechnicalAdviser::query()
+                ->when($value !== '', function ($query) use ($value) {
+                    $query->where('name', 'like', "%{$value}%");
+                })
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->take(10)
+                ->get()
+                ->map(function ($adviser) {
+                    return ['id' => $adviser->id, 'name' => $adviser->name];
+                });
+        }
+
+        // Include selected option if it exists and is not in search results
+        if (!empty($this->form->technical_adviser_id)) {
+            $selectedAdviser = \App\Models\TechnicalAdviser::find($this->form->technical_adviser_id);
+            if ($selectedAdviser) {
+                $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
+                $advisers = $advisers->merge($selectedOption)->unique('id');
+            }
+        }
+
+        // Cache the results for this request
+        $this->cachedTechnicalAdvisers = $advisers->toArray();
+        $this->lastTechnicalAdviserSearch = $value;
+        $this->form->technical_adviser_options = $advisers;
+
+        // Mark as loaded for empty searches
+        if ($value === '') {
+            $this->technicalAdvisersLoaded = true;
+        }
+
+        return $this->cachedTechnicalAdvisers;
     }
 
     // Search method for deans with caching
@@ -355,18 +621,18 @@ class AdminAcademicPaperIndex extends AdminComponent
             if ($cachedData !== null) {
                 $deans = collect($cachedData);
             } else {
-                // Get search results from database
-                $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+                // Get search results from database - now from Dean model
+                $deans = \App\Models\Dean::query()
                     ->when($value !== '', function ($query) use ($value) {
-                        $query->where('dean', 'like', "%{$value}%");
+                        $query->where('name', 'like', "%{$value}%");
                     })
-                    ->distinct()
-                    ->pluck('dean')
-                    ->filter()
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->take(10)
+                    ->get()
                     ->map(function ($dean) {
-                        return ['id' => $dean, 'name' => $dean];
-                    })
-                    ->take(10);
+                        return ['id' => $dean->id, 'name' => $dean->name];
+                    });
 
                 // Cache empty search results for 5 minutes
                 if ($value === '') {
@@ -375,23 +641,26 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $deans = \App\Models\AcademicPaper::whereNotNull('dean')
+            $deans = \App\Models\Dean::query()
                 ->when($value !== '', function ($query) use ($value) {
-                    $query->where('dean', 'like', "%{$value}%");
+                    $query->where('name', 'like', "%{$value}%");
                 })
-                ->distinct()
-                ->pluck('dean')
-                ->filter()
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->take(10)
+                ->get()
                 ->map(function ($dean) {
-                    return ['id' => $dean, 'name' => $dean];
-                })
-                ->take(10);
+                    return ['id' => $dean->id, 'name' => $dean->name];
+                });
         }
 
         // Include selected option if it exists and is not in search results
-        if (!empty($this->form->dean)) {
-            $selectedOption = collect([['id' => $this->form->dean, 'name' => $this->form->dean]]);
-            $deans = $deans->merge($selectedOption)->unique('id');
+        if (!empty($this->form->dean_id)) {
+            $selectedDean = \App\Models\Dean::find($this->form->dean_id);
+            if ($selectedDean) {
+                $selectedOption = collect([['id' => $selectedDean->id, 'name' => $selectedDean->name]]);
+                $deans = $deans->merge($selectedOption)->unique('id');
+            }
         }
 
         // Cache the results for this request
@@ -413,7 +682,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     private function invalidateSearchCaches(): void
     {
         // Clear individual cache keys
-        Cache::forget('advisers_all');
+        Cache::forget('research_advisers_all');
+        Cache::forget('technical_advisers_all');
         Cache::forget('deans_all');
 
         // Increment version token to invalidate all academic papers caches
@@ -425,11 +695,14 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     private function clearRequestCaches(): void
     {
-        $this->cachedAdvisers = null;
+        $this->cachedResearchAdvisers = null;
+        $this->cachedTechnicalAdvisers = null;
         $this->cachedDeans = null;
-        $this->lastAdviserSearch = null;
+        $this->lastResearchAdviserSearch = null;
+        $this->lastTechnicalAdviserSearch = null;
         $this->lastDeanSearch = null;
-        $this->advisersLoaded = false;
+        $this->researchAdvisersLoaded = false;
+        $this->technicalAdvisersLoaded = false;
         $this->deansLoaded = false;
     }
 
@@ -448,6 +721,25 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         $currentVersion = $this->getAcademicPapersVersion();
         Cache::put('academic_papers_version', $currentVersion + 1, 86400); // 24 hours
+    }
+
+    /**
+     * Get selected paper by ID with relationships (computed to avoid payload bloat)
+     */
+    #[Computed]
+    public function selectedPaper(): ?AcademicPaper
+    {
+        if (!$this->selectedPaperId) {
+            return null;
+        }
+
+        return AcademicPaper::with([
+            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'researchAdviser:id,name',
+            'technicalAdviser:id,name',
+            'dean:id,name',
+            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status')
+        ])->find($this->selectedPaperId);
     }
 
     /**
@@ -474,65 +766,88 @@ class AdminAcademicPaperIndex extends AdminComponent
         });
     }
 
-    public function showPaperDetails(AcademicPaper $academicPaper): void
+    public function showPaperDetails(int $paperId): void
     {
-        // Only load relationships if they're not already loaded
-        if (!$academicPaper->relationLoaded('authors') || !$academicPaper->relationLoaded('copies')) {
-            $this->selectedPaper = $academicPaper->load([
-                'authors' => function ($query) {
-                    $query->select('authors.id', 'authors.name');
-                },
-                'copies' => function ($query) {
-                    $query->select('id', 'academic_paper_id', 'status');
-                }
-            ]);
-        } else {
-            $this->selectedPaper = $academicPaper;
-        }
-        $this->showModal = true;
+        $this->selectedPaperId = $paperId;
+        $this->dispatch('paper-modal');
     }
 
-    public function closeModal(): void
+    /**
+     * Set deleteId and open delete modal
+     */
+    public function confirmDelete(int $paperId): void
     {
-        $this->showModal = false;
-        $this->selectedPaper = null;
+        $this->deleteId = $paperId;
+        $this->dispatch('delete-modal');
     }
 
-    public function requestQr(): void
-    {
-        // TODO: Implement QR code request functionality
-        // This could generate a QR code for the specific copy
-        // or redirect to a QR generation page
-    }
-
+    /**
+     * Set copyToDelete and open copy delete modal
+     */
     public function confirmCopyDelete(int $copyId): void
     {
         $this->copyToDelete = $copyId;
-        $this->copyDeleteModal = true;
+        $this->dispatch('copy-delete-modal');
     }
 
-    public function performCopyDelete(): void
+
+    public function performCopyDelete(?int $copyId = null): void
     {
-        if ($this->copyToDelete) {
-            $copy = \App\Models\Inventory::find($this->copyToDelete);
-            if ($copy && $copy->status === 'Available') {
-                $copy->delete();
-                $this->success("Copy #{$this->copyToDelete} deleted successfully", 'Copy Deleted!');
+        // Use parameter if provided, otherwise fall back to property
+        $copyToDelete = $copyId ?? $this->copyToDelete;
 
-                // Refresh the selected paper data
-                if ($this->selectedPaper) {
-                    $this->selectedPaper = $this->selectedPaper->fresh(['authors', 'copies']);
-                }
-
-                // Invalidate caches to reflect the change
-                $this->invalidateSearchCaches();
-            } else {
-                $this->error("Cannot delete copy #{$this->copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
-            }
+        if (!$copyToDelete) {
+            return;
         }
 
-        $this->copyDeleteModal = false;
-        $this->copyToDelete = null;
+        try {
+            $copy = \App\Models\Inventory::findOrFail($copyToDelete);
+
+            // Admin pages are already protected by middleware
+            if ($copy->status !== 'Available') {
+                // On validation error, show message but don't close modal
+                $this->error("Cannot delete copy #{$copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
+                $this->copyToDelete = null;
+                return;
+            }
+
+            $copy->delete();
+
+            // Invalidate caches to reflect the change
+            $this->invalidateSearchCaches();
+
+            // Clear copy count cache for this paper
+            if ($copy->academic_paper_id) {
+                Cache::forget("academic_paper_{$copy->academic_paper_id}_copy_count");
+
+                // If the deleted copy belongs to the currently loaded form paper, rehydrate the form
+                if ($this->isEditing && $this->form->academicPaperId === $copy->academic_paper_id) {
+                    $freshPaper = AcademicPaper::with([
+                        'authors' => function ($query) {
+                            $query->select('authors.id', 'authors.name');
+                        },
+                        'copies' => function ($query) {
+                            $query->select('id', 'academic_paper_id', 'status');
+                        }
+                    ])->find($copy->academic_paper_id);
+
+                    if ($freshPaper) {
+                        $this->form->setAcademicPaper($freshPaper);
+                    }
+                }
+            }
+
+            $this->copyToDelete = null;
+
+            $this->success("Copy #{$copy->copy_number} deleted successfully", 'Copy Deleted!');
+
+            // Dispatch event to close modal (only on success)
+            $this->dispatch('close-copy-delete-modal');
+        } catch (\Exception $e) {
+            // On error, show message but don't close modal
+            $this->error('Failed to delete copy: ' . $e->getMessage());
+            $this->copyToDelete = null;
+        }
     }
 
     #[Computed]

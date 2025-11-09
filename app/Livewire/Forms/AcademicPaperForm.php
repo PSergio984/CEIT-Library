@@ -21,19 +21,28 @@ class AcademicPaperForm extends Form
     public ?int $publication_year = null;
     #[Validate('required')]
     public string $paper_type = '';
-    public ?string $research_project_adviser = '';
+    #[Validate('required|integer|exists:research_advisers,id')]
+    public ?int $research_adviser_id = null;
+    #[Validate('required|integer|exists:technical_advisers,id')]
+    public ?int $technical_adviser_id = null;
     #[Validate('required')]
     public string $department = '';
-    public ?string $dean = '';
+    #[Validate('required|integer|exists:deans,id')]
+    public ?int $dean_id = null;
     #[Validate('required|array|min:1')]
     public array $author_names = [];
     #[Validate('required|integer|min:1|max:100')]
     public int $number_of_copies = 1;
+
+    // Track initial copy count for edit mode (prevents reducing)
+    private ?int $initialCopyCount = null;
+
     public array $type_choices = [];
     public array $department_choices = [];
 
     public array $year_choices = [];
-    public ?\Illuminate\Support\Collection $adviser_options = null;
+    public ?\Illuminate\Support\Collection $research_adviser_options = null;
+    public ?\Illuminate\Support\Collection $technical_adviser_options = null;
     public ?\Illuminate\Support\Collection $dean_options = null;
 
     /**
@@ -53,8 +62,11 @@ class AcademicPaperForm extends Form
     public function boot(): void
     {
         // Ensure collections are initialized
-        if ($this->adviser_options === null) {
-            $this->adviser_options = collect();
+        if ($this->research_adviser_options === null) {
+            $this->research_adviser_options = collect();
+        }
+        if ($this->technical_adviser_options === null) {
+            $this->technical_adviser_options = collect();
         }
         if ($this->dean_options === null) {
             $this->dean_options = collect();
@@ -183,18 +195,22 @@ class AcademicPaperForm extends Form
         $this->title = $academicPaper->title;
         $this->publication_year = $academicPaper->publication_year;
         $this->paper_type = $academicPaper->paper_type;
-        $this->research_project_adviser = $academicPaper->research_project_adviser ?? '';
+        $this->research_adviser_id = $academicPaper->research_adviser_id;
+        $this->technical_adviser_id = $academicPaper->technical_adviser_id;
         $this->department = $academicPaper->department;
-        $this->dean = $academicPaper->dean ?? '';
+        $this->dean_id = $academicPaper->dean_id;
 
         // Use already loaded relationships to avoid N+1 queries
         $this->author_names = $academicPaper->relationLoaded('authors')
             ? $academicPaper->authors->pluck('name')->filter()->toArray()
             : $academicPaper->authors()->pluck('name')->filter()->toArray();
 
-        $this->number_of_copies = $academicPaper->relationLoaded('copies')
+        $copyCount = $academicPaper->relationLoaded('copies')
             ? ($academicPaper->copies->count() ?: 1)
             : ($academicPaper->copies()->count() ?: 1);
+
+        $this->number_of_copies = $copyCount;
+        $this->initialCopyCount = $copyCount; // Store initial count for validation
 
         // Store only the ID to avoid serialization overhead
         $this->academicPaperId = $academicPaper->id;
@@ -215,16 +231,24 @@ class AcademicPaperForm extends Form
      */
     private function validationRules(): array
     {
-        return [
+        $rules = [
             'title' => 'required',
             'publication_year' => 'required',
             'paper_type' => 'required',
+            'research_adviser_id' => 'required|integer|exists:research_advisers,id',
+            'technical_adviser_id' => 'required|integer|exists:technical_advisers,id',
             'department' => 'required',
+            'dean_id' => 'required|integer|exists:deans,id',
             'author_names' => 'required|array|min:1',
             'number_of_copies' => 'required|integer|min:1|max:100',
-            'research_project_adviser' => 'required|string',
-            'dean' => 'required|string',
         ];
+
+        // In edit mode, enforce minimum to prevent reduction via form
+        if ($this->initialCopyCount !== null) {
+            $rules['number_of_copies'] = "required|integer|min:{$this->initialCopyCount}|max:100";
+        }
+
+        return $rules;
     }
 
     /**
@@ -236,17 +260,22 @@ class AcademicPaperForm extends Form
             'title.required' => 'The title field is required.',
             'publication_year.required' => 'The publication year field is required.',
             'paper_type.required' => 'The paper type field is required.',
+            'research_adviser_id.required' => 'The research adviser field is required.',
+            'technical_adviser_id.required' => 'The technical adviser field is required.',
             'department.required' => 'The department field is required.',
+            'dean_id.required' => 'The dean field is required.',
+            'dean_id.exists' => 'The selected dean is invalid.',
             'author_names.required' => 'At least one author is required.',
             'author_names.min' => 'At least one author must be specified.',
             'number_of_copies.required' => 'The number of copies field is required.',
             'number_of_copies.integer' => 'The number of copies must be a valid number.',
-            'number_of_copies.min' => 'The number of copies must be at least 1.',
+            'number_of_copies.min' => $this->initialCopyCount !== null
+                ? "Cannot reduce copies below current count ({$this->initialCopyCount}). Use the copy deletion modal instead."
+                : 'The number of copies must be at least 1.',
             'number_of_copies.max' => 'The number of copies cannot exceed 100.',
-            'research_project_adviser.required' => 'The research project adviser field is required.',
-            'research_project_adviser.string' => 'The research project adviser must be a valid text.',
-            'dean.required' => 'The dean field is required.',
-            'dean.string' => 'The dean must be a valid text.',
+            'research_adviser_id.exists' => 'The selected research adviser is invalid.',
+            'technical_adviser_id.exists' => 'The selected technical adviser is invalid.',
+            'dean_id.exists' => 'The selected dean is invalid.',
         ];
     }
 
@@ -260,8 +289,9 @@ class AcademicPaperForm extends Form
             'publication_year' => $this->publication_year,
             'paper_type' => $this->paper_type,
             'department' => $this->department,
-            'research_project_adviser' => $this->research_project_adviser,
-            'dean' => $this->dean,
+            'research_adviser_id' => $this->research_adviser_id,
+            'technical_adviser_id' => $this->technical_adviser_id,
+            'dean_id' => $this->dean_id,
             'author_names' => $this->author_names,
             'number_of_copies' => $this->number_of_copies,
         ];
@@ -291,9 +321,10 @@ class AcademicPaperForm extends Form
                 'title' => $this->title,
                 'publication_year' => $this->publication_year,
                 'paper_type' => $this->paper_type,
-                'research_project_adviser' => $this->research_project_adviser,
+                'research_adviser_id' => $this->research_adviser_id,
+                'technical_adviser_id' => $this->technical_adviser_id,
                 'department' => $this->department,
-                'dean' => $this->dean,
+                'dean_id' => $this->dean_id,
             ]);
 
             // Sync authors
@@ -318,8 +349,9 @@ class AcademicPaperForm extends Form
 
         return DB::transaction(function () use ($paper) {
             $updateData = $this->only(['title', 'publication_year', 'paper_type', 'department']);
-            $updateData['research_project_adviser'] = $this->research_project_adviser ?? '';
-            $updateData['dean'] = $this->dean ?? '';
+            $updateData['research_adviser_id'] = $this->research_adviser_id;
+            $updateData['technical_adviser_id'] = $this->technical_adviser_id;
+            $updateData['dean_id'] = $this->dean_id;
             $paper->update($updateData);
 
             // Sync authors
@@ -345,9 +377,10 @@ class AcademicPaperForm extends Form
             $this->title = '';
             $this->publication_year = null;
             $this->paper_type = '';
-            $this->research_project_adviser = '';
+            $this->research_adviser_id = null;
+            $this->technical_adviser_id = null;
             $this->department = '';
-            $this->dean = '';
+            $this->dean_id = null;
             $this->author_names = [];
             $this->number_of_copies = 1;
         } else {
@@ -363,14 +396,17 @@ class AcademicPaperForm extends Form
                     case 'paper_type':
                         $this->paper_type = '';
                         break;
-                    case 'research_project_adviser':
-                        $this->research_project_adviser = '';
+                    case 'research_adviser_id':
+                        $this->research_adviser_id = null;
+                        break;
+                    case 'technical_adviser_id':
+                        $this->technical_adviser_id = null;
                         break;
                     case 'department':
                         $this->department = '';
                         break;
-                    case 'dean':
-                        $this->dean = '';
+                    case 'dean_id':
+                        $this->dean_id = null;
                         break;
                     case 'author_names':
                         $this->author_names = [];
@@ -386,7 +422,9 @@ class AcademicPaperForm extends Form
         $this->academicPaperId = null;
         $this->id = null;
         $this->catalog_code = null;
-        $this->adviser_options = collect();
+        $this->initialCopyCount = null; // Reset initial count tracker
+        $this->research_adviser_options = collect();
+        $this->technical_adviser_options = collect();
         $this->dean_options = collect();
         $this->populateYearChoices();
         $this->loadStaticChoices();

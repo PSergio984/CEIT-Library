@@ -17,19 +17,19 @@ return new class extends Migration
             $table->string('catalog_code')->unique();
             $table->string('title');
             $table->year('publication_year');
-            $table->string('paper_type'); // New column for type of academic paper
-            $table->string('research_project_adviser');
+            $table->string('paper_type');
+            $table->foreignId('research_adviser_id')->nullable()->constrained('research_advisers')->nullOnDelete();
+            $table->foreignId('technical_adviser_id')->nullable()->constrained('technical_advisers')->nullOnDelete();
             $table->string('department');
-            $table->string('dean');
+            $table->foreignId('dean_id')->nullable()->constrained('deans')->nullOnDelete();
             $table->timestamps();
 
             // Add indexes for better performance
             $table->index('department'); // For department-based searches
-            $table->index('research_project_adviser'); // For searching by adviser
 
             // Full-text search only supported on MySQL/MariaDB, not SQLite
             if (DB::connection()->getDriverName() !== 'sqlite') {
-                $table->fullText(['title', 'research_project_adviser']); // Full-text search on title and adviser
+                $table->fullText(['title']); // Full-text search on title
             }
         });
     }

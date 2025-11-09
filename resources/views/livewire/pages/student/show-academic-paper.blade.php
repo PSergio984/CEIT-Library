@@ -31,7 +31,7 @@
 
                 <div class="space-y-3">
                     <div>
-                        <span class="font-semibold">Adviser:</span> {{ $academicPaper->research_project_adviser }}
+                        <span class="font-semibold">Adviser:</span> {{ $academicPaper->adviser?->name ?? 'N/A' }}
                     </div>
                     <div>
                         <span class="font-semibold">Year:</span> {{ $academicPaper->publication_year }}
