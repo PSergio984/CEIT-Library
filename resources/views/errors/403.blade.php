@@ -70,10 +70,12 @@
                             <div>
                                 <div class="font-semibold">Your Account Type</div>
                                 <div class="text-sm">
-                                    @if (auth()->user()->is_admin)
-                                        <span class="badge badge-primary">Administrator</span>
+                                    @if (auth()->user()->isSuperAdmin())
+                                        <span class="badge badge-error">Super Administrator</span>
+                                    @elseif(auth()->user()->hasLibrarianRole())
+                                        <span class="badge badge-primary">Librarian</span>
                                     @elseif(auth()->user()->isLibrarian())
-                                        <span class="badge badge-secondary">Active Librarian</span>
+                                        <span class="badge badge-secondary">Active Librarian Duty</span>
                                     @else
                                         <span class="badge badge-ghost">Student</span>
                                     @endif

@@ -42,6 +42,8 @@ class Librarian extends Model
         'user_id',
         'batch_no',
         'status',
+        'start_date',
+        'end_date',
         'expires_at',
         'created_by',
         'last_login_at',
@@ -49,9 +51,10 @@ class Librarian extends Model
     ];
 
     protected $casts = [
+        'start_date' => 'date',
+        'end_date' => 'date',
         'expires_at' => 'datetime',
         'last_login_at' => 'datetime',
-        'date_start' => 'date',
     ];
 
     // Relationship with the student user account
@@ -69,7 +72,16 @@ class Librarian extends Model
     // Check if duty period is expired
     public function isExpired()
     {
-        return $this->expires_at->isPast();
+        // Check end_date if set, otherwise fall back to expires_at
+        if ($this->end_date) {
+            return $this->end_date->isPast();
+        }
+
+        if ($this->expires_at) {
+            return $this->expires_at->isPast();
+        }
+
+        return false;
     }
 
     // All librarians have the same permissions
@@ -82,8 +94,17 @@ class Librarian extends Model
     // Get active librarians (not expired and active status)
     public function scopeActive($query)
     {
-        return $query->where('status', 'active')
-                    ->where('expires_at', '>', Carbon::now());
+        $today = Carbon::today();
+
+        return $query->where(function ($q) use ($today) {
+            // Start date is today or in the past
+            $q->where('start_date', '<=', $today)
+              // AND (no end date OR end date is in the future)
+              ->where(function ($q2) use ($today) {
+                  $q2->whereNull('end_date')
+                     ->orWhere('end_date', '>', $today);
+              });
+        });
     }
 
     // Get librarian by user ID if they have active duty

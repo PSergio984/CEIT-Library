@@ -18,8 +18,11 @@ class AdminDashboard extends AdminComponent
     #[Computed]
     public function stats()
     {
+        // Get student role ID for counting
+        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+
         return [
-            'total_users' => User::where('is_admin', 0)->count(),
+            'total_users' => User::where('role_id', $studentRoleId)->count(),
             'total_papers' => AcademicPaper::count(),
             'total_copies' => Inventory::count(),
             'available_copies' => Inventory::where('status', 'Available')->count(),

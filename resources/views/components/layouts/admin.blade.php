@@ -67,14 +67,39 @@
 
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
                 <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" />
+
+                @can('view-academic-papers')
+                    <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
+                        <x-mary-menu-item title="All Academic Paper" icon="o-document-text" link="/admin/academic-papers" />
+                        <x-mary-menu-item title="Information Technology" icon="o-computer-desktop"
+                            link="/admin/academic-papers/it" />
+                        <x-mary-menu-item title="Civil Engineering" icon="o-building-office"
+                            link="/admin/academic-papers/ce" />
+                        <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/ee" />
+                    </x-mary-menu-sub>
+                @endcan
+
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
 
-                <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
-                <x-mary-menu-item title="Librarians" icon="o-building-library" link="/admin/librarians" />
+                @can('manage-students')
+                    <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
+                @endcan
+
+                @can('manage-librarian-batches')
+                    <x-mary-menu-item title="Librarian Batches" icon="o-building-library" link="/admin/librarians" />
+                @endcan
+
+                @can('manage-user-roles')
+                    <x-mary-menu-item title="Manage Roles" icon="o-shield-check" link="/admin/manage-roles" />
+                @endcan
+
                 <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
                     link="/admin/rule-and-regulation" />
-                <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
-                <x-mary-menu-item title="Violation Logs" icon="o-shield-exclamation" link="/admin/violation-logs" />
+
+                @can('view-attendance-logs')
+                    <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
+                @endcan
+
                 <x-mary-menu-item title="View as Student" icon="o-eye" link="/dashboard" />
 
             </x-mary-menu>

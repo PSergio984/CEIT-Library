@@ -68,8 +68,12 @@ class AdminUserList extends AdminComponent
 
     protected function getStudentsQuery()
     {
+        // Get student role ID
+        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+
         return User::query()
-            ->select(['id', 'first_name', 'last_name', 'email', 'credit_score', 'account_status', 'is_admin'])
+            ->with('role')
+            ->select(['id', 'first_name', 'last_name', 'email', 'credit_score', 'account_status', 'role_id'])
             ->when($this->search, function ($query) {
                 $query->where(function ($q) {
                     $q->where('first_name', 'like', "%{$this->search}%")
@@ -80,8 +84,12 @@ class AdminUserList extends AdminComponent
             ->when($this->statusFilter, function ($query) {
                 $query->where('account_status', $this->statusFilter);
             })
-            ->when($this->roleFilter !== '', function ($query) {
-                $query->where('is_admin', $this->roleFilter === 'admin');
+            ->when($this->roleFilter !== '', function ($query) use ($studentRoleId) {
+                if ($this->roleFilter === 'student') {
+                    $query->where('role_id', $studentRoleId);
+                } else {
+                    $query->where('role_id', '!=', $studentRoleId);
+                }
             })
             ->when($this->creditScoreFilter, function ($query) {
                 switch ($this->creditScoreFilter) {
@@ -130,7 +138,7 @@ class AdminUserList extends AdminComponent
                     'credit_score_color' => $this->getCreditScoreColor($user->credit_score),
                     'status' => $user->account_status,
                     'account_status_label' => $user->account_status === 'active' ? 'Available' : 'Suspended',
-                    'is_admin' => $user->is_admin,
+                    'role' => $user->role,
                     'original' => $user,
                 ];
             });
@@ -155,7 +163,8 @@ class AdminUserList extends AdminComponent
     public function totalBorrowers()
     {
         return Cache::remember('admin_user_list_total_borrowers', 60, function () {
-            return User::where('is_admin', false)
+            $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+            return User::where('role_id', $studentRoleId)
                 ->whereHas('borrowTransactions', function ($query) {
                     $query->where('status', 'started');
                 })->count();
@@ -181,7 +190,7 @@ class AdminUserList extends AdminComponent
         $this->email = $user->email;
         $this->creditScore = $user->credit_score;
         $this->accountStatus = $user->account_status;
-        $this->isAdmin = $user->is_admin;
+        $this->isAdmin = $user->role_id; // Store role_id instead
         $this->showEditModal = true;
     }
 
@@ -196,9 +205,6 @@ class AdminUserList extends AdminComponent
         ]);
 
         $user = User::findOrFail($this->studentId);
-        if ($user->id === Auth::id() && $user->is_admin && !$this->isAdmin) {
-            return $this->error('You cannot remove your own admin access.');
-        }
         $user->update([
             'first_name' => $this->firstName,
             'last_name' => $this->lastName,
@@ -206,10 +212,6 @@ class AdminUserList extends AdminComponent
             'credit_score' => $this->creditScore,
             'account_status' => $this->accountStatus,
         ]);
-        if ($user->id !== Auth::id()) {
-            $user->is_admin = (bool) $this->isAdmin;
-            $user->save();
-        }
 
         // Clear cache after update
         Cache::forget('admin_user_list_total_borrowers');

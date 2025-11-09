@@ -6,6 +6,7 @@ use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Gate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -14,7 +15,7 @@ use Livewire\Attributes\Title;
 #[Title('Borrow Logs')]
 class AdminBorrowTransactions extends AdminComponent
 {
-    use WithPagination, Toast;
+    use WithPagination, Toast, CreatesQrCanonicalMessage;
 
     public $perPage = 20;
     public $search = '';
@@ -244,6 +245,22 @@ class AdminBorrowTransactions extends AdminComponent
             // Parse the JSON data from QR code
             $data = json_decode($qrData, true);
             \Log::info('Decoded JSON:', ['data' => $data]);
+
+            // Check if data is encrypted (new format)
+            if (isset($data['encrypted'])) {
+                \Log::info('Encrypted QR detected, decrypting...');
+                $decryptedData = $this->decryptQrData($data['encrypted']);
+
+                if (!$decryptedData) {
+                    \Log::error('Failed to decrypt QR data');
+                    $this->error("Invalid or corrupted QR code!");
+                    $this->isProcessingQr = false;
+                    return ['found' => false];
+                }
+
+                $data = $decryptedData;
+                \Log::info('Decrypted Data:', ['data' => $data]);
+            }
 
             if (!$data || !isset($data['p'])) {
                 \Log::error('Invalid QR format - missing p key');

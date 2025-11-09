@@ -9,6 +9,7 @@ use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
 use App\Livewire\Pages\Admin\AdminUserList;
 use App\Livewire\Pages\Admin\AdminViolationLogIndex;
+use App\Livewire\Pages\Admin\AdminManageRoles;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
 use App\Livewire\Pages\Student\CreditScoreHistory;
@@ -58,16 +59,12 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
             ->middleware('can:view-borrow-logs')
             ->name('borrow-logs');
 
-        Route::get('/violation-logs', AdminViolationLogIndex::class)
-            ->middleware('can:view-violation-logs')
-            ->name('violation-logs');
-
         // Rules and Regulations - Librarians can VIEW but not EDIT
         Route::get('/rule-and-regulation', AdminRuleAndRegulationIndex::class)
             ->middleware('can:view-rules')
             ->name('rules-and-regulations.index');
 
-        // ADMIN ONLY ROUTES - Librarians CANNOT access these
+        // SUPER ADMIN ONLY ROUTES
 
         // Academic Papers management (Admin only)
         Route::middleware('can:manage-academic-papers')->group(function () {
@@ -77,18 +74,28 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
             Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
                 ->whereNumber('academicPaper')
                 ->name('academic-paper.show');
+        });
+
+        // Academic Papers - Create/Edit (Super Admin only)
+        Route::middleware('can:manage-academic-papers')->group(function () {
+            Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
             Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
         });
 
-        // Attendance logs (Admin only)
+        // Attendance logs (Super Admin only)
         Route::get('/attendance', AdminAttendanceLogIndex::class)
             ->middleware('can:view-attendance-logs')
             ->name('attendance-logs');
 
-        // Librarian assignment (Admin only)
+        // Librarian batch assignment (Super Admin only)
         Route::get('/librarians', AdminAssignLibrarians::class)
-            ->middleware('can:assign-librarian-role')
+            ->middleware('can:manage-librarian-batches')
             ->name('librarians');
+
+        // Role management (Super Admin only)
+        Route::get('/manage-roles', AdminManageRoles::class)
+            ->middleware('can:manage-user-roles')
+            ->name('manage-roles');
 
         // Student management (Admin only)
         Route::get('/students', AdminUserList::class)

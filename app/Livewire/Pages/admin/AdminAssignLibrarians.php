@@ -33,8 +33,8 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function mount()
     {
-        // Authorize that only admins can access this page
-        $this->authorize('assign-librarian-role');
+        // Authorize that only super admins can access this page
+        $this->authorize('manage-librarian-batches');
     }
 
 
@@ -175,8 +175,11 @@ class AdminAssignLibrarians extends AdminComponent
     {
         $usedUserIds = Librarian::pluck('user_id')->toArray();
 
+        // Get student role ID
+        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id');
+
         return User::where('account_status', 'active')
-            ->where('is_admin', false)
+            ->where('role_id', $studentRoleId)
             ->whereNotIn('id', $usedUserIds)
             ->select('id', 'first_name', 'last_name', 'email')
             ->orderBy('last_name')
@@ -200,8 +203,11 @@ class AdminAssignLibrarians extends AdminComponent
             ->pluck('user_id')
             ->toArray();
 
+        // Get student role ID
+        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id');
+
         $availableStudents = User::where('account_status', 'active')
-            ->where('is_admin', false)
+            ->where('role_id', $studentRoleId)
             ->whereNotIn('id', $usedUserIds)
             ->select('id', 'first_name', 'last_name', 'email')
             ->orderBy('last_name')
@@ -225,14 +231,14 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function createBatch()
     {
-        // Ensure only admins can create batches and assign librarians
-        $this->authorize('assign-librarian-role');
+        // Ensure only super admins can create batches and assign librarians
+        $this->authorize('manage-librarian-batches');
 
         $this->validate([
             'newBatchNo' => 'required|unique:librarians,batch_no',
-            'selectedStudents' => 'required|array|min:1|max:5',
+            'selectedStudents' => 'required|array|size:5',
         ], [
-            'selectedStudents.max' => 'A batch can only have a maximum of 5 students.',
+            'selectedStudents.size' => 'A batch must have exactly 5 students.',
         ]);
 
         DB::transaction(function () {
@@ -286,16 +292,15 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function saveBatchAssignment()
     {
-        // Ensure only admins can modify batch assignments
-        $this->authorize('assign-librarian-role');
+        // Ensure only super admins can modify batch assignments
+        $this->authorize('manage-librarian-batches');
 
         $this->validate([
             'editingBatchNo' => 'required',
-            'editingDateStart' => 'required|date',
-            'editingSelectedStudents' => 'required|array|min:1|max:5',
+            'editingDateStart' => 'nullable|date',
+            'editingSelectedStudents' => 'required|array|size:5',
         ], [
-            'editingSelectedStudents.max' => 'A batch can only have a maximum of 5 students.',
-            'editingSelectedStudents.min' => 'A batch must have at least 1 student.',
+            'editingSelectedStudents.size' => 'A batch must have exactly 5 students.',
         ]);
 
         try {
@@ -355,11 +360,20 @@ class AdminAssignLibrarians extends AdminComponent
                 }
             }
 
+            // Update batch details
+            $status = $this->editingDateStart ? 'active' : 'inactive';
             Librarian::where('batch_no', $this->editingBatchNo)->update([
                 'date_start' => $this->editingDateStart,
                 'shift_notes' => $this->editingShiftNotes,
-                'status' => 'active',
+                'status' => $status,
             ]);
+
+            // If date is today, assign librarian role to all students in this batch
+            if ($this->editingDateStart && $this->editingDateStart === date('Y-m-d')) {
+                $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
+                User::whereIn('id', $this->editingSelectedStudents)
+                    ->update(['role_id' => $librarianRoleId]);
+            }
         });
         } catch (\Exception $e) {
             $this->error($e->getMessage());

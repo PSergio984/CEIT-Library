@@ -21,68 +21,92 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Admin access gate
+        // Admin access gate (for backward compatibility and general admin check)
         Gate::define('Admin-access', function ($user) {
-            return $user->is_admin;
+            return $user->hasAdminAccess();
         });
 
-        // Gate to check if user can assign librarian role (Admin only)
+        // SUPER ADMIN ONLY GATES
+
+        // User role management (Super Admin only)
+        Gate::define('manage-user-roles', function ($user) {
+            return $user->isSuperAdmin();
+        });
+
+        // System settings (Super Admin only)
+        Gate::define('manage-system-settings', function ($user) {
+            return $user->isSuperAdmin();
+        });
+
+        // ADMIN AND SUPER ADMIN GATES
+
+        // Gate to check if user can assign librarian role (Admin or Super Admin)
         Gate::define('assign-librarian-role', function ($user) {
-            return $user->is_admin;
+            return $user->hasAdminAccess();
         });
 
         // Gate for librarian-specific actions (not admin)
         Gate::define('librarian-only', function ($user) {
-            return !$user->is_admin && $user->isLibrarian();
+            return !$user->hasAdminAccess() && $user->isLibrarian();
         });
 
         // Gate to check if user can access privileged pages (Librarian or Admin)
         Gate::define('privileged-access', function ($user) {
-            return $user->is_admin || $user->isLibrarian();
+            return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
-        // GRANULAR PERMISSIONS - Admin only gates
+        // GRANULAR PERMISSIONS - Super Admin only gates
 
-        // Academic Papers management (Admin only)
+        // Academic Papers - VIEW (Librarian can view, but not edit/delete)
+        Gate::define('view-academic-papers', function ($user) {
+            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+        });
+
+        // Academic Papers - MANAGE (Super Admin only - edit/delete)
         Gate::define('manage-academic-papers', function ($user) {
-            return $user->is_admin;
+            return $user->isSuperAdmin();
         });
 
-        // Attendance logs (Admin only)
+        // Attendance logs (Super Admin only)
         Gate::define('view-attendance-logs', function ($user) {
-            return $user->is_admin;
+            return $user->isSuperAdmin();
         });
 
-        // Student management (Admin only)
+        // Student management (Super Admin only)
         Gate::define('manage-students', function ($user) {
-            return $user->is_admin;
+            return $user->isSuperAdmin();
         });
 
-        // Rules and Regulations - View (Librarian or Admin)
+        // Librarian batches (Super Admin only)
+        Gate::define('manage-librarian-batches', function ($user) {
+            return $user->isSuperAdmin();
+        });
+
+        // Rules and Regulations - View only (Librarian can view)
         Gate::define('view-rules', function ($user) {
-            return $user->is_admin || $user->isLibrarian();
+            return $user->hasAdminAccess() || $user->hasLibrarianRole();
         });
 
-        // Rules and Regulations - Edit (Admin only)
+        // Rules and Regulations - Edit (Super Admin only)
         Gate::define('manage-rules', function ($user) {
-            return $user->is_admin;
+            return $user->isSuperAdmin();
         });
 
-        // LIBRARIAN ALLOWED - These can be accessed by both Admin and Librarian
+        // LIBRARIAN READ-ONLY ACCESS - Can view but not edit
 
-        // Dashboard access (Admin or Librarian)
+        // Dashboard access (Librarian and Super Admin)
         Gate::define('access-admin-dashboard', function ($user) {
-            return $user->is_admin || $user->isLibrarian();
+            return $user->hasAdminAccess() || $user->hasLibrarianRole();
         });
 
-        // Borrow logs (Admin or Librarian)
+        // Borrow logs - VIEW (Librarian can view)
         Gate::define('view-borrow-logs', function ($user) {
-            return $user->is_admin || $user->isLibrarian();
+            return $user->hasAdminAccess() || $user->hasLibrarianRole();
         });
 
-        // Violation logs (Admin or Librarian)
-        Gate::define('view-violation-logs', function ($user) {
-            return $user->is_admin || $user->isLibrarian();
+        // Borrow logs - MANAGE (Super Admin only - edit/update status)
+        Gate::define('manage-borrow-logs', function ($user) {
+            return $user->isSuperAdmin();
         });
     }
 }

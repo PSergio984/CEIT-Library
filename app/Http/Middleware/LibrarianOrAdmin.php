@@ -22,8 +22,8 @@ class LibrarianOrAdmin
             return redirect()->route('login');
         }
 
-        // Allow access if user is admin or has active librarian role
-        if ($user->is_admin || $user->isLibrarian()) {
+        // Allow access if user has admin access or has active librarian role
+        if ($user->hasAdminAccess() || $user->isLibrarian()) {
             return $next($request);
         }
 

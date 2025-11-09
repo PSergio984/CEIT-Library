@@ -1,6 +1,7 @@
 <div>
     <header class="px-6 py-4 shadow-md">
-        <h1 class="text-2xl font-bold text-white">Admin - Assign Librarians to Batches</h1>
+        <h1 class="text-2xl font-bold text-white">Admin - Librarian Batch Assignments</h1>
+        <p class="text-sm text-slate-400 mt-1">Assign students to librarian duty batches for scheduled shifts</p>
     </header>
 
     <div class="px-4 py-5 min-h-screen">
@@ -266,9 +267,18 @@
                                 </span>
                             </label>
 
-                            @if (count($selectedStudents) >= 5)
+                            @if (count($selectedStudents) === 5)
+                                <div class="bg-green-900/50 border border-green-600 rounded-lg p-3 mb-3">
+                                    <p class="text-green-300 text-sm">✅ Required 5 students selected</p>
+                                </div>
+                            @elseif (count($selectedStudents) > 0)
                                 <div class="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 mb-3">
-                                    <p class="text-yellow-300 text-sm">⚠️ Maximum of 5 students reached</p>
+                                    <p class="text-yellow-300 text-sm">⚠️ You must select exactly 5 students
+                                        ({{ 5 - count($selectedStudents) }} more needed)</p>
+                                </div>
+                            @else
+                                <div class="bg-blue-900/50 border border-blue-600 rounded-lg p-3 mb-3">
+                                    <p class="text-blue-300 text-sm">ℹ️ Select exactly 5 students for this batch</p>
                                 </div>
                             @endif
 
@@ -312,7 +322,7 @@
 
                 <div class="bg-slate-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2 rounded-b-lg">
                     <button type="button" wire:click="createBatch"
-                        {{ $this->availableStudents->isEmpty() || count($selectedStudents) === 0 ? 'disabled' : '' }}
+                        {{ $this->availableStudents->isEmpty() || count($selectedStudents) !== 5 ? 'disabled' : '' }}
                         class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                         Create Batch
                     </button>
@@ -352,10 +362,18 @@
                                     </span>
                                 </label>
 
-                                @if (count($editingSelectedStudents) >= 5)
+                                @if (count($editingSelectedStudents) === 5)
+                                    <div class="bg-green-900/50 border border-green-600 rounded-lg p-3 mb-3">
+                                        <p class="text-green-300 text-sm">✅ Required 5 students selected</p>
+                                    </div>
+                                @elseif (count($editingSelectedStudents) > 0)
                                     <div class="bg-yellow-900/50 border border-yellow-600 rounded-lg p-3 mb-3">
-                                        <p class="text-yellow-300 text-sm">Maximum of 5 students reached.
-                                            Uncheck a student to select another.</p>
+                                        <p class="text-yellow-300 text-sm">⚠️ You must select exactly 5 students
+                                            ({{ 5 - count($editingSelectedStudents) }} more needed)</p>
+                                    </div>
+                                @else
+                                    <div class="bg-red-900/50 border border-red-600 rounded-lg p-3 mb-3">
+                                        <p class="text-red-300 text-sm">❌ Select exactly 5 students for this batch</p>
                                     </div>
                                 @endif
 
@@ -415,7 +433,11 @@
                             </div>
 
                             <div>
-                                <label class="block text-sm font-medium text-slate-300 mb-2">Serving Date</label>
+                                <label class="block text-sm font-medium text-slate-300 mb-2">
+                                    Serving Date
+                                    <span class="text-xs text-slate-400">(Optional - Set when students should become
+                                        librarians)</span>
+                                </label>
                                 <input type="date" wire:model.live="editingDateStart"
                                     class="w-full border border-slate-600 bg-slate-800 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                 @error('editingDateStart')
@@ -432,13 +454,27 @@
                                                 already assigned to this date.
                                             </p>
                                         </div>
+                                    @elseif($editingDateStart === date('Y-m-d'))
+                                        <div class="mt-2 bg-blue-900/50 border border-blue-600 rounded-lg p-3">
+                                            <p class="text-blue-300 text-sm">
+                                                🎯 <strong>Today's Date!</strong> These students will immediately become
+                                                librarians when you save.
+                                            </p>
+                                        </div>
                                     @elseif($this->isDateChanging && !$this->conflictingBatch)
                                         <div class="mt-2 bg-green-900/50 border border-green-600 rounded-lg p-3">
                                             <p class="text-green-300 text-sm">
-                                                This date is available
+                                                ✅ This date is available. Students will become librarians on this date.
                                             </p>
                                         </div>
                                     @endif
+                                @else
+                                    <div class="mt-2 bg-slate-800/70 border border-slate-600 rounded-lg p-3">
+                                        <p class="text-slate-400 text-sm">
+                                            ℹ️ Leave empty to create batch without assignment. Set date later to
+                                            activate.
+                                        </p>
+                                    </div>
                                 @endif
                             </div>
 
@@ -453,9 +489,9 @@
 
                     <div class="bg-slate-800 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2 rounded-b-lg">
                         <button type="button" wire:click="saveBatchAssignment"
-                            {{ $this->conflictingBatch ? 'disabled' : '' }}
+                            {{ $this->conflictingBatch || count($editingSelectedStudents) !== 5 ? 'disabled' : '' }}
                             class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                            Save Assignment
+                            {{ $editingDateStart ? 'Save & Assign Date' : 'Save Batch' }}
                         </button>
                         <button type="button" wire:click="$set('showEditModal', false)"
                             class="mt-3 w-full inline-flex justify-center rounded-lg border border-slate-600 shadow-sm px-4 py-2 bg-slate-700 text-base font-medium text-slate-300 hover:bg-slate-600 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm transition duration-200">
