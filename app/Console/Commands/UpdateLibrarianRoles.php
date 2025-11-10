@@ -33,9 +33,13 @@ class UpdateLibrarianRoles extends Command
         $studentRoleId = Role::where('name', 'student')->value('id') ?? 1;
         $librarianRoleId = Role::where('name', 'librarian')->value('id') ?? 2;
 
-        // Get all batches assigned to today
-        $todayBatches = Librarian::whereNotNull('date_start')
-            ->whereDate('date_start', $today)
+        // Get all batches assigned to today (start_date is today and no end_date or end_date is in the future)
+        $todayBatches = Librarian::whereNotNull('start_date')
+            ->whereDate('start_date', '<=', $today)
+            ->where(function ($q) use ($today) {
+                $q->whereNull('end_date')
+                  ->orWhereDate('end_date', '>', $today);
+            })
             ->get()
             ->groupBy('batch_no');
 
@@ -55,14 +59,22 @@ class UpdateLibrarianRoles extends Command
                 ->update(['status' => 'active']);
         }
 
-        // Get all batches from past dates (not today)
-        $pastBatches = Librarian::whereNotNull('date_start')
-            ->whereDate('date_start', '<', $today)
+        // Get all expired batches (end_date is in the past OR start_date is in the past with no active period)
+        $expiredBatches = Librarian::whereNotNull('start_date')
+            ->where(function ($q) use ($today) {
+                // Has end_date and it's in the past
+                $q->whereDate('end_date', '<', $today)
+                  // OR start_date was in the past but no longer active
+                  ->orWhere(function ($q2) use ($today) {
+                      $q2->whereDate('start_date', '<', $today)
+                         ->where('status', 'active');
+                  });
+            })
             ->get()
             ->groupBy('batch_no');
 
         $demotedCount = 0;
-        foreach ($pastBatches as $batchNo => $batch) {
+        foreach ($expiredBatches as $batchNo => $batch) {
             $userIds = $batch->pluck('user_id')->toArray();
 
             // Demote librarians back to student role
@@ -78,8 +90,8 @@ class UpdateLibrarianRoles extends Command
         }
 
         // Mark future batches as inactive
-        Librarian::whereNotNull('date_start')
-            ->whereDate('date_start', '>', $today)
+        Librarian::whereNotNull('start_date')
+            ->whereDate('start_date', '>', $today)
             ->update(['status' => 'inactive']);
 
         $this->info("✅ Promoted {$promotedCount} students to librarian role");

@@ -290,18 +290,15 @@
                                 </div>
                             @endif
 
-                            <div
-                                class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3">
+                            <div class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3"
+                                x-data="{ selected: @entangle('selectedStudents').defer }">
                                 @forelse($this->availableStudents as $student)
-                                    @php
-                                        $isDisabled =
-                                            count($selectedStudents) >= 5 && !in_array($student->id, $selectedStudents);
-                                    @endphp
                                     <label
-                                        class="flex items-center space-x-2 cursor-pointer hover:bg-slate-700 p-2 rounded-lg transition duration-150
-                                        {{ $isDisabled ? 'opacity-50 cursor-not-allowed' : '' }}">
-                                        <input type="checkbox" wire:model.live="selectedStudents"
-                                            value="{{ $student->id }}" {{ $isDisabled ? 'disabled' : '' }}
+                                        class="flex items-center space-x-2 cursor-pointer hover:bg-slate-700 p-2 rounded-lg transition duration-150"
+                                        x-bind:class="{ 'opacity-50 cursor-not-allowed': selected.length >= 5 && !selected.includes(
+                                                {{ $student->id }}) }">
+                                        <input type="checkbox" x-model="selected" value="{{ $student->id }}"
+                                            x-bind:disabled="selected.length >= 5 && !selected.includes({{ $student->id }})"
                                             class="rounded border-slate-500 text-blue-500 bg-slate-700 focus:ring-blue-500">
                                         <span class="text-sm text-white">
                                             {{ $student->first_name }} {{ $student->last_name }}
@@ -377,34 +374,32 @@
                                     </div>
                                 @endif
 
-                                <div
-                                    class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3">
+                                <div class="max-h-64 overflow-y-auto space-y-2 border border-slate-600 bg-slate-800 rounded-lg p-3"
+                                    x-data="{ editSelected: @entangle('editingSelectedStudents').defer }">
                                     @forelse($this->availableStudentsForEdit as $student)
                                         @php
-                                            $isSelected = in_array($student->id, $editingSelectedStudents);
-                                            $shouldDisable = count($editingSelectedStudents) >= 5 && !$isSelected;
                                             $isCurrentBatchMember = collect(
                                                 $this->groupedLibrarians->get($editingBatchNo),
                                             )
                                                 ->pluck('user_id')
                                                 ->contains($student->id);
-                                            $memberClass =
-                                                $isCurrentBatchMember && $isSelected
-                                                    ? 'bg-blue-900/20 border border-blue-600/30'
-                                                    : '';
                                         @endphp
 
                                         <label
-                                            class="flex items-center justify-between space-x-2 p-2 rounded-lg transition duration-150
-                                            {{ $shouldDisable ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-slate-700' }}
-                                            {{ $memberClass }}">
+                                            class="flex items-center justify-between space-x-2 p-2 rounded-lg transition duration-150 cursor-pointer hover:bg-slate-700"
+                                            x-bind:class="{
+                                                'opacity-50 cursor-not-allowed': editSelected.length >= 5 && !
+                                                    editSelected.includes({{ $student->id }}),
+                                                'bg-blue-900/20 border border-blue-600/30': {{ $isCurrentBatchMember ? 'true' : 'false' }} &&
+                                                    editSelected.includes({{ $student->id }})
+                                            }">
 
                                             <div class="flex items-center space-x-2 flex-1">
-                                                <input type="checkbox" wire:model.live="editingSelectedStudents"
+                                                <input type="checkbox" x-model="editSelected"
                                                     value="{{ $student->id }}"
-                                                    {{ $shouldDisable ? 'disabled' : '' }}
-                                                    class="rounded border-slate-500 text-blue-500 bg-slate-700 focus:ring-blue-500
-                                                    {{ $shouldDisable ? 'cursor-not-allowed' : 'cursor-pointer' }}">
+                                                    x-bind:disabled="editSelected.length >= 5 && !editSelected.includes(
+                                                        {{ $student->id }})"
+                                                    class="rounded border-slate-500 text-blue-500 bg-slate-700 focus:ring-blue-500 cursor-pointer">
 
                                                 <div class="flex flex-col">
                                                     <span class="text-sm text-white">
@@ -414,9 +409,10 @@
                                                 </div>
                                             </div>
 
-                                            @if ($isCurrentBatchMember && $isSelected)
+                                            @if ($isCurrentBatchMember)
                                                 <span
-                                                    class="text-xs bg-blue-600/50 text-blue-200 px-2 py-1 rounded-full whitespace-nowrap">
+                                                    class="text-xs bg-blue-600/50 text-blue-200 px-2 py-1 rounded-full whitespace-nowrap"
+                                                    x-show="editSelected.includes({{ $student->id }})">
                                                     Current Member
                                                 </span>
                                             @endif

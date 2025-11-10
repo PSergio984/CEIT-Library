@@ -58,7 +58,7 @@ class AdminAssignLibrarians extends AdminComponent
         }
 
         $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
-        $currentDate = $currentBatch ? date('Y-m-d', strtotime($currentBatch->date_start)) : null;
+        $currentDate = $currentBatch && $currentBatch->start_date ? date('Y-m-d', strtotime($currentBatch->start_date)) : null;
 
         return $currentDate != $this->editingDateStart && !empty($this->editingDateStart);
     }
@@ -70,8 +70,8 @@ class AdminAssignLibrarians extends AdminComponent
         }
 
         return Librarian::where('batch_no', '!=', $this->editingBatchNo)
-            ->whereNotNull('date_start')
-            ->where('date_start', $this->editingDateStart)
+            ->whereNotNull('start_date')
+            ->where('start_date', $this->editingDateStart)
             ->first();
     }
 
@@ -79,7 +79,7 @@ class AdminAssignLibrarians extends AdminComponent
     {
         return $this->getLibrariansQueryProperty()
             ->filter(function ($librarians) {
-                return is_null($librarians->first()->date_start);
+                return is_null($librarians->first()->start_date);
             })
             ->map(function ($librarians, $batchNo) {
                 return [
@@ -96,7 +96,7 @@ class AdminAssignLibrarians extends AdminComponent
     {
         return $this->getLibrariansQueryProperty()
             ->filter(function ($librarians) {
-                return !is_null($librarians->first()->date_start);
+                return !is_null($librarians->first()->start_date);
             })
             ->map(function ($librarians, $batchNo) {
                 $first = $librarians->first();
@@ -105,7 +105,7 @@ class AdminAssignLibrarians extends AdminComponent
                     'members' => $librarians->map(function ($lib) {
                         return $lib->user->first_name . ' ' . $lib->user->last_name;
                     })->toArray(),
-                    'date_assigned' => $first->date_start ? date('Y-m-d', strtotime($first->date_start)) : 'N/A',
+                    'date_assigned' => $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : 'N/A',
                     'librarians' => $librarians
                 ];
             });
@@ -127,11 +127,11 @@ class AdminAssignLibrarians extends AdminComponent
             $grouped = $grouped->filter(function ($librarians) use ($filterStart) {
                 $first = $librarians->first();
 
-                if (is_null($first->date_start)) {
+                if (is_null($first->start_date)) {
                     return false;
                 }
 
-                $batchStart = strtotime($first->date_start);
+                $batchStart = strtotime($first->start_date);
 
                 return $batchStart >= $filterStart;
             });
@@ -161,7 +161,7 @@ class AdminAssignLibrarians extends AdminComponent
             $first = $librarians->first();
             return [
                 'batch_no' => $batchNo,
-                'date_range' => ($first->date_start ? date('Y-m-d', strtotime($first->date_start)) : 'N/A'),
+                'date_range' => ($first->start_date ? date('Y-m-d', strtotime($first->start_date)) : 'N/A'),
                 'shift_notes' => $first->shift_notes ?? 'N/A',
                 'created_by' => ($first->createdBy->first_name ?? '') . ' ' . ($first->createdBy->last_name ?? ''),
                 'status' => $first->status,
@@ -259,7 +259,8 @@ class AdminAssignLibrarians extends AdminComponent
                     'user_id' => $userId,
                     'batch_no' => $this->newBatchNo,
                     'status' => 'inactive',
-                    'expires_at' => now()->addDay(),
+                    'start_date' => null,
+                    'end_date' => null,
                     'created_by' => Auth::id(),
                 ]);
             }
@@ -282,7 +283,7 @@ class AdminAssignLibrarians extends AdminComponent
         $first = $librarians->first();
 
         $this->editingBatchNo = $batchNo;
-        $this->editingDateStart = $first->date_start ? date('Y-m-d', strtotime($first->date_start)) : '';
+        $this->editingDateStart = $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : '';
         $this->editingShiftNotes = $first->shift_notes ?? '';
         $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn($id) => (string) $id)->toArray();
 
@@ -306,13 +307,13 @@ class AdminAssignLibrarians extends AdminComponent
         try {
             DB::transaction(function () {
             $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
-            $currentBatchDate = $currentBatch ? $currentBatch->date_start : null;
+            $currentBatchDate = $currentBatch ? $currentBatch->start_date : null;
 
             $isDateChanging = $currentBatchDate != $this->editingDateStart;
-            if ($isDateChanging) {
+            if ($isDateChanging && $this->editingDateStart) {
                 $conflictingBatch = Librarian::where('batch_no', '!=', $this->editingBatchNo)
-                    ->whereNotNull('date_start')
-                    ->where('date_start', $this->editingDateStart)
+                    ->whereNotNull('start_date')
+                    ->where('start_date', $this->editingDateStart)
                     ->lockForUpdate()
                     ->first();
 
@@ -354,16 +355,28 @@ class AdminAssignLibrarians extends AdminComponent
                         'user_id' => $userId,
                         'batch_no' => $this->editingBatchNo,
                         'status' => 'inactive',
-                        'expires_at' => now()->addDay(),
+                        'start_date' => $this->editingDateStart,
+                        'end_date' => null,
                         'created_by' => Auth::id(),
                     ]);
                 }
             }
 
+            // Determine status based on date
+            $status = 'inactive';
+            if ($this->editingDateStart) {
+                $today = date('Y-m-d');
+                if ($this->editingDateStart == $today) {
+                    $status = 'active';
+                } elseif ($this->editingDateStart < $today) {
+                    $status = 'expired';
+                }
+            }
+
             // Update batch details
-            $status = $this->editingDateStart ? 'active' : 'inactive';
             Librarian::where('batch_no', $this->editingBatchNo)->update([
-                'date_start' => $this->editingDateStart,
+                'start_date' => $this->editingDateStart,
+                'end_date' => null,
                 'shift_notes' => $this->editingShiftNotes,
                 'status' => $status,
             ]);
