@@ -42,15 +42,15 @@ class AdminBorrowTransactions extends AdminComponent
     // MaryUI table headers - Optimized for responsive display
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
-        ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-16'],
-        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-32'],
-        ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-48'],
+        ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
+        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-36'],
+        ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-40'],
         ['key' => 'paper_type', 'label' => 'Type', 'sortable' => true, 'class' => 'w-20'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-28'],
         ['key' => 'time_out', 'label' => 'Time Out', 'sortable' => true, 'class' => 'w-28'],
-        ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'class' => 'w-20'],
-        ['key' => 'notes', 'label' => 'Notes', 'class' => 'min-w-40'],
-        ['key' => 'actions', 'label' => 'Actions', 'class' => 'w-24', 'sortable' => false],
+        ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'class' => 'w-24'],
+        ['key' => 'notes', 'label' => 'Notes', 'class' => 'w-28'],
+        ['key' => 'actions', 'label' => '', 'class' => 'w-20 text-center', 'sortable' => false],
     ];
 
     // Sort configuration for MaryUI
