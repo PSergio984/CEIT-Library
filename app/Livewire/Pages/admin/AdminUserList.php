@@ -139,6 +139,7 @@ class AdminUserList extends AdminComponent
                     'status' => $user->account_status,
                     'account_status_label' => $user->account_status === 'active' ? 'Available' : 'Suspended',
                     'role' => $user->role,
+                    'is_admin' => $user->role && $user->role->hasAdminAccess(),
                     'original' => $user,
                 ];
             });

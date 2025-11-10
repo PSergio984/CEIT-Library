@@ -15,6 +15,7 @@ class AdminAssignLibrarians extends AdminComponent
 
     public $search = '';
     public $batchSearch = '';
+    public $editModalSearch = '';
     public $showCreateModal = false;
     public $showEditModal = false;
     public $selectedStudents = [];
@@ -199,32 +200,68 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function getAvailableStudentsForEditProperty()
     {
+        // Get users in OTHER batches (not the one being edited)
         $usedUserIds = Librarian::where('batch_no', '!=', $this->editingBatchNo ?? '')
             ->pluck('user_id')
             ->toArray();
 
-        // Get student role ID
-        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id');
+        // Get users in the CURRENT batch being edited
+        $currentBatchUserIds = Librarian::where('batch_no', $this->editingBatchNo ?? '')
+            ->pluck('user_id')
+            ->toArray();
 
+        // Get student and librarian role IDs
+        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id');
+        $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id');
+
+        // Get available students: either students not in any batch, OR users in the current batch (can be librarians)
+        // No search or sorting here - Alpine.js handles that client-side for instant response
         $availableStudents = User::where('account_status', 'active')
-            ->where('role_id', $studentRoleId)
+            ->where(function($query) use ($studentRoleId, $librarianRoleId, $currentBatchUserIds) {
+                $query->where('role_id', $studentRoleId)
+                      ->orWhere(function($q) use ($librarianRoleId, $currentBatchUserIds) {
+                          $q->where('role_id', $librarianRoleId)
+                            ->whereIn('id', $currentBatchUserIds);
+                      });
+            })
             ->whereNotIn('id', $usedUserIds)
-            ->select('id', 'first_name', 'last_name', 'email')
+            ->select('id', 'first_name', 'last_name', 'email', 'role_id')
             ->orderBy('last_name')
             ->orderBy('first_name')
             ->get();
 
         return $availableStudents;
-    }
-
-    public function resetFilters()
+    }    public function resetFilters()
     {
         $this->reset(['batchSearch', 'filterStatus', 'filterDateStart']);
     }
 
+    public function generateNextBatchNumber()
+    {
+        $currentYear = date('Y');
+        $yearPrefix = $currentYear;
+
+        // Get the highest batch number for the current year
+        $latestBatch = Librarian::where('batch_no', 'like', $yearPrefix . '%')
+            ->orderBy('batch_no', 'desc')
+            ->first();
+
+        if ($latestBatch) {
+            // Extract the sequence number and increment
+            $sequenceNumber = (int) substr($latestBatch->batch_no, 4) + 1;
+        } else {
+            // First batch of the year
+            $sequenceNumber = 1;
+        }
+
+        // Format: YYYY0001, YYYY0002, etc.
+        return $yearPrefix . str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
+    }
+
     public function openCreateModal()
     {
-        $this->reset(['selectedStudents', 'newBatchNo']);
+        $this->reset(['selectedStudents']);
+        $this->newBatchNo = $this->generateNextBatchNumber();
         $this->resetErrorBag();
         $this->showCreateModal = true;
     }
@@ -234,8 +271,13 @@ class AdminAssignLibrarians extends AdminComponent
         // Ensure only super admins can create batches and assign librarians
         $this->authorize('manage-librarian-batches');
 
+        // Generate batch number if not already set
+        if (empty($this->newBatchNo)) {
+            $this->newBatchNo = $this->generateNextBatchNumber();
+        }
+
         $this->validate([
-            'newBatchNo' => 'required|unique:librarians,batch_no',
+            'newBatchNo' => 'required|integer|unique:librarians,batch_no',
             'selectedStudents' => 'required|array|size:5',
         ], [
             'selectedStudents.size' => 'A batch must have exactly 5 students.',
@@ -286,6 +328,7 @@ class AdminAssignLibrarians extends AdminComponent
         $this->editingDateStart = $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : '';
         $this->editingShiftNotes = $first->shift_notes ?? '';
         $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn($id) => (string) $id)->toArray();
+        $this->editModalSearch = ''; // Reset search when opening modal
 
         $this->resetErrorBag();
         $this->showEditModal = true;

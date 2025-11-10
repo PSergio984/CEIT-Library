@@ -108,5 +108,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-borrow-logs', function ($user) {
             return $user->isSuperAdmin();
         });
+
+        // Violation logs - VIEW (Librarian and Super Admin)
+        Gate::define('view-violation-logs', function ($user) {
+            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+        });
+
+        // Violation logs - MANAGE (Super Admin only - add/edit/delete violations)
+        Gate::define('manage-violation-logs', function ($user) {
+            return $user->isSuperAdmin();
+        });
     }
 }

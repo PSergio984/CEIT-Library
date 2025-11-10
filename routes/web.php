@@ -66,9 +66,8 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
 
         // SUPER ADMIN ONLY ROUTES
 
-        // Academic Papers management (Admin only)
-        Route::middleware('can:manage-academic-papers')->group(function () {
-            Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
+        // Academic Papers - VIEW (Librarian and Admin can view)
+        Route::middleware('can:view-academic-papers')->group(function () {
             Route::get('/academic-papers', AdminAcademicPaperIndex::class)
                 ->name('academic-paper.index');
             Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
@@ -86,6 +85,11 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/attendance', AdminAttendanceLogIndex::class)
             ->middleware('can:view-attendance-logs')
             ->name('attendance-logs');
+
+        // Violation logs (Librarian and Admin can view)
+        Route::get('/violations', AdminViolationLogIndex::class)
+            ->middleware('can:view-violation-logs')
+            ->name('violation-logs');
 
         // Librarian batch assignment (Super Admin only)
         Route::get('/librarians', AdminAssignLibrarians::class)

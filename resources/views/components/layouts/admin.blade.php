@@ -66,7 +66,6 @@
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
 
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
-                <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" />
 
                 @can('view-academic-papers')
                     <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
@@ -98,6 +97,10 @@
 
                 @can('view-attendance-logs')
                     <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
+                @endcan
+
+                @can('view-violation-logs')
+                    <x-mary-menu-item title="Violations" icon="o-exclamation-triangle" link="/admin/violations" />
                 @endcan
 
                 <x-mary-menu-item title="View as Student" icon="o-eye" link="/dashboard" />

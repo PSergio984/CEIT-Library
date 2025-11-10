@@ -94,9 +94,9 @@ class UpdateLibrarianRoles extends Command
             ->whereDate('start_date', '>', $today)
             ->update(['status' => 'inactive']);
 
-        $this->info("✅ Promoted {$promotedCount} students to librarian role");
-        $this->info("✅ Demoted {$demotedCount} librarians back to student role");
-        $this->info("✅ Librarian roles updated successfully!");
+        $this->info("Promoted {$promotedCount} students to librarian role");
+        $this->info("Demoted {$demotedCount} librarians back to student role");
+        $this->info("Librarian roles updated successfully!");
 
         return Command::SUCCESS;
     }
