@@ -74,7 +74,7 @@ The CEIT Library now has a comprehensive role-based access control system with t
 
 **Features:**
 
--   Create batches with 1-5 students
+-   Create batches with exactly 5 students
 -   Assign dates to batches
 -   Track batch status (active/inactive/expired)
 -   View available and assigned batches
@@ -93,7 +93,7 @@ The CEIT Library now has a comprehensive role-based access control system with t
 **Important Notes:**
 
 -   Only students (not librarians/admins) can be assigned to batches
--   Maximum 5 students per batch
+-   Exactly 5 students per batch
 -   One batch per date (no conflicts)
 -   Batches are for scheduled duty shifts, not permanent role changes
 

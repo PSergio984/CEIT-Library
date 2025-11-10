@@ -59,7 +59,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Academic Papers - VIEW (Librarian can view, but not edit/delete)
         Gate::define('view-academic-papers', function ($user) {
-            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+            return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
         // Academic Papers - MANAGE (Super Admin only - edit/delete)
@@ -84,7 +84,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Rules and Regulations - View only (Librarian can view)
         Gate::define('view-rules', function ($user) {
-            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+            return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
         // Rules and Regulations - Edit (Super Admin only)
@@ -96,12 +96,12 @@ class AppServiceProvider extends ServiceProvider
 
         // Dashboard access (Librarian and Super Admin)
         Gate::define('access-admin-dashboard', function ($user) {
-            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+            return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
         // Borrow logs - VIEW (Librarian can view)
         Gate::define('view-borrow-logs', function ($user) {
-            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+            return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
         // Borrow logs - MANAGE (Super Admin only - edit/update status)
@@ -111,7 +111,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Violation logs - VIEW (Librarian and Super Admin)
         Gate::define('view-violation-logs', function ($user) {
-            return $user->hasAdminAccess() || $user->hasLibrarianRole();
+            return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
         // Violation logs - MANAGE (Super Admin only - add/edit/delete violations)
