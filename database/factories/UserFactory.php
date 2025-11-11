@@ -31,6 +31,7 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => Hash::make(fake()->password(8, 12)), // Generate random password between 8-12 characters
             'remember_token' => Str::random(10),
+            'role_id' => 1, // Default to student role
         ];
     }
 

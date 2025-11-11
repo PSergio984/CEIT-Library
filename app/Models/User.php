@@ -64,7 +64,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'last_name',
         'email',
         'password',
-        'is_admin',
+        'role_id',
         'credit_score',
         'account_status',
     ];
@@ -115,19 +115,58 @@ class User extends Authenticatable implements MustVerifyEmail
         $this->notify(new \App\Notifications\CustomResetPassword($token));
     }
 
+    // Relationship with role
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
+    }
+
     // Relationship with librarian duties
     public function librarianDuty()
     {
         return $this->hasOne(Librarian::class);
     }
 
-    // Check if user has active librarian privileges
-    public function isLibrarian()
+    // Role checker methods
+    public function hasRole(string $roleName): bool
+    {
+        return $this->role && $this->role->name === $roleName;
+    }
+
+    public function isStudent(): bool
+    {
+        return $this->hasRole(Role::STUDENT);
+    }
+
+    public function hasLibrarianRole(): bool
+    {
+        return $this->hasRole(Role::LIBRARIAN);
+    }
+
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole(Role::SUPER_ADMIN);
+    }
+
+    // Check if user has admin privileges (librarian or super_admin)
+    public function hasAdminAccess(): bool
+    {
+        return $this->role && $this->role->hasAdminAccess();
+    }
+
+    // Check if user has active librarian batch duty (for QR scanning)
+    public function hasActiveLibrarianDuty()
     {
         return $this->librarianDuty()
             ->where('status', 'active')
             ->where('expires_at', '>', now())
             ->exists();
+    }
+
+    // Alias for backward compatibility - checks BOTH role and batch duty
+    public function isLibrarian()
+    {
+        return $this->hasLibrarianRole() || $this->hasActiveLibrarianDuty();
     }
 
     // Get active librarian record

@@ -6,6 +6,7 @@ use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Gate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
@@ -14,7 +15,7 @@ use Livewire\Attributes\Title;
 #[Title('Borrow Logs')]
 class AdminBorrowTransactions extends AdminComponent
 {
-    use WithPagination, Toast;
+    use WithPagination, Toast, CreatesQrCanonicalMessage;
 
     public $perPage = 20;
     public $search = '';
@@ -41,15 +42,15 @@ class AdminBorrowTransactions extends AdminComponent
     // MaryUI table headers - Optimized for responsive display
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
-        ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-16'],
-        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-32'],
-        ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-48'],
+        ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
+        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-36'],
+        ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-40'],
         ['key' => 'paper_type', 'label' => 'Type', 'sortable' => true, 'class' => 'w-20'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-28'],
         ['key' => 'time_out', 'label' => 'Time Out', 'sortable' => true, 'class' => 'w-28'],
-        ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'class' => 'w-20'],
-        ['key' => 'notes', 'label' => 'Notes', 'class' => 'min-w-40'],
-        ['key' => 'actions', 'label' => 'Actions', 'class' => 'w-24', 'sortable' => false],
+        ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'class' => 'w-24'],
+        ['key' => 'notes', 'label' => 'Notes', 'class' => 'w-28'],
+        ['key' => 'actions', 'label' => '', 'class' => 'w-20 text-center', 'sortable' => false],
     ];
 
     // Sort configuration for MaryUI
@@ -244,6 +245,22 @@ class AdminBorrowTransactions extends AdminComponent
             // Parse the JSON data from QR code
             $data = json_decode($qrData, true);
             \Log::info('Decoded JSON:', ['data' => $data]);
+
+            // Check if data is encrypted (new format)
+            if (isset($data['encrypted'])) {
+                \Log::info('Encrypted QR detected, decrypting...');
+                $decryptedData = $this->decryptQrData($data['encrypted']);
+
+                if (!$decryptedData) {
+                    \Log::error('Failed to decrypt QR data');
+                    $this->error("Invalid or corrupted QR code!");
+                    $this->isProcessingQr = false;
+                    return ['found' => false];
+                }
+
+                $data = $decryptedData;
+                \Log::info('Decrypted Data:', ['data' => $data]);
+            }
 
             if (!$data || !isset($data['p'])) {
                 \Log::error('Invalid QR format - missing p key');

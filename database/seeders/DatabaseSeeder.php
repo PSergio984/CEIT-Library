@@ -22,37 +22,40 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create Admin users
+        // Get role IDs
+        $superAdminRoleId = \App\Models\Role::where('name', 'super_admin')->value('id') ?? 3;
+        $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
+        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+
+        // Create the ONLY super_admin user
         $admin = User::factory()->create([
             'first_name' => 'Janrel',
             'last_name' => 'Motovlogs',
             'email' => 'admin@plv.edu.ph',
-            'is_admin' => true,
+            'role_id' => $superAdminRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
 
-        $librarian = User::factory()->create([
-            'first_name' => 'Librarian',
+        // Create regular student users (including former librarian as student)
+        $students = User::factory(50)->create();
+
+        // Create a test librarian student (starts as student, can be promoted by super_admin)
+        $testLibrarian = User::factory()->create([
+            'first_name' => 'Test',
             'last_name' => 'Librarian',
             'email' => 'librarian@plv.edu.ph',
-            'is_admin' => false,
+            'role_id' => $studentRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
 
-        Librarian::factory()->active()->create([
-            'user_id' => $librarian->id,
-            'created_by' => $admin->id,
-        ]);
-
-        // Create regular student users
-        $students = User::factory(50)->create();
+        $students->push($testLibrarian);
 
         // Create a specific student user
         $specificStudent = User::factory()->create([
             'first_name' => 'Sample',
             'last_name' => 'Student',
             'email' => 'student@plv.edu.ph',
-            'is_admin' => false,
+            'role_id' => $studentRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
 
@@ -183,24 +186,128 @@ class DatabaseSeeder extends Seeder
 
 
 
-        // Create active librarians (students on duty today)
-        $librarianStudents = $students->random(3); // 3 students on librarian duty
-        foreach ($librarianStudents as $librarianStudent) {
-            Librarian::factory()->active()->create([
-                'user_id' => $librarianStudent->id,
+        // Create librarian batches
+        $today = \Carbon\Carbon::today();
+        $currentYear = date('Y');
+        $allLibrarianStudents = collect();
+
+        // 1. Create 1 ACTIVE batch (on duty today) - exactly 5 students
+        $this->command->info('Creating active batch for today...');
+        $activeBatchStudents = $students->random(5);
+        $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
+
+        foreach ($activeBatchStudents as $student) {
+            Librarian::create([
+                'user_id' => $student->id,
+                'batch_no' => $currentYear . '0001',
+                'start_date' => $today,
+                'end_date' => null,
+                'status' => 'active',
                 'created_by' => $admin->id,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]);
         }
 
-        // Create some expired librarian duties from previous days
-        $remainingStudents = $students->diff($librarianStudents); // Exclude current librarians
-        $previousLibrarians = $remainingStudents->random(5);
-        foreach ($previousLibrarians as $previousLibrarianStudent) {
-            Librarian::factory()->expired()->create([
-                'user_id' => $previousLibrarianStudent->id,
+        // 2. Create 2 EXPIRED batches (dates in the past) - 5 students each
+        $this->command->info('Creating 2 expired batches...');
+        $remainingStudents = $students->diff($allLibrarianStudents);
+
+        // Expired Batch 1 (ended 3 days ago)
+        $expiredBatch1Students = $remainingStudents->random(5);
+        $allLibrarianStudents = $allLibrarianStudents->merge($expiredBatch1Students);
+        $remainingStudents = $remainingStudents->diff($expiredBatch1Students);
+
+        foreach ($expiredBatch1Students as $student) {
+            Librarian::create([
+                'user_id' => $student->id,
+                'batch_no' => $currentYear . '0002',
+                'start_date' => $today->copy()->subDays(10),
+                'end_date' => $today->copy()->subDays(3),
+                'status' => 'expired',
                 'created_by' => $admin->id,
+                'created_at' => $today->copy()->subDays(10),
+                'updated_at' => $today->copy()->subDays(3),
             ]);
         }
+
+        // Expired Batch 2 (ended 1 week ago)
+        $expiredBatch2Students = $remainingStudents->random(5);
+        $allLibrarianStudents = $allLibrarianStudents->merge($expiredBatch2Students);
+        $remainingStudents = $remainingStudents->diff($expiredBatch2Students);
+
+        foreach ($expiredBatch2Students as $student) {
+            Librarian::create([
+                'user_id' => $student->id,
+                'batch_no' => $currentYear . '0003',
+                'start_date' => $today->copy()->subDays(20),
+                'end_date' => $today->copy()->subDays(7),
+                'status' => 'expired',
+                'created_by' => $admin->id,
+                'created_at' => $today->copy()->subDays(20),
+                'updated_at' => $today->copy()->subDays(7),
+            ]);
+        }
+
+        // 3. Create 3 INACTIVE batches (future dates) - 5 students each
+        $this->command->info('Creating 3 inactive batches...');
+
+        // Inactive Batch 1 (starts in 2 days)
+        $inactiveBatch1Students = $remainingStudents->random(5);
+        $allLibrarianStudents = $allLibrarianStudents->merge($inactiveBatch1Students);
+        $remainingStudents = $remainingStudents->diff($inactiveBatch1Students);
+
+        foreach ($inactiveBatch1Students as $student) {
+            Librarian::create([
+                'user_id' => $student->id,
+                'batch_no' => $currentYear . '0004',
+                'start_date' => $today->copy()->addDays(2),
+                'end_date' => null,
+                'status' => 'inactive',
+                'created_by' => $admin->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Inactive Batch 2 (starts in 5 days)
+        $inactiveBatch2Students = $remainingStudents->random(5);
+        $allLibrarianStudents = $allLibrarianStudents->merge($inactiveBatch2Students);
+        $remainingStudents = $remainingStudents->diff($inactiveBatch2Students);
+
+        foreach ($inactiveBatch2Students as $student) {
+            Librarian::create([
+                'user_id' => $student->id,
+                'batch_no' => $currentYear . '0005',
+                'start_date' => $today->copy()->addDays(5),
+                'end_date' => null,
+                'status' => 'inactive',
+                'created_by' => $admin->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Inactive Batch 3 (starts in 1 week)
+        $inactiveBatch3Students = $remainingStudents->random(5);
+        $allLibrarianStudents = $allLibrarianStudents->merge($inactiveBatch3Students);
+
+        foreach ($inactiveBatch3Students as $student) {
+            Librarian::create([
+                'user_id' => $student->id,
+                'batch_no' => $currentYear . '0006',
+                'start_date' => $today->copy()->addDays(7),
+                'end_date' => null,
+                'status' => 'inactive',
+                'created_by' => $admin->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // Store active batch students for use in attendance records
+        $librarianStudents = $activeBatchStudents;
+        $previousLibrarians = $expiredBatch1Students->merge($expiredBatch2Students);
 
         // Create academic paper sessions (reading history)
         $studentsWithSessions = $students->random(20);
@@ -465,13 +572,16 @@ class DatabaseSeeder extends Seeder
 
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
-        $this->command->info('- 52 users (1 Admin, 1 Librarian, 50 students)');
+        $this->command->info('- 52 users (1 Super Admin, 51 students)');
+        $this->command->info('- ONLY super_admin: Janrel Motovlogs (admin@plv.edu.ph)');
         $this->command->info('- 10 violation types');
-        $this->command->info('- 3 active librarians on duty');
+        $this->command->info('- Librarian Batches:');
+        $this->command->info('  * 1 ACTIVE batch (5 students on duty today)');
+        $this->command->info('  * 2 EXPIRED batches (5 students each, dates in the past)');
+        $this->command->info('  * 3 INACTIVE batches (5 students each, future start dates)');
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
         $this->command->info('- 3 Main Headers for Rules and Regulations with 3-5 rules each');
-
         $this->command->info('- Sample violations, credit scores, and session history');
     }
 }

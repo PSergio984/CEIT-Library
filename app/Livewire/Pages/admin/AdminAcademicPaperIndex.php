@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Vite;
 use Livewire\Attributes\Computed;
@@ -305,6 +306,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Perform deletion (called from modal)
     public function performDelete(?int $paperId = null): void
     {
+        // Only super_admin can delete academic papers
+        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+            $this->error('Only administrators can delete academic papers.');
+            $this->deleteId = null;
+            $this->dispatch('close-delete-modal');
+            return;
+        }
+
         // Use parameter if provided, otherwise fall back to property
         $deleteId = $paperId ?? $this->deleteId;
 
@@ -315,7 +324,6 @@ class AdminAcademicPaperIndex extends AdminComponent
         try {
             $academicPaper = AcademicPaper::findOrFail($deleteId);
 
-            // Admin pages are already protected by middleware, no need for additional authorization
             // Delete the paper
             $academicPaper->delete();
 
@@ -367,6 +375,12 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for creating new academic paper
     public function create(): void
     {
+        // Only super_admin can create academic papers
+        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+            $this->error('Only administrators can create academic papers.');
+            return;
+        }
+
         $this->isEditing = false;
         $this->form->reset(); // This already calls populateYearChoices() and loadStaticChoices()
         $this->resetErrorBag(); // Clear any previous validation errors
@@ -388,6 +402,12 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
+        // Only super_admin can edit academic papers
+        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+            $this->error('Only administrators can edit academic papers.');
+            return;
+        }
+
         $this->resetErrorBag(); // Clear any previous validation errors
 
         // Always reload the paper data to ensure fresh state
@@ -777,6 +797,12 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     public function confirmDelete(int $paperId): void
     {
+        // Only super_admin can delete academic papers
+        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+            $this->error('Only administrators can delete academic papers.');
+            return;
+        }
+
         $this->deleteId = $paperId;
         $this->dispatch('delete-modal');
     }
@@ -875,6 +901,15 @@ class AdminAcademicPaperIndex extends AdminComponent
             'Borrowed' => 'badge-warning',
             default => 'badge-error',
         };
+    }
+
+    /**
+     * Check if current user is super admin
+     */
+    #[Computed]
+    public function isSuperAdmin(): bool
+    {
+        return Auth::check() && Auth::user()->isSuperAdmin();
     }
 
     /**

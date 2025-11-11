@@ -117,9 +117,9 @@
         </div>
     </div>
 
-    <div class="hidden lg:block overflow-x-auto">
+    <div class="hidden lg:block overflow-x-auto rounded-lg border border-base-300">
         <x-mary-table :headers="$headers" :rows="$this->transactions" :sort-by="$sortBy" with-pagination striped
-            header-class="text-base-content bg-base-200" class="w-full min-w-fit table-auto">
+            header-class="text-base-content bg-base-200" class="w-full table-auto" row-class="hover:bg-base-200">
             @scope('cell_user_name', $row)
                 <div class="font-medium">{{ $row['user_name'] }}</div>
             @endscope
@@ -177,14 +177,20 @@
             @endscope
 
             @scope('cell_actions', $row)
-                @if ($this->canEdit)
-                    <x-mary-button wire:click="openEditModal({{ $row['id'] }})" class="btn-xs btn-outline"
-                        icon="o-pencil">
-                        Edit
-                    </x-mary-button>
-                @else
-                    <span class="text-xs text-base-content/50">View Only</span>
-                @endif
+                <div class="flex items-center justify-center">
+                    @if ($this->canEdit)
+                        <button wire:click="openEditModal({{ $row['id'] }})"
+                            class="btn btn-sm btn-square btn-ghost tooltip tooltip-left" data-tip="Edit Transaction">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                            </svg>
+                        </button>
+                    @else
+                        <span class="text-xs text-base-content/50">View</span>
+                    @endif
+                </div>
             @endscope
         </x-mary-table>
     </div>

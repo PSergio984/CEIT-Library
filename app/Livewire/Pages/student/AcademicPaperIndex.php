@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
+use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
@@ -14,7 +15,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 #[Title('Academic Paper List')]
 class AcademicPaperIndex extends Component
 {
-    use WithPagination;
+    use WithPagination, CreatesQrCanonicalMessage;
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
     public array $headers = [];
@@ -262,7 +263,7 @@ class AcademicPaperIndex extends Component
         // Store only the copy ID to avoid serializing models in Livewire state
         $this->selectedCopyId = $copy->id;
 
-        // 3) Build signed payload with TTL (e.g., 5 minutes)
+        // 3) Build encrypted payload with TTL (e.g., 5 minutes)
         $issuedAt = now();
         $expiresAt = $issuedAt->copy()->addMinutes(5);
         $payload = [
@@ -271,17 +272,13 @@ class AcademicPaperIndex extends Component
             'catalog_code' => $copy->academicPaper->catalog_code,
             'title'        => $copy->academicPaper->title,
             'requested_by' => Auth::id(),
+            'lat'          => Auth::user()->email, // Add email for compatibility
             'iat'          => $issuedAt->timestamp,
             'exp'          => $expiresAt->timestamp,
         ];
-        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $secret = config('app.qr_hmac_secret');
-        if (empty($secret)) {
-            abort(500, 'QR signing secret not configured.');
-        }
-        $raw = hash_hmac('sha256', $json, $secret, true);
-        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
-        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+
+        // Encrypt the QR payload
+        $qrPayload = $this->createEncryptedQrMessage($payload);
 
         // 4) Create SVG and base64 for modal
         $svg = QrCode::size(300)->generate($qrPayload);
@@ -317,17 +314,13 @@ class AcademicPaperIndex extends Component
             'catalog_code' => $paper->catalog_code,
             'title'        => $paper->title,
             'requested_by' => Auth::id(),
+            'lat'          => Auth::user()->email, // Add email for compatibility
             'iat'          => now()->timestamp,
             'exp'          => now()->addMinutes(5)->timestamp,
         ];
-        $json = json_encode($payload, JSON_UNESCAPED_SLASHES);
-        $secret = config('app.qr_hmac_secret');
-        if (empty($secret)) {
-            abort(500, 'QR signing secret not configured.');
-        }
-        $raw = hash_hmac('sha256', $json, $secret, true);
-        $sig = rtrim(strtr(base64_encode($raw), '/', '-_'), '=');
-        $qrPayload = json_encode(['p' => $payload, 'sig' => $sig], JSON_UNESCAPED_SLASHES);
+
+        // Encrypt the QR payload
+        $qrPayload = $this->createEncryptedQrMessage($payload);
 
         $filename = 'qr-code-inv-' . $copy->id . '.png';
 

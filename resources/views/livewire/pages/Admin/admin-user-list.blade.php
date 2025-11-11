@@ -82,7 +82,8 @@
 
     <div class="block lg:hidden space-y-4" wire:loading.class="opacity-50">
         @foreach ($this->students as $student)
-            <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" wire:key="mobile-student-{{ $student['id'] }}">
+            <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow"
+                wire:key="mobile-student-{{ $student['id'] }}">
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex items-center gap-3 flex-1">
                         <div>
@@ -90,7 +91,7 @@
                         </div>
                     </div>
                     @if ($student['is_admin'])
-                        <span class="badge badge-info badge-sm">Admin</span>
+                        <span class="badge badge-info badge-sm">Librarian</span>
                     @endif
                 </div>
 
@@ -105,7 +106,7 @@
                     </div>
                     <div>
                         <p class="text-xs text-base-content/50 font-medium mb-1">Status</p>
-                          <x-student-status-badge :status="$student['account_status_label']" size="sm" />
+                        <x-student-status-badge :status="$student['account_status_label']" size="sm" />
                     </div>
                 </div>
 
@@ -115,14 +116,14 @@
                         View
                     </x-mary-button>
                     @can('Admin-access')
-                    <x-mary-button wire:click="editStudent({{ $student['id'] }})" class="btn-sm btn-ghost flex-1"
-                        icon="o-pencil">
-                        Edit
-                    </x-mary-button>
-                    <x-mary-button wire:click="confirmDelete({{ $student['id'] }})"
-                        class="btn-sm btn-ghost text-error flex-1" icon="o-trash">
-                        Delete
-                    </x-mary-button>
+                        <x-mary-button wire:click="editStudent({{ $student['id'] }})" class="btn-sm btn-ghost flex-1"
+                            icon="o-pencil">
+                            Edit
+                        </x-mary-button>
+                        <x-mary-button wire:click="confirmDelete({{ $student['id'] }})"
+                            class="btn-sm btn-ghost text-error flex-1" icon="o-trash">
+                            Delete
+                        </x-mary-button>
                     @endcan
                 </div>
             </div>
@@ -148,7 +149,7 @@
                     <div>
                         <div class="font-medium">{{ $row['name'] }}</div>
                         @if ($row['is_admin'])
-                            <span class="badge badge-info badge-xs">Admin</span>
+                            <span class="badge badge-info badge-xs">Librarian</span>
                         @endif
                     </div>
                 </div>
@@ -161,18 +162,20 @@
             @scope('cell_credit_score', $row)
                 @php
                     $allowedColors = ['success', 'warning', 'error'];
-                    $color = in_array($row['credit_score_color'], $allowedColors) ? $row['credit_score_color'] : 'success';
-                    $colorClass = match($color) {
+                    $color = in_array($row['credit_score_color'], $allowedColors)
+                        ? $row['credit_score_color']
+                        : 'success';
+                    $colorClass = match ($color) {
                         'success' => 'text-success',
                         'warning' => 'text-warning',
                         'error' => 'text-error',
-                        default => 'text-success'
+                        default => 'text-success',
                     };
                 @endphp
                 <div class="flex items-center gap-2">
                     <span class="font-bold text-lg {{ $colorClass }}">{{ $row['credit_score'] }}</span>
 
-            </div>
+                </div>
             @endscope
 
             @scope('cell_status', $row)
@@ -185,11 +188,11 @@
                 <div class="flex gap-1">
                     <x-mary-button wire:click="showTransactionDetails({{ $row['id'] }})" class="btn-sm btn-ghost"
                         icon="o-eye" tooltip="View Details" />
-                     @can('Admin-access')
-                    <x-mary-button wire:click="editStudent({{ $row['id'] }})" class="btn-sm btn-ghost" icon="o-pencil"
-                        tooltip="Edit Student" />
-                    <x-mary-button wire:click="confirmDelete({{ $row['id'] }})" class="btn-sm btn-ghost text-error"
-                        icon="o-trash" tooltip="Delete Student" />
+                    @can('Admin-access')
+                        <x-mary-button wire:click="editStudent({{ $row['id'] }})" class="btn-sm btn-ghost" icon="o-pencil"
+                            tooltip="Edit Student" />
+                        <x-mary-button wire:click="confirmDelete({{ $row['id'] }})" class="btn-sm btn-ghost text-error"
+                            icon="o-trash" tooltip="Delete Student" />
                     @endcan
                 </div>
             @endscope
@@ -264,8 +267,10 @@
                 <x-slot:actions>
                     <div class="sticky bottom-0 left-0 right-0 px-2 pb-4 bg-white/90 sm:bg-transparent z-50">
                         <div class="flex flex-row gap-2 w-full">
-                            <x-mary-button label="Close" @click="$wire.closeModal()" class="w-1/2 sm:w-auto" icon="o-x-mark" variant="outline" />
-                            <x-mary-button label="Transaction History" class="btn-primary w-1/2 sm:w-auto" icon="o-clock" />
+                            <x-mary-button label="Close" @click="$wire.closeModal()" class="w-1/2 sm:w-auto"
+                                icon="o-x-mark" variant="outline" />
+                            <x-mary-button label="Transaction History" class="btn-primary w-1/2 sm:w-auto"
+                                icon="o-clock" />
                         </div>
                     </div>
                 </x-slot:actions>
