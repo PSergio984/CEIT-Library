@@ -1,5 +1,12 @@
 <?php
 
+/**
+ * WARNING: Callers MUST eager-load inventory.academicPaper before dispatching this notification
+ * to avoid N+1 queries and ensure all fields are available.
+ *
+ * Defensive null checks are used for all dereferences and date formatting.
+ */
+
 namespace App\Notifications;
 
 use App\Models\BorrowTransaction;
@@ -45,22 +52,29 @@ class BorrowTransactionOverdue extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         $transaction = $this->transaction;
-        $paper = $transaction->inventory->academicPaper;
-        $overdueDuration = $transaction->overdue_duration;
+        $inventory = optional($transaction->inventory);
+        $paper = optional($inventory->academicPaper);
+        $overdueDuration = $transaction->overdue_duration ?? 'N/A';
 
-        $borrowDate = $transaction->time_in->format('F j, Y \a\t g:i A');
-        $dueDate = $transaction->expires_at->format('F j, Y \a\t g:i A');
+        $borrowDate = $transaction->time_in ? $transaction->time_in->format('F j, Y \a\t g:i A') : 'N/A';
+        $dueDate = $transaction->expires_at ? $transaction->expires_at->format('F j, Y \a\t g:i A') : 'N/A';
+
+        $firstName = $notifiable->first_name ?? 'User';
+        $title = $paper->title ?? '[Unknown Title]';
+        $paperType = $paper->paper_type ?? '[Unknown Type]';
+        $copyNumber = $inventory->copy_number ?? '[Unknown Copy]';
+        $catalogCode = $paper->catalog_code ?? '[Unknown Code]';
 
         return (new MailMessage)
             ->error()
             ->subject('⚠️ Overdue: Library Material Requires Immediate Return')
-            ->greeting('Hello ' . $notifiable->first_name . ',')
+            ->greeting('Hello ' . $firstName . ',')
             ->line('This is an urgent notice that your borrowed library material is now **overdue**.')
             ->line('**Material Details:**')
-            ->line('📚 **Title:** ' . $paper->title)
-            ->line('🏷️ **Type:** ' . $paper->paper_type)
-            ->line('📖 **Copy Number:** ' . $transaction->inventory->copy_number)
-            ->line('🆔 **Catalog Code:** ' . $paper->catalog_code)
+            ->line('📚 **Title:** ' . $title)
+            ->line('🏷️ **Type:** ' . $paperType)
+            ->line('📖 **Copy Number:** ' . $copyNumber)
+            ->line('🆔 **Catalog Code:** ' . $catalogCode)
             ->line('')
             ->line('**Transaction Details:**')
             ->line('📅 **Borrowed On:** ' . $borrowDate)
@@ -92,13 +106,24 @@ class BorrowTransactionOverdue extends Notification implements ShouldQueue
      */
     public function toArray(object $notifiable): array
     {
+        $transaction = $this->transaction;
+        $inventory = optional($transaction->inventory);
+        $paper = optional($inventory->academicPaper);
+
+        // Prefer direct property, fallback to inventory->academicPaper->id
+        $academicPaperId = $transaction->academic_paper_id ?? $paper->id ?? null;
+        $inventoryId = $transaction->inventory_id ?? $inventory->id ?? null;
+        $paperTitle = $paper->title ?? null;
+        $dueDate = $transaction->expires_at ? $transaction->expires_at->toDateTimeString() : null;
+        $overdueDuration = $transaction->overdue_duration ?? null;
+
         return [
-            'transaction_id' => $this->transaction->id,
-            'academic_paper_id' => $this->transaction->academic_paper_id,
-            'inventory_id' => $this->transaction->inventory_id,
-            'paper_title' => $this->transaction->inventory->academicPaper->title,
-            'due_date' => $this->transaction->expires_at->toDateTimeString(),
-            'overdue_duration' => $this->transaction->overdue_duration,
+            'transaction_id' => $transaction->id ?? null,
+            'academic_paper_id' => $academicPaperId,
+            'inventory_id' => $inventoryId,
+            'paper_title' => $paperTitle,
+            'due_date' => $dueDate,
+            'overdue_duration' => $overdueDuration,
             'type' => 'overdue_transaction',
         ];
     }

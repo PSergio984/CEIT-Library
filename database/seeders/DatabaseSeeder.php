@@ -158,7 +158,7 @@ class DatabaseSeeder extends Seeder
         $statuses = [
             'completed',    // completed transaction
             'started',      // active/ongoing transaction
-            'overdue',      // overduetransaction
+            'overdue',      // overdue transaction
         ];
 
         // Eager load copies to avoid N+1 queries

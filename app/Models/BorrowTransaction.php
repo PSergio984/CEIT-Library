@@ -186,18 +186,17 @@ class BorrowTransaction extends Model
         return $this->status === 'started' && $this->isExpired();
     }
 
-    // Calculate time remaining until due (returns Carbon\CarbonInterval or null)
-    public function getTimeRemainingAttribute()
+    /**
+     * Calculate time remaining until due (returns DateInterval or null)
+     *
+     * @return \DateInterval|null
+     */
+    public function getTimeRemainingAttribute(): ?\DateInterval
     {
         if ($this->status !== 'started' || !$this->expires_at) {
             return null;
         }
-
-        if ($this->isOverdue()) {
-            // Return negative interval for overdue duration
-            return now()->diff($this->expires_at);
-        }
-
+        // Always use $this->expires_at->diff(now()) for consistent direction
         return $this->expires_at->diff(now());
     }
 
@@ -219,6 +218,10 @@ class BorrowTransaction extends Model
         }
         if ($diff->i > 0 && $diff->d === 0) {
             $parts[] = $diff->i . ' ' . \Illuminate\Support\Str::plural('minute', $diff->i);
+        }
+
+        if (empty($parts)) {
+            return 'less than a minute overdue';
         }
 
         return implode(', ', $parts) . ' overdue';

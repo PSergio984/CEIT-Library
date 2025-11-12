@@ -98,5 +98,10 @@ Schedule::command('librarian:update-roles')->hourly();
 Schedule::command('librarian:update-roles')->dailyAt('00:00');
 
 // Schedule overdue transaction checks to run every hour
-// This will update 'started' transactions to 'expired' and send email notifications
-Schedule::command('transactions:check-overdue')->hourly();
+// This will update 'started' transactions to 'overdue' and send email notifications
+// Use withoutOverlapping and onOneServer to prevent concurrent/multi-server runs
+// Set lock timeout to 65 minutes (slightly longer than hourly interval) to avoid race window
+Schedule::command('transactions:check-overdue')
+    ->hourly()
+    ->withoutOverlapping(65) // Prevent overlap, 65 min lock timeout (covers full interval)
+    ->onOneServer(); // Only one instance across all servers

@@ -144,7 +144,25 @@
                                 </svg>
                                 <span class="font-medium">Copy #{{ $transaction['copy_number'] }}</span>
                                 <span class="text-base-content/50">•</span>
-                                <span class="font-mono text-xs tooltip" data-tip="Internal inventory tracking number">ID: {{ $transaction['inventory']->id }}</span>
+                                <div x-data="{ open: false }" class="relative">
+                                    <button type="button"
+                                        class="font-mono text-xs underline decoration-dotted focus:outline-none focus:ring-2 focus:ring-primary/60"
+                                        aria-describedby="tooltip-inventory-{{ $transaction['id'] }}"
+                                        @mouseenter="open = true" @mouseleave="open = false"
+                                        @focus="open = true" @blur="open = false"
+                                    >
+                                        ID: {{ $transaction['inventory']->id }}
+                                    </button>
+                                    <div
+                                        x-show="open"
+                                        id="tooltip-inventory-{{ $transaction['id'] }}"
+                                        role="tooltip"
+                                        class="absolute left-1/2 z-20 mt-2 w-56 -translate-x-1/2 rounded bg-base-200 px-3 py-2 text-xs text-base-content shadow-lg border border-base-300 transition-opacity duration-150"
+                                        x-cloak
+                                    >
+                                        Internal inventory tracking number
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -241,33 +259,10 @@
                                         </svg>
                                         Time Remaining
                                     </div>
-                                    <div 
-                                        x-data="{
-                                            expiresAt: new Date('{{ $transaction['expires_at']->toIso8601String() }}'),
-                                            hours: 0,
-                                            minutes: 0,
-                                            seconds: 0,
-                                            updateCountdown() {
-                                                const now = new Date();
-                                                const diff = this.expiresAt - now;
-                                                
-                                                if (diff <= 0) {
-                                                    this.hours = 0;
-                                                    this.minutes = 0;
-                                                    this.seconds = 0;
-                                                    return;
-                                                }
-                                                
-                                                this.hours = Math.floor(diff / (1000 * 60 * 60));
-                                                this.minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                                                this.seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                                            }
-                                        }"
-                                        x-init="
-                                            updateCountdown();
-                                            setInterval(() => updateCountdown(), 1000);
-                                        "
+                                    <div
+                                        x-data="countdownTimer(new Date('{{ $transaction['expires_at']->toIso8601String() }}'))"
                                         class="flex items-center gap-2"
+                                        aria-live="polite"
                                     >
                                         <div class="grid grid-flow-col gap-2 text-center auto-cols-max">
                                             <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
@@ -284,6 +279,46 @@
                                             </div>
                                         </div>
                                     </div>
+</div>
+<!-- Alpine global countdown store and helper -->
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.store('globalNow', {
+            now: new Date(),
+            start() {
+                setInterval(() => {
+                    this.now = new Date();
+                }, 1000); // update every second
+            }
+        });
+        Alpine.store('globalNow').start();
+
+        window.countdownTimer = (expiresAt) => ({
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            init() {
+                this.update();
+                Alpine.effect(() => {
+                    this.update();
+                });
+            },
+            update() {
+                const now = Alpine.store('globalNow').now;
+                const diff = expiresAt - now;
+                if (diff <= 0) {
+                    this.hours = 0;
+                    this.minutes = 0;
+                    this.seconds = 0;
+                    return;
+                }
+                this.hours = Math.floor(diff / (1000 * 60 * 60));
+                this.minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                this.seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            }
+        });
+    });
+</script>
                                 @endif
                             @else
                                 {{-- Duration for completed/other transactions --}}

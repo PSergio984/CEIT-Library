@@ -11,12 +11,16 @@
         default => 'badge-ghost',            // Default ghost badge
     };
     
-    // Display text - capitalize first letter only for better readability
-    $displayText = match($status) {
-        'started' => 'Borrowed',
-        'expired' => 'Overdue',
-        default => ucfirst($status),
-    };
+    // Display text - handle null/empty status with fallback
+    if (empty(trim((string)$status))) {
+        $displayText = 'Unknown';
+    } else {
+        $displayText = match($status) {
+            'started' => 'Borrowed',
+            'expired' => 'Overdue',
+            default => ucfirst($status),
+        };
+    }
 @endphp
 
 <div class="badge {{ $badgeClass }} badge-md font-semibold">

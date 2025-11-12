@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
  * 
  * This command runs hourly via Laravel's task scheduler to:
  * 1. Find all 'started' transactions that are past their expiration date
- * 2. Update their status to 'expired'
+ * 2. Update their status to 'overdue'
  * 3. Send overdue notification emails to affected users
  * 
  * Scheduled in: app/Console/Kernel.php
@@ -100,24 +100,45 @@ class CheckOverdueTransactions extends Command
         $failed = 0;
 
         foreach ($overdueTransactions as $transaction) {
+
             try {
-                // Update status to expired
-                $transaction->update(['status' => 'expired']);
-                $updated++;
+                \DB::transaction(function () use ($transaction, &$updated) {
+                    // Update status to overdue
+                    $transaction->update(['status' => 'overdue']);
+                    $updated++;
+                });
 
-                // Send notification to user
-                $transaction->user->notify(new BorrowTransactionOverdue($transaction));
-                $notified++;
-
-                // Log the action
-                Log::info('Overdue transaction processed', [
+                // Log the action after DB commit
+                \Log::info('Overdue transaction processed', [
                     'transaction_id' => $transaction->id,
                     'user_id' => $transaction->user_id,
                     'paper_id' => $transaction->academic_paper_id,
                 ]);
+
+                // Send notification to user (outside transaction)
+                if ($transaction->user) {
+                    try {
+                        $transaction->user->notify(new \App\Notifications\BorrowTransactionOverdue($transaction));
+                        $notified++;
+                    } catch (\Exception $notifyEx) {
+                        $failed++;
+                        \Log::error('Failed to send overdue notification', [
+                            'transaction_id' => $transaction->id,
+                            'user_id' => $transaction->user_id,
+                            'error' => $notifyEx->getMessage(),
+                        ]);
+                        $this->newLine();
+                        $this->error("Failed to notify user for transaction #{$transaction->id}: {$notifyEx->getMessage()}");
+                    }
+                } else {
+                    \Log::warning('Cannot notify user - user not found', [
+                        'transaction_id' => $transaction->id,
+                        'user_id' => $transaction->user_id,
+                    ]);
+                }
             } catch (\Exception $e) {
                 $failed++;
-                Log::error('Failed to process overdue transaction', [
+                \Log::error('Failed to process overdue transaction', [
                     'transaction_id' => $transaction->id,
                     'error' => $e->getMessage(),
                 ]);
