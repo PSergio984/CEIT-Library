@@ -116,7 +116,7 @@ class DatabaseSeeder extends Seeder
                 Inventory::factory()->create([
                     'academic_paper_id' => $academicPaper->id,
                     'copy_number' => $i,
-                    'status' => fake()->randomElement(['Available', 'Reserved', 'Unavailable']),
+                    'status' => fake()->randomElement(['Available', 'Unavailable']),
                 ]);
             }
         });
@@ -158,9 +158,7 @@ class DatabaseSeeder extends Seeder
         $statuses = [
             'completed',    // completed
             'started',      // active
-            'expired',      // overdue
-            'cancelled',    // cancelled
-            'requested',    // requested
+            'overdue',      // overdue
         ];
 
         // Eager load copies to avoid N+1 queries
