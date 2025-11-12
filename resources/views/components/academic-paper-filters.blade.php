@@ -72,7 +72,6 @@
             <button 
                 x-show="hasActiveFilters"
                 @click="$wire.clearFilters(); showFilters = true;"
-                x-transition
                 class="btn btn-ghost btn-sm sm:btn-md gap-2 whitespace-nowrap"
                 title="Clear all filters"
             >
@@ -88,12 +87,6 @@
     {{-- Collapsible Filter Section --}}
     <div 
         x-show="showFilters" 
-        x-transition:enter="transition ease-out duration-200"
-        x-transition:enter-start="opacity-0 transform -translate-y-2"
-        x-transition:enter-end="opacity-100 transform translate-y-0"
-        x-transition:leave="transition ease-in duration-150"
-        x-transition:leave-start="opacity-100 transform translate-y-0"
-        x-transition:leave-end="opacity-0 transform -translate-y-2"
         class="bg-base-200 rounded-lg p-4"
     >
         <div class="flex flex-wrap gap-2">
