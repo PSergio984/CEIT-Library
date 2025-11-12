@@ -168,16 +168,70 @@ class BorrowTransaction extends Model
         return null;
     }
 
-    // Check if session is expired
-    public function isExpired()
+    // Check if session is expired (overdue)
+    public function isExpired(): bool
     {
         return $this->expires_at->isPast();
     }
 
     // Check if session is active
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->status === 'started' && !$this->isExpired();
+    }
+
+    // Check if transaction is overdue (started but past expiration)
+    public function isOverdue(): bool
+    {
+        return $this->status === 'started' && $this->isExpired();
+    }
+
+    // Calculate time remaining until due (returns Carbon\CarbonInterval or null)
+    public function getTimeRemainingAttribute()
+    {
+        if ($this->status !== 'started' || !$this->expires_at) {
+            return null;
+        }
+
+        if ($this->isOverdue()) {
+            // Return negative interval for overdue duration
+            return now()->diff($this->expires_at);
+        }
+
+        return $this->expires_at->diff(now());
+    }
+
+    // Get overdue duration in human readable format
+    public function getOverdueDurationAttribute(): ?string
+    {
+        if (!$this->isOverdue()) {
+            return null;
+        }
+
+        $diff = now()->diff($this->expires_at);
+
+        $parts = [];
+        if ($diff->d > 0) {
+            $parts[] = $diff->d . ' ' . \Illuminate\Support\Str::plural('day', $diff->d);
+        }
+        if ($diff->h > 0) {
+            $parts[] = $diff->h . ' ' . \Illuminate\Support\Str::plural('hour', $diff->h);
+        }
+        if ($diff->i > 0 && $diff->d === 0) {
+            $parts[] = $diff->i . ' ' . \Illuminate\Support\Str::plural('minute', $diff->i);
+        }
+
+        return implode(', ', $parts) . ' overdue';
+    }
+
+    // Update status to expired if overdue
+    public function updateStatusIfOverdue(): bool
+    {
+        if ($this->isOverdue() && $this->status === 'started') {
+            $this->update(['status' => 'overdue']);
+            return true;
+        }
+        return false;
     }
 
     // Find session by token (for QR scanning)

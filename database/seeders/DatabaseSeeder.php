@@ -154,11 +154,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create at least 5 borrow transactions for each status for the specific student
-        // Use only allowed enum values for status
+        // Use only allowed enum values for status: ['started', 'completed', 'overdue']
         $statuses = [
-            'completed',    // completed
-            'started',      // active
-            'overdue',      // overdue
+            'completed',    // completed transaction
+            'started',      // active/ongoing transaction
+            'overdue',      // overduetransaction
         ];
 
         // Eager load copies to avoid N+1 queries

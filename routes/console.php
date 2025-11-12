@@ -96,3 +96,7 @@ Schedule::command('attendance:check-missing-timeouts')->dailyAt('00:30');
 // Schedule librarian role updates to run every hour and at midnight
 Schedule::command('librarian:update-roles')->hourly();
 Schedule::command('librarian:update-roles')->dailyAt('00:00');
+
+// Schedule overdue transaction checks to run every hour
+// This will update 'started' transactions to 'expired' and send email notifications
+Schedule::command('transactions:check-overdue')->hourly();

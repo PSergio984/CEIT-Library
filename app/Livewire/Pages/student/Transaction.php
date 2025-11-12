@@ -21,6 +21,10 @@ class Transaction extends Component
     public int $perPage = 10;
 
 
+    /**
+     * Get distinct paper types for filter dropdown
+     * Cached per-request to avoid multiple queries
+     */
     #[Computed]
     public function paperTypes(): array
     {
@@ -29,7 +33,10 @@ class Transaction extends Component
             ->join('inventories', 'borrow_transactions.inventory_id', '=', 'inventories.id')
             ->join('academic_papers', 'inventories.academic_paper_id', '=', 'academic_papers.id')
             ->distinct()
+            ->orderBy('academic_papers.paper_type')
             ->pluck('academic_papers.paper_type')
+            ->filter()
+            ->values()
             ->toArray();
     }
 
@@ -66,24 +73,54 @@ class Transaction extends Component
         return $query;
     }
 
+    /**
+     * Get paginated transactions with computed properties
+     * ✅ Uses computed property (not stored in public state)
+     * ✅ Eager loads relationships (prevents N+1 queries)
+     * ✅ Auto-calculates overdue status for display
+     */
     #[Computed]
     public function transactions()
     {
         return $this->getTransactionsQuery()
             ->paginate($this->perPage)
             ->through(function ($transaction) {
+                // Auto-calculate actual status (check if overdue)
+                $displayStatus = $transaction->status;
+                $isOverdue = false;
+                $timeRemaining = null;
+                $overdueDuration = null;
+
+                if ($transaction->status === 'started') {
+                    if ($transaction->isOverdue()) {
+                        // Transaction is technically overdue but hasn't been updated yet
+                        $displayStatus = 'expired';
+                        $isOverdue = true;
+                        $overdueDuration = $transaction->overdue_duration;
+                    } else {
+                        // Still active, calculate time remaining
+                        $timeRemaining = $transaction->time_remaining;
+                    }
+                }
+
                 return [
                     'id' => $transaction->id,
                     'title' => $transaction->inventory->academicPaper->title ?? 'N/A',
                     'paper_type' => $transaction->inventory->academicPaper->paper_type ?? 'N/A',
+                    'department' => $transaction->inventory->academicPaper->department ?? 'N/A',
                     'time_in' => $transaction->time_in,
                     'time_out' => $transaction->time_out,
-                    'status' => $transaction->status,
+                    'status' => $displayStatus, // Display overdue status even if not updated yet
+                    'actual_status' => $transaction->status, // Store actual DB status
+                    'is_overdue' => $isOverdue,
+                    'time_remaining' => $timeRemaining,
+                    'overdue_duration' => $overdueDuration,
                     'duration' => $this->formatDuration($transaction),
                     'notes' => $transaction->notes ?? 'No notes',
                     'expires_at' => $transaction->expires_at,
                     'academic_paper' => $transaction->inventory->academicPaper,
                     'inventory' => $transaction->inventory,
+                    'copy_number' => $transaction->inventory->copy_number ?? 1,
                 ];
             });
     }
