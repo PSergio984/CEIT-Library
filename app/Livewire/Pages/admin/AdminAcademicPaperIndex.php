@@ -125,9 +125,12 @@ class AdminAcademicPaperIndex extends AdminComponent
             $paginated = $this->buildAcademicPapersQuery()->paginate($this->perPage, pageName: 'academic-papers-index');
         }
 
-        // Transform items to include status as a direct property
+        // Transform items to include status and borrowability as direct properties
         $paginated->getCollection()->transform(function ($paper) {
             $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
+            // Check if any copies are borrowed - if so, the paper cannot be deleted
+            $paper->has_borrowed_copies = $paper->copies->contains('status', 'Unavailable');
+            $paper->can_delete = !$paper->has_borrowed_copies;
             return $paper;
         });
 
@@ -322,9 +325,24 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         try {
-            $academicPaper = AcademicPaper::findOrFail($deleteId);
+            $academicPaper = AcademicPaper::with('copies')->findOrFail($deleteId);
 
-            // Delete the paper
+            // Check if any copies are borrowed (status = 'Unavailable')
+            $borrowedCopies = $academicPaper->copies()->where('status', 'Unavailable')->count();
+
+            if ($borrowedCopies > 0) {
+                $this->error(
+                    "Cannot delete this academic paper. {$borrowedCopies} " .
+                        ($borrowedCopies === 1 ? 'copy is' : 'copies are') .
+                        ' currently borrowed.',
+                    'Deletion Not Allowed'
+                );
+                $this->deleteId = null;
+                $this->dispatch('close-delete-modal');
+                return;
+            }
+
+            // Delete the paper (will cascade delete available copies)
             $academicPaper->delete();
 
             // Invalidate ALL related caches

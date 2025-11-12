@@ -116,11 +116,14 @@
                             </button>
                             <button x-data="{ loading: false }"
                                 @click="
-                                loading = true;
-                                $wire.confirmDelete({{ $paper->id }}).finally(() => loading = false)
+                                @if ($paper->can_delete)
+                                    loading = true;
+                                    $wire.confirmDelete({{ $paper->id }}).finally(() => loading = false)
+                                @endif
                             "
-                                :disabled="loading"
-                                class="btn btn-xs sm:btn-sm btn-ghost text-error flex-1 min-w-[80px]">
+                                :disabled="loading || {{ $paper->can_delete ? 'false' : 'true' }}"
+                                class="btn btn-xs sm:btn-sm btn-ghost {{ $paper->can_delete ? 'text-error' : 'text-base-content/40' }} flex-1 min-w-[80px]"
+                                @if(!$paper->can_delete) title="Cannot delete - paper has borrowed copies" @endif>
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                     stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
                                     <path stroke-linecap="round" stroke-linejoin="round"
@@ -226,11 +229,14 @@
 
                                 <button x-data="{ loading: false }"
                                     @click="
-                            loading = true;
-                            $wire.confirmDelete({{ $row->id }}).finally(() => loading = false)
+                            @if ($row->can_delete)
+                                loading = true;
+                                $wire.confirmDelete({{ $row->id }}).finally(() => loading = false)
+                            @endif
                         "
-                                    :disabled="loading" class="btn btn-sm btn-ghost text-error tooltip"
-                                    data-tip="Delete">
+                                    :disabled="loading || {{ $row->can_delete ? 'false' : 'true' }}" 
+                                    class="btn btn-sm btn-ghost {{ $row->can_delete ? 'text-error' : 'text-base-content/40' }} tooltip"
+                                    data-tip="{{ $row->can_delete ? 'Delete' : 'Cannot delete - has borrowed copies' }}">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                                         stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
                                         <path stroke-linecap="round" stroke-linejoin="round"

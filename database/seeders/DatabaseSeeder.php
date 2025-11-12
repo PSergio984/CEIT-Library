@@ -345,7 +345,7 @@ class DatabaseSeeder extends Seeder
                     ]);
 
                     // Mark the copy as reserved
-                    $availableCopy->update(['status' => 'Reserved']);
+                    $availableCopy->update(['status' => 'unavailable']);
                 }
             }
         }
@@ -580,6 +580,5 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
         $this->command->info('- 3 Main Headers for Rules and Regulations with 3-5 rules each');
-        $this->command->info('- Sample violations, credit scores, and session history');
     }
 }
