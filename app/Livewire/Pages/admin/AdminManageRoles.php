@@ -83,6 +83,14 @@ class AdminManageRoles extends AdminComponent
             return;
         }
 
+        // Only super admins can promote to admin or super_admin role
+        if (in_array($newRole->name, [Role::ADMIN, Role::SUPER_ADMIN])) {
+            if (!Auth::user()->isSuperAdmin()) {
+                $this->error('Only Super Admins can promote users to Admin or Super Admin roles!');
+                return;
+            }
+        }
+
         $user->update(['role_id' => $this->selectedRoleId]);
 
         $this->success("Role updated: {$user->first_name} {$user->last_name} is now a {$newRole->display_name}");

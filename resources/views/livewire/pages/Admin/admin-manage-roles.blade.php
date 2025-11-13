@@ -48,7 +48,7 @@
             </div>
 
             <!-- Role Statistics -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 @foreach ($roles as $role)
                     <div class="bg-slate-800/70 backdrop-blur-sm rounded-lg p-4 border border-slate-600">
                         <div class="flex items-center justify-between">
@@ -61,10 +61,12 @@
                             <div
                                 class="p-3 rounded-full
                                 {{ $role->name === 'super_admin' ? 'bg-red-500/20' : '' }}
+                                {{ $role->name === 'admin' ? 'bg-purple-500/20' : '' }}
                                 {{ $role->name === 'librarian' ? 'bg-blue-500/20' : '' }}
                                 {{ $role->name === 'student' ? 'bg-green-500/20' : '' }}">
                                 <svg class="w-6 h-6
                                     {{ $role->name === 'super_admin' ? 'text-red-400' : '' }}
+                                    {{ $role->name === 'admin' ? 'text-purple-400' : '' }}
                                     {{ $role->name === 'librarian' ? 'text-blue-400' : '' }}
                                     {{ $role->name === 'student' ? 'text-green-400' : '' }}"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,6 +112,7 @@
                                     <span
                                         class="px-3 py-1 rounded-full text-xs font-semibold
                                         {{ $user->role->name === 'super_admin' ? 'bg-red-500/20 text-red-400' : '' }}
+                                        {{ $user->role->name === 'admin' ? 'bg-purple-500/20 text-purple-400' : '' }}
                                         {{ $user->role->name === 'librarian' ? 'bg-blue-500/20 text-blue-400' : '' }}
                                         {{ $user->role->name === 'student' ? 'bg-green-500/20 text-green-400' : '' }}">
                                         {{ $user->role->display_name }}
@@ -175,27 +178,44 @@
                                 </label>
                                 <div class="space-y-2">
                                     @foreach ($roles as $role)
-                                        <label
-                                            class="flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition
-                                            {{ $selectedRoleId == $role->id ? 'bg-blue-900/30 border-2 border-blue-500' : 'bg-slate-800/50 border border-slate-600 hover:bg-slate-600/30' }}">
-                                            <input type="radio" wire:model.live="selectedRoleId"
-                                                value="{{ $role->id }}"
-                                                class="mt-1 text-blue-500 focus:ring-blue-500 bg-slate-700 border-slate-500">
-                                            <div class="flex-1">
-                                                <div class="flex items-center gap-2">
-                                                    <span
-                                                        class="font-medium text-white">{{ $role->display_name }}</span>
-                                                    <span
-                                                        class="px-2 py-0.5 rounded text-xs font-semibold
-                                                        {{ $role->name === 'super_admin' ? 'bg-red-500/20 text-red-400' : '' }}
-                                                        {{ $role->name === 'librarian' ? 'bg-blue-500/20 text-blue-400' : '' }}
-                                                        {{ $role->name === 'student' ? 'bg-green-500/20 text-green-400' : '' }}">
-                                                        {{ $role->name }}
-                                                    </span>
+                                        @php
+                                            // Only super admins can assign admin and super_admin roles
+                                            $canAssignRole =
+                                                Auth::user()->isSuperAdmin() ||
+                                                !in_array($role->name, ['admin', 'super_admin']);
+                                        @endphp
+
+                                        @if ($canAssignRole)
+                                            <label
+                                                class="flex items-start space-x-3 p-3 rounded-lg cursor-pointer transition
+                                                {{ $selectedRoleId == $role->id ? 'bg-blue-900/30 border-2 border-blue-500' : 'bg-slate-800/50 border border-slate-600 hover:bg-slate-600/30' }}">
+                                                <input type="radio" wire:model.live="selectedRoleId"
+                                                    value="{{ $role->id }}"
+                                                    class="mt-1 text-blue-500 focus:ring-blue-500 bg-slate-700 border-slate-500">
+                                                <div class="flex-1">
+                                                    <div class="flex items-center gap-2">
+                                                        <span
+                                                            class="font-medium text-white">{{ $role->display_name }}</span>
+                                                        <span
+                                                            class="px-2 py-0.5 rounded text-xs font-semibold
+                                                            {{ $role->name === 'super_admin' ? 'bg-red-500/20 text-red-400' : '' }}
+                                                            {{ $role->name === 'admin' ? 'bg-purple-500/20 text-purple-400' : '' }}
+                                                            {{ $role->name === 'librarian' ? 'bg-blue-500/20 text-blue-400' : '' }}
+                                                            {{ $role->name === 'student' ? 'bg-green-500/20 text-green-400' : '' }}">
+                                                            {{ $role->name }}
+                                                        </span>
+                                                        @if (in_array($role->name, ['admin', 'super_admin']))
+                                                            <span
+                                                                class="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded">
+                                                                Super Admin Only
+                                                            </span>
+                                                        @endif
+                                                    </div>
+                                                    <p class="text-xs text-slate-400 mt-1">{{ $role->description }}
+                                                    </p>
                                                 </div>
-                                                <p class="text-xs text-slate-400 mt-1">{{ $role->description }}</p>
-                                            </div>
-                                        </label>
+                                            </label>
+                                        @endif
                                     @endforeach
                                 </div>
                                 @error('selectedRoleId')

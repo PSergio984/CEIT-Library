@@ -16,6 +16,7 @@ class Role extends Model
     // Role constants
     const STUDENT = 'student';
     const LIBRARIAN = 'librarian';
+    const ADMIN = 'admin';
     const SUPER_ADMIN = 'super_admin';
 
     /**
@@ -43,6 +44,14 @@ class Role extends Model
     }
 
     /**
+     * Check if this role is admin
+     */
+    public function isAdmin(): bool
+    {
+        return $this->name === self::ADMIN;
+    }
+
+    /**
      * Check if this role is super admin
      */
     public function isSuperAdmin(): bool
@@ -51,10 +60,18 @@ class Role extends Model
     }
 
     /**
-     * Check if this role has admin privileges (librarian or super_admin)
+     * Check if this role has admin privileges (admin or super_admin)
      */
     public function hasAdminAccess(): bool
     {
-        return in_array($this->name, [self::LIBRARIAN, self::SUPER_ADMIN]);
+        return in_array($this->name, [self::ADMIN, self::SUPER_ADMIN]);
+    }
+
+    /**
+     * Check if this role has full admin access (librarian, admin or super_admin)
+     */
+    public function hasLibrarianOrAdminAccess(): bool
+    {
+        return in_array($this->name, [self::LIBRARIAN, self::ADMIN, self::SUPER_ADMIN]);
     }
 }
