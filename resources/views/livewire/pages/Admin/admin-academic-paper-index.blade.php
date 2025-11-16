@@ -192,10 +192,10 @@
         </div>
 
         {{-- Desktop Table View (for screens 1280px and wider) --}}
-        <div class="hidden xl:block">
+        <div class="hidden xl:block overflow-x-auto">
             <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy" :per-page="$perPage"
                 :per-page-values="[5, 10, 25, 50]" striped row-class="hover:bg-base-200"
-                header-class="text-base-content bg-base-200">
+                header-class="text-base-content bg-base-200" style="min-width: 100%;">
                     <x-slot:empty>
                         <div class="text-center py-12">
                             <x-mary-icon name="o-document-magnifying-glass"

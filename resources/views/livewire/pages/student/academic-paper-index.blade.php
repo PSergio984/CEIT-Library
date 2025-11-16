@@ -125,7 +125,7 @@
         </div>
 
         {{-- Desktop Table View (for screens 1280px and wider) --}}
-        <div class="hidden xl:block">
+        <div class="hidden xl:block overflow-hidden">
             <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy"
                 :per-page="$perPage" :per-page-values="[5, 10, 25, 50]"
                 striped

@@ -106,16 +106,23 @@
 
             {{-- Authors Field --}}
             <div class="mb-6">
-                <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_names" @endif>
-                    Authors @if($isEditing) <span wire:dirty wire:target="form.author_names" class="text-orange-400">*</span> @endif
+                <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_ids" @endif>
+                    Authors @if($isEditing) <span wire:dirty wire:target="form.author_ids" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-tags 
-                    wire:model="form.author_names" 
-                    placeholder="Enter author names and hit enter" 
-                    icon="o-user-group" 
+                <x-mary-choices 
+                    wire:model="form.author_ids" 
+                    searchable 
                     clearable
-                    hint="Press Enter after typing each author name"
-                    error-field="form.author_names" />
+                    search-function="searchAuthors" 
+                    icon="o-user-group" 
+                    min-chars="0" 
+                    debounce="300ms" 
+                    :options="$form->author_options ?? []" 
+                    @change="$refs.authorChoices && $refs.authorChoices.reset && $refs.authorChoices.reset()"
+                    x-ref="authorChoices"
+                    hint="Start typing to search for authors" 
+                    placeholder="Select Authors" 
+                    error-field="form.author_ids" />
             </div>
 
             {{-- Number of Copies Field --}}

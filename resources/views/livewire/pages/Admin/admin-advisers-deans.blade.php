@@ -1,6 +1,6 @@
 <div class="p-6">
-    <x-mary-header title="Manage Advisers & Deans" 
-        subtitle="Manage research advisers, technical advisers, and deans for academic papers" 
+    <x-mary-header title="Manage Advisers, Deans & Authors" 
+        subtitle="Manage research advisers, technical advisers, deans, and authors for academic papers" 
         separator />
 
     {{-- Stats Cards --}}
@@ -37,6 +37,11 @@
             wire:click="$set('activeTab', 'deans')">
             Deans
         </a>
+        <a role="tab" 
+            class="tab {{ $activeTab === 'authors' ? 'tab-active' : '' }}" 
+            wire:click="$set('activeTab', 'authors')">
+            Authors
+        </a>
     </div>
 
     {{-- Search and Create --}}
@@ -53,7 +58,7 @@
                 wire:click="openCreateModal" 
                 class="btn-primary w-full sm:w-auto" 
                 icon="o-plus">
-                Add {{ ucfirst($activeTab === 'deans' ? 'Dean' : 'Adviser') }}
+                Add {{ ucfirst($activeTab === 'deans' ? 'Dean' : ($activeTab === 'authors' ? 'Author' : 'Adviser')) }}
             </x-mary-button>
         </div>
     </div>
@@ -106,7 +111,7 @@
                     @if($search)
                         No entries match your search criteria.
                     @else
-                        Add your first {{ $activeTab === 'deans' ? 'dean' : 'adviser' }} to get started.
+                        Add your first {{ $activeTab === 'deans' ? 'dean' : ($activeTab === 'authors' ? 'author' : 'adviser') }} to get started.
                     @endif
                 </p>
                 @if($search)
@@ -170,12 +175,12 @@
         <div class="text-center py-12">
             <x-mary-icon name="o-user-group" class="w-16 h-16 mx-auto text-base-content/30 mb-4" />
             <h3 class="text-lg font-medium mb-2">No entries found</h3>
-            <p class="text-base-content/70">Add your first {{ $activeTab === 'deans' ? 'dean' : 'adviser' }} to get started.</p>
+            <p class="text-base-content/70">Add your first {{ $activeTab === 'deans' ? 'dean' : ($activeTab === 'authors' ? 'author' : 'adviser') }} to get started.</p>
         </div>
     @endif
 
     {{-- Create/Edit Modal --}}
-    <x-mary-modal wire:model="showCreateModal" title="Add {{ ucfirst($activeTab === 'deans' ? 'Dean' : 'Adviser') }}" class="backdrop-blur">
+    <x-mary-modal wire:model="showCreateModal" title="Add {{ ucfirst($activeTab === 'deans' ? 'Dean' : ($activeTab === 'authors' ? 'Author' : 'Adviser')) }}" class="backdrop-blur">
         <x-mary-input label="Name" wire:model="name" placeholder="Enter full name" />
         
         <x-slot:actions>
@@ -184,7 +189,7 @@
         </x-slot:actions>
     </x-mary-modal>
 
-    <x-mary-modal wire:model="showEditModal" title="Edit {{ ucfirst($activeTab === 'deans' ? 'Dean' : 'Adviser') }}" class="backdrop-blur">
+    <x-mary-modal wire:model="showEditModal" title="Edit {{ ucfirst($activeTab === 'deans' ? 'Dean' : ($activeTab === 'authors' ? 'Author' : 'Adviser')) }}" class="backdrop-blur">
         <x-mary-input label="Name" wire:model="name" placeholder="Enter full name" />
         
         <x-slot:actions>

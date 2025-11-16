@@ -10,13 +10,13 @@ use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
-#[Title('Manage Advisers & Deans')]
+#[Title('Manage Advisers, Deans & Authors')]
 #[Lazy]
 class AdminAdvisersDeans extends AdminComponent
 {
     use WithPagination, Toast;
 
-    // Active tab: 'research', 'technical', or 'deans'
+    // Active tab: 'research', 'technical', 'deans', or 'authors'
     public string $activeTab = 'research';
 
     // Search and filters
@@ -46,7 +46,14 @@ class AdminAdvisersDeans extends AdminComponent
     #[Computed(persist: true, seconds: 5)]
     public function entries()
     {
+        // Validate table name before use
+        $allowedTables = ['research_advisers', 'technical_advisers', 'deans', 'authors'];
         $table = $this->getTableName();
+
+        if (!in_array($table, $allowedTables, true)) {
+            throw new \InvalidArgumentException('Invalid table name');
+        }
+
         $relatedColumn = $this->getRelatedColumn();
 
         // Whitelist allowed columns and directions
@@ -61,6 +68,27 @@ class AdminAdvisersDeans extends AdminComponent
         $requestedDirection = strtolower($this->sortBy['direction'] ?? 'asc');
         $direction = in_array($requestedDirection, $allowedDirections, true) ? $requestedDirection : 'asc';
 
+        // Use parameter binding for search pattern
+        $searchPattern = $this->search ? '%' . $this->search . '%' : null;
+
+        // Authors use a pivot table, so join differently
+        if ($this->activeTab === 'authors') {
+            return DB::table($table)
+                ->select([
+                    "{$table}.id",
+                    "{$table}.name",
+                    "{$table}.created_at",
+                    DB::raw("COUNT(academic_paper_authors.academic_paper_id) as papers_count")
+                ])
+                ->leftJoin('academic_paper_authors', 'academic_paper_authors.author_id', '=', "{$table}.id")
+                ->when($searchPattern, function ($query) use ($table, $searchPattern) {
+                    $query->where("{$table}.name", 'like', $searchPattern);
+                })
+                ->groupBy("{$table}.id", "{$table}.name", "{$table}.created_at")
+                ->orderBy($column, $direction)
+                ->paginate(20);
+        }
+
         return DB::table($table)
             ->select([
                 "{$table}.id",
@@ -69,8 +97,8 @@ class AdminAdvisersDeans extends AdminComponent
                 DB::raw("COUNT(academic_papers.id) as papers_count")
             ])
             ->leftJoin('academic_papers', "academic_papers.{$relatedColumn}", '=', "{$table}.id")
-            ->when($this->search, function ($query) use ($table) {
-                $query->where("{$table}.name", 'like', "%{$this->search}%");
+            ->when($searchPattern, function ($query) use ($table, $searchPattern) {
+                $query->where("{$table}.name", 'like', $searchPattern);
             })
             ->groupBy("{$table}.id", "{$table}.name", "{$table}.created_at")
             ->orderBy($column, $direction)
@@ -90,6 +118,8 @@ class AdminAdvisersDeans extends AdminComponent
             'research' => 'research_advisers',
             'technical' => 'technical_advisers',
             'deans' => 'deans',
+            'authors' => 'authors',
+            default => 'research_advisers',
         };
     }
 
@@ -99,6 +129,8 @@ class AdminAdvisersDeans extends AdminComponent
             'research' => 'research_adviser_id',
             'technical' => 'technical_adviser_id',
             'deans' => 'dean_id',
+            'authors' => 'author_id',
+            default => 'research_adviser_id',
         };
     }
 
@@ -119,7 +151,6 @@ class AdminAdvisersDeans extends AdminComponent
     {
         $this->reset(['name', 'editingId']);
         $this->showCreateModal = true;
-        $this->skipRender();
     }
 
     public function openEditModal(int $id)
@@ -134,7 +165,6 @@ class AdminAdvisersDeans extends AdminComponent
         $this->editingId = $id;
         $this->name = $entry->name;
         $this->showEditModal = true;
-        $this->skipRender();
     }
 
     public function save()
@@ -168,20 +198,29 @@ class AdminAdvisersDeans extends AdminComponent
     {
         $this->deleteId = $id;
         $this->showDeleteModal = true;
-        $this->skipRender();
     }
 
-    public function delete()
+    public function delete(): void
     {
-        if (!$this->deleteId) return;
+        if (!$this->deleteId) {
+            $this->closeModals();
+            return;
+        }
 
         $table = $this->getTableName();
         $relatedColumn = $this->getRelatedColumn();
 
         // Check if entry is being used
-        $inUse = DB::table('academic_papers')
-            ->where($relatedColumn, $this->deleteId)
-            ->exists();
+        if ($this->activeTab === 'authors') {
+            // Authors use a pivot table
+            $inUse = DB::table('academic_paper_author')
+                ->where('author_id', $this->deleteId)
+                ->exists();
+        } else {
+            $inUse = DB::table('academic_papers')
+                ->where($relatedColumn, $this->deleteId)
+                ->exists();
+        }
 
         if ($inUse) {
             $this->error('Cannot delete: This entry is being used by academic papers');
@@ -203,7 +242,6 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showEditModal = false;
         $this->showDeleteModal = false;
         $this->reset(['name', 'editingId', 'deleteId']);
-        $this->skipRender();
     }
 
     private function clearCaches()

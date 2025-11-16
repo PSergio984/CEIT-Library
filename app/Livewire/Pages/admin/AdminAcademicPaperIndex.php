@@ -73,11 +73,15 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     private ?array $cachedDeans = null;
 
+    private ?array $cachedAuthors = null;
+
     private ?string $lastResearchAdviserSearch = null;
 
     private ?string $lastTechnicalAdviserSearch = null;
 
     private ?string $lastDeanSearch = null;
+
+    private ?string $lastAuthorSearch = null;
 
     // Flag to prevent duplicate cache queries
     private bool $researchAdvisersLoaded = false;
@@ -85,6 +89,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     private bool $technicalAdvisersLoaded = false;
 
     private bool $deansLoaded = false;
+
+    private bool $authorsLoaded = false;
 
     public function mount(?string $dept = null)
     {
@@ -94,6 +100,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->form->research_adviser_options = collect();
         $this->form->technical_adviser_options = collect();
         $this->form->dean_options = collect();
+        $this->form->author_options = collect();
         $this->headers = [
             ['key' => 'id', 'label' => '#'],
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
@@ -432,6 +439,9 @@ class AdminAcademicPaperIndex extends AdminComponent
         if ($this->cachedDeans === null) {
             $this->searchDeans('');
         }
+        if ($this->cachedAuthors === null) {
+            $this->searchAuthors('');
+        }
 
         $this->formDrawer = true;
     }
@@ -470,6 +480,9 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
         if ($this->cachedDeans === null) {
             $this->searchDeans('');
+        }
+        if ($this->cachedAuthors === null) {
+            $this->searchAuthors('');
         }
 
         $this->formDrawer = true;
@@ -660,6 +673,61 @@ class AdminAcademicPaperIndex extends AdminComponent
         return $this->cachedTechnicalAdvisers;
     }
 
+    // Search method for authors with caching
+    public function searchAuthors(string $value = '')
+    {
+        // Request-level caching for repeated searches within the same request
+        if ($this->lastAuthorSearch === $value && $this->cachedAuthors !== null && $this->authorsLoaded) {
+            return $this->cachedAuthors;
+        }
+
+        $this->lastAuthorSearch = $value;
+
+        // Get currently selected author IDs to ensure they're always included
+        $selectedIds = $this->form->author_ids ?? [];
+
+        // Use persistent cache with short TTL for search results
+        $cacheKey = 'author_search_' . md5(strtolower(trim($value))) . '_' . md5(json_encode($selectedIds));
+
+        $results = Cache::remember($cacheKey, 300, function () use ($value, $selectedIds) {
+            $query = \App\Models\Author::query()
+                ->select('id', 'name')
+                ->orderBy('name');
+
+            if (!empty($value)) {
+                // Search by name OR include already selected authors
+                $query->where(function ($q) use ($value, $selectedIds) {
+                    $q->where('name', 'like', '%' . $value . '%');
+                    if (!empty($selectedIds)) {
+                        $q->orWhereIn('id', $selectedIds);
+                    }
+                });
+            } elseif (!empty($selectedIds)) {
+                // If no search value but have selected IDs, prioritize them
+                $query->whereIn('id', $selectedIds);
+            }
+
+            return $query->limit(50)->get();
+        });
+
+        // Transform to MaryUI format
+        $options = $results->map(function ($author) {
+            return [
+                'id' => $author->id,
+                'name' => $author->name,
+            ];
+        });
+
+        // Update form options
+        $this->form->author_options = $options;
+
+        // Cache in memory for this request
+        $this->cachedAuthors = $options->toArray();
+        $this->authorsLoaded = true;
+
+        return $this->cachedAuthors;
+    }
+
     // Search method for deans with caching
     public function searchDeans(string $value = '')
     {
@@ -748,6 +816,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         Cache::forget('research_advisers_all');
         Cache::forget('technical_advisers_all');
         Cache::forget('deans_all');
+        Cache::forget('authors_all');
+        $this->cachedAuthors = null;
 
         // Increment version token to invalidate all academic papers caches
         $this->incrementAcademicPapersVersion();
@@ -761,12 +831,15 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->cachedResearchAdvisers = null;
         $this->cachedTechnicalAdvisers = null;
         $this->cachedDeans = null;
+        $this->cachedAuthors = null;
         $this->lastResearchAdviserSearch = null;
         $this->lastTechnicalAdviserSearch = null;
         $this->lastDeanSearch = null;
+        $this->lastAuthorSearch = null;
         $this->researchAdvisersLoaded = false;
         $this->technicalAdvisersLoaded = false;
         $this->deansLoaded = false;
+        $this->authorsLoaded = false;
     }
 
     /**

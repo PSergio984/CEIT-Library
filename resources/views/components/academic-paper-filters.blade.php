@@ -117,7 +117,7 @@
             
             {{-- Year From Filter --}}
             <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full">
-                <option value="">Year From</option>
+                <option value="" disabled selected>Year From</option>
                 <template x-for="year in validYearsFrom" :key="year">
                     <option :value="year" x-text="year"></option>
                 </template>
@@ -125,7 +125,7 @@
             
             {{-- Year To Filter --}}
             <select wire:model.live="yearToFilter" class="select select-bordered select-sm sm:select-md w-full">
-                <option value="">Year To</option>
+                <option value="" disabled selected>Year To</option>
                 <template x-for="year in validYearsTo" :key="year">
                     <option :value="year" x-text="year"></option>
                 </template>
