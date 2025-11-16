@@ -9,6 +9,8 @@ tools:
         "new",
         "runCommands",
         "runTasks",
+        "awesome-copilot/*",
+        "context7/*",
         "herd/*",
         "laravel-boost/*",
         "usages",

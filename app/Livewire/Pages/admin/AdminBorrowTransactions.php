@@ -8,35 +8,48 @@ use App\Models\Inventory;
 use App\Models\User;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
-use Livewire\Attributes\Title;
 
 #[Title('Borrow Logs')]
+#[Lazy]
 class AdminBorrowTransactions extends AdminComponent
 {
-    use WithPagination, Toast, CreatesQrCanonicalMessage;
+    use CreatesQrCanonicalMessage, Toast, WithPagination;
 
     public $perPage = 20;
+
     public $search = '';
+
     public $paperTypeFilter = '';
+
     public $statusFilter = '';
+
     public $selectedDate = '';
 
     // Edit modal properties
     public $showEditModal = false;
+
     public $editingTransactionId = null;
+
     public $editStatus = '';
+
     public $editTimeOut = '';
 
     // QR Scanner modal properties
     public $showQrModal = false;
+
     public $scannedQrData = '';
+
     public $isProcessingQr = false;
 
     // Borrow confirmation modal properties
     public $showConfirmBorrowModal = false;
+
     public $pendingBorrowData = [];
+
     public $borrowNotes = '';
 
     // MaryUI table headers - Optimized for responsive display
@@ -66,7 +79,7 @@ class AdminBorrowTransactions extends AdminComponent
     {
         return BorrowTransaction::with([
             'user',
-            'inventory.academicPaper'
+            'inventory.academicPaper',
         ])
             ->when($this->search, function ($query) {
                 $query->where(function ($query) {
@@ -155,8 +168,9 @@ class AdminBorrowTransactions extends AdminComponent
     {
         $transaction = BorrowTransaction::find($transactionId);
 
-        if (!$transaction) {
-            $this->error("Transaction not found!");
+        if (! $transaction) {
+            $this->error('Transaction not found!');
+
             return;
         }
 
@@ -183,13 +197,15 @@ class AdminBorrowTransactions extends AdminComponent
 
         $transaction = BorrowTransaction::find($this->editingTransactionId);
 
-        if (!$transaction) {
-            $this->error("Transaction not found!");
+        if (! $transaction) {
+            $this->error('Transaction not found!');
+
             return;
         }
 
         if ($this->editStatus === 'completed' && empty($this->editTimeOut)) {
-            $this->error("Time Out is required when status is completed!");
+            $this->error('Time Out is required when status is completed!');
+
             return;
         }
 
@@ -250,10 +266,11 @@ class AdminBorrowTransactions extends AdminComponent
                 \Log::info('Encrypted QR detected, decrypting...');
                 $decryptedData = $this->decryptQrData($data['encrypted']);
 
-                if (!$decryptedData) {
+                if (! $decryptedData) {
                     \Log::error('Failed to decrypt QR data');
-                    $this->error("Invalid or corrupted QR code!");
+                    $this->error('Invalid or corrupted QR code!');
                     $this->isProcessingQr = false;
+
                     return ['found' => false];
                 }
 
@@ -261,10 +278,11 @@ class AdminBorrowTransactions extends AdminComponent
                 \Log::info('Decrypted Data:', ['data' => $data]);
             }
 
-            if (!$data || !isset($data['p'])) {
+            if (! $data || ! isset($data['p'])) {
                 \Log::error('Invalid QR format - missing p key');
-                $this->error("Invalid QR code format!");
+                $this->error('Invalid QR code format!');
                 $this->isProcessingQr = false;
+
                 return ['found' => false];
             }
 
@@ -273,20 +291,20 @@ class AdminBorrowTransactions extends AdminComponent
             \Log::info('Borrow Data:', ['borrowData' => $borrowData]);
 
             // Validate required fields
-            if (!isset($borrowData['inventory_id']) || !isset($borrowData['paper_id'])) {
+            if (! isset($borrowData['inventory_id']) || ! isset($borrowData['paper_id'])) {
                 \Log::error('Missing required fields', [
                     'has_inventory_id' => isset($borrowData['inventory_id']),
-                    'has_paper_id' => isset($borrowData['paper_id'])
+                    'has_paper_id' => isset($borrowData['paper_id']),
                 ]);
-                $this->error("Missing required data in QR code!");
+                $this->error('Missing required data in QR code!');
                 $this->isProcessingQr = false;
+
                 return ['found' => false];
             }
 
             // Find the inventory and paper
             $inventory = Inventory::with('academicPaper')->find($borrowData['inventory_id']);
             $paper = AcademicPaper::find($borrowData['paper_id']);
-
 
             // Try to find user by ID (requested_by) only
             $user = null;
@@ -297,28 +315,30 @@ class AdminBorrowTransactions extends AdminComponent
             }
 
             \Log::info('Database lookups:', [
-                'inventory_found' => !!$inventory,
-                'paper_found' => !!$paper,
-                'user_found' => !!$user,
-                'user_data' => $user ? ['id' => $user->id] : null
+                'inventory_found' => (bool) $inventory,
+                'paper_found' => (bool) $paper,
+                'user_found' => (bool) $user,
+                'user_data' => $user ? ['id' => $user->id] : null,
             ]);
 
-            if (!$inventory || !$paper) {
+            if (! $inventory || ! $paper) {
                 \Log::error('Invalid inventory or paper', [
                     'inventory_id' => $borrowData['inventory_id'],
-                    'paper_id' => $borrowData['paper_id']
+                    'paper_id' => $borrowData['paper_id'],
                 ]);
-                $this->error("Invalid inventory or paper ID!");
+                $this->error('Invalid inventory or paper ID!');
                 $this->isProcessingQr = false;
+
                 return ['found' => false];
             }
 
-            if (!$user) {
+            if (! $user) {
                 \Log::error('User not found', [
-                    'requested_by' => $borrowData['requested_by'] ?? 'not set'
+                    'requested_by' => $borrowData['requested_by'] ?? 'not set',
                 ]);
-                $this->error("User not found!");
+                $this->error('User not found!');
                 $this->isProcessingQr = false;
+
                 return ['found' => false];
             }
 
@@ -340,7 +360,7 @@ class AdminBorrowTransactions extends AdminComponent
                     try {
                         $activeTransaction->update([
                             'time_out' => now(),
-                            'status' => 'completed'
+                            'status' => 'completed',
                         ]);
 
                         $inventory->update(['status' => 'Available']);
@@ -350,18 +370,21 @@ class AdminBorrowTransactions extends AdminComponent
                         $this->isProcessingQr = false; // Reset processing flag so camera can scan again
                         $this->success("Book returned successfully! Copy #{$inventory->copy_number} is now available.");
                         \Log::info('Book returned successfully');
+
                         return ['found' => true, 'action' => 'returned'];
                     } catch (\Exception $e) {
                         \DB::rollBack();
                         \Log::error('Return error:', ['error' => $e->getMessage()]);
-                        $this->error("Failed to return book: " . $e->getMessage());
+                        $this->error('Failed to return book: ' . $e->getMessage());
                         $this->isProcessingQr = false;
+
                         return ['found' => false];
                     }
                 } else {
                     \Log::warning('Book marked unavailable but no active transaction found');
-                    $this->error("This book is marked as unavailable but has no active transaction. Please check manually.");
+                    $this->error('This book is marked as unavailable but has no active transaction. Please check manually.');
                     $this->isProcessingQr = false;
+
                     return ['found' => false];
                 }
             } elseif ($inventory->status === 'Available') {
@@ -391,24 +414,27 @@ class AdminBorrowTransactions extends AdminComponent
                 $this->borrowNotes = '';
 
                 \Log::info('=== QR Processing Successful ===');
+
                 return ['found' => true, 'action' => 'borrow_prepared'];
             } else {
                 // Book has other status (Lost, Damaged, etc.)
                 \Log::warning('Book has non-borrowable status', [
                     'inventory_id' => $inventory->id,
-                    'status' => $inventory->status
+                    'status' => $inventory->status,
                 ]);
                 $this->error("This book cannot be borrowed. Current status: {$inventory->status}");
                 $this->isProcessingQr = false;
+
                 return ['found' => false];
             }
         } catch (\Exception $e) {
             \Log::error('QR Processing Exception:', [
                 'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
-            $this->error("Error processing QR code: " . $e->getMessage());
+            $this->error('Error processing QR code: ' . $e->getMessage());
             $this->isProcessingQr = false;
+
             return ['found' => false];
         } finally {
             $this->isProcessingQr = false;
@@ -427,7 +453,8 @@ class AdminBorrowTransactions extends AdminComponent
     {
         try {
             if (empty($this->pendingBorrowData)) {
-                $this->error("No pending borrow request!");
+                $this->error('No pending borrow request!');
+
                 return;
             }
 
@@ -452,10 +479,11 @@ class AdminBorrowTransactions extends AdminComponent
             // Update inventory status to Unavailable
             $inventory = Inventory::lockForUpdate()->find($this->pendingBorrowData['inventory_id']);
 
-            if (!$inventory || $inventory->status !== 'Available') {
+            if (! $inventory || $inventory->status !== 'Available') {
                 \DB::rollBack();
-                $this->error("This copy is no longer available!");
+                $this->error('This copy is no longer available!');
                 $this->closeConfirmBorrowModal();
+
                 return;
             }
 
@@ -469,7 +497,7 @@ class AdminBorrowTransactions extends AdminComponent
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Borrow Confirmation Error: ' . $e->getMessage());
-            $this->error("Failed to create borrow transaction: " . $e->getMessage());
+            $this->error('Failed to create borrow transaction: ' . $e->getMessage());
         }
     }
 
@@ -502,6 +530,17 @@ class AdminBorrowTransactions extends AdminComponent
         $this->statusFilter = '';
         $this->sortBy = ['column' => 'time_in', 'direction' => 'desc'];
         $this->resetPage();
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading borrow transactions...',
+            'subtext' => 'Please wait while we fetch the transaction data',
+        ]);
     }
 
     public function render()

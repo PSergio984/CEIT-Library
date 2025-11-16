@@ -1,3 +1,11 @@
+@php
+    // Livewire Lazy Loading: If this is being rendered as a placeholder, show loading skeleton
+    if (isset($placeholder) && $placeholder) {
+        echo view('components.loading-placeholder');
+        return;
+    }
+@endphp
+
 <div class="p-6">
     <x-mary-header title="Manage Advisers, Deans & Authors" 
         subtitle="Manage research advisers, technical advisers, deans, and authors for academic papers" 

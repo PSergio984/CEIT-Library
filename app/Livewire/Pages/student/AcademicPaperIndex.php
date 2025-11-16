@@ -7,12 +7,14 @@ use App\Models\Inventory;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Title('Academic Paper List')]
+#[Lazy]
 class AcademicPaperIndex extends Component
 {
     use CreatesQrCanonicalMessage, WithPagination;

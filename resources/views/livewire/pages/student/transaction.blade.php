@@ -85,23 +85,10 @@
                 </div>
 
                 {{-- Clear Filters Button --}}
-                <div class="form-control">
-                    <label class="label">
-                        <span class="label-text opacity-0">Clear</span>
-                    </label>
-                    <button 
-                        wire:click="clearFilters" 
-                        class="btn btn-outline btn-error gap-2 hover:scale-105 transition-transform"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                        </svg>
-                        Clear Filters
-                    </button>
+                <div class="flex items-end justify-end w-full h-full">
+                    <x-clear-filters-button />
                 </div>
             </div>
-
-            {{-- Results Count --}}
             <div class="mt-4 text-sm text-base-content/70">
                 Showing <span class="font-semibold text-base-content">{{ $this->transactions->count() }}</span> of 
                 <span class="font-semibold text-base-content">{{ $this->transactions->total() }}</span> results
@@ -156,28 +143,28 @@
                                         id="tooltip-inventory-{{ $transaction['id'] }}"
                                         role="tooltip"
                                         class="absolute left-1/2 z-20 mt-2 w-56 -translate-x-1/2 rounded bg-base-200 px-3 py-2 text-xs text-base-content shadow-lg border border-base-300 transition-opacity duration-150"
-                                        x-cloak
-                                    >
-                                        Internal inventory tracking number
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {{-- Status Badge --}}
-                        <div class="flex-shrink-0">
-                            <x-transaction-status :status="$transaction['status']" />
-                        </div>
-                    </div>
-                </div>
-
-                {{-- Card Body --}}
-                <div class="p-4 md:p-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {{-- Borrowed Date with Full DateTime --}}
-                        <div class="space-y-1">
-                            <div class="flex items-center gap-2 text-sm font-semibold text-base-content/60">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                        <div 
+                                            wire:key="transaction-{{ $transaction['id'] }}"
+                                            class="bg-base-100 rounded-lg p-4 shadow-lg border border-base-300 cursor-pointer hover:shadow-xl transition-shadow mb-6 overflow-hidden hover:border-primary/30"
+                                            tabindex="0" 
+                                            role="button"
+                                            wire:click="viewTransaction('{{ $transaction['id'] }}')"
+                                            wire:keydown.enter="viewTransaction('{{ $transaction['id'] }}')"
+                                        >
+                                            <div class="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 md:p-6 rounded-t-lg border-b border-base-300">
+                                                <div class="flex items-start justify-between flex-wrap gap-4">
+                                                    {{-- ...existing code... --}}
+                                                </div>
+                                            </div>
+                                            <div class="p-4 md:p-6">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                    {{-- ...existing code... --}}
+                                                </div>
+                                                @if ($transaction['notes'])
+                                                    {{-- ...existing code... --}}
+                                                @endif
+                                            </div>
+                                        </div>
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                                 </svg>
                                 Date Borrowed
@@ -314,30 +301,25 @@
                 </div>
             </div>
         @empty
-            {{-- Empty State --}}
-            <div class="bg-base-100 rounded-box shadow-lg p-12 text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-24 h-24 mx-auto text-base-content/20 mb-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
-                </svg>
-                
-                <h3 class="text-2xl font-bold text-base-content mb-2">No Transactions Found</h3>
-                <p class="text-base-content/60 mb-6">
-                    @if ($search || $statusFilter || $paperTypeFilter || $selectedDate)
-                        No transactions match your current filters. Try adjusting your search criteria.
-                    @else
-                        You haven't borrowed any materials yet. Visit the library to get started!
-                    @endif
-                </p>
-                
-                @if ($search || $statusFilter || $paperTypeFilter || $selectedDate)
-                    <button wire:click="clearFilters" class="btn btn-primary gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                        </svg>
-                        Clear All Filters
-                    </button>
-                @endif
-            </div>
+            {{-- Empty State Using Reusable Component --}}
+            @if ($search || $statusFilter || $paperTypeFilter || $selectedDate)
+                <x-empty-state
+                    icon="o-magnifying-glass-circle"
+                    title="No Transactions Found"
+                    message="No transactions match your current filters. Try adjusting your search criteria or clearing filters to see all results."
+                    action-label="Clear All Filters"
+                    action-wire="clearFilters"
+                    size="default"
+                />
+            @else
+                <x-empty-state
+                    icon="o-book-open"
+                    title="No Transactions Yet"
+                    message="You haven't borrowed any materials yet. Visit the library to get started and explore our collection of academic papers!"
+                    :show-action="false"
+                    size="default"
+                />
+            @endif
         @endforelse
 
         {{-- Pagination --}}

@@ -103,17 +103,24 @@
                     </div>
                 </div>
             @empty
-                <div class="text-center py-8 sm:py-12 bg-base-100 rounded-lg border border-base-300">
-                    <x-mary-icon name="o-document-magnifying-glass" class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-base-content/40 mb-4" />
-                    <h3 class="text-base sm:text-lg font-medium text-base-content mb-2 px-4">No Academic Papers Found</h3>
-                    <p class="text-xs sm:text-sm text-base-content/70 px-4">
-                        @if($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
-                            No papers match your current filters
-                        @else
-                            No academic papers are available at the moment
-                        @endif
-                    </p>
-                </div>
+                {{-- Empty State Using Reusable Component --}}
+                @if($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                    <x-empty-state
+                        icon="o-document-magnifying-glass"
+                        title="No Academic Papers Found"
+                        message="No papers match your current filters. Try adjusting your search criteria to find more results."
+                        :show-action="false"
+                        size="sm"
+                    />
+                @else
+                    <x-empty-state
+                        icon="o-document-text"
+                        title="No Academic Papers Available"
+                        message="The library collection is currently empty. Please check back later for updates."
+                        :show-action="false"
+                        size="sm"
+                    />
+                @endif
             @endforelse
 
             {{-- Mobile/Tablet Pagination --}}
@@ -132,17 +139,25 @@
                 row-class="hover:bg-base-200"
                 header-class="text-base-content bg-base-200">
                     <x-slot:empty>
-                        <div class="text-center py-12">
-                            <x-mary-icon name="o-document-magnifying-glass" class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
-                            <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
-                            <p class="text-sm text-base-content/70">
-                                @if($search || $statusFilter || $yearFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
-                                    No papers match your current filters
-                                @else
-                                    No academic papers are available at the moment
-                                @endif
-                            </p>
-                        </div>
+                        @if($search || $statusFilter || $yearFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                            <x-empty-state
+                                icon="o-document-magnifying-glass"
+                                title="No Academic Papers Found"
+                                message="No papers match your current filters. Try adjusting your search criteria."
+                                :show-action="false"
+                                size="default"
+                                class="border-0"
+                            />
+                        @else
+                            <x-empty-state
+                                icon="o-document-text"
+                                title="No Academic Papers Available"
+                                message="The library collection is currently empty. Please check back later."
+                                :show-action="false"
+                                size="default"
+                                class="border-0"
+                            />
+                        @endif
                     </x-slot:empty>
 
                     @scope('cell_catalog_code', $row)
