@@ -250,33 +250,37 @@
                                         {{ $transaction['overdue_duration'] }}
                                     </div>
                                 @else
-                                    {{-- Real-time Countdown Timer --}}
-                                    <div class="flex items-center gap-2 text-sm font-semibold text-info/80">
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 animate-pulse">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                        Time Remaining
-                                    </div>
-                                    <div
-                                        x-data="countdownTimer(new Date('{{ $transaction['expires_at']->toIso8601String() }}'))"
-                                        class="flex items-center gap-2"
-                                        aria-live="polite"
-                                    >
-                                        <div class="grid grid-flow-col gap-2 text-center auto-cols-max">
-                                            <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
-                                                <span class="countdown font-mono text-2xl" x-text="String(hours).padStart(2, '0')"></span>
-                                                <span class="text-xs">hours</span>
-                                            </div>
-                                            <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
-                                                <span class="countdown font-mono text-2xl" x-text="String(minutes).padStart(2, '0')"></span>
-                                                <span class="text-xs">min</span>
-                                            </div>
-                                            <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
-                                                <span class="countdown font-mono text-2xl" x-text="String(seconds).padStart(2, '0')"></span>
-                                                <span class="text-xs">sec</span>
+                                    @if ($transaction['expires_at'])
+                                        {{-- Real-time Countdown Timer --}}
+                                        <div class="flex items-center gap-2 text-sm font-semibold text-info/80">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 animate-pulse">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                            Time Remaining
+                                        </div>
+                                        <div
+                                            x-data="countdownTimer('{{ $transaction['expires_at']->toIso8601String() }}')"
+                                            class="flex items-center gap-2"
+                                            aria-live="polite"
+                                        >
+                                            <div class="grid grid-flow-col gap-2 text-center auto-cols-max">
+                                                <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
+                                                    <span class="countdown font-mono text-2xl" x-text="String(hours).padStart(2, '0')"></span>
+                                                    <span class="text-xs">hours</span>
+                                                </div>
+                                                <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
+                                                    <span class="countdown font-mono text-2xl" x-text="String(minutes).padStart(2, '0')"></span>
+                                                    <span class="text-xs">min</span>
+                                                </div>
+                                                <div class="flex flex-col p-2 bg-info/10 rounded-box text-info">
+                                                    <span class="countdown font-mono text-2xl" x-text="String(seconds).padStart(2, '0')"></span>
+                                                    <span class="text-xs">sec</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
+                                    @else
+                                        <div class="text-base-content/50 italic">No due date</div>
+                                    @endif
                                 @endif
                             @else
                                 {{-- Duration for completed/other transactions --}}
@@ -380,4 +384,8 @@
                         clearInterval(interval);
                         interval = null;
                     }
-                },
+                }
+            };
+        });
+    });
+</script>

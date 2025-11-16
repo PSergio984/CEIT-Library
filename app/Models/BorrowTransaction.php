@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * @property string $session_token
  * @property string|null $notes
  * @property int|null $duration_minutes
+ * @property \Illuminate\Support\Carbon|null $overdue_notified_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\AcademicPaper $academicPaper
@@ -58,12 +59,14 @@ class BorrowTransaction extends Model
         'session_token',
         'notes',
         'duration_minutes',
+        'overdue_notified_at',
     ];
 
     protected $casts = [
         'time_in' => 'datetime',
         'time_out' => 'datetime',
         'expires_at' => 'datetime',
+        'overdue_notified_at' => 'datetime',
     ];
 
     protected static function booted()
