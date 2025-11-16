@@ -200,7 +200,11 @@ class BorrowTransaction extends Model
      */
     public function getTimeRemainingAttribute(): ?\DateInterval
     {
-        if ($this->status !== 'started' || !$this->expires_at) {
+        if (
+            $this->status !== 'started' ||
+            !$this->expires_at ||
+            $this->expires_at->lessThanOrEqualTo(now())
+        ) {
             return null;
         }
         // Always use $this->expires_at->diff(now()) for consistent direction
