@@ -41,7 +41,7 @@
             </div>
 
             <div>
-                <x-mary-select label="Account Status" wire:model.live="statusFilter" :options="[
+                <x-mary-select label="Account Status" wire:model="statusFilter" :options="[
                     ['id' => '', 'name' => 'All Status'],
                     ['id' => 'active', 'name' => 'Active'],
                     ['id' => 'suspended', 'name' => 'Suspended'],
@@ -50,7 +50,7 @@
             </div>
 
             <div>
-                <x-mary-select label="Credit Score" wire:model.live="creditScoreFilter" :options="[
+                <x-mary-select label="Credit Score" wire:model="creditScoreFilter" :options="[
                     ['id' => '', 'name' => 'All Scores'],
                     ['id' => 'high', 'name' => 'High (75-100)'],
                     ['id' => 'medium', 'name' => 'Medium (50-74)'],
@@ -60,7 +60,7 @@
             </div>
 
             <div>
-                <x-mary-select label="User Role" wire:model.live="roleFilter" :options="[
+                <x-mary-select label="User Role" wire:model="roleFilter" :options="[
                     ['id' => '', 'name' => 'All Roles'],
                     ['id' => 'student', 'name' => 'Student'],
                     ['id' => 'admin', 'name' => 'Admin'],
@@ -210,24 +210,24 @@
         </div>
     @endif
 
-    @if ($showStudentModal && $selectedStudent)
-        <x-mary-modal wire:model="showStudentModal" title="Student Details" class="backdrop-blur">
+    <x-mary-modal wire:model="showStudentModal" title="Student Details" class="backdrop-blur">
             <div class="space-y-6 pb-28 sm:pb-0">
+                @if (!empty($selectedStudentData))
                 <div class="grid grid-cols-2 gap-6">
                     <div>
                         <div class="text-sm text-base-content/60 mb-1">Student Name</div>
-                        <div class="font-semibold">{{ $selectedStudent->first_name }}
-                            {{ $selectedStudent->last_name }}</div>
+                        <div class="font-semibold">{{ $selectedStudentData['first_name'] ?? '' }}
+                            {{ $selectedStudentData['last_name'] ?? '' }}</div>
                     </div>
                     <div>
                         <div class="text-sm text-base-content/60 mb-1">Email</div>
-                        <div>{{ $selectedStudent->email }}</div>
+                        <div>{{ $selectedStudentData['email'] ?? '' }}</div>
                     </div>
                     <div>
                         <div class="text-sm text-base-content/60 mb-1">Credit Score</div>
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-xl">{{ $selectedStudent->credit_score }}</span>
-                            <x-student-status-badge :status="$selectedStudent->account_status" />
+                            <span class="font-bold text-xl">{{ $selectedStudentData['credit_score'] ?? 0 }}</span>
+                            <x-student-status-badge :status="$selectedStudentData['account_status'] ?? 'active'" />
                         </div>
                     </div>
                 </div>
@@ -236,18 +236,19 @@
                 <div>
                     <h3 class="font-semibold text-lg mb-3">Currently Borrowed Books</h3>
                     <div class="space-y-2">
-                        @forelse($selectedStudent->borrowTransactions as $transaction)
+                        @forelse($selectedStudentData['transactions'] ?? [] as $transaction)
                             @php
-                                $dueDate = $transaction->time_in?->copy()->addDays(7);
+                                $timeIn = !empty($transaction['time_in']) ? \Carbon\Carbon::parse($transaction['time_in']) : null;
+                                $dueDate = $timeIn?->copy()->addDays(7);
                                 $isOverdue = $dueDate && $dueDate->isPast();
                                 $isDueSoon = $dueDate && $dueDate->diffInDays(now()) <= 2;
                             @endphp
                             <div class="flex justify-between items-center p-3 bg-base-200 rounded-lg">
                                 <div>
                                     <div class="font-medium">
-                                        {{ $transaction->inventory?->academicPaper?->title ?? 'Unknown Title' }}</div>
+                                        {{ $transaction['title'] }}</div>
                                     <div class="text-sm text-base-content/60">
-                                        {{ $transaction->inventory?->academicPaper?->paper_type ?? 'N/A' }}
+                                        {{ $transaction['paper_type'] }}
                                     </div>
                                 </div>
                                 <span
@@ -263,11 +264,12 @@
                         @endforelse
                     </div>
                 </div>
+                @endif
 
                 <x-slot:actions>
                     <div class="sticky bottom-0 left-0 right-0 px-2 pb-4 bg-white/90 sm:bg-transparent z-50">
                         <div class="flex flex-row gap-2 w-full">
-                            <x-mary-button label="Close" @click="$wire.closeModal()" class="w-1/2 sm:w-auto"
+                            <x-mary-button label="Close" wire:click="closeModal" class="w-1/2 sm:w-auto"
                                 icon="o-x-mark" variant="outline" />
                             <x-mary-button label="Transaction History" class="btn-primary w-1/2 sm:w-auto"
                                 icon="o-clock" />
@@ -276,10 +278,8 @@
                 </x-slot:actions>
             </div>
         </x-mary-modal>
-    @endif
 
-    @if ($showEditModal)
-        <x-mary-modal wire:model="showEditModal" title="Edit User" class="backdrop-blur">
+    <x-mary-modal wire:model="showEditModal" title="Edit User" class="backdrop-blur">
             <div class="space-y-4">
                 <x-mary-input label="Student ID" wire:model="studentId" readonly disabled />
 
@@ -302,15 +302,13 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="$wire.closeModal()" />
+                <x-mary-button label="Cancel" wire:click="closeModal" />
                 <x-mary-button label="Save Changes" wire:click="saveChanges" class="btn-primary"
                     spinner="saveChanges" />
             </x-slot:actions>
         </x-mary-modal>
-    @endif
 
-    @if ($showDeleteModal && $selectedStudent)
-        <x-mary-modal wire:model="showDeleteModal" title="Delete User?" class="backdrop-blur">
+    <x-mary-modal wire:model="showDeleteModal" title="Delete User?" class="backdrop-blur">
             <div class="space-y-4">
                 <div class="alert alert-warning">
                     <x-mary-icon name="o-exclamation-triangle" class="w-6 h-6" />
@@ -319,7 +317,7 @@
 
                 <p class="text-base-content/80">
                     Once deleted, all information and resources related to
-                    <strong>{{ $selectedStudent->first_name }} {{ $selectedStudent->last_name }}</strong>
+                    <strong>{{ $selectedStudentData['first_name'] ?? '' }} {{ $selectedStudentData['last_name'] ?? '' }}</strong>
                     will be permanently removed from the system.
                 </p>
 
@@ -329,10 +327,9 @@
             </div>
 
             <x-slot:actions>
-                <x-mary-button label="Cancel" @click="$wire.closeModal()" />
+                <x-mary-button label="Cancel" wire:click="closeModal" />
                 <x-mary-button label="Delete User" wire:click="deleteUser" class="btn-error" icon="o-trash"
                     spinner="deleteUser" />
             </x-slot:actions>
         </x-mary-modal>
-    @endif
-</div>
+</div> <!-- Close p-6 -->

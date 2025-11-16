@@ -22,10 +22,14 @@ class AdminUserList extends AdminComponent
     public $creditScoreFilter = '';
     public $roleFilter = '';
 
+    // Modal visibility
     public $showStudentModal = false;
     public $showEditModal = false;
     public $showDeleteModal = false;
-    public $selectedStudent = null;
+
+    // Modal data properties (primitives only - no Eloquent models)
+    public $selectedStudentId = null;
+    public $selectedStudentData = [];
 
     public $studentId;
     public $firstName;
@@ -138,9 +142,7 @@ class AdminUserList extends AdminComponent
                     'credit_score_color' => $this->getCreditScoreColor($user->credit_score),
                     'status' => $user->account_status,
                     'account_status_label' => $user->account_status === 'active' ? 'Available' : 'Suspended',
-                    'role' => $user->role,
                     'is_admin' => $user->role && $user->role->hasAdminAccess(),
-                    'original' => $user,
                 ];
             });
     }
@@ -174,11 +176,30 @@ class AdminUserList extends AdminComponent
 
     public function showTransactionDetails($userId)
     {
-        $this->selectedStudent = User::with(['borrowTransactions' => function ($query) {
+        $student = User::with(['borrowTransactions' => function ($query) {
             $query->where('status', 'started')
                 ->with('inventory.academicPaper')
                 ->latest();
-        }])->find($userId);
+        }])->findOrFail($userId);
+
+        // Store minimal data + transactions (primitives only)
+        $this->selectedStudentData = [
+            'id' => $student->id,
+            'first_name' => $student->first_name,
+            'last_name' => $student->last_name,
+            'email' => $student->email,
+            'credit_score' => $student->credit_score,
+            'account_status' => $student->account_status,
+            'transactions' => $student->borrowTransactions->map(function ($transaction) {
+                return [
+                    'id' => $transaction->id,
+                    'title' => $transaction->inventory?->academicPaper?->title ?? 'Unknown Title',
+                    'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
+                    'time_in' => $transaction->time_in?->toIso8601String(),
+                ];
+            })->toArray(),
+        ];
+        $this->selectedStudentId = $userId;
         $this->showStudentModal = true;
     }
 
@@ -191,7 +212,7 @@ class AdminUserList extends AdminComponent
         $this->email = $user->email;
         $this->creditScore = $user->credit_score;
         $this->accountStatus = $user->account_status;
-        $this->isAdmin = $user->role_id; // Store role_id instead
+        $this->isAdmin = $user->role_id;
         $this->showEditModal = true;
     }
 
@@ -225,15 +246,23 @@ class AdminUserList extends AdminComponent
 
     public function confirmDelete($userId)
     {
-        $this->selectedStudent = User::findOrFail($userId);
+        $user = User::findOrFail($userId);
+        $this->selectedStudentData = [
+            'id' => $user->id,
+            'first_name' => $user->first_name,
+            'last_name' => $user->last_name,
+        ];
+        $this->selectedStudentId = $userId;
         $this->showDeleteModal = true;
     }
 
     public function deleteUser()
     {
-        if ($this->selectedStudent) {
-            // Check for active borrow transactions (status = 'started' or returned_at/time_out is null)
-            $hasActiveBorrows = $this->selectedStudent->borrowTransactions()
+        if ($this->selectedStudentId) {
+            $student = User::findOrFail($this->selectedStudentId);
+
+            // Check for active borrow transactions
+            $hasActiveBorrows = $student->borrowTransactions()
                 ->where(function ($q) {
                     $q->where('status', 'started')
                         ->orWhereNull('time_out');
@@ -245,15 +274,15 @@ class AdminUserList extends AdminComponent
                 return;
             }
 
-            // If using SoftDeletes, prefer soft delete here
-            $this->selectedStudent->delete();
+            $student->delete();
 
             // Clear cache after deletion
             Cache::forget('admin_user_list_total_borrowers');
             $this->clearStatsCaches();
 
             $this->showDeleteModal = false;
-            $this->selectedStudent = null;
+            $this->selectedStudentId = null;
+            $this->selectedStudentData = [];
             $this->success('Student deleted successfully!');
         }
     }
@@ -282,7 +311,8 @@ class AdminUserList extends AdminComponent
         $this->showStudentModal = false;
         $this->showEditModal = false;
         $this->showDeleteModal = false;
-        $this->selectedStudent = null;
+        $this->selectedStudentId = null;
+        $this->selectedStudentData = [];
         $this->reset(['studentId', 'firstName', 'lastName', 'email', 'creditScore', 'accountStatus', 'isAdmin']);
     }
 
