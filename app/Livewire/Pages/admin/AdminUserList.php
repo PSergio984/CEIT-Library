@@ -10,8 +10,10 @@ use Livewire\Attributes\Computed;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Lazy;
 
 #[Title('Admin User List')]
+#[Lazy]
 class AdminUserList extends AdminComponent
 {
     use WithPagination, Toast, AuthorizesRequests;
@@ -110,7 +112,7 @@ class AdminUserList extends AdminComponent
             });
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 5)]
     public function students()
     {
         $query = $this->getStudentsQuery();
@@ -157,15 +159,15 @@ class AdminUserList extends AdminComponent
             $this->creditScoreFilter,
         ]));
 
-        return Cache::remember($cacheKey, 60, function () {
+        return Cache::remember($cacheKey, 300, function () {
             return $this->getStudentsQuery()->count();
         });
     }
 
-    #[Computed]
+    #[Computed(persist: true, seconds: 60)]
     public function totalBorrowers()
     {
-        return Cache::remember('admin_user_list_total_borrowers', 60, function () {
+        return Cache::remember('admin_user_list_total_borrowers', 300, function () {
             $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
             return User::where('role_id', $studentRoleId)
                 ->whereHas('borrowTransactions', function ($query) {
@@ -201,6 +203,7 @@ class AdminUserList extends AdminComponent
         ];
         $this->selectedStudentId = $userId;
         $this->showStudentModal = true;
+        $this->skipRender();
     }
 
     public function editStudent($userId)
@@ -214,6 +217,7 @@ class AdminUserList extends AdminComponent
         $this->accountStatus = $user->account_status;
         $this->isAdmin = $user->role_id;
         $this->showEditModal = true;
+        $this->skipRender();
     }
 
     public function saveChanges()
@@ -254,6 +258,7 @@ class AdminUserList extends AdminComponent
         ];
         $this->selectedStudentId = $userId;
         $this->showDeleteModal = true;
+        $this->skipRender();
     }
 
     public function deleteUser()
@@ -314,6 +319,7 @@ class AdminUserList extends AdminComponent
         $this->selectedStudentId = null;
         $this->selectedStudentData = [];
         $this->reset(['studentId', 'firstName', 'lastName', 'email', 'creditScore', 'accountStatus', 'isAdmin']);
+        $this->skipRender();
     }
 
     // Filter methods
@@ -345,6 +351,17 @@ class AdminUserList extends AdminComponent
         $this->roleFilter = '';
         $this->sortBy = self::DEFAULT_SORT;
         $this->resetPage();
+    }
+
+    public function placeholder()
+    {
+        return <<<'HTML'
+        <div class="p-6">
+            <div class="flex items-center justify-center h-96">
+                <span class="loading loading-spinner loading-lg"></span>
+            </div>
+        </div>
+        HTML;
     }
 
     public function render()

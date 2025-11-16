@@ -101,10 +101,10 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
             ->middleware('can:manage-user-roles')
             ->name('manage-roles');
 
-        // Student management (Admin only)
-        Route::get('/students', AdminUserList::class)
-            ->middleware('can:manage-students')
-            ->name('user-list');
+        // // Student management (Admin only)
+        // Route::get('/students', AdminUserList::class)
+        //     ->middleware('can:manage-students')
+        //     ->name('user-list');
     });
 
 Route::view('profile', 'profile')

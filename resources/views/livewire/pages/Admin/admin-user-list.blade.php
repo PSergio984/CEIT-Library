@@ -41,7 +41,7 @@
             </div>
 
             <div>
-                <x-mary-select label="Account Status" wire:model="statusFilter" :options="[
+                <x-mary-select label="Account Status" wire:model.blur="statusFilter" :options="[
                     ['id' => '', 'name' => 'All Status'],
                     ['id' => 'active', 'name' => 'Active'],
                     ['id' => 'suspended', 'name' => 'Suspended'],
@@ -50,7 +50,7 @@
             </div>
 
             <div>
-                <x-mary-select label="Credit Score" wire:model="creditScoreFilter" :options="[
+                <x-mary-select label="Credit Score" wire:model.blur="creditScoreFilter" :options="[
                     ['id' => '', 'name' => 'All Scores'],
                     ['id' => 'high', 'name' => 'High (75-100)'],
                     ['id' => 'medium', 'name' => 'Medium (50-74)'],
@@ -60,7 +60,7 @@
             </div>
 
             <div>
-                <x-mary-select label="User Role" wire:model="roleFilter" :options="[
+                <x-mary-select label="User Role" wire:model.blur="roleFilter" :options="[
                     ['id' => '', 'name' => 'All Roles'],
                     ['id' => 'student', 'name' => 'Student'],
                     ['id' => 'admin', 'name' => 'Admin'],
