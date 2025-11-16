@@ -193,7 +193,7 @@ class BorrowTransaction extends Model
     /**
      * Calculate time remaining until due (returns DateInterval or null)
      *
-     * @return \DateInterval|null
+     * @return ?\DateInterval
      */
     public function getTimeRemainingAttribute(): ?\DateInterval
     {
@@ -209,6 +209,11 @@ class BorrowTransaction extends Model
     {
 
         if (!($this->status === 'overdue' || $this->isOverdue())) {
+            return null;
+        }
+
+        // Guard against null or invalid expires_at (legacy rows)
+        if (!$this->expires_at || !($this->expires_at instanceof \Carbon\Carbon)) {
             return null;
         }
 

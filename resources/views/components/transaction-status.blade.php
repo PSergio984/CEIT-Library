@@ -11,6 +11,7 @@
     
     // Display text - handle null/empty status with fallback
     if (empty(trim((string)$status))) {
+        \Log::warning('Transaction status is null or empty in transaction-status component.', ['status' => $status]);
         $displayText = 'Unknown';
     } else {
         $displayText = match($status) {

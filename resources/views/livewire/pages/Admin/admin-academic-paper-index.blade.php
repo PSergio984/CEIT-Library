@@ -116,10 +116,8 @@
                             </button>
                             <button x-data="{ loading: false }"
                                 @click="
-                                @if ($paper->can_delete)
                                     loading = true;
                                     $wire.confirmDelete({{ $paper->id }}).finally(() => loading = false)
-                                @endif
                             "
                                 :disabled="loading || {{ $paper->can_delete ? 'false' : 'true' }}"
                                 class="btn btn-xs sm:btn-sm btn-ghost {{ $paper->can_delete ? 'text-error' : 'text-base-content/40' }} flex-1 min-w-[80px]"

@@ -376,4 +376,8 @@
                     this.seconds = Math.floor((diff % (1000 * 60)) / 1000);
                 },
                 destroy() {
-                    if
+                    if (interval) {
+                        clearInterval(interval);
+                        interval = null;
+                    }
+                },

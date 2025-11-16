@@ -45,10 +45,11 @@ class CheckOverdueTransactions extends Command
         $this->info('🔍 Checking for overdue borrow transactions...');
         $this->newLine();
 
-        // Find all started transactions that are past expiration
-        $overdueTransactions = BorrowTransaction::with(['user', 'inventory.academicPaper'])
+        // Find all started transactions that are past expiration and have not been notified
+        $overdueTransactions = BorrowTransaction::with(['user', 'inventory'])
             ->where('status', 'started')
             ->where('expires_at', '<', now())
+            ->whereNull('overdue_notified_at')
             ->get();
 
         if ($overdueTransactions->isEmpty()) {
@@ -119,6 +120,7 @@ class CheckOverdueTransactions extends Command
                 if ($transaction->user) {
                     try {
                         $transaction->user->notify(new \App\Notifications\BorrowTransactionOverdue($transaction));
+                        $transaction->update(['overdue_notified_at' => now()]);
                         $notified++;
                     } catch (\Exception $notifyEx) {
                         $failed++;

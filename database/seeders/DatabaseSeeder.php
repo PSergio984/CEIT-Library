@@ -345,7 +345,7 @@ class DatabaseSeeder extends Seeder
                     ]);
 
                     // Mark the copy as reserved
-                    $availableCopy->update(['status' => 'unavailable']);
+                    $availableCopy->update(['status' => 'Unavailable']);
                 }
             }
         }

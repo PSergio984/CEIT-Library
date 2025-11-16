@@ -56,8 +56,8 @@ class BorrowTransactionOverdue extends Notification implements ShouldQueue
         $paper = optional($inventory->academicPaper);
         $overdueDuration = $transaction->overdue_duration ?? 'N/A';
 
-        $borrowDate = $transaction->time_in ? $transaction->time_in->format('F j, Y \a\t g:i A') : 'N/A';
-        $dueDate = $transaction->expires_at ? $transaction->expires_at->format('F j, Y \a\t g:i A') : 'N/A';
+        $borrowDate = $transaction->time_in ? $transaction->time_in->format('F j, Y') . ' at ' . $transaction->time_in->format('g:i A') : 'N/A';
+        $dueDate = $transaction->expires_at ? $transaction->expires_at->format('F j, Y') . ' at ' . $transaction->expires_at->format('g:i A') : 'N/A';
 
         $firstName = $notifiable->first_name ?? 'User';
         $title = $paper->title ?? '[Unknown Title]';
