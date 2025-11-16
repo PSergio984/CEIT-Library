@@ -222,7 +222,7 @@ class DatabaseSeeder extends Seeder
                 'batch_no' => $currentYear . '0002',
                 'start_date' => $today->copy()->subDays(10),
                 'end_date' => $today->copy()->subDays(3),
-                'status' => 'expired',
+                'status' => 'expired', // This is for Librarian model, not BorrowTransaction
                 'created_by' => $admin->id,
                 'created_at' => $today->copy()->subDays(10),
                 'updated_at' => $today->copy()->subDays(3),
@@ -240,7 +240,7 @@ class DatabaseSeeder extends Seeder
                 'batch_no' => $currentYear . '0003',
                 'start_date' => $today->copy()->subDays(20),
                 'end_date' => $today->copy()->subDays(7),
-                'status' => 'expired',
+                'status' => 'expired', // This is for Librarian model, not BorrowTransaction
                 'created_by' => $admin->id,
                 'created_at' => $today->copy()->subDays(20),
                 'updated_at' => $today->copy()->subDays(7),

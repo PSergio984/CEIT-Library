@@ -94,7 +94,7 @@ class Transaction extends Component
                 if ($transaction->status === 'started') {
                     if ($transaction->isOverdue()) {
                         // Transaction is technically overdue but hasn't been updated yet
-                        $displayStatus = 'expired';
+                        $displayStatus = 'overdue';
                         $isOverdue = true;
                         $overdueDuration = $transaction->overdue_duration;
                     } else {

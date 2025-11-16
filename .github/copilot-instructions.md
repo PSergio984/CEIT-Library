@@ -6,6 +6,7 @@
 The Laravel Boost guidelines are specifically curated by Laravel maintainers for this application. These guidelines should be followed closely to enhance the user's satisfaction building Laravel applications.
 
 ## Foundational Context
+
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - 8.2.12
@@ -20,47 +21,58 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - phpunit/phpunit (PHPUNIT) - v11
 
 ## Conventions
+
 - You must follow all existing code conventions used in this application. When creating or editing a file, check sibling files for the correct structure, approach, naming.
 - Use descriptive names for variables and methods. For example, `isRegisteredForDiscounts`, not `discount()`.
 - Check for existing components to reuse before writing a new one.
 
 ## Verification Scripts
+
 - Do not create verification scripts or tinker when tests cover that functionality and prove it works. Unit and feature tests are more important.
 
 ## Application Structure & Architecture
+
 - Stick to existing directory structure - don't create new base folders without approval.
 - Do not change the application's dependencies without approval.
 
 ## Frontend Bundling
+
 - If the user doesn't see a frontend change reflected in the UI, it could mean they need to run `npm run build`, `npm run dev`, or `composer run dev`. Ask them.
 
 ## Replies
+
 - Be concise in your explanations - focus on what's important rather than explaining obvious details.
 
 ## Documentation Files
-- You must only create documentation files if explicitly requested by the user.
 
+- You must only create documentation files if explicitly requested by the user.
 
 === boost rules ===
 
 ## Laravel Boost
+
 - Laravel Boost is an MCP server that comes with powerful tools designed specifically for this application. Use them.
 
 ## Artisan
+
 - Use the `list-artisan-commands` tool when you need to call an Artisan command to double check the available parameters.
 
 ## URLs
+
 - Whenever you share a project URL with the user you should use the `get-absolute-url` tool to ensure you're using the correct scheme, domain / IP, and port.
 
 ## Tinker / Debugging
+
 - You should use the `tinker` tool when you need to execute PHP to debug code or query Eloquent models directly.
 - Use the `database-query` tool when you only need to read from the database.
 
 ## Reading Browser Logs With the `browser-logs` Tool
+
 - You can read browser logs, errors, and exceptions using the `browser-logs` tool from Boost.
 - Only recent browser logs will be useful - ignore old logs.
 
 ## Searching Documentation (Critically Important)
+
 - Boost comes with a powerful `search-docs` tool you should use before any other approaches. This tool automatically passes a list of installed packages and their versions to the remote Boost API, so it returns only version-specific documentation specific for the user's circumstance. You should pass an array of packages to filter on if you know you need docs for particular packages.
 - The 'search-docs' tool is perfect for all Laravel related packages, including Laravel, Inertia, Livewire, Filament, Tailwind, Pest, Nova, Nightwatch, etc.
 - You must use this tool to search for Laravel-ecosystem documentation before falling back to other approaches.
@@ -69,6 +81,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - Do not add package names to queries - package information is already shared. For example, use `test resource table`, not `filament 4 test resource table`.
 
 ### Available Search Syntax
+
 - You can and should pass multiple queries at once. The most relevant results will be returned first.
 
 1. Simple Word Searches with auto-stemming - query=authentication - finds 'authenticate' and 'auth'
@@ -77,7 +90,6 @@ This application is a Laravel application and its main Laravel ecosystems packag
 4. Mixed Queries - query=middleware "rate limit" - "middleware" AND exact phrase "rate limit"
 5. Multiple Queries - queries=["authentication", "middleware"] - ANY of these terms
 
-
 === php rules ===
 
 ## PHP
@@ -85,11 +97,13 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - Always use curly braces for control structures, even if it has one line.
 
 ### Constructors
+
 - Use PHP 8 constructor property promotion in `__construct()`.
-    - <code-snippet>public function __construct(public GitHub $github) { }</code-snippet>
+    - <code-snippet>public function \_\_construct(public GitHub $github) { }</code-snippet>
 - Do not allow empty `__construct()` methods with zero parameters.
 
 ### Type Declarations
+
 - Always use explicit return type declarations for methods and functions.
 - Use appropriate PHP type hints for method parameters.
 
@@ -101,14 +115,16 @@ protected function isAccessible(User $user, ?string $path = null): bool
 </code-snippet>
 
 ## Comments
+
 - Prefer PHPDoc blocks over comments. Never use comments within the code itself unless there is something _very_ complex going on.
 
 ## PHPDoc Blocks
+
 - Add useful array shape type definitions for arrays when appropriate.
 
 ## Enums
-- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
 
+- Typically, keys in an Enum should be TitleCase. For example: `FavoritePerson`, `BestLake`, `Monthly`.
 
 === herd rules ===
 
@@ -116,7 +132,6 @@ protected function isAccessible(User $user, ?string $path = null): bool
 
 - The application is served by Laravel Herd and will be available at: https?://[kebab-case-project-dir].test. Use the `get-absolute-url` tool to generate URLs for the user to ensure valid URLs.
 - You must not run any commands to make the site available via HTTP(s). It is _always_ available through Laravel Herd.
-
 
 === laravel/core rules ===
 
@@ -127,6 +142,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Pass `--no-interaction` to all Artisan commands to ensure they work without user input. You should also pass the correct `--options` to ensure correct behavior.
 
 ### Database
+
 - Always use proper Eloquent relationship methods with return type hints. Prefer relationship methods over raw queries or manual joins.
 - Use Eloquent models and relationships before suggesting raw database queries
 - Avoid `DB::`; prefer `Model::query()`. Generate code that leverages Laravel's ORM capabilities rather than bypassing them.
@@ -134,35 +150,43 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Use Laravel's query builder for very complex database operations.
 
 ### Model Creation
+
 - When creating new models, create useful factories and seeders for them too. Ask the user if they need any other things, using `list-artisan-commands` to check the available options to `php artisan make:model`.
 
 ### APIs & Eloquent Resources
+
 - For APIs, default to using Eloquent API Resources and API versioning unless existing API routes do not, then you should follow existing application convention.
 
 ### Controllers & Validation
+
 - Always create Form Request classes for validation rather than inline validation in controllers. Include both validation rules and custom error messages.
 - Check sibling Form Requests to see if the application uses array or string based validation rules.
 
 ### Queues
+
 - Use queued jobs for time-consuming operations with the `ShouldQueue` interface.
 
 ### Authentication & Authorization
+
 - Use Laravel's built-in authentication and authorization features (gates, policies, Sanctum, etc.).
 
 ### URL Generation
+
 - When generating links to other pages, prefer named routes and the `route()` function.
 
 ### Configuration
+
 - Use environment variables only in configuration files - never use the `env()` function directly outside of config files. Always use `config('app.name')`, not `env('APP_NAME')`.
 
 ### Testing
+
 - When creating models for tests, use the factories for the models. Check if the factory has custom states that can be used before manually setting up the model.
 - Faker: Use methods such as `$this->faker->word()` or `fake()->randomDigit()`. Follow existing conventions whether to use `$this->faker` or `fake()`.
 - When creating tests, make use of `php artisan make:test [options] <name>` to create a feature test, and pass `--unit` to create a unit test. Most tests should be feature tests.
 
 ### Vite Error
-- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
+- If you receive an "Illuminate\Foundation\ViteException: Unable to locate file in Vite manifest" error, you can run `npm run build` or ask the user to run `npm run dev` or `composer run dev`.
 
 === laravel/v12 rules ===
 
@@ -172,6 +196,7 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - Since Laravel 11, Laravel has a new streamlined file structure which this project uses.
 
 ### Laravel 12 Structure
+
 - No middleware files in `app/Http/Middleware/`.
 - `bootstrap/app.php` is the file to register middleware, exceptions, and routing files.
 - `bootstrap/providers.php` contains application specific service providers.
@@ -179,22 +204,25 @@ protected function isAccessible(User $user, ?string $path = null): bool
 - **Commands auto-register** - files in `app/Console/Commands/` are automatically available and do not require manual registration.
 
 ### Database
+
 - When modifying a column, the migration must include all of the attributes that were previously defined on the column. Otherwise, they will be dropped and lost.
 - Laravel 11 allows limiting eagerly loaded records natively, without external packages: `$query->latest()->limit(10);`.
 
 ### Models
-- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 
+- Casts can and likely should be set in a `casts()` method on a model rather than the `$casts` property. Follow existing conventions from other models.
 
 === livewire/core rules ===
 
 ## Livewire Core
+
 - Use the `search-docs` tool to find exact version specific documentation for how to write Livewire & Livewire tests.
 - Use the `php artisan make:livewire [Posts\\CreatePost]` artisan command to create new components
 - State should live on the server, with the UI reflecting it.
 - All Livewire requests hit the Laravel backend, they're like regular HTTP requests. Always validate form data, and run authorization checks in Livewire actions.
 
 ## Livewire Best Practices
+
 - Livewire components require a single root element.
 - Use `wire:loading` and `wire:dirty` for delightful loading states.
 - Add `wire:key` in loops:
@@ -214,7 +242,6 @@ protected function isAccessible(User $user, ?string $path = null): bool
     public function updatedSearch() { $this->resetPage(); }
 </code-snippet>
 
-
 ## Testing Livewire
 
 <code-snippet name="Example Livewire component test" lang="php">
@@ -226,18 +253,17 @@ protected function isAccessible(User $user, ?string $path = null): bool
         ->assertStatus(200);
 </code-snippet>
 
-
     <code-snippet name="Testing a Livewire component exists within a page" lang="php">
         $this->get('/posts/create')
         ->assertSeeLivewire(CreatePost::class);
     </code-snippet>
-
 
 === livewire/v3 rules ===
 
 ## Livewire 3
 
 ### Key Changes From Livewire 2
+
 - These things changed in Livewire 2, but may not have been updated in this application. Verify this application's setup to ensure you conform with application conventions.
     - Use `wire:model.live` for real-time updates, `wire:model` is now deferred by default.
     - Components now use the `App\Livewire` namespace (not `App\Http\Livewire`).
@@ -245,13 +271,16 @@ protected function isAccessible(User $user, ?string $path = null): bool
     - Use the `components.layouts.app` view as the typical layout path (not `layouts.app`).
 
 ### New Directives
+
 - `wire:show`, `wire:transition`, `wire:cloak`, `wire:offline`, `wire:target` are available for use. Use the documentation to find usage examples.
 
 ### Alpine
+
 - Alpine is now included with Livewire, don't manually include Alpine.js.
 - Plugins included with Alpine: persist, intersect, collapse, and focus.
 
 ### Lifecycle Hooks
+
 - You can listen for `livewire:init` to hook into Livewire initialization, and `fail.status === 419` for the page expiring:
 
 <code-snippet name="livewire:load example" lang="js">
@@ -265,9 +294,9 @@ document.addEventListener('livewire:init', function () {
     Livewire.hook('message.failed', (message, component) => {
         console.error(message);
     });
+
 });
 </code-snippet>
-
 
 === volt/core rules ===
 
@@ -291,7 +320,7 @@ state(['count' => 0]);
 $increment = fn () => $this->count++;
 $decrement = fn () => $this->count--;
 
-$double = computed(fn () => $this->count * 2);
+$double = computed(fn () => $this->count \* 2);
 ?>
 
 <div>
@@ -303,21 +332,21 @@ $double = computed(fn () => $this->count * 2);
 @endvolt
 </code-snippet>
 
-
 ### Volt Class Based Component Example
-To get started, define an anonymous class that extends Livewire\Volt\Component. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
 
+To get started, define an anonymous class that extends Livewire\Volt\Component. Within the class, you may utilize all of the features of Livewire using traditional Livewire syntax:
 
 <code-snippet name="Volt Class-based Volt Component Example" lang="php">
 use Livewire\Volt\Component;
 
 new class extends Component {
-    public $count = 0;
+public $count = 0;
 
     public function increment()
     {
         $this->count++;
     }
+
 } ?>
 
 <div>
@@ -326,21 +355,20 @@ new class extends Component {
 </div>
 </code-snippet>
 
-
 ### Testing Volt & Volt Components
+
 - Use the existing directory for tests if it already exists. Otherwise, fallback to `tests/Feature/Volt`.
 
 <code-snippet name="Livewire Test Example" lang="php">
 use Livewire\Volt\Volt;
 
 test('counter increments', function () {
-    Volt::test('counter')
-        ->assertSee('Count: 0')
-        ->call('increment')
-        ->assertSee('Count: 1');
+Volt::test('counter')
+->assertSee('Count: 0')
+->call('increment')
+->assertSee('Count: 1');
 });
 </code-snippet>
-
 
 <code-snippet name="Volt Component Test Using Pest" lang="php">
 declare(strict_types=1);
@@ -349,7 +377,7 @@ use App\Models\{User, Product};
 use Livewire\Volt\Volt;
 
 test('product form creates product', function () {
-    $user = User::factory()->create();
+$user = User::factory()->create();
 
     Volt::test('pages.products.create')
         ->actingAs($user)
@@ -360,12 +388,11 @@ test('product form creates product', function () {
         ->assertHasNoErrors();
 
     expect(Product::where('name', 'Test Product')->exists())->toBeTrue();
+
 });
 </code-snippet>
 
-
 ### Common Patterns
-
 
 <code-snippet name="CRUD With Volt" lang="php">
 <?php
@@ -376,7 +403,7 @@ use function Livewire\Volt\{state, computed};
 state(['editing' => null, 'search' => '']);
 
 $products = computed(fn() => Product::when($this->search,
-    fn($q) => $q->where('name', 'like', "%{$this->search}%")
+fn($q) => $q->where('name', 'like', "%{$this->search}%")
 )->get());
 
 $edit = fn(Product $product) => $this->editing = $product->id;
@@ -401,14 +428,12 @@ $delete = fn(Product $product) => $product->delete();
     </flux:button>
 </code-snippet>
 
-
 === pint/core rules ===
 
 ## Laravel Pint Code Formatter
 
 - You must run `vendor/bin/pint --dirty` before finalizing changes to ensure your code matches the project's expected style.
 - Do not run `vendor/bin/pint --test`, simply run `vendor/bin/pint` to fix any formatting issues.
-
 
 === phpunit/core rules ===
 
@@ -422,11 +447,11 @@ $delete = fn(Product $product) => $product->delete();
 - You must not remove any tests or test files from the tests directory without approval. These are not temporary or helper files, these are core to the application.
 
 ### Running Tests
+
 - Run the minimal number of tests, using an appropriate filter, before finalizing.
 - To run all tests: `php artisan test`.
 - To run all tests in a file: `php artisan test tests/Feature/ExampleTest.php`.
 - To filter on a particular test name: `php artisan test --filter=testName` (recommended after making a change to a related file).
-
 
 === tests rules ===
 
@@ -434,4 +459,690 @@ $delete = fn(Product $product) => $product->delete();
 
 - Every change must be programmatically tested. Write a new test or update an existing test, then run the affected tests to make sure they pass.
 - Run the minimum number of tests needed to ensure code quality and speed. Use `php artisan test` with a specific filename or filter.
-</laravel-boost-guidelines>
+  </laravel-boost-guidelines>
+
+<laravel-livewire-guidelines>
+
+# Laravel Livewire Component Refactoring Prompt
+
+## Objective
+
+Refactor this Laravel Livewire component to align with production-grade best practices, focusing on performance optimization, proper state management, and the fundamental distinction between server-side and client-side state.
+pls remember im using maryui component library
+
+---
+
+## Core Philosophy: Server State vs. Client State
+
+**The Golden Rule:** _"If I didn't need to make a network request in JavaScript for this, I don't need a Livewire component for it."_
+
+**Livewire is designed for managing SERVER STATE, not CLIENT STATE.**
+
+### Server State (Use Livewire)
+
+- Data that requires database queries
+- Information that needs server-side authorization
+- Content that must be validated or processed by PHP
+- State that needs to persist across sessions
+- Operations requiring backend business logic
+
+### Client State (Use Alpine.js)
+
+- Modal visibility toggles
+- Dropdown open/closed states
+- Tab switching (without data fetching)
+- Accordion expand/collapse
+- Form field show/hide logic
+- Tooltip visibility
+- Loading animations and UI transitions
+- Temporary client-side filtering (before applying)
+- Any purely presentational UI changes
+
+**Key Question to Ask:** _"Does this interaction require communication with the server?"_
+
+- **NO** → Use Alpine.js (instant, zero latency)
+- **YES** → Use Livewire (but optimize it)
+
+---
+
+## Refactoring Checklist
+
+### 1. Security Audit
+
+#### Authorization
+
+- [ ] **Implement server-side authorization** for ALL actions that modify data
+- [ ] Use Laravel Policies with `$this->authorize()` in every destructive method
+- [ ] Never trust client-side parameters - always retrieve and verify models from database
+- [ ] Use `#[Locked]` attribute on properties that shouldn't be modified by client (e.g., user IDs, model IDs)
+
+```php
+// ❌ INSECURE
+public function delete($postId) {
+    Post::find($postId)->delete();
+}
+
+// ✅ SECURE
+public function delete($postId) {
+    $post = Post::findOrFail($postId);
+    $this->authorize('delete', $post);
+    $post->delete();
+}
+```
+
+#### State Protection
+
+- [ ] Mark server-authoritative properties with `#[Locked]`
+- [ ] Validate ALL input data before processing
+- [ ] Implement CSRF protection (built-in with Livewire)
+
+---
+
+### 2. Performance Optimization
+
+#### Minimize Payload Size (CRITICAL)
+
+- [ ] **Remove ALL Eloquent models from public properties**
+- [ ] Convert data collections to `#[Computed]` properties
+- [ ] Keep public properties primitive (strings, integers, booleans, arrays)
+- [ ] Avoid storing large arrays or complex objects in public state
+
+```php
+// ❌ BLOATED PAYLOAD
+public $posts; // Entire Eloquent collection serialized on every request
+
+public function mount() {
+    $this->posts = Post::with('author')->get();
+}
+
+// ✅ OPTIMIZED
+#[Computed]
+public function posts() {
+    return Post::with('author')
+        ->where('user_id', auth()->id())
+        ->get();
+}
+```
+
+**Why This Matters:**
+
+- Every public property is serialized to JSON and sent in BOTH directions (client → server → client)
+- A collection of 50 posts can create a 100KB+ payload
+- Computed properties are fetched on-demand and NOT included in the wire snapshot
+
+#### Database Query Optimization
+
+- [ ] **Eradicate N+1 queries** using `with()` for eager loading
+- [ ] Use Laravel Debugbar/Telescope to verify query count
+- [ ] Add database indexes on columns used in `where()`, `orderBy()`, `orWhere()`
+- [ ] Use `select()` to retrieve only necessary columns
+- [ ] Implement pagination for large datasets
+- [ ] Cache expensive queries with `#[Computed(persist: true)]`
+
+```php
+// ❌ N+1 QUERY PROBLEM
+#[Computed]
+public function posts() {
+    return Post::where('user_id', auth()->id())->get();
+    // In Blade: {{ $post->author->name }} triggers N additional queries
+}
+
+// ✅ EAGER LOADED
+#[Computed]
+public function posts() {
+    return Post::with('author', 'comments.user')
+        ->where('user_id', auth()->id())
+        ->get();
+}
+```
+
+#### Reduce Server Roundtrips
+
+- [ ] **Default to `wire:model` (deferred)** instead of `wire:model.live`
+- [ ] Use `wire:model.live.debounce.300ms` for search inputs
+- [ ] Use `wire:model.blur` for field-level validation
+- [ ] Consolidate multiple filter inputs with an "Apply Filters" button
+- [ ] Remove unnecessary `wire:click` events for UI-only changes
+
+```php
+// ❌ CHATTY COMPONENT (3+ server requests)
+<select wire:model.live="status">...</select>
+<select wire:model.live="category">...</select>
+<select wire:model.live="sortBy">...</select>
+
+// ✅ OPTIMIZED (1 server request)
+<select wire:model="status">...</select>
+<select wire:model="category">...</select>
+<select wire:model="sortBy">...</select>
+<button wire:click="applyFilters">Apply Filters</button>
+```
+
+**wire:model Decision Matrix:**
+
+| Modifier                         | Use Case                 | Requests per Interaction      |
+| -------------------------------- | ------------------------ | ----------------------------- |
+| `wire:model`                     | Default for forms        | 0 (sent with form submission) |
+| `wire:model.blur`                | Field validation         | 1 (on focus loss)             |
+| `wire:model.live.debounce.300ms` | Search/autocomplete      | 1 (after 300ms pause)         |
+| `wire:model.live`                | Real-time username check | Many (every keystroke)        |
+
+---
+
+### 3. Offload to Alpine.js (THE BIGGEST WIN)
+
+#### Move Client-Side State to Alpine
+
+- [ ] **Remove Livewire public properties for modal visibility**
+- [ ] Use Alpine `x-data` for dropdown/accordion state
+- [ ] Handle tab switching with Alpine unless fetching data
+- [ ] Manage temporary UI animations with Alpine
+- [ ] Use `x-show` / `x-if` for conditional rendering
+
+```php
+// ❌ INEFFICIENT (server roundtrip just to show modal)
+// Livewire Component
+public $showModal = false;
+
+public function openModal() {
+    $this->showModal = true;
+}
+
+// Blade
+<button wire:click="openModal">Open</button>
+@if($showModal)
+    <div class="modal">...</div>
+@endif
+
+// ✅ OPTIMIZED (instant client-side)
+// Remove public $showModal from component
+
+// Blade
+<div x-data="{ showModal: false }">
+    <button @click="showModal = true">Open</button>
+    <div x-show="showModal" class="modal">...</div>
+</div>
+```
+
+#### Livewire-Alpine Communication Patterns
+
+**Pattern 1: Livewire dispatches event → Alpine listens**
+
+```php
+// Livewire Component
+public function loadUserData($userId) {
+    $user = User::findOrFail($userId);
+    $this->dispatch('open-edit-modal', user: $user->toArray());
+}
+
+// Blade Template
+<div
+    x-data="{
+        show: false,
+        userData: {}
+    }"
+    @open-edit-modal.window="
+        show = true;
+        userData = $event.detail.user;
+    "
+>
+    <div x-show="show" class="modal">
+        <input x-model="userData.name">
+        <button @click="$wire.saveUser(userData.id, userData)">Save</button>
+    </div>
+</div>
+```
+
+**Pattern 2: Optimistic UI with Alpine**
+
+```php
+// Delete button with optimistic removal
+<button
+    @click="
+        document.getElementById('row-{{ $post->id }}').classList.add('opacity-50');
+        $wire.deletePost({{ $post->id }})
+    "
+>
+    Delete
+</button>
+
+// Livewire method
+public function deletePost($postId) {
+    $post = Post::findOrFail($postId);
+    $this->authorize('delete', $post);
+
+    if ($post->hasActiveComments()) {
+        $this->dispatch('restore-row-' . $postId);
+        $this->dispatch('show-error', 'Cannot delete post with active comments');
+        return;
+    }
+
+    $post->delete();
+}
+```
+
+---
+
+### 4. Blade Template Best Practices
+
+#### Essential Directives
+
+- [ ] **Always use `wire:key` in loops** with unique, stable identifiers
+- [ ] Add `wire:loading` states to all action buttons
+- [ ] Use `wire:loading.attr="disabled"` to prevent duplicate submissions
+- [ ] Implement `wire:confirm` for destructive actions
+- [ ] Use `wire:target` for specific loading states
+
+```blade
+{{-- ❌ MISSING wire:key (causes DOM diffing bugs) --}}
+@foreach($posts as $post)
+    <div>{{ $post->title }}</div>
+@endforeach
+
+{{-- ✅ CORRECT --}}
+@foreach($posts as $post)
+    <div wire:key="post-{{ $post->id }}">
+        {{ $post->title }}
+    </div>
+@endforeach
+
+{{-- Loading states --}}
+<button
+    wire:click="save"
+    wire:loading.attr="disabled"
+    wire:target="save"
+>
+    <span wire:loading.remove wire:target="save">Save</span>
+    <span wire:loading wire:target="save">Saving...</span>
+</button>
+
+{{-- Destructive action confirmation --}}
+<button
+    wire:click="delete({{ $post->id }})"
+    wire:confirm="Are you sure you want to delete this post?"
+>
+    Delete
+</button>
+```
+
+---
+
+### 5. Advanced Optimization Techniques
+
+#### Computed Property Caching
+
+```php
+// Cache expensive computations for 5 minutes
+#[Computed(persist: true, seconds: 300)]
+public function statistics() {
+    return [
+        'total_users' => User::count(),
+        'active_today' => User::whereDate('last_active', today())->count(),
+        'revenue' => Order::sum('total')
+    ];
+}
+
+// Invalidate cache when needed
+public function refreshStats() {
+    unset($this->statistics);
+}
+```
+
+#### Cache Versioning Pattern
+
+```php
+// More reliable than cache tags
+protected function getStatsCacheKey($key): string {
+    $version = Cache::rememberForever('admin_stats_version', fn() => 1);
+    return "admin_stats_v{$version}:{$key}";
+}
+
+protected function clearStatsCache(): void {
+    Cache::increment('admin_stats_version'); // Invalidates all v1 keys
+}
+```
+
+#### Component Decomposition
+
+```php
+// ❌ MONOLITHIC COMPONENT
+class AdminUserList extends Component {
+    // Handles: list display, filtering, edit modal, delete modal, stats
+    // 500+ lines of code
+}
+
+// ✅ DECOMPOSED
+class AdminUserList extends Component {
+    // Only handles: list display and filtering
+}
+
+class UserStatsCard extends Component {
+    // Lazy-loaded: <livewire:user-stats-card lazy />
+}
+
+class EditUserModal extends Component {
+    // Listens for: 'edit-user' event
+}
+```
+
+---
+
+### 6. Implementation Priority
+
+**Apply changes in this order for maximum impact:**
+
+1. **Security First** (30 minutes)
+
+    - Add authorization checks
+    - Lock sensitive properties
+    - Validate inputs
+
+2. **Payload Reduction** (1-2 hours)
+
+    - Convert collections to computed properties
+    - Remove Eloquent models from public props
+    - **This alone can yield 80-90% payload reduction**
+
+3. **Alpine Migration** (2-3 hours)
+
+    - Move modal state to Alpine
+    - Remove wire:model.live from dropdowns
+    - Add "Apply Filters" pattern
+
+4. **Database Optimization** (1-2 hours)
+
+    - Eager load relationships
+    - Add indexes
+    - Verify with Debugbar
+
+5. **Polish UX** (1 hour)
+    - Add loading states
+    - Add wire:key to loops
+    - Add confirmation dialogs
+
+---
+
+## Verification Checklist
+
+After refactoring, verify these metrics:
+
+### Performance Metrics
+
+- [ ] **Payload size reduced by >70%** (check Network tab)
+- [ ] **Database queries ≤ 3 per page load** (check Debugbar)
+- [ ] **No N+1 queries** (verified with Debugbar)
+- [ ] **Initial page load <500ms** (local environment)
+
+### Interaction Metrics
+
+- [ ] Modal open/close has **zero network requests**
+- [ ] Filter changes consolidated into **1 request** (not 3-7)
+- [ ] Search has **debounce applied** (not firing on every keystroke)
+
+### Code Quality
+
+- [ ] **All loops have wire:key**
+- [ ] **All actions have authorization**
+- [ ] **All destructive actions have confirmation**
+- [ ] **All buttons have loading states**
+
+---
+
+## Example: Before & After
+
+### BEFORE (Problematic Component)
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use App\Models\Post;
+
+class PostManager extends Component
+{
+    public $posts; // ❌ Entire collection in payload
+    public $showModal = false; // ❌ Server roundtrip for UI state
+    public $editingPost; // ❌ Full model in payload
+
+    public function mount()
+    {
+        $this->posts = Post::where('user_id', auth()->id())->get();
+        // ❌ Missing eager loading (N+1 queries)
+    }
+
+    public function openEditModal($postId) // ❌ No authorization
+    {
+        $this->editingPost = Post::find($postId);
+        $this->showModal = true; // ❌ Server request just to show modal
+    }
+
+    public function delete($postId) // ❌ CRITICAL SECURITY FLAW
+    {
+        Post::find($postId)->delete();
+    }
+
+    public function render()
+    {
+        return view('livewire.post-manager');
+    }
+}
+```
+
+```blade
+{{-- Blade Template (BEFORE) --}}
+<div>
+    @foreach($posts as $post) {{-- ❌ Missing wire:key --}}
+        <div>
+            <h3>{{ $post->title }}</h3>
+            <p>By {{ $post->author->name }}</p> {{-- ❌ N+1 query --}}
+
+            <button wire:click="openEditModal({{ $post->id }})">
+                Edit {{-- ❌ No loading state --}}
+            </button>
+
+            <button wire:click="delete({{ $post->id }})">
+                Delete {{-- ❌ No confirmation --}}
+            </button>
+        </div>
+    @endforeach
+
+    @if($showModal) {{-- ❌ Livewire managing UI state --}}
+        <div class="modal">
+            <input wire:model.live="editingPost.title"> {{-- ❌ Live on every keystroke --}}
+            <button wire:click="save">Save</button>
+        </div>
+    @endif
+</div>
+```
+
+### AFTER (Optimized Component)
+
+```php
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
+use App\Models\Post;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
+class PostManager extends Component
+{
+    use AuthorizesRequests;
+
+    // ✅ No posts property - using computed instead
+    // ✅ No showModal - Alpine handles it
+    // ✅ No editingPost - fetched on-demand
+
+    #[Computed] // ✅ Not in payload, cached per-request
+    public function posts()
+    {
+        return Post::with('author') // ✅ Eager loading
+            ->where('user_id', auth()->id())
+            ->latest()
+            ->get();
+    }
+
+    public function loadPostForEdit($postId)
+    {
+        $post = Post::findOrFail($postId);
+        $this->authorize('update', $post); // ✅ Authorization
+
+        // ✅ Dispatch to Alpine (no server state)
+        $this->dispatch('open-edit-modal', post: $post->toArray());
+    }
+
+    public function save($postId, $data)
+    {
+        $post = Post::findOrFail($postId);
+        $this->authorize('update', $post);
+
+        $validated = validator($data, [
+            'title' => 'required|max:255',
+            'body' => 'required',
+        ])->validate();
+
+        $post->update($validated);
+
+        $this->dispatch('post-updated');
+    }
+
+    public function delete($postId)
+    {
+        $post = Post::findOrFail($postId); // ✅ Retrieve from DB
+        $this->authorize('delete', $post); // ✅ Authorization
+
+        $post->delete();
+    }
+
+    public function render()
+    {
+        return view('livewire.post-manager');
+    }
+}
+```
+
+```blade
+{{-- Blade Template (AFTER) --}}
+<div>
+    {{-- ✅ Alpine manages modal state (zero server requests) --}}
+    <div
+        x-data="{
+            showModal: false,
+            postData: {}
+        }"
+        @open-edit-modal.window="
+            showModal = true;
+            postData = $event.detail.post;
+        "
+        @post-updated.window="
+            showModal = false;
+        "
+    >
+        @foreach($this->posts as $post) {{-- ✅ wire:key present --}}
+            <div wire:key="post-{{ $post->id }}">
+                <h3>{{ $post->title }}</h3>
+                <p>By {{ $post->author->name }}</p> {{-- ✅ No N+1 (eager loaded) --}}
+
+                <button
+                    wire:click="loadPostForEdit({{ $post->id }})"
+                    wire:loading.attr="disabled"
+                    wire:target="loadPostForEdit({{ $post->id }})"
+                >
+                    {{-- ✅ Loading state --}}
+                    <span wire:loading.remove wire:target="loadPostForEdit({{ $post->id }})">
+                        Edit
+                    </span>
+                    <span wire:loading wire:target="loadPostForEdit({{ $post->id }})">
+                        Loading...
+                    </span>
+                </button>
+
+                <button
+                    wire:click="delete({{ $post->id }})"
+                    wire:confirm="Are you sure you want to delete this post?" {{-- ✅ Confirmation --}}
+                    wire:loading.attr="disabled"
+                >
+                    Delete
+                </button>
+            </div>
+        @endforeach
+
+        {{-- ✅ Alpine-managed modal (instant open/close) --}}
+        <div x-show="showModal" x-cloak class="modal">
+            <input x-model="postData.title"> {{-- ✅ No server requests while typing --}}
+
+            <button
+                @click="$wire.save(postData.id, postData); showModal = false"
+                wire:loading.attr="disabled"
+                wire:target="save"
+            >
+                <span wire:loading.remove wire:target="save">Save</span>
+                <span wire:loading wire:target="save">Saving...</span>
+            </button>
+
+            <button @click="showModal = false">Cancel</button>
+        </div>
+    </div>
+</div>
+```
+
+### Performance Comparison
+
+| Metric              | Before              | After           | Improvement       |
+| ------------------- | ------------------- | --------------- | ----------------- |
+| **Payload Size**    | 150 KB              | 8 KB            | **94% reduction** |
+| **DB Queries**      | 52 queries (N+1)    | 2 queries       | **96% reduction** |
+| **Modal Open Time** | 200-500ms (network) | <16ms (instant) | **Instant**       |
+| **Filter Changes**  | 3-7 requests        | 1 request       | **85% reduction** |
+| **Security Issues** | 3 critical          | 0               | **100% fixed**    |
+
+---
+
+## Final Reminders
+
+### The Decision Tree
+
+```
+User interaction happens
+    ↓
+Does it require server data/logic?
+    ├─ NO → Use Alpine.js (instant, zero latency)
+    │   Examples: toggle modal, switch tabs, show/hide
+    │
+    └─ YES → Use Livewire (optimize it)
+        ↓
+        • Use computed properties for data
+        • Add authorization
+        • Eager load relationships
+        • Add loading states
+        • Use wire:model (deferred by default)
+```
+
+### Common Pitfalls to Avoid
+
+1. **Don't use Livewire for client-only UI state**
+2. **Don't pass Eloquent models to public properties**
+3. **Don't use wire:model.live everywhere**
+4. **Don't forget wire:key in loops**
+5. **Don't trust client-sent parameters**
+6. **Don't skip eager loading**
+7. **Don't omit loading states**
+8. **Don't skip confirmation on destructive actions**
+
+---
+
+## Additional Resources
+
+- [Livewire Security Documentation](https://livewire.laravel.com/docs/security)
+- [Livewire Performance Guide](https://livewire.laravel.com/docs/performance)
+- [Alpine.js Integration Guide](https://livewire.laravel.com/docs/alpine)
+- [Laravel Query Optimization](https://laravel.com/docs/queries#optimizing-queries)
+
+---
+
+_Remember: Livewire + Alpine.js is not an either/or choice. Use both strategically: Livewire for server state, Alpine for client state. This is the path to performant, maintainable applications._
+</laravel-livewire-guidelines>

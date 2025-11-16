@@ -65,11 +65,9 @@
                     </label>
                     <select wire:model.live="statusFilter" class="select select-bordered focus:select-primary">
                         <option value="">All Status</option>
-                        <option value="requested">Requested</option>
                         <option value="started">Borrowed</option>
                         <option value="completed">Returned</option>
-                        <option value="expired">Overdue</option>
-                        <option value="cancelled">Cancelled</option>
+                        <option value="overdue">Overdue</option>
                     </select>
                 </div>
 
@@ -239,7 +237,7 @@
 
                         {{-- Countdown Timer / Overdue Duration --}}
                         <div class="space-y-1">
-                            @if ($transaction['status'] === 'started' || $transaction['status'] === 'expired')
+                            @if (in_array($transaction['status'], ['started', 'overdue']))
                                 @if ($transaction['is_overdue'])
                                     {{-- Overdue Duration Display --}}
                                     <div class="flex items-center gap-2 text-sm font-semibold text-error/80">
@@ -279,46 +277,6 @@
                                             </div>
                                         </div>
                                     </div>
-</div>
-<!-- Alpine global countdown store and helper -->
-<script>
-    document.addEventListener('alpine:init', () => {
-        Alpine.store('globalNow', {
-            now: new Date(),
-            start() {
-                setInterval(() => {
-                    this.now = new Date();
-                }, 1000); // update every second
-            }
-        });
-        Alpine.store('globalNow').start();
-
-        window.countdownTimer = (expiresAt) => ({
-            hours: 0,
-            minutes: 0,
-            seconds: 0,
-            init() {
-                this.update();
-                Alpine.effect(() => {
-                    this.update();
-                });
-            },
-            update() {
-                const now = Alpine.store('globalNow').now;
-                const diff = expiresAt - now;
-                if (diff <= 0) {
-                    this.hours = 0;
-                    this.minutes = 0;
-                    this.seconds = 0;
-                    return;
-                }
-                this.hours = Math.floor(diff / (1000 * 60 * 60));
-                this.minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                this.seconds = Math.floor((diff % (1000 * 60)) / 1000);
-            }
-        });
-    });
-</script>
                                 @endif
                             @else
                                 {{-- Duration for completed/other transactions --}}
@@ -385,22 +343,4 @@
             </div>
         @endif
     </div>
-
-    @if ($this->transactions->isEmpty())
-        <div class="text-center py-12">
-            <h3 class="text-lg font-medium mb-2">No transactions found</h3>
-            <p class="text-base-content/70 mb-4">
-                @if ($search || $statusFilter || $paperTypeFilter || $selectedDate)
-                    Try adjusting your search criteria or filters.
-                @else
-                    You haven't borrowed any papers yet.
-                @endif
-            </p>
-            @if ($search || $statusFilter || $paperTypeFilter || $selectedDate)
-                <button wire:click="clearFilters" class="btn btn-outline">
-                    Clear All Filters
-                </button>
-            @endif
-        </div>
-    @endif
 </div>

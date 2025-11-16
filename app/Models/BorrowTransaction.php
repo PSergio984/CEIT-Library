@@ -171,6 +171,10 @@ class BorrowTransaction extends Model
     // Check if session is expired (overdue)
     public function isExpired(): bool
     {
+        // Guard against null or invalid expires_at
+        if (!$this->expires_at || !($this->expires_at instanceof \Carbon\Carbon)) {
+            return false;
+        }
         return $this->expires_at->isPast();
     }
 

@@ -5,9 +5,7 @@
     $badgeClass = match($status) {
         'completed' => 'badge-success',      // Green for completed/returned on-time
         'started' => 'badge-info',           // Blue for active/ongoing transactions
-        'expired' => 'badge-error',          // Red for overdue/expired transactions
-        'requested' => 'badge-warning',      // Yellow for pending requests
-        'cancelled' => 'badge-neutral',      // Gray for cancelled transactions
+        'overdue' => 'badge-error',          // Red for overdue transactions
         default => 'badge-ghost',            // Default ghost badge
     };
     
@@ -17,7 +15,7 @@
     } else {
         $displayText = match($status) {
             'started' => 'Borrowed',
-            'expired' => 'Overdue',
+            'overdue' => 'Overdue',
             default => ucfirst($status),
         };
     }
