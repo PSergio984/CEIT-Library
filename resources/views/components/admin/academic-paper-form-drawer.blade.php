@@ -32,7 +32,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.department" @endif>
                     Department @if($isEditing) <span wire:dirty wire:target="form.department" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-building-library" wire:model="form.department" :options="$form->department_choices" placeholder="Select Department" required />
+                <x-mary-select icon="o-building-library" wire:model="form.department" :options="$form->department_choices" required />
             </div>
             
             {{-- Publication Year Field --}}
@@ -40,7 +40,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.publication_year" @endif>
                     Publication Year @if($isEditing) <span wire:dirty wire:target="form.publication_year" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-calendar" wire:model="form.publication_year" :options="$form->year_choices" required placeholder="Select Year" />
+                <x-mary-select icon="o-calendar" wire:model="form.publication_year" :options="$form->year_choices" required />
             </div>
             
             {{-- Paper Type Field --}}
@@ -48,13 +48,13 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.paper_type" @endif>
                     Paper Type @if($isEditing) <span wire:dirty wire:target="form.paper_type" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-document" wire:model="form.paper_type" :options="$form->type_choices" placeholder="Select Paper Type" required />
+                <x-mary-select icon="o-document" wire:model="form.paper_type" :options="$form->type_choices" required />
             </div>
             
             {{-- Research Adviser Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.research_adviser_id" @endif>
-                    Research Adviser <span class="text-error">*</span> @if($isEditing) <span wire:dirty wire:target="form.research_adviser_id" class="text-orange-400">(changed)</span> @endif
+                    Research Adviser @if($isEditing) <span wire:dirty wire:target="form.research_adviser_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
                     wire:model="form.research_adviser_id" 
@@ -66,13 +66,14 @@
                     debounce="300ms"
                     :options="$form->research_adviser_options ?? []" 
                     hint="Start typing to search for a research adviser"
+                    placeholder="Select Research Adviser"
                     error-field="form.research_adviser_id" />
             </div>
             
             {{-- Technical Adviser Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.technical_adviser_id" @endif>
-                    Technical Adviser <span class="text-error">*</span> @if($isEditing) <span wire:dirty wire:target="form.technical_adviser_id" class="text-orange-400">(changed)</span> @endif
+                    Technical Adviser @if($isEditing) <span wire:dirty wire:target="form.technical_adviser_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
                     wire:model="form.technical_adviser_id" 
@@ -91,7 +92,7 @@
             {{-- Dean Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean_id" @endif>
-                    Dean <span class="text-error">*</span> @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">(changed)</span> @endif
+                    Dean @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
                     wire:model="form.dean_id" 
@@ -102,6 +103,7 @@
                     min-chars="1"
                     debounce="300ms"
                     :options="$form->dean_options ?? []"
+                    placeholder="Select Dean"
                     hint="Start typing to search for a dean"
                     error-field="form.dean_id" />
             </div>

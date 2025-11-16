@@ -42,7 +42,9 @@ class CheckOverdueTransactions extends Command
     public function handle(): int
     {
         // Acquire lock to prevent concurrent execution
-        $lock = Cache::lock('check-overdue-transactions', 300);
+        // TTL set to 1 hour (3600s) to handle large batches safely
+        // Lock will auto-expire if process crashes, preventing permanent deadlock
+        $lock = Cache::lock('check-overdue-transactions', 3600);
 
         if (!$lock->get()) {
             $this->warn('⚠️  Another instance of this command is already running. Exiting.');
@@ -53,7 +55,10 @@ class CheckOverdueTransactions extends Command
         try {
             return $this->processOverdueTransactions();
         } finally {
-            $lock->forceRelease();
+            // Only release if this instance still owns the lock (prevents releasing another process's lock)
+            if ($lock->owner()) {
+                $lock->release();
+            }
         }
     }
 
