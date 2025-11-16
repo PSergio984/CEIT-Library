@@ -22,6 +22,7 @@ class BorrowTransactionFactory extends Factory
      */
     public function definition(): array
     {
+
         $timeIn = $this->faker->dateTimeBetween('-3 months', 'now');
         $timeOut = $this->faker->optional(0.8)->dateTimeBetween($timeIn, \Carbon\Carbon::parse($timeIn)->addHours(4));
 
@@ -30,8 +31,9 @@ class BorrowTransactionFactory extends Factory
             $status = 'completed';
         } elseif ($timeIn) {
             $carbonTimeIn = $timeIn instanceof \Carbon\Carbon ? $timeIn : \Carbon\Carbon::parse($timeIn);
-            $expiresAt = $carbonTimeIn->copy()->addHours(6);
-            $status = now()->greaterThan($expiresAt) ? 'overdue' : 'started';
+            // Deterministic: if timeIn is older than 6 hours, set overdue, else started
+            $hoursAgo = $carbonTimeIn->diffInHours(now());
+            $status = $hoursAgo > 6 ? 'overdue' : 'started';
         }
 
         return [

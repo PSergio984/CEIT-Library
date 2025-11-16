@@ -90,9 +90,6 @@
                             <h3 class="font-semibold text-base">{{ $student['name'] }}</h3>
                         </div>
                     </div>
-                    @if ($student['is_admin'])
-                        <span class="badge badge-info badge-sm">Librarian</span>
-                    @endif
                 </div>
 
                 <div class="mb-3">

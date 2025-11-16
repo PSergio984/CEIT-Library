@@ -35,6 +35,7 @@
                     type="text" 
                     class="grow bg-transparent focus:outline-none"
                     placeholder="Search by title, author, catalog code..." 
+                    aria-label="Search papers by title, author, or catalog code"
                     wire:model.live.debounce.300ms="search"
                     x-ref="searchInput"
                 />

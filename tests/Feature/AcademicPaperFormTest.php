@@ -24,7 +24,7 @@ class AcademicPaperFormTest extends TestCase
         parent::setUp();
         Cache::flush();
 
-        $this->admin = User::factory()->create(['is_admin' => true]);
+        $this->admin = User::factory()->create(['role_id' => 3]);
     }
 
     #[Test]

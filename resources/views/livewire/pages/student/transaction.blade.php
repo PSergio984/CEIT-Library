@@ -352,40 +352,41 @@
 {{-- Alpine.js countdownTimer component for transaction timers --}}
 <script>
     document.addEventListener('alpine:init', () => {
-        Alpine.data('countdownTimer', (expiresAtIso) => {
-            let interval = null;
-            return {
-                expiresAt: new Date(expiresAtIso),
-                hours: 0,
-                minutes: 0,
-                seconds: 0,
-                elapsed: false,
-                init() {
-                    this.update();
-                    interval = setInterval(() => this.update(), 1000);
-                },
-                update() {
-                    const now = new Date();
-                    let diff = this.expiresAt - now;
-                    if (diff <= 0) {
-                        this.hours = 0;
-                        this.minutes = 0;
-                        this.seconds = 0;
-                        this.elapsed = true;
-                        clearInterval(interval);
-                        return;
+        Alpine.data('countdownTimer', (expiresAtIso) => ({
+            expiresAt: new Date(expiresAtIso),
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            elapsed: false,
+            interval: null,
+            init() {
+                this.update();
+                this.interval = setInterval(() => this.update(), 1000);
+            },
+            update() {
+                const now = new Date();
+                let diff = this.expiresAt - now;
+                if (diff <= 0) {
+                    this.hours = 0;
+                    this.minutes = 0;
+                    this.seconds = 0;
+                    this.elapsed = true;
+                    if (this.interval) {
+                        clearInterval(this.interval);
+                        this.interval = null;
                     }
-                    this.hours = Math.floor(diff / (1000 * 60 * 60));
-                    this.minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-                    this.seconds = Math.floor((diff % (1000 * 60)) / 1000);
-                },
-                destroy() {
-                    if (interval) {
-                        clearInterval(interval);
-                        interval = null;
-                    }
+                    return;
                 }
-            };
-        });
+                this.hours = Math.floor(diff / (1000 * 60 * 60));
+                this.minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                this.seconds = Math.floor((diff % (1000 * 60)) / 1000);
+            },
+            destroy() {
+                if (this.interval) {
+                    clearInterval(this.interval);
+                    this.interval = null;
+                }
+            }
+        }));
     });
 </script>
