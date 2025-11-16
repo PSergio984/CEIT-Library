@@ -71,6 +71,10 @@
                     <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" />
                 @endcan
 
+                @can('manage-academic-papers')
+                    <x-mary-menu-item title="Advisers & Deans" icon="o-academic-cap" link="/admin/advisers-deans" />
+                @endcan
+
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
 
                 {{-- @can('manage-students')
