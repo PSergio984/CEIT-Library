@@ -683,35 +683,35 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         $this->lastAuthorSearch = $value;
 
-        // Get currently selected author IDs to ensure they're always included
-        $selectedIds = $this->form->author_ids ?? [];
-
         // Use persistent cache with short TTL for search results
-        $cacheKey = 'author_search_' . md5(strtolower(trim($value))) . '_' . md5(json_encode($selectedIds));
+        $cacheKey = 'author_search_' . md5(strtolower(trim($value)));
 
-        $results = Cache::remember($cacheKey, 300, function () use ($value, $selectedIds) {
+        $results = Cache::remember($cacheKey, 300, function () use ($value) {
             $query = \App\Models\Author::query()
                 ->select('id', 'name')
                 ->orderBy('name');
 
             if (!empty($value)) {
-                // Search by name OR include already selected authors
-                $query->where(function ($q) use ($value, $selectedIds) {
-                    $q->where('name', 'like', '%' . $value . '%');
-                    if (!empty($selectedIds)) {
-                        $q->orWhereIn('id', $selectedIds);
-                    }
-                });
-            } elseif (!empty($selectedIds)) {
-                // If no search value but have selected IDs, prioritize them
-                $query->whereIn('id', $selectedIds);
+                $query->where('name', 'like', '%' . $value . '%');
             }
 
             return $query->limit(50)->get();
         });
 
+        // Always include selected authors in options for correct tag rendering
+        $selectedIds = $this->form->author_ids ?? [];
+        $selectedAuthors = collect();
+        if (!empty($selectedIds)) {
+            $selectedAuthors = \App\Models\Author::whereIn('id', $selectedIds)
+                ->select('id', 'name')
+                ->get();
+        }
+
+        // Merge search results and selected authors, remove duplicates
+        $merged = $results->concat($selectedAuthors)->unique('id')->values();
+
         // Transform to MaryUI format
-        $options = $results->map(function ($author) {
+        $options = $merged->map(function ($author) {
             return [
                 'id' => $author->id,
                 'name' => $author->name,

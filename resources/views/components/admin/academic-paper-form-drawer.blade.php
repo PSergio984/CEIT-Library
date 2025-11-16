@@ -118,8 +118,6 @@
                     min-chars="0" 
                     debounce="300ms" 
                     :options="$form->author_options ?? []" 
-                    @change="$refs.authorChoices && $refs.authorChoices.reset && $refs.authorChoices.reset()"
-                    x-ref="authorChoices"
                     hint="Start typing to search for authors" 
                     placeholder="Select Authors" 
                     error-field="form.author_ids" />
