@@ -84,7 +84,7 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
 
         // Advisers & Deans management (Super Admin only)
         Route::get('/advisers-deans', AdminAdvisersDeans::class)
-            ->middleware('can:manage-advisers-deans')
+            ->middleware('can:manage-academic-papers')
             ->name('advisers-deans');
 
         // Attendance logs (Super Admin only)

@@ -49,6 +49,18 @@ class AdminAdvisersDeans extends AdminComponent
         $table = $this->getTableName();
         $relatedColumn = $this->getRelatedColumn();
 
+        // Whitelist allowed columns and directions
+        $allowedColumns = ['id', 'name', 'papers_count', 'created_at'];
+        $allowedDirections = ['asc', 'desc'];
+
+        // Normalize and validate requested column
+        $requestedColumn = $this->sortBy['column'] ?? 'name';
+        $column = in_array($requestedColumn, $allowedColumns, true) ? $requestedColumn : 'name';
+
+        // Normalize and validate requested direction
+        $requestedDirection = strtolower($this->sortBy['direction'] ?? 'asc');
+        $direction = in_array($requestedDirection, $allowedDirections, true) ? $requestedDirection : 'asc';
+
         return DB::table($table)
             ->select([
                 "{$table}.id",
@@ -61,18 +73,15 @@ class AdminAdvisersDeans extends AdminComponent
                 $query->where("{$table}.name", 'like', "%{$this->search}%");
             })
             ->groupBy("{$table}.id", "{$table}.name", "{$table}.created_at")
-            ->orderBy($this->sortBy['column'], $this->sortBy['direction'])
+            ->orderBy($column, $direction)
             ->paginate(20);
     }
 
-    #[Computed(persist: true, seconds: 60)]
+    #[Computed]
     public function totalCount()
     {
-        return Cache::remember(
-            "advisers_deans_total_{$this->activeTab}",
-            300,
-            fn() => DB::table($this->getTableName())->count()
-        );
+        // Don't cache - needs to be accurate per tab
+        return DB::table($this->getTableName())->count();
     }
 
     private function getTableName(): string
@@ -131,7 +140,7 @@ class AdminAdvisersDeans extends AdminComponent
     public function save()
     {
         $this->validate([
-            'name' => 'required|string|max:255|unique:' . $this->getTableName() . ',name,' . $this->editingId,
+            'name' => 'required|string|max:255|unique:' . $this->getTableName() . ',name,' . ($this->editingId ?? 'NULL') . ',id',
         ]);
 
         $table = $this->getTableName();

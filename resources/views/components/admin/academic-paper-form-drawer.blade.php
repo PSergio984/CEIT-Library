@@ -61,16 +61,14 @@
                     single 
                     searchable 
                     search-function="searchResearchAdvisers" 
-                    icon="o-user"
-                    min-chars="1"
-                    debounce="300ms"
+                    icon="o-user" 
+                    min-chars="0" 
+                    debounce="300ms" 
                     :options="$form->research_adviser_options ?? []" 
-                    hint="Start typing to search for a research adviser"
-                    placeholder="Select Research Adviser"
+                    hint="Start typing to search for a research adviser" 
+                    placeholder="Select Research Adviser" 
                     error-field="form.research_adviser_id" />
-            </div>
-            
-            {{-- Technical Adviser Field --}}
+            </div>            {{-- Technical Adviser Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.technical_adviser_id" @endif>
                     Technical Adviser @if($isEditing) <span wire:dirty wire:target="form.technical_adviser_id" class="text-orange-400">*</span> @endif
@@ -80,16 +78,14 @@
                     single 
                     searchable 
                     search-function="searchTechnicalAdvisers" 
-                    icon="o-user"
-                    min-chars="1"
-                    debounce="300ms"
+                    icon="o-user" 
+                    min-chars="0" 
+                    debounce="300ms" 
                     :options="$form->technical_adviser_options ?? []" 
-                    hint="Start typing to search for a technical adviser"
-                    placeholder="Select Technical Adviser"
+                    hint="Start typing to search for a technical adviser" 
+                    placeholder="Select Technical Adviser" 
                     error-field="form.technical_adviser_id" />
-            </div>
-            
-            {{-- Dean Field --}}
+            </div>            {{-- Dean Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean_id" @endif>
                     Dean @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">*</span> @endif
@@ -99,12 +95,12 @@
                     single 
                     searchable 
                     search-function="searchDeans" 
-                    icon="o-user-circle"
-                    min-chars="1"
-                    debounce="300ms"
-                    :options="$form->dean_options ?? []"
-                    placeholder="Select Dean"
-                    hint="Start typing to search for a dean"
+                    icon="o-user" 
+                    min-chars="0" 
+                    debounce="300ms" 
+                    :options="$form->dean_options ?? []" 
+                    hint="Start typing to search for a dean" 
+                    placeholder="Select Dean" 
                     error-field="form.dean_id" />
             </div>
 

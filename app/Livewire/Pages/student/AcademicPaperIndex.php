@@ -392,6 +392,14 @@ class AcademicPaperIndex extends Component
         };
     }
 
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('livewire.pages.student.academic-paper-index-placeholder');
+    }
+
     public function render()
     {
         return view('livewire.pages.student.academic-paper-index');

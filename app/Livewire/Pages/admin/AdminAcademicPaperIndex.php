@@ -12,8 +12,10 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use Livewire\Attributes\Lazy;
 
 #[Title('Academic Paper List')]
+#[Lazy]
 class AdminAcademicPaperIndex extends AdminComponent
 {
     use Toast;
@@ -990,6 +992,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         $direction = $this->sortBy['direction'] ?? 'asc';
 
         return in_array(strtolower($direction), ['asc', 'desc']) ? strtolower($direction) : 'asc';
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('livewire.pages.admin.admin-academic-paper-index-placeholder');
     }
 
     public function render()

@@ -1,12 +1,26 @@
 {{-- resources/views/livewire/academic-paper-index.blade.php --}}
 <x-slot name="header">
     <h2 class="font-semibold text-xl text-base-content leading-tight">
-        {{ __('Academic Paper Directory') }}
+        {{ __("Academic Paper Directory") }}
     </h2>
 </x-slot>
 
 <div>
-    <div class="p-6">
+    {{-- Full Page Loading Spinner - Shows ONLY during initial navigation (academicPapers change) --}}
+    <div wire:loading.flex wire:target="academicPapers" 
+        class="fixed inset-0 left-64 bg-base-100 z-50 items-center justify-center">
+        <div class="flex flex-col items-center gap-4">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-base-content font-medium">Loading academic papers...</p>
+        </div>
+    </div>
+
+    {{-- Main Content - Only hidden during navigation, subtle opacity for filters --}}
+    <div class="p-6" 
+        wire:loading.remove 
+        wire:target="academicPapers"
+        wire:loading.class="opacity-50"
+        wire:loading.class.remove="opacity-100">
         {{-- Header Section --}}
         <div class="mb-6">
             <h3 class="text-lg font-medium text-base-content mb-2">Library Academic Paper Collection</h3>
@@ -60,6 +74,17 @@
                     </div>
 
                     <div class="flex gap-2 mt-4 pt-3 border-t border-base-300">
+                        <button x-data="{ loading: false }"
+                            @click="loading = true; $wire.showPaperDetails({{ $paper->id }}).finally(() => loading = false)"
+                            :disabled="loading"
+                            class="btn btn-sm btn-primary gap-2 flex-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span x-show="!loading">View Details</span>
+                            <span x-show="loading" class="loading loading-spinner loading-xs"></span>
+                        </button>
                         <button 
                             x-data="{ loading: false }"
                             @click="
@@ -101,12 +126,11 @@
 
         {{-- Desktop Table View (for screens 1280px and wider) --}}
         <div class="hidden xl:block">
-            <div class="overflow-x-auto">
-                <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy"
-                    :per-page="$perPage" :per-page-values="[5, 10, 25, 50]"
-                    striped
-                    row-class="hover:bg-base-200"
-                    header-class="text-base-content bg-base-200">
+            <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy"
+                :per-page="$perPage" :per-page-values="[5, 10, 25, 50]"
+                striped
+                row-class="hover:bg-base-200"
+                header-class="text-base-content bg-base-200">
                     <x-slot:empty>
                         <div class="text-center py-12">
                             <x-mary-icon name="o-document-magnifying-glass" class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
@@ -154,7 +178,6 @@
                     </button>
                     @endscope
                 </x-mary-table>
-            </div>
         </div>
 
     </div>{{-- Close p-6 div --}}

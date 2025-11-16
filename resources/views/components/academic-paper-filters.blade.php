@@ -6,14 +6,16 @@
 ])
 
 {{-- Academic Paper Filters Component - Reusable for Admin and Student --}}
-<div x-data="{ 
-    availableYears: @js($availableYears->toArray()),
-    availablePaperTypes: @js($availablePaperTypes->toArray()),
-    availableDepartments: @js($availableDepartments->toArray()),
-    filtersLoaded: false,
+<div x-data="{
+    availableYears: null,
+    availablePaperTypes: null,
+    availableDepartments: null,
     
     init() {
-        // Data is now initialized immediately for accessibility and no visual flash
+        // Synchronously assign props to Alpine state for predictable rendering
+        this.availableYears = @js($availableYears->toArray());
+        this.availablePaperTypes = @js($availablePaperTypes->toArray());
+        this.availableDepartments = @js($availableDepartments->toArray());
     },
     
     get hasActiveFilters() {
@@ -89,7 +91,7 @@
         </div>
 
         {{-- Filter Controls --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3" @click.once="filtersLoaded = true">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {{-- Status Filter --}}
             <select wire:model.live="statusFilter" class="select select-bordered select-sm sm:select-md w-full">
                 <option value="">All Status</option>
@@ -150,37 +152,9 @@
                 <span x-text="$wire.yearFromFilter"></span>
             </span>
             <span x-show="$wire.yearToFilter" x-cloak class="badge badge-sm gap-1">
-                @props([
-                    'availableYears',
-                    'availablePaperTypes',
-                    'availableDepartments',
-                    'showSearchBar' => true,
-                ])
-
-                {{-- Academic Paper Filters Component - Reusable for Admin and Student --}}
-                <div x-data="{
-                    availableYears: null,
-                    availablePaperTypes: null,
-                    availableDepartments: null,
-    
-                    init() {
-                        // Synchronously assign props to Alpine state for predictable rendering
-                        this.availableYears = @js($availableYears->toArray());
-                        this.availablePaperTypes = @js($availablePaperTypes->toArray());
-                        this.availableDepartments = @js($availableDepartments->toArray());
-                    },
-    
-                    get hasActiveFilters() {
-                        return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter);
-                    },
-                    get validYearsFrom() {
-                        const toYear = $wire.yearToFilter;
-                        if (!toYear) return this.availableYears;
-                        return this.availableYears.filter(year => year <= parseInt(toYear));
-                    },
-                    get validYearsTo() {
-                        const fromYear = $wire.yearFromFilter;
-                        if (!fromYear) return this.availableYears;
-                        return this.availableYears.filter(year => year >= parseInt(fromYear));
-                    }
-                }" class="mb-6">
+                <span>To:</span>
+                <span x-text="$wire.yearToFilter"></span>
+            </span>
+        </div>
+    </div>
+</div>
