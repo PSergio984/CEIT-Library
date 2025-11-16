@@ -116,7 +116,7 @@ class DatabaseSeeder extends Seeder
                 Inventory::factory()->create([
                     'academic_paper_id' => $academicPaper->id,
                     'copy_number' => $i,
-                    'status' => fake()->randomElement(['Available', 'Reserved', 'Unavailable']),
+                    'status' => fake()->randomElement(['Available', 'Unavailable']),
                 ]);
             }
         });
@@ -154,13 +154,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create at least 5 borrow transactions for each status for the specific student
-        // Use only allowed enum values for status
+        // Use only allowed enum values for status: ['started', 'completed', 'overdue']
         $statuses = [
-            'completed',    // completed
-            'started',      // active
-            'expired',      // overdue
-            'cancelled',    // cancelled
-            'requested',    // requested
+            'completed',    // completed transaction
+            'started',      // active/ongoing transaction
+            'overdue',      // overdue transaction
         ];
 
         // Eager load copies to avoid N+1 queries
@@ -224,7 +222,7 @@ class DatabaseSeeder extends Seeder
                 'batch_no' => $currentYear . '0002',
                 'start_date' => $today->copy()->subDays(10),
                 'end_date' => $today->copy()->subDays(3),
-                'status' => 'expired',
+                'status' => 'expired', // This is for Librarian model, not BorrowTransaction
                 'created_by' => $admin->id,
                 'created_at' => $today->copy()->subDays(10),
                 'updated_at' => $today->copy()->subDays(3),
@@ -242,7 +240,7 @@ class DatabaseSeeder extends Seeder
                 'batch_no' => $currentYear . '0003',
                 'start_date' => $today->copy()->subDays(20),
                 'end_date' => $today->copy()->subDays(7),
-                'status' => 'expired',
+                'status' => 'expired', // This is for Librarian model, not BorrowTransaction
                 'created_by' => $admin->id,
                 'created_at' => $today->copy()->subDays(20),
                 'updated_at' => $today->copy()->subDays(7),
@@ -347,7 +345,7 @@ class DatabaseSeeder extends Seeder
                     ]);
 
                     // Mark the copy as reserved
-                    $availableCopy->update(['status' => 'Reserved']);
+                    $availableCopy->update(['status' => 'Unavailable']);
                 }
             }
         }
@@ -582,6 +580,5 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
         $this->command->info('- 3 Main Headers for Rules and Regulations with 3-5 rules each');
-        $this->command->info('- Sample violations, credit scores, and session history');
     }
 }

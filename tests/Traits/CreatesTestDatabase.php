@@ -99,7 +99,7 @@ trait CreatesTestDatabase
                 $table->foreignId('inventory_id')->constrained('inventories')->onDelete('cascade');
                 $table->timestamp('time_in')->nullable();
                 $table->timestamp('time_out')->nullable();
-                $table->enum('status', ['requested', 'started', 'completed', 'expired', 'cancelled'])->default('requested');
+                $table->enum('status', ['started', 'completed', 'overdue'])->default('started');
                 $table->timestamp('expires_at');
                 $table->string('session_token', 64)->unique();
                 $table->text('notes')->nullable();

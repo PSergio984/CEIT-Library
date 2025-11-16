@@ -59,7 +59,7 @@ class extends Component
 
                     // Check if concatenated name matches email prefix
                     if ($concatenatedName !== $emailPrefix) {
-                        $fail('The first name and last name must match the characters before @plv.edu.ph in your email address. Expected: ' . $emailPrefix . ', Got: ' . $concatenatedName);
+                        $fail('The first name and last name must match the characters before @plv.edu.ph in your email address.');
                     }
                 }
             ],
