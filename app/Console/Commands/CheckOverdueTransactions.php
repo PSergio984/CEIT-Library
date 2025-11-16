@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
  * 2. Update their status to 'overdue'
  * 3. Send overdue notification emails to affected users
  * 
- * Scheduled in: app/Console/Kernel.php
+ * Scheduled in: routes/console.php
  */
 class CheckOverdueTransactions extends Command
 {

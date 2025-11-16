@@ -101,6 +101,9 @@ class Transaction extends Component
                         // Still active, calculate time remaining
                         $timeRemaining = $transaction->time_remaining;
                     }
+                } elseif ($transaction->status === 'overdue') {
+                    $isOverdue = true;
+                    $overdueDuration = $transaction->overdue_duration;
                 }
 
                 return [

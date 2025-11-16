@@ -187,7 +187,7 @@ class BorrowTransaction extends Model
     // Check if transaction is overdue (started but past expiration)
     public function isOverdue(): bool
     {
-        return $this->status === 'started' && $this->isExpired();
+        return in_array($this->status, ['started', 'overdue'], true) && $this->isExpired();
     }
 
     /**
@@ -207,7 +207,8 @@ class BorrowTransaction extends Model
     // Get overdue duration in human readable format
     public function getOverdueDurationAttribute(): ?string
     {
-        if (!$this->isOverdue()) {
+
+        if (!($this->status === 'overdue' || $this->isOverdue())) {
             return null;
         }
 

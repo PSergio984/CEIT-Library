@@ -103,5 +103,5 @@ Schedule::command('librarian:update-roles')->dailyAt('00:00');
 // Set lock timeout to 65 minutes (slightly longer than hourly interval) to avoid race window
 Schedule::command('transactions:check-overdue')
     ->hourly()
-    ->withoutOverlapping(65) // Prevent overlap, 65 min lock timeout (covers full interval)
+    ->withoutOverlapping(55) // Prevent overlap, 55 min lock timeout (slightly less than interval)
     ->onOneServer(); // Only one instance across all servers
