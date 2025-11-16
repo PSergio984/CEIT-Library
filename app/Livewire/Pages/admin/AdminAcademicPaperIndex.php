@@ -700,12 +700,11 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Always include selected authors in options for correct tag rendering
         $selectedIds = $this->form->author_ids ?? [];
-        $selectedAuthors = collect();
-        if (!empty($selectedIds)) {
-            $selectedAuthors = \App\Models\Author::whereIn('id', $selectedIds)
-                ->select('id', 'name')
-                ->get();
-        }
+        $selectedAuthors = !empty($selectedIds)
+            ? \App\Models\Author::whereIn('id', $selectedIds)
+            ->select('id', 'name')
+            ->get()
+            : collect();
 
         // Merge search results and selected authors, remove duplicates
         $merged = $results->concat($selectedAuthors)->unique('id')->values();

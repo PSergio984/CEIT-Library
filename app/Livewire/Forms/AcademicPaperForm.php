@@ -136,7 +136,7 @@ class AcademicPaperForm extends Form
         }
 
         // Filter out any invalid IDs and sync
-        $validAuthorIds = array_filter($this->author_ids, fn($id) => is_numeric($id) && $id > 0);
+        $validAuthorIds = array_filter($this->author_ids, fn($id) => is_int($id) && $id > 0);
         $academicPaper->authors()->sync($validAuthorIds);
     }
 

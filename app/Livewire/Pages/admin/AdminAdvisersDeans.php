@@ -51,7 +51,8 @@ class AdminAdvisersDeans extends AdminComponent
         $table = $this->getTableName();
 
         if (!in_array($table, $allowedTables, true)) {
-            throw new \InvalidArgumentException('Invalid table name');
+            \Log::warning('Invalid table name requested', ['table' => $table, 'activeTab' => $this->activeTab]);
+            throw new \InvalidArgumentException('Invalid data source requested.');
         }
 
         $relatedColumn = $this->getRelatedColumn();
@@ -213,7 +214,7 @@ class AdminAdvisersDeans extends AdminComponent
         // Check if entry is being used
         if ($this->activeTab === 'authors') {
             // Authors use a pivot table
-            $inUse = DB::table('academic_paper_author')
+            $inUse = DB::table('academic_paper_authors')
                 ->where('author_id', $this->deleteId)
                 ->exists();
         } else {

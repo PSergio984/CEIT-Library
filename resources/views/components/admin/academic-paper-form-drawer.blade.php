@@ -68,7 +68,9 @@
                     hint="Start typing to search for a research adviser" 
                     placeholder="Select Research Adviser" 
                     error-field="form.research_adviser_id" />
-            </div>            {{-- Technical Adviser Field --}}
+            </div>
+
+            {{-- Technical Adviser Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.technical_adviser_id" @endif>
                     Technical Adviser @if($isEditing) <span wire:dirty wire:target="form.technical_adviser_id" class="text-orange-400">*</span> @endif
@@ -85,7 +87,9 @@
                     hint="Start typing to search for a technical adviser" 
                     placeholder="Select Technical Adviser" 
                     error-field="form.technical_adviser_id" />
-            </div>            {{-- Dean Field --}}
+            </div>
+
+            {{-- Dean Field --}}
             <div class="mb-6">
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.dean_id" @endif>
                     Dean @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">*</span> @endif
