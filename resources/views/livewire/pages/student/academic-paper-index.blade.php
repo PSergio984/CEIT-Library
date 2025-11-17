@@ -201,10 +201,20 @@
     <div 
         x-data="{
             showPaperModal: false,
-            showQrModal: false
+            showQrModal: false,
+            openModal(modal) {
+                this.showPaperModal = false;
+                this.showQrModal = false;
+                if (modal === 'paper') this.showPaperModal = true;
+                if (modal === 'qr') this.showQrModal = true;
+            },
+            closeAllModals() {
+                this.showPaperModal = false;
+                this.showQrModal = false;
+            }
         }"
-        @open-paper-modal.window="showPaperModal = true"
-        @open-qr-modal.window="showQrModal = true"
+        @open-paper-modal.window="openModal('paper')"
+        @open-qr-modal.window="openModal('qr')"
         @close-qr-modal.window="showQrModal = false"
     >
         <!-- Modal for Academic Paper Details - Shared Component -->
