@@ -94,8 +94,15 @@ new class extends Component
                         class="input input-bordered focus:input-primary w-full transition-all"
                         autocomplete="new-password"
                     />
+                    {{--
+                        Password requirements are enforced by Password::defaults() in the validation rules in this component.
+                        If you change the password policy, update this message to match the new rules.
+                        For dynamic guidance, pass a computed requirements string from the component.
+                    --}}
                     <label class="label">
-                        <span class="label-text-alt text-base-content/60">Use at least 8 characters with a mix of letters, numbers & symbols</span>
+                        <span class="label-text-alt text-base-content/60">
+                            Use at least 8 characters with a mix of letters, numbers & symbols
+                        </span>
                     </label>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>

@@ -179,11 +179,29 @@
         </x-mary-table>
     </div>
 
-    @if ($this->entries->isEmpty() && !$search)
-        <div class="text-center py-12">
+
+    @if ($this->entries->isEmpty())
+        <div class="hidden lg:block text-center py-12">
             <x-mary-icon name="o-user-group" class="w-16 h-16 mx-auto text-base-content/30 mb-4" />
-            <h3 class="text-lg font-medium mb-2">No entries found</h3>
-            <p class="text-base-content/70">Add your first {{ $activeTab === 'deans' ? 'dean' : ($activeTab === 'authors' ? 'author' : 'adviser') }} to get started.</p>
+            <h3 class="text-lg font-medium mb-2">
+                @if($search)
+                    No results for '{{ $search }}'
+                @else
+                    No entries found
+                @endif
+            </h3>
+            <p class="text-base-content/70 mb-4">
+                @if($search)
+                    Try clearing or refining your search.
+                @else
+                    Add your first {{ $activeTab === 'deans' ? 'dean' : ($activeTab === 'authors' ? 'author' : 'adviser') }} to get started.
+                @endif
+            </p>
+            @if($search)
+                <x-mary-button wire:click="$set('search', '')" class="btn-outline">
+                    Clear Search
+                </x-mary-button>
+            @endif
         </div>
     @endif
 
