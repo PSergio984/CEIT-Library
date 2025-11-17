@@ -143,7 +143,8 @@
                     type="number"
                     wire:model="form.penalty_score"
                     placeholder="Enter penalty score"
-                    min="0"
+                    min="1"
+                    max="100"
                     required
                 />
 
