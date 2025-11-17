@@ -58,7 +58,6 @@ class ActiveUsersTab extends AdminComponent
             ->where('status', 'active')
             ->whereNotNull('time_in')
             ->whereNull('time_out')
-            ->whereDate('time_in', today())
             ->when($search, function ($query) use ($search) {
                 // Split the search into words
                 $terms = preg_split('/\s+/', $search);
