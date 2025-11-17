@@ -1,5 +1,6 @@
 <div>
-    <div class="mt-6">
+    <x-mary-tab name="transactions-tab" label="Violation Transactions" icon="o-document-text">
+        <div class="mt-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-semibold">Violation Records</h3>
             </div>
@@ -151,7 +152,7 @@
                     </svg>
                     <p class="text-base-content/50 mt-4">No violation records found</p>
                 </div>
-            {{-- @endif removed: fixed Blade parse error --}}
+            @endif
         </div>
     </x-mary-tab>
 
@@ -168,4 +169,5 @@
             </div>
         </div>
     </x-mary-modal>
+
 </div>
