@@ -143,7 +143,9 @@
                     type="number"
                     wire:model="form.penalty_score"
                     placeholder="Enter penalty score"
-                    min="0"
+                    min="1"
+                    max="100"
+                    value="{{ old('form.penalty_score', 1) }}"
                     required
                 />
 

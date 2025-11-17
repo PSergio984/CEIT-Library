@@ -6,8 +6,18 @@
 ])
 
 {{-- Academic Paper Filters Component - Reusable for Admin and Student --}}
-<div x-data="{ 
-    availableYears: @js($availableYears->toArray()),
+<div x-data="{
+    availableYears: null,
+    availablePaperTypes: null,
+    availableDepartments: null,
+    
+    init() {
+        // Synchronously assign props to Alpine state for predictable rendering
+        this.availableYears = @js($availableYears->toArray());
+        this.availablePaperTypes = @js($availablePaperTypes->toArray());
+        this.availableDepartments = @js($availableDepartments->toArray());
+    },
+    
     get hasActiveFilters() {
         return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter);
     },
@@ -35,6 +45,7 @@
                     type="text" 
                     class="grow bg-transparent focus:outline-none"
                     placeholder="Search by title, author, catalog code..." 
+                    aria-label="Search papers by title, author, or catalog code"
                     wire:model.live.debounce.300ms="search"
                     x-ref="searchInput"
                 />
@@ -91,17 +102,17 @@
             {{-- Paper Type Filter --}}
             <select wire:model.live="paperTypeFilter" class="select select-bordered select-sm sm:select-md w-full">
                 <option value="">All Types</option>
-                @foreach($availablePaperTypes as $type)
-                    <option value="{{ $type }}">{{ $type }}</option>
-                @endforeach
+                <template x-for="type in availablePaperTypes" :key="type">
+                    <option :value="type" x-text="type"></option>
+                </template>
             </select>
             
             {{-- Department Filter --}}
             <select wire:model.live="departmentFilter" class="select select-bordered select-sm sm:select-md w-full">
                 <option value="">All Departments</option>
-                @foreach($availableDepartments as $dept)
-                    <option value="{{ $dept }}">{{ $dept }}</option>
-                @endforeach
+                <template x-for="dept in availableDepartments" :key="dept">
+                    <option :value="dept" x-text="dept"></option>
+                </template>
             </select>
             
             {{-- Year From Filter --}}

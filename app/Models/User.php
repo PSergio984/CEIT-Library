@@ -18,7 +18,6 @@ use Illuminate\Notifications\Notifiable;
  * @property int $credit_score
  * @property string $account_status
  * @property string $password
- * @property int $is_admin
  * @property string|null $remember_token
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at

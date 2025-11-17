@@ -129,15 +129,15 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" class="py-12 px-4 text-center">
-                                    <div class="flex flex-col items-center gap-3">
-                                        <svg class="w-16 h-16 text-slate-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                                        </svg>
-                                        <p class="text-slate-400">No users found</p>
-                                    </div>
+                                <td colspan="5" class="py-4 px-4">
+                                    <x-empty-state
+                                        icon="o-users"
+                                        title="No Users Found"
+                                        message="No users match your current filters. Try adjusting your search criteria."
+                                        :show-action="false"
+                                        size="sm"
+                                        class="border-0"
+                                    />
                                 </td>
                             </tr>
                         @endforelse

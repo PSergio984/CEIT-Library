@@ -3,18 +3,23 @@
 namespace App\Livewire\Pages\admin;
 
 use App\Models\Attendance;
+use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
-use Livewire\Attributes\Title;
 
 #[Title('Attendance Logs')]
+#[Lazy]
 class AdminAttendanceLogIndex extends AdminComponent
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     public $perPage = 20;
+
     public $search = '';
+
     public $statusFilter = '';
+
     public $selectedDate = '';
 
     // Listeners for QR scanner events
@@ -81,20 +86,19 @@ class AdminAttendanceLogIndex extends AdminComponent
             $query->orderBy('time_in', 'desc');
         }
 
-
         return $query->paginate($this->perPage)
             ->through(function ($attendance) {
 
                 return [
-                    'id'               => $attendance->id,
-                    'user_name'        => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
-                    'scanned_by_name'  => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
-                    'user'             => $attendance->user,
-                    'time_in'          => $attendance->time_in,
-                    'time_out'         => $attendance->time_out,
+                    'id' => $attendance->id,
+                    'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
+                    'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
+                    'user' => $attendance->user,
+                    'time_in' => $attendance->time_in,
+                    'time_out' => $attendance->time_out,
                     'duration_minutes' => $attendance->duration_minutes,
-                    'status'           => $attendance->status,
-                    'original'         => $attendance,
+                    'status' => $attendance->status,
+                    'original' => $attendance,
                 ];
             });
     }
@@ -155,6 +159,16 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->dispatch('$refresh');
     }
 
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading attendance logs...',
+            'subtext' => 'Please wait while we fetch the attendance data',
+        ]);
+    }
 
     public function render()
     {

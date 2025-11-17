@@ -1,12 +1,26 @@
 {{-- Academic Paper Directory - Livewire + Alpine.js + DaisyUI --}}
 <x-slot name="header">
     <h2 class="font-semibold text-xl text-base-content leading-tight">
-        {{ __('Academic Paper Directory') }}
+        {{ __("Academic Paper Directory") }}
     </h2>
 </x-slot>
 
 <div>
-    <div class="p-6">
+    {{-- Full Page Loading Spinner - Shows ONLY during initial navigation (academicPapers change) --}}
+    <div wire:loading.flex wire:target="academicPapers" 
+        class="fixed inset-0 left-64 bg-base-100 z-50 items-center justify-center">
+        <div class="flex flex-col items-center gap-4">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-base-content font-medium">Loading academic papers...</p>
+        </div>
+    </div>
+
+    {{-- Main Content - Only hidden during navigation, subtle opacity for filters --}}
+    <div class="p-6" 
+        wire:loading.remove 
+        wire:target="academicPapers"
+        wire:loading.class="opacity-50"
+        wire:loading.class.remove="opacity-100">
 
         {{-- Header Actions --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
@@ -16,14 +30,23 @@
                     loading = true;
                     $wire.create().finally(() => loading = false)
                 "
-                    :disabled="loading" class="btn btn-primary gap-2">
+                    :disabled="loading" 
+                    class="btn btn-primary gap-2"
+                    wire:loading.attr="disabled"
+                    wire:target="create">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                        stroke="currentColor" class="w-5 h-5" x-show="!loading">
+                        stroke="currentColor" class="w-5 h-5" 
+                        x-show="!loading"
+                        wire:loading.remove
+                        wire:target="create">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                     </svg>
-                    <span x-show="!loading">Create Academic Paper</span>
-                    <span x-show="loading" class="loading loading-spinner loading-sm"></span>
-                    <span x-show="loading">Loading...</span>
+                    <span x-show="!loading" wire:loading.remove wire:target="create">Create Academic Paper</span>
+                    <span class="loading loading-spinner loading-sm" 
+                        x-show="loading"
+                        wire:loading
+                        wire:target="create"></span>
+                    <span x-show="loading" wire:loading wire:target="create">Loading...</span>
                 </button>
             @else
                 <div class="text-sm text-base-content/70">
@@ -84,6 +107,17 @@
 
                     <div class="flex flex-wrap gap-2 mt-4 pt-3 border-t border-base-300">
                         <button x-data="{ loading: false }"
+                            @click="loading = true; $wire.showPaperDetails({{ $paper->id }}).finally(() => loading = false)"
+                            :disabled="loading"
+                            class="btn btn-sm btn-ghost gap-2 flex-1 sm:flex-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                            <span x-show="!loading">View Details</span>
+                            <span x-show="loading" class="loading loading-spinner loading-xs"></span>
+                        </button>
+                        <button x-data="{ loading: false }"
                             @click="
                             loading = true;
                             $wire.showPaperDetails({{ $paper->id }}).finally(() => loading = false)
@@ -134,19 +168,24 @@
                     </div>
                 </div>
             @empty
-                <div class="text-center py-8 sm:py-12 bg-base-100 rounded-lg border border-base-300">
-                    <x-mary-icon name="o-document-magnifying-glass"
-                        class="w-12 h-12 sm:w-16 sm:h-16 mx-auto text-base-content/40 mb-4" />
-                    <h3 class="text-base sm:text-lg font-medium text-base-content mb-2 px-4">No Academic Papers Found
-                    </h3>
-                    <p class="text-xs sm:text-sm text-base-content/70 px-4">
-                        @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
-                            No papers match your current filters
-                        @else
-                            No academic papers are available at the moment
-                        @endif
-                    </p>
-                </div>
+                {{-- Empty State Using Reusable Component --}}
+                @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                    <x-empty-state
+                        icon="o-document-magnifying-glass"
+                        title="No Academic Papers Found"
+                        message="No papers match your current filters. Try adjusting your search criteria to find more results."
+                        :show-action="false"
+                        size="sm"
+                    />
+                @else
+                    <x-empty-state
+                        icon="o-document-text"
+                        title="No Academic Papers Available"
+                        message="No academic papers have been added yet. Create one to get started."
+                        :show-action="false"
+                        size="sm"
+                    />
+                @endif
             @endforelse
 
             {{-- Mobile/Tablet Pagination --}}
@@ -158,24 +197,30 @@
         </div>
 
         {{-- Desktop Table View (for screens 1280px and wider) --}}
-        <div class="hidden xl:block">
-            <div class="overflow-x-auto">
-                <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy" per-page="perPage"
-                    :per-page-values="[5, 10, 25, 50]" striped row-class="hover:bg-base-200"
-                    header-class="text-base-content bg-base-200">
+        <div class="hidden xl:block overflow-x-auto">
+            <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy" :per-page="$perPage"
+                :per-page-values="[5, 10, 25, 50]" striped row-class="hover:bg-base-200"
+                header-class="text-base-content bg-base-200" style="min-width: 100%;">
                     <x-slot:empty>
-                        <div class="text-center py-12">
-                            <x-mary-icon name="o-document-magnifying-glass"
-                                class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
-                            <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
-                            <p class="text-sm text-base-content/70">
-                                @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
-                                    No papers match your current filters
-                                @else
-                                    No academic papers are available at the moment
-                                @endif
-                            </p>
-                        </div>
+                        @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                            <x-empty-state
+                                icon="o-document-magnifying-glass"
+                                title="No Academic Papers Found"
+                                message="No papers match your current filters. Try adjusting your search criteria."
+                                :show-action="false"
+                                size="default"
+                                class="border-0"
+                            />
+                        @else
+                            <x-empty-state
+                                icon="o-document-text"
+                                title="No Academic Papers Available"
+                                message="No academic papers have been added yet. Create one to get started."
+                                :show-action="false"
+                                size="default"
+                                class="border-0"
+                            />
+                        @endif
                     </x-slot:empty>
 
                     @scope('cell_catalog_code', $row)
@@ -246,7 +291,6 @@
                         </div>
                     @endscope
                 </x-mary-table>
-            </div>
         </div>
 
     </div>{{-- Close p-6 div --}}

@@ -1,6 +1,7 @@
 <?php
 
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
@@ -81,6 +82,11 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
             Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
         });
 
+        // Advisers & Deans management (Super Admin only)
+        Route::get('/advisers-deans', AdminAdvisersDeans::class)
+            ->middleware('can:manage-academic-papers')
+            ->name('advisers-deans');
+
         // Attendance logs (Super Admin only)
         Route::get('/attendance', AdminAttendanceLogIndex::class)
             ->middleware('can:view-attendance-logs')
@@ -101,10 +107,10 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
             ->middleware('can:manage-user-roles')
             ->name('manage-roles');
 
-        // Student management (Admin only)
-        Route::get('/students', AdminUserList::class)
-            ->middleware('can:manage-students')
-            ->name('user-list');
+        // // Student management (Admin only)
+        // Route::get('/students', AdminUserList::class)
+        //     ->middleware('can:manage-students')
+        //     ->name('user-list');
     });
 
 Route::view('profile', 'profile')

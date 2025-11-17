@@ -70,12 +70,7 @@
                         <span class="text-base-content/70">Email:</span>
                         <span class="font-semibold">{{ $user->email ?? '-' }}</span>
                     </div>
-                    <div class="flex justify-between">
-                        <span class="text-base-content/70">Status:</span>
-                        <span class="badge badge-{{ $user->status === 'active' ? 'success' : 'error' }} badge-sm">
-                            {{ ucfirst($user->status) }}
-                        </span>
-                    </div>
+
                 </div>
             </div>
         {{-- @else unreachable: user should always be present if authenticated --}}

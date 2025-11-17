@@ -15,7 +15,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function admin_can_access_librarian_assignment_page()
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => 3]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.librarians'));
@@ -26,7 +26,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function librarian_cannot_access_librarian_assignment_page()
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create(['role_id' => 1]);
 
         // Create active librarian duty
         Librarian::factory()->create([
@@ -44,7 +44,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function student_cannot_access_librarian_assignment_page()
     {
-        $student = User::factory()->create(['is_admin' => false]);
+        $student = User::factory()->create(['role_id' => 1]);
 
         $response = $this->actingAs($student)
             ->get(route('admin.librarians'));
@@ -59,7 +59,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => 3]);
 
         $response = $this->actingAs($admin)
             ->get(route('test-qr'));
@@ -74,7 +74,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create(['role_id' => 1]);
 
         Librarian::factory()->create([
             'user_id' => $user->id,
@@ -95,7 +95,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $student = User::factory()->create(['is_admin' => false]);
+        $student = User::factory()->create(['role_id' => 1]);
 
         $response = $this->actingAs($student)
             ->get(route('test-qr'));
@@ -110,7 +110,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create(['role_id' => 1]);
 
         // Create expired librarian duty (this is for Librarian model, not BorrowTransaction)
         Librarian::factory()->create([
@@ -128,7 +128,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function admin_can_access_admin_dashboard()
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => 3]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.dashboard'));
@@ -196,7 +196,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function gate_librarian_or_admin_access_denies_student()
     {
-        $student = User::factory()->create(['is_admin' => false]);
+        $student = User::factory()->create(['role_id' => 1]);
 
         $this->assertFalse(Gate::forUser($student)->allows('librarian-or-admin-access'));
     }
@@ -365,6 +365,7 @@ class RoleBasedAccessControlTest extends TestCase
             'access-admin-dashboard',
             'view-borrow-logs',
             'view-violation-logs',
+            'manage-advisers-deans',
         ];
 
         foreach ($permissions as $permission) {
