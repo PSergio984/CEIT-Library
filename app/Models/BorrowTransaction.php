@@ -19,6 +19,7 @@ use Illuminate\Support\Str;
  * @property string $session_token
  * @property string|null $notes
  * @property int|null $duration_minutes
+ * @property \Illuminate\Support\Carbon|null $overdue_notified_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\AcademicPaper $academicPaper
@@ -58,12 +59,14 @@ class BorrowTransaction extends Model
         'session_token',
         'notes',
         'duration_minutes',
+        'overdue_notified_at',
     ];
 
     protected $casts = [
         'time_in' => 'datetime',
         'time_out' => 'datetime',
         'expires_at' => 'datetime',
+        'overdue_notified_at' => 'datetime',
     ];
 
     protected static function booted()
@@ -168,16 +171,87 @@ class BorrowTransaction extends Model
         return null;
     }
 
-    // Check if session is expired
-    public function isExpired()
+    // Check if session is expired (overdue)
+    public function isExpired(): bool
     {
+        // Guard against null or invalid expires_at
+        if (!$this->expires_at || !($this->expires_at instanceof \Carbon\Carbon)) {
+            return false;
+        }
         return $this->expires_at->isPast();
     }
 
     // Check if session is active
-    public function isActive()
+    public function isActive(): bool
     {
         return $this->status === 'started' && !$this->isExpired();
+    }
+
+    // Check if transaction is overdue (started but past expiration)
+    public function isOverdue(): bool
+    {
+        return in_array($this->status, ['started', 'overdue'], true) && $this->isExpired();
+    }
+
+    /**
+     * Calculate time remaining until due (returns DateInterval or null)
+     *
+     * @return ?\DateInterval
+     */
+    public function getTimeRemainingAttribute(): ?\DateInterval
+    {
+        if (
+            $this->status !== 'started' ||
+            !$this->expires_at ||
+            $this->expires_at->lessThanOrEqualTo(now())
+        ) {
+            return null;
+        }
+        // Always use $this->expires_at->diff(now()) for consistent direction
+        return $this->expires_at->diff(now());
+    }
+
+    // Get overdue duration in human readable format
+    public function getOverdueDurationAttribute(): ?string
+    {
+
+        if (!($this->status === 'overdue' || $this->isOverdue())) {
+            return null;
+        }
+
+        // Guard against null or invalid expires_at (legacy rows)
+        if (!$this->expires_at || !($this->expires_at instanceof \Carbon\Carbon)) {
+            return null;
+        }
+
+        $diff = now()->diff($this->expires_at);
+
+        $parts = [];
+        if ($diff->d > 0) {
+            $parts[] = $diff->d . ' ' . \Illuminate\Support\Str::plural('day', $diff->d);
+        }
+        if ($diff->h > 0) {
+            $parts[] = $diff->h . ' ' . \Illuminate\Support\Str::plural('hour', $diff->h);
+        }
+        if ($diff->i > 0 && $diff->d === 0) {
+            $parts[] = $diff->i . ' ' . \Illuminate\Support\Str::plural('minute', $diff->i);
+        }
+
+        if (empty($parts)) {
+            return 'less than a minute overdue';
+        }
+
+        return implode(', ', $parts) . ' overdue';
+    }
+
+    // Update status to expired if overdue
+    public function updateStatusIfOverdue(): bool
+    {
+        if ($this->isOverdue() && $this->status === 'started') {
+            $this->update(['status' => 'overdue']);
+            return true;
+        }
+        return false;
     }
 
     // Find session by token (for QR scanning)

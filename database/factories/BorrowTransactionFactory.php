@@ -25,11 +25,13 @@ class BorrowTransactionFactory extends Factory
         $timeIn = $this->faker->dateTimeBetween('-3 months', 'now');
         $timeOut = $this->faker->optional(0.8)->dateTimeBetween($timeIn, \Carbon\Carbon::parse($timeIn)->addHours(4));
 
-        $status = 'requested';
+        $status = 'started';
         if ($timeIn && $timeOut) {
             $status = 'completed';
         } elseif ($timeIn) {
-            $status = $this->faker->randomElement(['started', 'expired']);
+            $carbonTimeIn = $timeIn instanceof \Carbon\Carbon ? $timeIn : \Carbon\Carbon::parse($timeIn);
+            $expiresAt = $carbonTimeIn->copy()->addHours(6);
+            $status = now()->greaterThan($expiresAt) ? 'overdue' : 'started';
         }
 
         return [

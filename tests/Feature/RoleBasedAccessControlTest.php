@@ -112,7 +112,7 @@ class RoleBasedAccessControlTest extends TestCase
 
         $user = User::factory()->create(['is_admin' => false]);
 
-        // Create expired librarian duty
+        // Create expired librarian duty (this is for Librarian model, not BorrowTransaction)
         Librarian::factory()->create([
             'user_id' => $user->id,
             'status' => 'expired',

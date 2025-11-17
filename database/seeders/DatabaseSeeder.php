@@ -145,7 +145,7 @@ class DatabaseSeeder extends Seeder
                 Inventory::factory()->create([
                     'academic_paper_id' => $academicPaper->id,
                     'copy_number' => $i,
-                    'status' => fake()->randomElement(['Available', 'Reserved', 'Unavailable']),
+                    'status' => fake()->randomElement(['Available', 'Unavailable']),
                 ]);
             }
         });
@@ -183,13 +183,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create at least 5 borrow transactions for each status for the specific student
-        // Use only allowed enum values for status
+        // Use only allowed enum values for status: ['started', 'completed', 'overdue']
         $statuses = [
-            'completed',    // completed
-            'started',      // active
-            'expired',      // overdue
-            'cancelled',    // cancelled
-            'requested',    // requested
+            'completed',    // completed transaction
+            'started',      // active/ongoing transaction
+            'overdue',      // overdue transaction
         ];
 
         // Eager load copies to avoid N+1 queries
@@ -377,7 +375,7 @@ class DatabaseSeeder extends Seeder
                     ]);
 
                     // Mark the copy as reserved
-                    $availableCopy->update(['status' => 'Reserved']);
+                    $availableCopy->update(['status' => 'Unavailable']);
                 }
             }
         }
@@ -612,6 +610,5 @@ class DatabaseSeeder extends Seeder
         $this->command->info('- 5 active borrowing transactions');
         $this->command->info('- 8 students currently in library');
         $this->command->info('- 3 Main Headers for Rules and Regulations with 3-5 rules each');
-        $this->command->info('- Sample violations, credit scores, and session history');
     }
 }

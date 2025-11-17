@@ -15,7 +15,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
                 <x-mary-input label="Search" wire:model.live.debounce.300ms="search"
-                    placeholder="Search by name, email, title..." icon="o-magnifying-glass" />
+                    placeholder="Search by name, title..." icon="o-magnifying-glass" />
             </div>
 
             <div>
@@ -55,8 +55,6 @@
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         <h3 class="font-semibold text-base">{{ $transaction['user_name'] }}</h3>
-                        <p class="text-sm text-base-content/70">
-                            {{ $transaction['user']?->email ?? 'N/A' }}</p>
                     </div>
                     <span
                         class="badge badge-{{ $transaction['status'] == 'completed' ? 'success' : 'warning' }} badge-sm">
@@ -122,10 +120,6 @@
             header-class="text-base-content bg-base-200" class="w-full table-auto" row-class="hover:bg-base-200">
             @scope('cell_user_name', $row)
                 <div class="font-medium">{{ $row['user_name'] }}</div>
-            @endscope
-
-            @scope('cell_email', $row)
-                <div class="text-sm text-base-content/70">{{ $row['email'] }}</div>
             @endscope
 
             @scope('cell_title', $row)
@@ -255,10 +249,6 @@
                         <div>
                             <p class="text-sm text-base-content/60">Name</p>
                             <p class="font-medium">{{ $pendingBorrowData['user_name'] ?? 'N/A' }}</p>
-                        </div>
-                        <div>
-                            <p class="text-sm text-base-content/60">Email</p>
-                            <p class="font-medium">{{ $pendingBorrowData['user_email'] ?? 'N/A' }}</p>
                         </div>
                     </div>
                 </div>
