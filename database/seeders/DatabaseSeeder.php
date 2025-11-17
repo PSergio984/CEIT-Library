@@ -23,18 +23,38 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Get role IDs
-        $superAdminRoleId = \App\Models\Role::where('name', 'super_admin')->value('id') ?? 3;
+        $superAdminRoleId = \App\Models\Role::where('name', 'super_admin')->value('id') ?? 4;
+        $adminRoleId = \App\Models\Role::where('name', 'admin')->value('id') ?? 3;
         $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
         $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
 
         // Create the ONLY super_admin user
-        $admin = User::factory()->create([
+        $superAdmin = User::factory()->create([
             'first_name' => 'Janrel',
             'last_name' => 'Motovlogs',
             'email' => 'admin@plv.edu.ph',
             'role_id' => $superAdminRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
+
+        // Create 5 admin users
+        $adminUsers = [
+            ['first_name' => 'Agustin', 'last_name' => 'Ankunding', 'email' => 'kaletreidanion@plv.edu.ph'],
+            ['first_name' => 'Joaquin', 'last_name' => 'Hill', 'email' => 'blake.johns@plv.edu.ph'],
+            ['first_name' => 'Irving', 'last_name' => 'Keebler', 'email' => 'quigley.jared@plv.edu.ph'],
+            ['first_name' => 'Michael', 'last_name' => 'Renner', 'email' => 'erin.franecki@plv.edu.ph'],
+            ['first_name' => 'Kacie', 'last_name' => 'Rice', 'email' => 'bschumm@plv.edu.ph'],
+        ];
+
+        foreach ($adminUsers as $adminData) {
+            User::factory()->create([
+                'first_name' => $adminData['first_name'],
+                'last_name' => $adminData['last_name'],
+                'email' => $adminData['email'],
+                'role_id' => $adminRoleId,
+                'password' => bcrypt('Pwd@12345'),
+            ]);
+        }
 
         // Create regular student users (including former librarian as student)
         $students = User::factory(50)->create();
@@ -197,13 +217,14 @@ class DatabaseSeeder extends Seeder
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
 
         foreach ($activeBatchStudents as $student) {
+            $student->update(['role_id' => $librarianRoleId]);
             Librarian::create([
                 'user_id' => $student->id,
                 'batch_no' => $currentYear . '0001',
                 'start_date' => $today,
                 'end_date' => null,
                 'status' => 'active',
-                'created_by' => $admin->id,
+                'created_by' => $superAdmin->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -225,7 +246,7 @@ class DatabaseSeeder extends Seeder
                 'start_date' => $today->copy()->subDays(10),
                 'end_date' => $today->copy()->subDays(3),
                 'status' => 'expired',
-                'created_by' => $admin->id,
+                'created_by' => $superAdmin->id,
                 'created_at' => $today->copy()->subDays(10),
                 'updated_at' => $today->copy()->subDays(3),
             ]);
@@ -243,7 +264,7 @@ class DatabaseSeeder extends Seeder
                 'start_date' => $today->copy()->subDays(20),
                 'end_date' => $today->copy()->subDays(7),
                 'status' => 'expired',
-                'created_by' => $admin->id,
+                'created_by' => $superAdmin->id,
                 'created_at' => $today->copy()->subDays(20),
                 'updated_at' => $today->copy()->subDays(7),
             ]);
@@ -264,7 +285,7 @@ class DatabaseSeeder extends Seeder
                 'start_date' => $today->copy()->addDays(2),
                 'end_date' => null,
                 'status' => 'inactive',
-                'created_by' => $admin->id,
+                'created_by' => $superAdmin->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -282,7 +303,7 @@ class DatabaseSeeder extends Seeder
                 'start_date' => $today->copy()->addDays(5),
                 'end_date' => null,
                 'status' => 'inactive',
-                'created_by' => $admin->id,
+                'created_by' => $superAdmin->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -299,7 +320,7 @@ class DatabaseSeeder extends Seeder
                 'start_date' => $today->copy()->addDays(7),
                 'end_date' => null,
                 'status' => 'inactive',
-                'created_by' => $admin->id,
+                'created_by' => $superAdmin->id,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

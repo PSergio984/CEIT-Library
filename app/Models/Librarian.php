@@ -74,7 +74,7 @@ class Librarian extends Model
     {
         // Check end_date if set, otherwise fall back to expires_at
         if ($this->end_date) {
-            return $this->end_date->isPast();
+            return $this->end_date < Carbon::today();
         }
 
         if ($this->expires_at) {
@@ -97,12 +97,15 @@ class Librarian extends Model
         $today = Carbon::today();
 
         return $query->where(function ($q) use ($today) {
-            // Start date is today or in the past
-            $q->where('start_date', '<=', $today)
+            // Start date is today or in the past (or null for no start constraint)
+            $q->where(function ($q2) use ($today) {
+                $q2->whereNull('start_date')
+                   ->orWhere('start_date', '<=', $today);
+            })
               // AND (no end date OR end date is in the future)
               ->where(function ($q2) use ($today) {
                   $q2->whereNull('end_date')
-                     ->orWhere('end_date', '>', $today);
+                    ->orWhere('end_date', '>', $today); // Note: excludes duties ending today
               });
         });
     }
