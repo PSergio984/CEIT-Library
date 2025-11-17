@@ -91,7 +91,7 @@
 
                     @scope('cell_time_in', $attendance)
                     <div class="text-sm">
-                        {{ $attendance->time_in->format('h:i A') }}
+                        {{ $attendance->time_in->format('D, M d h:i A') }}
                     </div>
                     @endscope
 
