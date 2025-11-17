@@ -309,8 +309,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Perform deletion (called from modal)
     public function performDelete(?int $paperId = null): void
     {
-        // Only super_admin can delete academic papers
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        // Only admin and super_admin can delete academic papers
+        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can delete academic papers.');
             $this->deleteId = null;
             $this->dispatch('close-delete-modal');
@@ -393,8 +393,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for creating new academic paper
     public function create(): void
     {
-        // Only super_admin can create academic papers
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        // Only admin and super_admin can create academic papers
+        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can create academic papers.');
             return;
         }
@@ -420,8 +420,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
-        // Only super_admin can edit academic papers
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        // Only admin and super_admin can edit academic papers
+        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can edit academic papers.');
             return;
         }
@@ -815,8 +815,8 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     public function confirmDelete(int $paperId): void
     {
-        // Only super_admin can delete academic papers
-        if (!Auth::check() || !Auth::user()->isSuperAdmin()) {
+        // Only admin and super_admin can delete academic papers
+        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can delete academic papers.');
             return;
         }
@@ -922,12 +922,12 @@ class AdminAcademicPaperIndex extends AdminComponent
     }
 
     /**
-     * Check if current user is super admin
+     * Check if current user has admin access
      */
     #[Computed]
-    public function isSuperAdmin(): bool
+    public function hasAdminAccess(): bool
     {
-        return Auth::check() && Auth::user()->isSuperAdmin();
+        return Auth::check() && Auth::user()->hasAdminAccess();
     }
 
     /**
