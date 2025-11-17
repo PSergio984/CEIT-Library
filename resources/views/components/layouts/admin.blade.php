@@ -68,14 +68,7 @@
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
 
                 @can('view-academic-papers')
-                    <x-mary-menu-sub title="Academic Papers" icon="o-book-open">
-                        <x-mary-menu-item title="All Academic Paper" icon="o-document-text" link="/admin/academic-papers" />
-                        <x-mary-menu-item title="Information Technology" icon="o-computer-desktop"
-                            link="/admin/academic-papers/it" />
-                        <x-mary-menu-item title="Civil Engineering" icon="o-building-office"
-                            link="/admin/academic-papers/ce" />
-                        <x-mary-menu-item title="Electrical Engineering" icon="o-bolt" link="/admin/academic-papers/ee" />
-                    </x-mary-menu-sub>
+                    <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" />
                 @endcan
 
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />

@@ -43,7 +43,7 @@ class AdminBorrowTransactions extends AdminComponent
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
         ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
-        ['key' => 'email', 'label' => 'Email', 'class' => 'min-w-36'],
+
         ['key' => 'title', 'label' => 'Title Borrowed', 'sortable' => true, 'class' => 'min-w-40'],
         ['key' => 'paper_type', 'label' => 'Type', 'sortable' => true, 'class' => 'w-20'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-28'],
@@ -133,7 +133,6 @@ class AdminBorrowTransactions extends AdminComponent
                 return [
                     'id' => $transaction->id,
                     'user_name' => trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A',
-                    'email' => $transaction->user?->email ?? 'N/A',
                     'user' => $transaction->user,
                     'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
                     'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
@@ -288,13 +287,10 @@ class AdminBorrowTransactions extends AdminComponent
             $inventory = Inventory::with('academicPaper')->find($borrowData['inventory_id']);
             $paper = AcademicPaper::find($borrowData['paper_id']);
 
-            // Try to find user by email (lat) or by ID (requested_by)
+
+            // Try to find user by ID (requested_by) only
             $user = null;
-            if (isset($borrowData['lat'])) {
-                $userEmail = $borrowData['lat'];
-                \Log::info('Looking for user with email:', ['email' => $userEmail]);
-                $user = User::where('email', $userEmail)->first();
-            } elseif (isset($borrowData['requested_by'])) {
+            if (isset($borrowData['requested_by'])) {
                 $userId = $borrowData['requested_by'];
                 \Log::info('Looking for user with ID:', ['id' => $userId]);
                 $user = User::find($userId);
@@ -304,7 +300,7 @@ class AdminBorrowTransactions extends AdminComponent
                 'inventory_found' => !!$inventory,
                 'paper_found' => !!$paper,
                 'user_found' => !!$user,
-                'user_data' => $user ? ['id' => $user->id, 'email' => $user->email] : null
+                'user_data' => $user ? ['id' => $user->id] : null
             ]);
 
             if (!$inventory || !$paper) {
@@ -319,7 +315,6 @@ class AdminBorrowTransactions extends AdminComponent
 
             if (!$user) {
                 \Log::error('User not found', [
-                    'lat' => $borrowData['lat'] ?? 'not set',
                     'requested_by' => $borrowData['requested_by'] ?? 'not set'
                 ]);
                 $this->error("User not found!");
@@ -356,7 +351,6 @@ class AdminBorrowTransactions extends AdminComponent
                         $this->success("Book returned successfully! Copy #{$inventory->copy_number} is now available.");
                         \Log::info('Book returned successfully');
                         return ['found' => true, 'action' => 'returned'];
-
                     } catch (\Exception $e) {
                         \DB::rollBack();
                         \Log::error('Return error:', ['error' => $e->getMessage()]);
@@ -377,7 +371,6 @@ class AdminBorrowTransactions extends AdminComponent
                 $this->pendingBorrowData = [
                     'user_id' => $user->id,
                     'user_name' => $user->first_name . ' ' . $user->last_name,
-                    'user_email' => $user->email,
                     'inventory_id' => $inventory->id,
                     'paper_id' => $paper->id,
                     'copy_number' => $inventory->copy_number,
@@ -409,7 +402,6 @@ class AdminBorrowTransactions extends AdminComponent
                 $this->isProcessingQr = false;
                 return ['found' => false];
             }
-
         } catch (\Exception $e) {
             \Log::error('QR Processing Exception:', [
                 'message' => $e->getMessage(),
@@ -474,7 +466,6 @@ class AdminBorrowTransactions extends AdminComponent
             $this->success("Borrow transaction created successfully! Copy #{$inventory->copy_number} is now unavailable.");
             $this->closeConfirmBorrowModal();
             $this->reset(['borrowNotes', 'pendingBorrowData']);
-
         } catch (\Exception $e) {
             \DB::rollBack();
             \Log::error('Borrow Confirmation Error: ' . $e->getMessage());

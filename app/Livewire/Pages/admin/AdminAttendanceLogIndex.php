@@ -30,7 +30,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         ['key' => 'status', 'label' => 'Status', 'sortable' => true, 'class' => 'w-24'],
     ];
 
-    public array $sortBy = ['column' => 'time_in', 'direction' => 'desc'];
+    public array $sortBy = ['column' => 'status', 'direction' => 'asc'];
 
     protected function getAttendancesQuery()
     {
@@ -135,7 +135,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->search = '';
         $this->selectedDate = '';
         $this->statusFilter = '';
-        $this->sortBy = ['column' => 'time_in', 'direction' => 'desc'];
+        $this->sortBy = ['column' => 'status', 'direction' => 'desc'];
         $this->resetPage();
     }
 
