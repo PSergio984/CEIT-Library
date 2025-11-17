@@ -142,7 +142,14 @@
         <h3 class="text-base sm:text-lg font-medium text-base-content mb-2 px-4">No Academic Papers Found
         </h3>
         <p class="text-xs sm:text-sm text-base-content/70 px-4">
-            @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+            @if (
+                $search ||
+                    $statusFilter ||
+                    $departmentFilter ||
+                    $paperTypeFilter ||
+                    $yearFilter ||
+                    $yearFromFilter ||
+                    $yearToFilter)
                 No papers match your current filters
             @else
                 No academic papers are available at the moment
@@ -259,7 +266,7 @@
 
     {{-- Modals --}}
     <x-admin.delete-academic-paper-modal :deleteId="$deleteId" />
-    <x-admin.paper-details-modal :selectedPaper="$this->selectedPaper" :isAdmin="true" />
+    <x-admin.paper-details-modal :selectedPaper="$this->selectedPaper" :isAdmin="$this->hasAdminAccess" />
     <x-admin.delete-copy-modal :copyToDelete="$copyToDelete" />
 </div>
 {{-- Create/Edit Academic Paper Drawer --}}
