@@ -47,7 +47,7 @@
                                 </div>
                                 <div>
                                     <span class="font-semibold">Time In:</span>
-                                    <span>{{ $attendance->time_in->format('h:i A') }}</span>
+                                    <span>{{ $attendance->time_in->format('D, M d h:i A') }}</span>
                                 </div>
                             </div>
 
