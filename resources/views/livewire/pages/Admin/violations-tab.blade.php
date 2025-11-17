@@ -145,6 +145,7 @@
                     placeholder="Enter penalty score"
                     min="1"
                     max="100"
+                    value="{{ old('form.penalty_score', 1) }}"
                     required
                 />
 
