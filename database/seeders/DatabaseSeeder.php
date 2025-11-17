@@ -70,6 +70,15 @@ class DatabaseSeeder extends Seeder
 
         $students->push($testLibrarian);
 
+        // Create a specific admin user for testing
+        $specificAdmin = User::factory()->create([
+            'first_name' => 'Sample',
+            'last_name' => 'Admin',
+            'email' => 'sampleadmin@plv.edu.ph',
+            'role_id' => $adminRoleId,
+            'password' => bcrypt('Pwd@12345'),
+        ]);
+
         // Create a specific student user
         $specificStudent = User::factory()->create([
             'first_name' => 'Sample',
