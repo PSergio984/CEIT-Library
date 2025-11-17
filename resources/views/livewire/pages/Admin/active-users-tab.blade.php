@@ -1,6 +1,5 @@
 <div>
-    <x-mary-tab name="active-users-tab" label="Active Users" icon="o-users">
-        <div class="mt-6">
+    <div class="mt-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-semibold">Users Currently in Library (Today)</h3>
             </div>
@@ -200,4 +199,5 @@
             </div>
         </div>
     </x-mary-modal>
+    </div>
 </div>
