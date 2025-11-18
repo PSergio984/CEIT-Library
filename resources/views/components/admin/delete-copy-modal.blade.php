@@ -3,13 +3,13 @@
 <dialog 
     x-ref="copyDeleteModal" 
     x-show="showCopyDeleteModal"
-    @cancel="showCopyDeleteModal = false"
+    @click.self="showCopyDeleteModal = false"
+    @close="showCopyDeleteModal = false"
     @close-copy-delete-modal.window="showCopyDeleteModal = false"
     class="modal"
-   
-    x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })">
-    <div class="modal-box"
-    
+    x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })"
+>
+    <div class="modal-box">
         <h3 class="font-bold text-lg mb-2">Delete Copy</h3>
         <p class="text-sm text-base-content/70 mb-4">Are you sure?</p>
         @if($copyToDelete)
@@ -17,7 +17,6 @@
         @else
             <p class="mb-6">Are you sure you want to delete this copy? This action cannot be undone. Only available copies can be deleted.</p>
         @endif
-        
         <div class="modal-action">
             <button @click="showCopyDeleteModal = false" class="btn">Cancel</button>
             <button 

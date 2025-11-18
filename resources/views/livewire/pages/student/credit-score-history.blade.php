@@ -146,6 +146,7 @@
         @endif
 
         {{-- Empty State --}}
+        @if ($this->history->count() === 0)
             @if ($search || $typeFilter || $selectedDate)
                 <x-empty-state
                     icon="o-magnifying-glass-circle"

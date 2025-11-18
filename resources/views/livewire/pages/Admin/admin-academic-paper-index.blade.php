@@ -296,12 +296,29 @@
     </div>{{-- Close p-6 div --}}
 
     {{-- Alpine.js State Management for Modals --}}
+
     <div x-data="{
         showDeleteModal: false,
         showPaperModal: false,
-        showCopyDeleteModal: false
-    }" @delete-modal.window="showDeleteModal = true"
-        @paper-modal.window="showPaperModal = true" @copy-delete-modal.window="showCopyDeleteModal = true">
+        showCopyDeleteModal: false,
+        openModal(modal) {
+            this.showDeleteModal = false;
+            this.showPaperModal = false;
+            this.showCopyDeleteModal = false;
+            if (modal === 'delete') this.showDeleteModal = true;
+            if (modal === 'paper') this.showPaperModal = true;
+            if (modal === 'copyDelete') this.showCopyDeleteModal = true;
+        },
+        closeAllModals() {
+            this.showDeleteModal = false;
+            this.showPaperModal = false;
+            this.showCopyDeleteModal = false;
+        }
+    }"
+    @delete-modal.window="openModal('delete')"
+    @paper-modal.window="openModal('paper')"
+    @copy-delete-modal.window="openModal('copyDelete')"
+    >
 
         {{-- Modals --}}
         <x-admin.delete-academic-paper-modal :deleteId="$deleteId" />
