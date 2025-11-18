@@ -7,34 +7,45 @@ use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
-use Livewire\Attributes\Title;
 
 #[Title('Rules and Regulations')]
+#[Lazy]
 class AdminRuleAndRegulationIndex extends AdminComponent
 {
-    use WithPagination, Toast, AuthorizesRequests;
+    use AuthorizesRequests, Toast, WithPagination;
 
     public RuleAndRegulationForm $form;
 
     public array $sortBy = ['column' => 'rule_header_id', 'direction' => 'asc'];
+
     public array $headers = [];
+
     public int $perPage = 10;
+
     public ?int $editingRuleId = null;
+
     public bool $openDrawer = false;
+
     public bool $openModal = false;
+
     public bool $isEdit = false;
+
     public string $search = '';
+
     #[Url(as: 'header')]
     public ?int $filterHeaderId = null;
 
     public bool $confirmDeleteModal = false;
+
     public ?int $deletingRuleId = null;
+
     public bool $myModal1 = false;
 
     // Check if user can edit (admin only)
@@ -55,7 +66,6 @@ class AdminRuleAndRegulationIndex extends AdminComponent
             ['key' => 'updated_at', 'label' => 'Updated', 'sortable' => true, 'class' => 'w-40'],
         ];
     }
-
 
     public function openCreateDrawer(): void
     {
@@ -185,10 +195,21 @@ class AdminRuleAndRegulationIndex extends AdminComponent
         $this->deletingRuleId = null;
     }
 
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading rules and regulations...',
+            'subtext' => 'Please wait while we fetch the library rules',
+        ]);
+    }
+
     public function render()
     {
         return view('livewire.pages.admin.admin-rule-and-regulation-index', [
-            'headers_list' => RuleHeader::orderBy('order')->get()
+            'headers_list' => RuleHeader::orderBy('order')->get(),
         ]);
     }
 }

@@ -71,11 +71,15 @@
                     <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" />
                 @endcan
 
+                @can('manage-advisers-deans')
+                    <x-mary-menu-item title="Advisers & Deans" icon="o-academic-cap" link="/admin/advisers-deans" />
+                @endcan
+
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
 
-                @can('manage-students')
+                {{-- @can('manage-students')
                     <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />
-                @endcan
+                @endcan --}}
 
                 @can('manage-librarian-batches')
                     <x-mary-menu-item title="Librarian Batches" icon="o-building-library" link="/admin/librarians" />

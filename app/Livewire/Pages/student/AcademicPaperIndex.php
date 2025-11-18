@@ -7,28 +7,39 @@ use App\Models\Inventory;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Title('Academic Paper List')]
+#[Lazy]
 class AcademicPaperIndex extends Component
 {
-    use WithPagination, CreatesQrCanonicalMessage;
+    use CreatesQrCanonicalMessage, WithPagination;
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
+
     public array $headers = [];
+
     public int $perPage = 10;
+
     public ?string $dept = null;
+
     public string $search = '';
 
     // Filters
     public string $statusFilter = '';
+
     public string $yearFilter = '';
+
     public string $departmentFilter = '';
+
     public string $paperTypeFilter = '';
+
     public string $yearFromFilter = '';
+
     public string $yearToFilter = '';
 
     // Store IDs only (modals controlled by Alpine.js)
@@ -36,6 +47,7 @@ class AcademicPaperIndex extends Component
 
     // QR Code properties
     public ?string $qrCode = null;
+
     public ?int $selectedCopyId = null;
 
     public function updatingPerPage(): void
@@ -59,15 +71,9 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function academicPapers()
     {
+        // Optimize: Only eager load what's displayed in list view
+        // Authors and full copy details are loaded lazily in detail modal
         $query = AcademicPaper::query()
-            ->with([
-                'copies' => function ($query) {
-                    $query->select('academic_paper_id', 'status');
-                },
-                'authors' => function ($query) {
-                    $query->select('authors.id', 'authors.name');
-                }
-            ])
             ->when($this->dept, function ($q) {
                 $departmentName = $this->resolveDepartmentName($this->dept);
                 if ($departmentName) {
@@ -115,7 +121,7 @@ class AcademicPaperIndex extends Component
             ->withCount([
                 'copies as available_copies' => function ($query) {
                     $query->where('status', 'Available');
-                }
+                },
             ]);
 
         if ($this->sortBy['column'] === 'status') {
@@ -129,20 +135,22 @@ class AcademicPaperIndex extends Component
         // Transform to add computed status property
         $paginated->getCollection()->transform(function ($paper) {
             $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
+
             return $paper;
         });
 
         return $paginated;
     }
 
-    #[Computed]
+    #[Computed(persist: true, cache: true)]
     public function availableYears()
     {
+        // Lazy-loaded and cached for better initial load performance
         // Get min and max years from database
         $minYear = AcademicPaper::min('publication_year');
         $maxYear = AcademicPaper::max('publication_year');
 
-        if (!$minYear || !$maxYear) {
+        if (! $minYear || ! $maxYear) {
             return collect();
         }
 
@@ -150,9 +158,10 @@ class AcademicPaperIndex extends Component
         return collect(range($maxYear, $minYear))->values();
     }
 
-    #[Computed]
+    #[Computed(persist: true, cache: true)]
     public function availableDepartments()
     {
+        // Lazy-loaded and cached for better initial load performance
         return AcademicPaper::distinct()
             ->orderBy('department')
             ->pluck('department')
@@ -160,9 +169,10 @@ class AcademicPaperIndex extends Component
             ->values();
     }
 
-    #[Computed]
+    #[Computed(persist: true, cache: true)]
     public function availablePaperTypes()
     {
+        // Lazy-loaded and cached for better initial load performance
         return AcademicPaper::distinct()
             ->orderBy('paper_type')
             ->pluck('paper_type')
@@ -232,7 +242,7 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function selectedPaper(): ?AcademicPaper
     {
-        if (!$this->selectedPaperId) {
+        if (! $this->selectedPaperId) {
             return null;
         }
 
@@ -241,7 +251,7 @@ class AcademicPaperIndex extends Component
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status')
+            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 
@@ -250,13 +260,15 @@ class AcademicPaperIndex extends Component
         // 1. grab the copy (inventory row)
         $copy = Inventory::with('academicPaper')->find($inventoryId);
 
-        if (!$copy) {
+        if (! $copy) {
             session()->flash('error', 'Copy not found.');
+
             return;
         }
 
-        if (!$copy->isAvailable()) {
+        if (! $copy->isAvailable()) {
             session()->flash('error', 'This copy is not available.');
+
             return;
         }
 
@@ -268,13 +280,13 @@ class AcademicPaperIndex extends Component
         $expiresAt = $issuedAt->copy()->addMinutes(5);
         $payload = [
             'inventory_id' => $copy->id,
-            'paper_id'     => $copy->academic_paper_id,
+            'paper_id' => $copy->academic_paper_id,
             'catalog_code' => $copy->academicPaper->catalog_code,
-            'title'        => $copy->academicPaper->title,
+            'title' => $copy->academicPaper->title,
             'requested_by' => Auth::id(),
-            'lat'          => Auth::user()->email, // Add email for compatibility
-            'iat'          => $issuedAt->timestamp,
-            'exp'          => $expiresAt->timestamp,
+            'lat' => Auth::user()->email, // Add email for compatibility
+            'iat' => $issuedAt->timestamp,
+            'exp' => $expiresAt->timestamp,
         ];
 
         // Encrypt the QR payload
@@ -296,13 +308,13 @@ class AcademicPaperIndex extends Component
 
     public function downloadQr()
     {
-        if (!$this->selectedCopy) {
+        if (! $this->selectedCopy) {
             abort(400, 'No selected copy.');
         }
 
         $copy = $this->selectedCopy;
 
-        if (!$copy->isAvailable()) {
+        if (! $copy->isAvailable()) {
             abort(409, 'Copy no longer available.');
         }
 
@@ -310,18 +322,17 @@ class AcademicPaperIndex extends Component
 
         $payload = [
             'inventory_id' => $copy->id,
-            'paper_id'     => $paper->id,
+            'paper_id' => $paper->id,
             'catalog_code' => $paper->catalog_code,
-            'title'        => $paper->title,
+            'title' => $paper->title,
             'requested_by' => Auth::id(),
-            'lat'          => Auth::user()->email, // Add email for compatibility
-            'iat'          => now()->timestamp,
-            'exp'          => now()->addMinutes(5)->timestamp,
+            'lat' => Auth::user()->email, // Add email for compatibility
+            'iat' => now()->timestamp,
+            'exp' => now()->addMinutes(5)->timestamp,
         ];
 
         // Encrypt the QR payload
         $qrPayload = $this->createEncryptedQrMessage($payload);
-
         $filename = 'qr-code-inv-' . $copy->id . '.png';
 
         return response()->streamDownload(
@@ -333,7 +344,7 @@ class AcademicPaperIndex extends Component
 
     private function resolveDepartmentName(?string $dept): ?string
     {
-        if (!$dept) {
+        if (! $dept) {
             return null;
         }
 
@@ -354,7 +365,7 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function selectedCopy()
     {
-        if (!$this->selectedCopyId) {
+        if (! $this->selectedCopyId) {
             return null;
         }
 
@@ -364,7 +375,7 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function departmentIcon(): string
     {
-        if (!$this->selectedPaper || !$this->selectedPaper->department) {
+        if (! $this->selectedPaper || ! $this->selectedPaper->department) {
             return '';
         }
 
@@ -381,6 +392,14 @@ class AcademicPaperIndex extends Component
             'Borrowed' => 'badge-warning',
             default => 'badge-error',
         };
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('livewire.pages.student.academic-paper-index-placeholder');
     }
 
     public function render()

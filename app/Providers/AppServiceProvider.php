@@ -123,5 +123,10 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-violation-logs', function ($user) {
             return $user->hasAdminAccess();
         });
+
+        // Advisers & Deans management (Super Admin only)
+        Gate::define('manage-advisers-deans', function ($user) {
+            return $user->isSuperAdmin();
+        });
     }
 }

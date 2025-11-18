@@ -5,18 +5,23 @@ namespace App\Livewire\Pages\Admin;
 use App\Models\Role;
 use App\Models\User;
 use Auth;
-use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Lazy;
 use Mary\Traits\Toast;
 
+#[Lazy]
 class AdminManageRoles extends AdminComponent
 {
-    use Toast, AuthorizesRequests;
+    use AuthorizesRequests, Toast;
 
     public $search = '';
+
     public $filterRole = '';
+
     public $showAssignRoleModal = false;
+
     public $selectedUserId = null;
+
     public $selectedRoleId = null;
 
     public function mount()
@@ -80,6 +85,7 @@ class AdminManageRoles extends AdminComponent
         // Prevent demoting yourself
         if ($user->id === Auth::id() && $newRole->name !== Role::SUPER_ADMIN) {
             $this->error('You cannot change your own role!');
+
             return;
         }
 
@@ -101,6 +107,17 @@ class AdminManageRoles extends AdminComponent
     public function resetFilters()
     {
         $this->reset(['search', 'filterRole']);
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading role management...',
+            'subtext' => 'Please wait while we fetch user roles',
+        ]);
     }
 
     public function render()

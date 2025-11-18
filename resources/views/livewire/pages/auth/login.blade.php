@@ -23,8 +23,9 @@ class extends Component
 
         Session::regenerate();
 
-        // Check if user is admin and redirect accordingly
-        if (auth()->user()->is_admin) {
+        // Check if user is super admin or has admin access and redirect accordingly
+        $user = auth()->user();
+        if ($user && ($user->isSuperAdmin() || $user->hasAdminAccess())) {
             $this->redirectIntended(default: route('admin.dashboard', absolute: false), navigate: true);
         } else {
             $this->redirectIntended(default: route('student.dashboard', absolute: false), navigate: true);

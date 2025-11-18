@@ -3,14 +3,27 @@ description: "Expert Laravel development assistant specializing in modern Larave
 model: GPT-4.1 | 'gpt-5' | 'Claude Sonnet 4.5'
 tools:
     [
-        "codebase",
-        "terminalCommand",
-        "edit/editFiles",
+        "edit",
+        "runNotebooks",
+        "search",
+        "new",
+        "runCommands",
+        "runTasks",
+        "awesome-copilot/*",
+        "context7/*",
+        "herd/*",
+        "laravel-boost/*",
+        "usages",
+        "vscodeAPI",
+        "problems",
+        "changes",
+        "testFailure",
+        "openSimpleBrowser",
         "fetch",
         "githubRepo",
-        "runTests",
-        "problems",
-        "search",
+        "extensions",
+        "todos",
+        "runSubagent",
     ]
 ---
 

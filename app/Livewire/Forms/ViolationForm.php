@@ -15,8 +15,8 @@ class ViolationForm extends Form
     #[Validate('required|string')]
     public string $description = '';
 
-    #[Validate('required|integer|min:0')]
-    public int $penalty_score = 0;
+    #[Validate('required|integer|min:1|max:100')]
+    public int $penalty_score = 1;
 
     public function store(): void
     {

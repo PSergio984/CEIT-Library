@@ -30,7 +30,7 @@ class AcademicPaperForm extends Form
     #[Validate('required|integer|exists:deans,id')]
     public ?int $dean_id = null;
     #[Validate('required|array|min:1')]
-    public array $author_names = [];
+    public array $author_ids = [];
     #[Validate('required|integer|min:1|max:100')]
     public int $number_of_copies = 1;
 
@@ -44,6 +44,7 @@ class AcademicPaperForm extends Form
     public ?\Illuminate\Support\Collection $research_adviser_options = null;
     public ?\Illuminate\Support\Collection $technical_adviser_options = null;
     public ?\Illuminate\Support\Collection $dean_options = null;
+    public ?\Illuminate\Support\Collection $author_options = null;
 
     /**
      * Get the academic paper model from the stored ID
@@ -70,6 +71,9 @@ class AcademicPaperForm extends Form
         }
         if ($this->dean_options === null) {
             $this->dean_options = collect();
+        }
+        if ($this->author_options === null) {
+            $this->author_options = collect();
         }
 
         // Lazy load choices only when needed
@@ -126,25 +130,14 @@ class AcademicPaperForm extends Form
 
     private function syncAuthors(\App\Models\AcademicPaper $academicPaper)
     {
-        if (empty($this->author_names)) {
+        if (empty($this->author_ids)) {
             $academicPaper->authors()->detach();
             return;
         }
 
-        $authorIds = [];
-        foreach ($this->author_names as $authorName) {
-            $authorName = trim($authorName);
-            if (empty($authorName)) continue;
-
-            // Find existing author or create new one
-            $author = \App\Models\Author::firstOrCreate(
-                ['name' => $authorName],
-                ['name' => $authorName]
-            );
-            $authorIds[] = $author->id;
-        }
-
-        $academicPaper->authors()->sync($authorIds);
+        // Filter out any invalid IDs and sync
+        $validAuthorIds = array_filter($this->author_ids, fn($id) => is_int($id) && $id > 0);
+        $academicPaper->authors()->sync($validAuthorIds);
     }
 
     private function createInventoryCopies($academicPaper)
@@ -201,9 +194,9 @@ class AcademicPaperForm extends Form
         $this->dean_id = $academicPaper->dean_id;
 
         // Use already loaded relationships to avoid N+1 queries
-        $this->author_names = $academicPaper->relationLoaded('authors')
-            ? $academicPaper->authors->pluck('name')->filter()->toArray()
-            : $academicPaper->authors()->pluck('name')->filter()->toArray();
+        $this->author_ids = $academicPaper->relationLoaded('authors')
+            ? $academicPaper->authors->pluck('id')->filter()->toArray()
+            : $academicPaper->authors()->pluck('id')->filter()->toArray();
 
         $copyCount = $academicPaper->relationLoaded('copies')
             ? ($academicPaper->copies->count() ?: 1)
@@ -239,7 +232,8 @@ class AcademicPaperForm extends Form
             'technical_adviser_id' => 'required|integer|exists:technical_advisers,id',
             'department' => 'required',
             'dean_id' => 'required|integer|exists:deans,id',
-            'author_names' => 'required|array|min:1',
+            'author_ids' => 'required|array|min:1',
+            'author_ids.*' => 'integer|exists:authors,id',
             'number_of_copies' => 'required|integer|min:1|max:100',
         ];
 
@@ -265,8 +259,9 @@ class AcademicPaperForm extends Form
             'department.required' => 'The department field is required.',
             'dean_id.required' => 'The dean field is required.',
             'dean_id.exists' => 'The selected dean is invalid.',
-            'author_names.required' => 'At least one author is required.',
-            'author_names.min' => 'At least one author must be specified.',
+            'author_ids.required' => 'At least one author is required.',
+            'author_ids.min' => 'At least one author must be specified.',
+            'author_ids.*.exists' => 'One or more selected authors are invalid.',
             'number_of_copies.required' => 'The number of copies field is required.',
             'number_of_copies.integer' => 'The number of copies must be a valid number.',
             'number_of_copies.min' => $this->initialCopyCount !== null
@@ -292,7 +287,7 @@ class AcademicPaperForm extends Form
             'research_adviser_id' => $this->research_adviser_id,
             'technical_adviser_id' => $this->technical_adviser_id,
             'dean_id' => $this->dean_id,
-            'author_names' => $this->author_names,
+            'author_ids' => $this->author_ids,
             'number_of_copies' => $this->number_of_copies,
         ];
     }
@@ -381,7 +376,7 @@ class AcademicPaperForm extends Form
             $this->technical_adviser_id = null;
             $this->department = '';
             $this->dean_id = null;
-            $this->author_names = [];
+            $this->author_ids = [];
             $this->number_of_copies = 1;
         } else {
             // Reset only specified properties
@@ -408,8 +403,8 @@ class AcademicPaperForm extends Form
                     case 'dean_id':
                         $this->dean_id = null;
                         break;
-                    case 'author_names':
-                        $this->author_names = [];
+                    case 'author_ids':
+                        $this->author_ids = [];
                         break;
                     case 'number_of_copies':
                         $this->number_of_copies = 1;
@@ -426,6 +421,7 @@ class AcademicPaperForm extends Form
         $this->research_adviser_options = collect();
         $this->technical_adviser_options = collect();
         $this->dean_options = collect();
+        $this->author_options = collect();
         $this->populateYearChoices();
         $this->loadStaticChoices();
     }
