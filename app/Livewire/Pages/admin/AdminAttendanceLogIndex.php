@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\admin;
 
 use App\Models\Attendance;
 use App\Models\Role;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
@@ -180,6 +181,78 @@ class AdminAttendanceLogIndex extends AdminComponent
         // The toast notification is already handled by the QrScanner component
         // Just refresh the page data
         $this->dispatch('$refresh');
+    }
+
+    public function exportPdf()
+    {
+        // Get all attendances matching current filters (no pagination)
+        $query = $this->getAttendancesQuery();
+
+        if (isset($this->sortBy['column']) && isset($this->sortBy['direction'])) {
+            $column = $this->sortBy['column'];
+            $direction = $this->sortBy['direction'];
+
+            if ($column === 'user_name') {
+                $query->join('users', 'attendances.user_id', '=', 'users.id')
+                    ->orderBy('users.first_name', $direction)
+                    ->select('attendances.*');
+            } elseif ($column === 'scanned_by_name') {
+                $query->leftJoin('librarians', 'attendances.scanned_by', '=', 'librarians.id')
+                    ->leftJoin('users as librarian_users', 'librarians.user_id', '=', 'librarian_users.id')
+                    ->orderBy('librarian_users.first_name', $direction)
+                    ->select('attendances.*');
+            } else {
+                $query->orderBy($column, $direction);
+            }
+        } else {
+            $query->orderBy('time_in', 'desc');
+        }
+
+        $attendances = $query->get()->map(function ($attendance) {
+            return [
+                'id' => $attendance->id,
+                'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
+                'role_name' => $attendance->role?->name ?? 'N/A',
+                'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
+                'time_in' => $attendance->time_in,
+                'time_out' => $attendance->time_out,
+                'duration_minutes' => $attendance->duration_minutes,
+                'status' => $attendance->status,
+            ];
+        });
+
+        // Build filter description for PDF
+        $filterDescription = [];
+        if ($this->search) {
+            $filterDescription[] = 'Search: ' . $this->search;
+        }
+        if ($this->statusFilter) {
+            $statusName = $this->statusFilter === 'active' ? 'Active' : 'Completed';
+            $filterDescription[] = 'Status: ' . $statusName;
+        }
+        if ($this->roleFilter) {
+            $role = Role::find($this->roleFilter);
+            $filterDescription[] = 'Role: ' . ($role?->name ?? 'Unknown');
+        }
+        if ($this->selectedDate) {
+            $filterDescription[] = 'Date: ' . date('M d, Y', strtotime($this->selectedDate));
+        }
+
+        $filterText = !empty($filterDescription) ? implode(' | ', $filterDescription) : 'All Records';
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.attendance-log', [
+            'attendances' => $attendances,
+            'filterText' => $filterText,
+            'generatedAt' => now()->format('M d, Y h:i A'),
+            'totalRecords' => $attendances->count(),
+        ]);
+
+        $filename = 'attendance-log-' . now()->format('Y-m-d-His') . '.pdf';
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, $filename);
     }
 
     /**
