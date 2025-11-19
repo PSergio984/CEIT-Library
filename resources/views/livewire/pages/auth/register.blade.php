@@ -143,15 +143,7 @@ class extends Component
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
                     error-field="password"
-                    @input="
-                        requirements.length = $event.target.value.length >= 8;
-                        requirements.number = /\d/.test($event.target.value);
-                        requirements.symbol = /[!@#$%^&*(),.?\":{}|<>]/.test($event.target.value);
-                        requirements.uppercase = /[A-Z]/.test($event.target.value);
-                        const score = Object.values(requirements).filter(Boolean).length;
-                        passwordStrength = (score / 4) * 100;
-                        passwordLabel = score <= 1 ? 'Weak' : score === 2 ? 'Fair' : score === 3 ? 'Good' : 'Strong';
-                    " />
+                    x-on:input="requirements.length = $event.target.value.length >= 8; requirements.number = /\\d/.test($event.target.value); requirements.symbol = /[!@#$%^&*(),.?':{}|<>]/.test($event.target.value); requirements.uppercase = /[A-Z]/.test($event.target.value); const score = Object.values(requirements).filter(Boolean).length; passwordStrength = (score / 4) * 100; passwordLabel = score <= 1 ? 'Weak' : score === 2 ? 'Fair' : score === 3 ? 'Good' : 'Strong';" />
                 
                 <!-- Password Strength Bar -->
                 <div class="mt-2">
