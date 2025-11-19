@@ -84,7 +84,7 @@ class extends Component
             this.requirements.number = /\d/.test(value || '');
             // Use single quotes for the string and escape only necessary characters in the regex
             // Avoid unescaped double quotes and problematic characters
-            this.requirements.symbol = /[!@#$%^&*(),.?':{}|<>\[\]\\/]/.test(value || '');
+            this.requirements.symbol = /[!@#$%^&*(),.?:{}|<>\[\]\\/]/.test(value || '');
             this.requirements.uppercase = /[A-Z]/.test(value || '');
             this.requirements.lowercase = /[a-z]/.test(value || '');
             const score = Object.values(this.requirements).filter(Boolean).length;

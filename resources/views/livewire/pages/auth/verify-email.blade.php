@@ -40,12 +40,10 @@ class extends Component
             return;
         }
 
-        Auth::user()->sendEmailVerificationNotification();
         RateLimiter::hit($key, $decaySeconds);
-        
-        $this->throttleSeconds = null;
-        Session::flash('status', 'verification-link-sent');
-    }
+            $this->throttleSeconds = null;
+            Auth::user()->sendEmailVerificationNotification();
+            Session::flash('status', 'verification-link-sent');
 
     /**
      * Log the current user out of the application.
@@ -106,10 +104,10 @@ class extends Component
                 wire:click="sendVerification"
                 wire:loading.attr="disabled"
                 wire:target="sendVerification"
-                class="w-3/4 !bg-[#273F4F] !text-white !border-none !hover:bg-[#1d2c38] flex items-center justify-center px-4 py-3 normal-case">
+                class="w-3/4 !bg-[#273F4F] !text-white !border-none hover:!bg-[#1d2c38] flex items-center justify-center px-4 py-3 normal-case">
                 {{ __('Resend verification email') }}
             </x-primary-button>
-            <button wire:click="logout" type="submit"
+            <button wire:click="logout" type="button"
                     class="underline text-sm sm:text-base text-gray-700 hover:text-gray-900 rounded-md font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#273F4F]">
                 {{ __('Log Out') }}
             </button>

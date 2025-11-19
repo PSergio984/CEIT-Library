@@ -16,8 +16,8 @@ return [
     'reset' => 'Your password has been reset.',
     'sent' => 'We have emailed your password reset link.',
     'throttled' => 'Please wait before retrying.',
-    'throttle' => 'Too many password reset attempts. Please try again in :seconds seconds.',
+    'throttle' => 'Too many password reset attempts. Please try again in :seconds second.|Too many password reset attempts. Please try again in :seconds seconds.',
     'token' => 'This password reset token is invalid.',
-    'user' => "We can't find a user with that email address.",
+    'user' => "If that email address is in our system, we have sent a password reset link.",
 
 ];
