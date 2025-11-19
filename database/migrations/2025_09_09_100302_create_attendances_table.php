@@ -32,6 +32,7 @@ return new class extends Migration
             $table->index(['time_in', 'status']); // For daily/hourly library usage reports
             $table->index(['user_id', 'status', 'time_in']); // Composite for user active session lookup
             $table->index('role_id'); // For role-based attendance reporting
+            $table->index('role_id'); // For role-based attendance reporting
         });
     }
 

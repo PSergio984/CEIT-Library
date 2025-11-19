@@ -383,7 +383,7 @@ class DatabaseSeeder extends Seeder
         // Create library entrance/exit sessions
         $studentsWithLibrarySessions = $students->random(25);
         foreach ($studentsWithLibrarySessions as $libraryVisitorStudent) {
-            // Create 2-5 library visits per student
+            // Create 2-5 library visits per student (excluding super_admin)
             $visitCount = rand(2, 5);
             for ($i = 0; $i < $visitCount; $i++) {
                 // Use existing librarians for scanned_by
