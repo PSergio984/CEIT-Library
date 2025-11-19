@@ -18,6 +18,7 @@ class ActiveUsersTab extends AdminComponent
     // Refresh the table when a violation is recorded on ViolationTransactionsTab
     protected $listeners = [
         'refreshActiveUsers' => '$refresh',
+        'refreshViolationTransactionsTab' => '$refresh',
     ];
 
     public $search = '';
@@ -27,7 +28,6 @@ class ActiveUsersTab extends AdminComponent
     public ?User $selectedUser = null;
     public $selectedUserForViolation = null;
     public $selectedViolationId = null;
-    public $violationSeverity = 'Minor';
     public $violationRemarks = '';
     public $searchActiveUsers = '';
     public $perPageActiveUsers = 10;
@@ -43,12 +43,6 @@ class ActiveUsersTab extends AdminComponent
     ];
 
     public array $sortBy = ['column' => 'time_in', 'direction' => 'desc'];
-
-    public $severityOptions = [
-        ['id' => 'Minor', 'name' => 'Minor'],
-        ['id' => 'Major', 'name' => 'Major'],
-        ['id' => 'Critical', 'name' => 'Critical'],
-    ];
 
     public function getActiveUsersProperty()
     {
@@ -106,7 +100,6 @@ class ActiveUsersTab extends AdminComponent
         $this->selectedUserForViolation = $userId;
         $this->selectedUser = User::findOrFail($userId);
         $this->selectedViolationId = null;
-        $this->violationSeverity = 'Minor';
         $this->violationRemarks = '';
         $this->ViolationDrawer = true;
     }
@@ -116,7 +109,6 @@ class ActiveUsersTab extends AdminComponent
         $this->validate([
             'selectedUserForViolation' => 'required|exists:users,id',
             'selectedViolationId'      => 'required|exists:violations,id',
-            'violationSeverity'        => 'required|in:Minor,Major,Critical',
             'violationRemarks'         => 'nullable|string|max:500',
         ]);
 
@@ -125,7 +117,6 @@ class ActiveUsersTab extends AdminComponent
                 ViolationTransaction::create([
                     'user_id'       => $this->selectedUserForViolation,
                     'violation_id'  => $this->selectedViolationId,
-                    'severity'      => $this->violationSeverity,
                     'remarks'       => $this->violationRemarks,
                     'date_occurred' => now(),
                 ]);
@@ -141,7 +132,7 @@ class ActiveUsersTab extends AdminComponent
             $this->success("Violation '{$violation->name}' recorded for {$user->first_name} {$user->last_name}. Credit score updated to {$user->credit_score}.");
             $this->ViolationDrawer = false;
 
-            $this->reset(['selectedUser', 'selectedUserForViolation', 'selectedViolationId', 'violationSeverity', 'violationRemarks']);
+            $this->reset(['selectedUser', 'selectedUserForViolation', 'selectedViolationId', 'violationRemarks']);
         } catch (\Exception $e) {
             $this->error('An error occurred: ' . $e->getMessage());
         }

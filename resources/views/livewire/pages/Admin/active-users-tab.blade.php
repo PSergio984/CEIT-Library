@@ -162,14 +162,6 @@
                         required
                     />
 
-                    <x-mary-select
-                        label="Severity"
-                        wire:model="violationSeverity"
-                        :options="$severityOptions"
-                        icon="o-signal"
-                        required
-                    />
-
                     <x-mary-textarea
                         label="Remarks (Optional)"
                         wire:model="violationRemarks"

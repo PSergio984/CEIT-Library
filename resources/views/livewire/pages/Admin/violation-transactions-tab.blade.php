@@ -6,19 +6,11 @@
             </div>
 
             <div class="bg-base-200 p-4 rounded-lg mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <x-mary-input label="search" wire:model.live="searchTransaction"
                                       placeholder="Search user or violation..."
                                       icon="o-magnifying-glass" clearable/>
-                    </div>
-                    <div>
-                        <x-mary-select label="Filter By Severity" wire:model.live="severityFilter" :options="[
-                            ['id' => '', 'name' => 'All Severities'],
-                            ['id' => 'Minor', 'name' => 'Minor'],
-                            ['id' => 'Major', 'name' => 'Major'],
-                            ['id' => 'Critical', 'name' => 'Critical']
-                        ]" icon="o-funnel"/>
                     </div>
                     <div>
                         <x-mary-datetime label="Filter by Date" wire:model.live="dateFilter" type="date"
@@ -44,12 +36,6 @@
                         <div class="card-body p-4">
                             <div class="flex justify-between items-start mb-2">
                                 <div class="badge badge-primary">{{ $transaction->id }}</div>
-                                <x-mary-badge :value="$transaction->severity" class="badge-sm"
-                                              :class="[
-                                            'Minor' => 'badge-info',
-                                            'Major' => 'badge-warning',
-                                            'Critical' => 'badge-error badge-outline'
-                                        ][$transaction->severity] ?? 'badge-ghost'"/>
                             </div>
 
                             <div class="space-y-2 text-sm">
@@ -99,40 +85,23 @@
                               :per-page="$perPageTransaction" :per-page-values="[10, 20, 50]" striped
                               row-class="hover:bg-base-200" header-class="text-base-content bg-base-200">
                     @scope('cell_user.name', $transaction)
-                    <div>
-                        <div
-                            class="font-medium">{{ $transaction->user->first_name }} {{ $transaction->user->last_name }}</div>
-                    </div>
+                    <span class="font-medium">{{ $transaction->user->first_name }} {{ $transaction->user->last_name }}</span>
                     @endscope
 
                     @scope('cell_violation.name', $transaction)
-                    <div>
-                        <div class="font-medium">{{ $transaction->violation->name }}</div>
-                        @if($transaction->remarks)
-                            <div class="text-xs text-base-content/70 line-clamp-2">{{ $transaction->remarks }}</div>
-                        @endif
-                    </div>
+                    <div class="font-medium">{{ $transaction->violation->name }}</div>
+                    @if($transaction->remarks)
+                        <div class="text-xs text-base-content/70 line-clamp-2 mt-1">{{ $transaction->remarks }}</div>
+                    @endif
                     @endscope
 
                     @scope('cell_violation_penalty', $transaction)
                     <span class="text-error font-semibold">-{{ $transaction->violation_penalty }}</span>
                     @endscope
 
-                    @scope('cell_severity', $transaction)
-                    <x-mary-badge :value="$transaction->severity" class="badge-sm"
-                                  :class="[
-                                    'Minor' => 'badge-info',
-                                    'Major' => 'badge-warning',
-                                    'Critical' => 'badge-error badge-outline'
-                                ][$transaction->severity] ?? 'badge-ghost'"/>
-                    @endscope
-
                     @scope('cell_date_occurred', $transaction)
-                    <div class="text-sm">
-                        {{ $transaction->date_occurred->format('M d, Y') }}
-                        <div
-                            class="text-xs text-base-content/70">{{ $transaction->date_occurred->format('h:i A') }}</div>
-                    </div>
+                    <div>{{ $transaction->date_occurred->format('M d, Y') }}</div>
+                    <div class="text-xs text-base-content/70">{{ $transaction->date_occurred->format('h:i A') }}</div>
                     @endscope
 
                     @scope('actions', $transaction)

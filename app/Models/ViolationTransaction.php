@@ -45,12 +45,11 @@ class ViolationTransaction extends Model
         'attendance_id',
         'violation_penalty',
         'date_occurred',
-        'severity',
         'remarks',
     ];
 
     protected $casts = [
-        'date_occurred' => 'date',
+        'date_occurred' => 'datetime',
         'violation_penalty' => 'integer',
     ];
     /**
@@ -133,9 +132,9 @@ class ViolationTransaction extends Model
      */
     protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
     {
-        // Use parameterized query with DB::statement for proper binding
+        // Use parameterized query with explicit CAST and clamping
         \DB::statement(
-            'UPDATE users SET credit_score = LEAST(100, GREATEST(0, credit_score + ?)) WHERE id = ?',
+            'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
             [$delta, $userId]
         );
     }
@@ -167,12 +166,6 @@ class ViolationTransaction extends Model
         return static::join('violations', 'violation_transactions.violation_id', '=', 'violations.id')
             ->where('violation_transactions.user_id', $userId)
             ->sum('violations.penalty_score');
-    }
-
-    // Scope for filtering by severity
-    public function scopeBySeverity($query, $severity)
-    {
-        return $query->where('severity', $severity);
     }
 
     // Scope for filtering by date range
