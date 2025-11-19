@@ -549,8 +549,18 @@
                                         become
                                         librarians)</span>
                                 </label>
-                                <input type="date" wire:model.live="editingDateStart"
-                                    class="input input-bordered w-full">
+                                <input type="date" wire:model.live="editingDateStart" min="{{ date('Y-m-d') }}"
+                                    class="input input-bordered w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-datetime-edit-fields-wrapper]:py-0">
+                                <style>
+                                    /* Gray out past dates in the calendar */
+                                    input[type="date"]::-webkit-calendar-picker-indicator {
+                                        filter: invert(0.5);
+                                    }
+
+                                    input[type="date"]:invalid {
+                                        color: rgb(156 163 175);
+                                    }
+                                </style>
                                 @error('editingDateStart')
                                     <span class="text-error text-xs">{{ $message }}</span>
                                 @enderror

@@ -93,4 +93,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
 // Schedule the command to run daily at 12:30 AM
 Schedule::command('attendance:check-missing-timeouts')->dailyAt('00:30');
 
+// Schedule librarian batch status updates to run every hour
+Schedule::command('librarian:update-batch-statuses')->hourly();
+
 Schedule::command('librarian:update-roles')->hourly();
