@@ -68,8 +68,7 @@
         {{-- Desktop Table View --}}
         <div class="hidden lg:block overflow-x-auto">
             <x-mary-table :headers="$headers" :rows="$this->violations" :sort-by="$sortBy"
-                          with-pagination
-                          :per-page="$perPage" :per-page-values="[10, 20, 50]" striped
+                          with-pagination striped
                           row-class="hover:bg-base-200" header-class="text-base-content bg-base-200">
 
                 @scope('cell_name', $row)

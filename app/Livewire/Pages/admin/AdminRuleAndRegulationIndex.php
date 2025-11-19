@@ -61,8 +61,8 @@ class AdminRuleAndRegulationIndex extends AdminComponent
 
         $this->headers = [
             ['key' => 'id', 'label' => '#', 'class' => 'w-16', 'sortable' => false],
-            ['key' => 'ruleHeader.title', 'label' => 'Header', 'sortable' => true],
-            ['key' => 'content', 'label' => 'Content', 'sortable' => true],
+            ['key' => 'ruleHeader.title', 'label' => 'Header', 'sortable' => true, 'class' => 'w-50'],
+            ['key' => 'content', 'label' => 'Content', 'sortable' => true, 'class' => 'w-30'],
             ['key' => 'updated_at', 'label' => 'Updated', 'sortable' => true, 'class' => 'w-40'],
         ];
     }

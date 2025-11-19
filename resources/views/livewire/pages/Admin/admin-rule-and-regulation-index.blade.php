@@ -98,8 +98,6 @@
                 :rows="$this->rules()"
                 :sort-by="$sortBy"
                 with-pagination
-                :per-page="$perPage"
-                :per-page-values="[5, 10, 20]"
             >
                 @scope('cell_ruleHeader.title', $rule)
                 @if($rule->ruleHeader)

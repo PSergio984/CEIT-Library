@@ -74,8 +74,7 @@
             {{-- Desktop Table View --}}
             <div class="hidden lg:block overflow-x-auto">
                 <x-mary-table :headers="$activeUsersHeaders" :rows="$this->activeUsers"
-                              :sort-by="$sortBy" with-pagination
-                              :per-page="$perPageActiveUsers" :per-page-values="[10, 20, 50]" striped
+                              :sort-by="$sortBy" with-pagination striped
                               row-class="hover:bg-base-200" header-class="text-base-content bg-base-200">
 
                     @scope('cell_user.name', $attendance)
