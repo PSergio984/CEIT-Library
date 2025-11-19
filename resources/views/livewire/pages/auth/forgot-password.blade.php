@@ -39,7 +39,7 @@ class extends Component
 
             session()->flash('status', __($status));
         } catch (\Illuminate\Http\Exceptions\ThrottleRequestsException $e) {
-                $retryAfter = isset($e->getHeaders()['Retry-After']) ? (int) $e->getHeaders()['Retry-After'] : 0;
+                $retryAfter = (int) ($e->getHeaders()['Retry-After'] ?? 0);
                 $this->addError('email', $retryAfter > 0
                     ? trans_choice('Too many password reset attempts. Please try again in :seconds second|Too many password reset attempts. Please try again in :seconds seconds', $retryAfter, ['seconds' => $retryAfter])
                     : __('Too many password reset attempts. Please try again later.')

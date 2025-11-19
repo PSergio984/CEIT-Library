@@ -51,7 +51,7 @@ class extends Component
         event(new Registered($user = User::create($validated)));
 
         // Send welcome email for testing
-        Mail::to($user->email)->queue(new Welcome($user));
+        Mail::to($user->email)->queue(new Welcome());
 
         // Temporarily log in user to access verification notice page, then redirect there
         Auth::login($user);
@@ -72,7 +72,7 @@ class extends Component
     updateEmail() {
         const cleanFirst = (this.$wire.first_name || '').replace(/\s+/g, '').toLowerCase();
         const cleanLast = (this.$wire.last_name || '').replace(/\s+/g, '').toLowerCase();
-        this.$wire.email = (cleanFirst || cleanLast) ? cleanFirst + cleanLast + '@plv.edu.ph' : '';
+        this.$wire.email = (cleanFirst && cleanLast) ? cleanFirst + cleanLast + '@plv.edu.ph' : '';
     }
 }">
     <!-- ... header ... -->
@@ -93,7 +93,7 @@ class extends Component
                     error-field="first_name"
                     x-on:blur="
                         let val = $event.target.value.trim().replace(/\s+/g, ' ');
-                        val = val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+                        val = val.split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '').filter(Boolean).join(' ');
                         $event.target.value = val;
                         $wire.first_name = val;
                     "
@@ -111,8 +111,10 @@ class extends Component
                     icon-class="!text-gray-700"
                     error-field="last_name"
                     x-on:blur="
-                        $event.target.value = $event.target.value.charAt(0).toUpperCase() + $event.target.value.slice(1);
-                        $wire.last_name = $event.target.value;
+                        let val = $event.target.value.trim().replace(/\s+/g, ' ');
+                        val = val.split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '').filter(Boolean).join(' ');
+                        $event.target.value = val;
+                        $wire.last_name = val;
                     "
                     x-on:change="updateEmail()" />
             </div>
@@ -144,7 +146,7 @@ class extends Component
                     @input="
                         requirements.length = $event.target.value.length >= 8;
                         requirements.number = /\d/.test($event.target.value);
-                        requirements.symbol = /[!@#$%^&*(),.?:{}|<>]/.test($event.target.value);
+                        requirements.symbol = /[!@#$%^&*(),.?\":{}|<>]/.test($event.target.value);
                         requirements.uppercase = /[A-Z]/.test($event.target.value);
                         const score = Object.values(requirements).filter(Boolean).length;
                         passwordStrength = (score / 4) * 100;
