@@ -17,26 +17,34 @@ class extends Component
      */
     public function sendPasswordResetLink(): void
     {
-        $this->validate([
-            'email' => ['required', 'string', 'email', new PlvEmailDomain],
-        ]);
+        try {
+            $this->validate([
+                'email' => ['required', 'string', 'email', new PlvEmailDomain],
+            ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
-        $status = Password::sendResetLink(
-            $this->only('email')
-        );
+            // We will send the password reset link to this user. Once we have attempted
+            // to send the link, we will examine the response then see the message we
+            // need to show to the user. Finally, we'll send out a proper response.
+            $status = Password::sendResetLink(
+                $this->only('email')
+            );
 
-        if ($status != Password::RESET_LINK_SENT) {
-            $this->addError('email', __($status));
+            if ($status != Password::RESET_LINK_SENT) {
+                $this->addError('email', __($status));
 
-            return;
+                return;
+            }
+
+            $this->reset('email');
+
+            session()->flash('status', __($status));
+        } catch (\Illuminate\Http\Exceptions\ThrottleRequestsException $e) {
+                $retryAfter = isset($e->getHeaders()['Retry-After']) ? (int) $e->getHeaders()['Retry-After'] : 0;
+                $this->addError('email', $retryAfter > 0
+                    ? trans_choice('Too many password reset attempts. Please try again in :seconds second|Too many password reset attempts. Please try again in :seconds seconds', $retryAfter, ['seconds' => $retryAfter])
+                    : __('Too many password reset attempts. Please try again later.')
+                );
         }
-
-        $this->reset('email');
-
-        session()->flash('status', __($status));
     }
 }; ?>
 

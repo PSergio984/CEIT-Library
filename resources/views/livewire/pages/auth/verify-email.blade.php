@@ -13,7 +13,9 @@ class extends Component
 {
     /**
      * Send an email verification notification to the user.
+     * Allow 3 attempts per 60 seconds
      */
+    #[\Livewire\Attributes\Throttle(3, 60)]
     public function sendVerification(): void
     {
         if (Auth::user()->hasVerifiedEmail()) {

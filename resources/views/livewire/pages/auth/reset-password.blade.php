@@ -17,8 +17,11 @@ class extends Component
 {
     #[Locked]
     public string $token = '';
+
     public string $email = '';
+
     public string $password = '';
+
     public string $password_confirmation = '';
 
     /**
@@ -36,39 +39,47 @@ class extends Component
      */
     public function resetPassword(): void
     {
-        $this->validate([
-            'token' => ['required'],
-            'email' => ['required', 'string', 'email'],
-            'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-        ]);
+        try {
+            $this->validate([
+                'token' => ['required'],
+                'email' => ['required', 'string', 'email'],
+                'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            ]);
 
-        // Here we will attempt to reset the user's password. If it is successful we
-        // will update the password on an actual user model and persist it to the
-        // database. Otherwise we will parse the error and return the response.
-        $status = Password::reset(
-            $this->only('email', 'password', 'password_confirmation', 'token'),
-            function ($user) {
-                $user->forceFill([
-                    'password' => Hash::make($this->password),
-                    'remember_token' => Str::random(60),
-                ])->save();
+            // Here we will attempt to reset the user's password. If it is successful we
+            // will update the password on an actual user model and persist it to the
+            // database. Otherwise we will parse the error and return the response.
+            $status = Password::reset(
+                $this->only('email', 'password', 'password_confirmation', 'token'),
+                function ($user) {
+                    $user->forceFill([
+                        'password' => Hash::make($this->password),
+                        'remember_token' => Str::random(60),
+                    ])->save();
 
-                event(new PasswordReset($user));
+                    event(new PasswordReset($user));
+                }
+            );
+
+            // If the password was successfully reset, we will redirect the user back to
+            // the application's home authenticated view. If there is an error we can
+            // redirect them back to where they came from with their error message.
+            if ($status != Password::PASSWORD_RESET) {
+                $this->addError('email', __($status));
+
+                return;
             }
-        );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
-        if ($status != Password::PASSWORD_RESET) {
-            $this->addError('email', __($status));
+            Session::flash('status', __($status));
 
-            return;
+            $this->redirectRoute('login', navigate: true);
+        } catch (\Illuminate\Http\Exceptions\ThrottleRequestsException $e) {
+            $retryAfter = isset($e->getHeaders()['Retry-After']) ? (int) $e->getHeaders()['Retry-After'] : 0;
+            $this->addError('email', $retryAfter > 0
+                ? trans_choice('Too many password reset attempts. Please try again in :seconds second|Too many password reset attempts. Please try again in :seconds seconds', $retryAfter, ['seconds' => $retryAfter])
+                : __('Too many password reset attempts. Please try again later.')
+            );
         }
-
-        Session::flash('status', __($status));
-
-        $this->redirectRoute('login', navigate: true);
     }
 }; ?>
 
