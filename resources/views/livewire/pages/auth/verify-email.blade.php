@@ -2,30 +2,48 @@
 
 use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
 #[Title('Verify Email - CEIT Library')]
+
 class extends Component
 {
+    public ?int $throttleSeconds = null;
+
     /**
      * Send an email verification notification to the user.
-     * Allow 3 attempts per 60 seconds
+     * Throttle logic matches login form
      */
-    #[\Livewire\Attributes\Throttle(3, 60)]
     public function sendVerification(): void
     {
         if (Auth::user()->hasVerifiedEmail()) {
             $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+            return;
+        }
 
+        $key = 'verify-email|' . Auth::id() . '|' . request()->ip();
+        $maxAttempts = config('throttle.verify_email.limit', 5);
+        $decaySeconds = config('throttle.verify_email.decay', 60);
+
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            $this->throttleSeconds = RateLimiter::availableIn($key);
+            $this->addError('sendVerification', trans('auth.verification_throttle', [
+                'seconds' => $this->throttleSeconds,
+                'minutes' => ceil($this->throttleSeconds / 60),
+            ]));
             return;
         }
 
         Auth::user()->sendEmailVerificationNotification();
-
+        RateLimiter::hit($key, $decaySeconds);
+        
+        $this->throttleSeconds = null;
         Session::flash('status', 'verification-link-sent');
     }
 
@@ -76,11 +94,20 @@ class extends Component
                 {{ __('A new verification link has been sent to the email address you provided during registration.') }}
             </div>
         @endif
+        
+        @error('sendVerification')
+            <div class="mb-4 font-medium text-sm sm:text-base text-red-600" role="alert">
+                {{ $message }}
+            </div>
+        @enderror
+        
         <div class="mt-4 flex flex-col items-center gap-4">
-            <x-primary-button wire:click="sendVerification"
-                              class="w-3/4 !bg-[#273F4F] !text-white !border-none !hover:bg-[#1d2c38] flex items-center justify-center px-4 py-3 normal-case">
-                <span
-                    class="text-center text-sm sm:text-base leading-tight break-words">{{ __('Resend verification email') }}</span>
+            <x-primary-button
+                wire:click="sendVerification"
+                wire:loading.attr="disabled"
+                wire:target="sendVerification"
+                class="w-3/4 !bg-[#273F4F] !text-white !border-none !hover:bg-[#1d2c38] flex items-center justify-center px-4 py-3 normal-case">
+                {{ __('Resend verification email') }}
             </x-primary-button>
             <button wire:click="logout" type="submit"
                     class="underline text-sm sm:text-base text-gray-700 hover:text-gray-900 rounded-md font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#273F4F]">

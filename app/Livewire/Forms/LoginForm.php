@@ -45,9 +45,17 @@ class LoginForm extends Form
     /**
      * Ensure the authentication request is not rate limited.
      */
+
     protected function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $raw = config('throttle.login.limit', 5);
+        $maxAttempts = (int) $raw;
+        if ($maxAttempts < 1) {
+            \Log::warning('Invalid throttle.login.limit config: ' . var_export($raw, true) . '. Falling back to 5.');
+            $maxAttempts = 5;
+        }
+
+        if (! RateLimiter::tooManyAttempts($this->throttleKey(), $maxAttempts)) {
             return;
         }
 

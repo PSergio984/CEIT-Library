@@ -2,6 +2,7 @@
 
 use App\Rules\PlvEmailDomain;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
@@ -14,6 +15,7 @@ class extends Component
 
     /**
      * Send a password reset link to the provided email address.
+     * Throttle: 3 attempts per 60 seconds per user+IP (matches verify-email)
      */
     public function sendPasswordResetLink(): void
     {
@@ -21,30 +23,30 @@ class extends Component
             'email' => ['required', 'string', 'email', new PlvEmailDomain],
         ]);
 
-        // We will send the password reset link to this user. Once we have attempted
-        // to send the link, we will examine the response then see the message we
-        // need to show to the user. Finally, we'll send out a proper response.
+        $key = 'forgot-password|' . strtolower($this->email) . '|' . request()->ip();
+        $maxAttempts = config('throttle.forgot_password.limit', 3);
+        $decaySeconds = config('throttle.forgot_password.decay', 60);
+
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($key);
+            $this->addError('email', trans('passwords.throttle', [
+                'seconds' => $seconds,
+                'minutes' => ceil($seconds / 60),
+            ]));
+            return;
+        }
+
         $status = Password::sendResetLink(
             $this->only('email')
         );
 
-        if ($status == Password::RESET_THROTTLED) {
-            $seconds = config('auth.passwords.'.config('auth.defaults.passwords').'.throttle', 60);
-            $this->addError('email', trans_choice(
-                'Too many password reset attempts. Please try again in :seconds second.|Too many password reset attempts. Please try again in :seconds seconds.',
-                $seconds,
-                ['seconds' => $seconds]
-            ));
-
-            return;
-        }
-
         if ($status != Password::RESET_LINK_SENT) {
             $this->addError('email', __($status));
-
+            RateLimiter::hit($key, $decaySeconds);
             return;
         }
 
+        RateLimiter::clear($key);
         $this->reset('email');
         session()->flash('status', __($status));
     }

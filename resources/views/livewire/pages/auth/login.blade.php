@@ -120,7 +120,7 @@ class extends Component
 
             <!-- Login Button -->
             <div class="mb-4 flex justify-center">
-                <x-primary-button class="w-full sm:w-2/3 md:w-1/2" wire:target="login">
+                <x-primary-button class="w-full sm:w-2/3 md:w-1/2" wire:target="login" wire:loading.attr="disabled">
                     {{ __('Log in') }}
                 </x-primary-button>
             </div>
