@@ -22,8 +22,7 @@ class ViolationTransactionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'violation_id' => Violation::factory(),
-            'date_occurred' => $this->faker->dateTimeBetween('-6 months', 'now')->format('Y-m-d'),
-            'severity' => $this->faker->randomElement(['Minor', 'Major', 'Critical']),
+            'date_occurred' => $this->faker->dateTimeBetween('-6 months', 'now')->format('Y-m-d H:i:s'),
             'remarks' => $this->faker->optional(0.7)->sentence(),
         ];
     }

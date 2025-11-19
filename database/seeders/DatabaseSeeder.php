@@ -504,50 +504,46 @@ class DatabaseSeeder extends Seeder
             $today->copy()->subDays(2),
         ];
 
-        // Late Return violation (Minor severity, -5 points)
+        // Late Return violation (-5 points)
         $lateReturnViolation = Violation::where('name', 'Late Return of Books')->first();
         if ($lateReturnViolation) {
             ViolationTransaction::create([
                 'user_id' => $specificStudent->id,
                 'violation_id' => $lateReturnViolation->id,
                 'date_occurred' => $violationDates[0],
-                'severity' => 'Minor',
                 'remarks' => 'Returned thesis 2 days past due date',
             ]);
         }
 
-        // Loud Talking violation (Minor severity, -3 points)
+        // Loud Talking violation (-3 points)
         $loudTalkingViolation = Violation::where('name', 'Loud Talking in Library')->first();
         if ($loudTalkingViolation) {
             ViolationTransaction::create([
                 'user_id' => $specificStudent->id,
                 'violation_id' => $loudTalkingViolation->id,
                 'date_occurred' => $violationDates[1],
-                'severity' => 'Minor',
                 'remarks' => 'Talking loudly in the reading area',
             ]);
         }
 
-        // Eating in Library violation (Minor severity, -4 points)
+        // Eating in Library violation (-4 points)
         $eatingViolation = Violation::where('name', 'Eating in Library')->first();
         if ($eatingViolation) {
             ViolationTransaction::create([
                 'user_id' => $specificStudent->id,
                 'violation_id' => $eatingViolation->id,
                 'date_occurred' => $violationDates[2],
-                'severity' => 'Minor',
                 'remarks' => 'Eating snacks in the study area',
             ]);
         }
 
-        // Mobile Phone violation (Minor severity, -3 points)
+        // Mobile Phone violation (-3 points)
         $mobilePhoneViolation = Violation::where('name', 'Using Mobile Phone Loudly')->first();
         if ($mobilePhoneViolation) {
             ViolationTransaction::create([
                 'user_id' => $specificStudent->id,
                 'violation_id' => $mobilePhoneViolation->id,
                 'date_occurred' => $violationDates[3],
-                'severity' => 'Minor',
                 'remarks' => 'Received a call without leaving the study area',
             ]);
         }
