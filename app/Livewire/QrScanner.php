@@ -287,7 +287,7 @@ class QrScanner extends Component
         if ($activeSession) {
             // User is checking out (time out) - wrap in transaction
             try {
-                return DB::transaction(function () use ($activeSession, $user) {
+                return DB::transaction(function () use ($activeSession, $user, $userId) {
                     $activeSession->time_out = Carbon::now();
                     $activeSession->status = 'completed';
                     $activeSession->calculateDuration();
@@ -325,6 +325,7 @@ class QrScanner extends Component
                 return DB::transaction(function () use ($userId, $scannedBy, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
+                        'role_id' => $user->role_id,
                         'time_in' => Carbon::now(),
                         'status' => 'active',
                         'scanned_by' => $scannedBy,

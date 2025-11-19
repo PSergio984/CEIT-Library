@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\admin;
 
 use App\Models\Attendance;
+use App\Models\Role;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
@@ -20,6 +21,8 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     public $statusFilter = '';
 
+    public $roleFilter = '';
+
     public $selectedDate = '';
 
     // Listeners for QR scanner events
@@ -27,8 +30,9 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     public array $headers = [
         ['key' => 'id', 'label' => '#', 'class' => 'w-12'],
-        ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'min-w-32'],
-        ['key' => 'scanned_by_name', 'label' => 'Scanned By', 'sortable' => true, 'class' => 'min-w-40'],
+        ['key' => 'user_name', 'label' => 'Student Name', 'sortable' => true, 'class' => 'w-40'],
+        ['key' => 'role_name', 'label' => 'Role', 'sortable' => true, 'class' => 'w-28'],
+        ['key' => 'scanned_by_name', 'label' => 'Scanned By', 'sortable' => true, 'class' => 'w-40'],
         ['key' => 'time_in', 'label' => 'Time In', 'sortable' => true, 'class' => 'w-36'],
         ['key' => 'time_out', 'label' => 'Time Out', 'sortable' => true, 'class' => 'w-36'],
         ['key' => 'duration_minutes', 'label' => 'Duration', 'sortable' => true, 'class' => 'w-24'],
@@ -41,7 +45,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     {
         $search = trim($this->search);
 
-        return Attendance::with(['user', 'scannedByLibrarian.user'])
+        return Attendance::with(['user', 'scannedByLibrarian.user', 'role'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     // Search student name (match full name or individual parts)
@@ -59,6 +63,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                 });
             })
             ->when($this->statusFilter, fn($q) => $q->where('attendances.status', $this->statusFilter))
+            ->when($this->roleFilter, fn($q) => $q->where('attendances.role_id', $this->roleFilter))
             ->when($this->selectedDate, fn($q) => $q->whereDate('attendances.time_in', $this->selectedDate));
     }
 
@@ -92,6 +97,13 @@ class AdminAttendanceLogIndex extends AdminComponent
                 return [
                     'id' => $attendance->id,
                     'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
+                    'role_name' => $attendance->role?->name ?? 'N/A',
+                    'role_badge_color' => match(strtolower($attendance->role?->name ?? '')) {
+                        'student' => 'badge-success',
+                        'librarian' => 'badge-info',
+                        'admin', 'super_admin', 'super admin' => 'badge-error',
+                        default => 'badge-outline'
+                    },
                     'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
                     'user' => $attendance->user,
                     'time_in' => $attendance->time_in,
@@ -119,6 +131,11 @@ class AdminAttendanceLogIndex extends AdminComponent
             ->count();
     }
 
+    public function getRolesProperty()
+    {
+        return Role::orderBy('name')->get();
+    }
+
     public function updatingSearch()
     {
         $this->resetPage();
@@ -134,11 +151,17 @@ class AdminAttendanceLogIndex extends AdminComponent
         $this->resetPage();
     }
 
+    public function updatingRoleFilter()
+    {
+        $this->resetPage();
+    }
+
     public function clearFilters()
     {
         $this->search = '';
         $this->selectedDate = '';
         $this->statusFilter = '';
+        $this->roleFilter = '';
         $this->sortBy = ['column' => 'status', 'direction' => 'desc'];
         $this->resetPage();
     }

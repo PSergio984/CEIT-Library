@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
             $table->timestamp('time_in')->nullable();
             $table->timestamp('time_out')->nullable();
             $table->enum('status', ['active', 'completed'])->default('active');
@@ -30,6 +31,7 @@ return new class extends Migration
             $table->index('scanned_by'); // For librarian activity tracking
             $table->index(['time_in', 'status']); // For daily/hourly library usage reports
             $table->index(['user_id', 'status', 'time_in']); // Composite for user active session lookup
+            $table->index('role_id'); // For role-based attendance reporting
         });
     }
 
