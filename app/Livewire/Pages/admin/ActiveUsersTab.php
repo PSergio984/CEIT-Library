@@ -18,7 +18,6 @@ class ActiveUsersTab extends AdminComponent
     // Refresh the table when a violation is recorded on ViolationTransactionsTab
     protected $listeners = [
         'refreshActiveUsers' => '$refresh',
-        'refreshViolationTransactionsTab' => '$refresh',
     ];
 
     public $search = '';

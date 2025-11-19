@@ -132,7 +132,7 @@ class ViolationTransaction extends Model
      */
     protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
     {
-        // Use parameterized query with explicit CAST and clamping
+        // Explicitly cast credit_score to SIGNED for arithmetic, then cast result to UNSIGNED with clamping
         \DB::statement(
             'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
             [$delta, $userId]
