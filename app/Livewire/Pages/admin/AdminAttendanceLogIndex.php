@@ -4,7 +4,6 @@ namespace App\Livewire\Pages\admin;
 
 use App\Models\Attendance;
 use App\Models\Role;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
