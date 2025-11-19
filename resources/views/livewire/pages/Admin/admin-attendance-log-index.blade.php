@@ -3,9 +3,14 @@
         <div>
             <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
         </div>
-        <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
-            Scan QR Code
-        </x-mary-button>
+        <div class="flex gap-2">
+            <x-mary-button wire:click="exportPdf" class="btn-primary" icon="o-arrow-down-tray">
+                Export PDF
+            </x-mary-button>
+            <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
+                Scan QR Code
+            </x-mary-button>
+        </div>
     </div>
 
     {{-- QR Scanner Component --}}
