@@ -29,7 +29,11 @@
             font-size: 18px;
             margin-bottom: 5px;
             color: #1a1a1a;
+<<<<<<< HEAD
             font-family: Helvetica, Arial, sans-serif;
+=======
+            font-family: 'Poppins', sans-serif;
+>>>>>>> 1568951 (feat: implement PDF export functionality for attendance logs and add corresponding view)
             font-weight: bold;
         }
         
@@ -96,7 +100,11 @@
             border-radius: 3px;
             font-size: 8px;
             font-weight: bold;
+<<<<<<< HEAD
             font-family: Helvetica, Arial, sans-serif;
+=======
+            font-family: 'Poppins', sans-serif;
+>>>>>>> 1568951 (feat: implement PDF export functionality for attendance logs and add corresponding view)
         }
         
         .status-active {
@@ -115,7 +123,11 @@
             border-radius: 3px;
             font-size: 8px;
             font-weight: bold;
+<<<<<<< HEAD
             font-family: Helvetica, Arial, sans-serif;
+=======
+            font-family: 'Poppins', sans-serif;
+>>>>>>> 1568951 (feat: implement PDF export functionality for attendance logs and add corresponding view)
         }
         
         .role-student {
