@@ -32,8 +32,14 @@ class AttendanceFactory extends Factory
 
         $status = $timeOut ? 'completed' : 'active';
 
+        // Only pick students for attendance, not super_admin
+        $user = User::whereHas('role', function($q) {
+            $q->where('name', 'student');
+        })->inRandomOrder()->first() ?? User::factory()->create();
+
         return [
-            'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
+            'user_id' => $user->id,
+            'role_id' => $user->role_id,
             'time_in' => $timeIn,
             'time_out' => $timeOut,
             'status' => $status,

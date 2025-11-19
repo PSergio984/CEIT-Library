@@ -39,6 +39,7 @@ class Attendance extends Model
 
     protected $fillable = [
         'user_id',
+        'role_id',
         'time_in',
         'time_out',
         'status',
@@ -100,6 +101,12 @@ class Attendance extends Model
     public function scannedByLibrarian()
     {
         return $this->belongsTo(Librarian::class, 'scanned_by');
+    }
+
+    // Relationship with role (snapshot at check-in time)
+    public function role()
+    {
+        return $this->belongsTo(Role::class);
     }
 
     // Calculate duration when time_out is set
