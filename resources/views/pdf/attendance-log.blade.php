@@ -29,7 +29,7 @@
             font-size: 18px;
             margin-bottom: 5px;
             color: #1a1a1a;
-            font-family: 'Poppins', sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             font-weight: bold;
         }
         
@@ -96,7 +96,7 @@
             border-radius: 3px;
             font-size: 8px;
             font-weight: bold;
-            font-family: 'Poppins', sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
         }
         
         .status-active {
@@ -115,7 +115,7 @@
             border-radius: 3px;
             font-size: 8px;
             font-weight: bold;
-            font-family: 'Poppins', sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
         }
         
         .role-student {
