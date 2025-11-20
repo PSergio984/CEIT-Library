@@ -237,10 +237,14 @@ return [
 
         /**
 <<<<<<< HEAD
+<<<<<<< HEAD
          * Enable inline JavaScript
 =======
          * Rnable inline JavaScript
 >>>>>>> 1568951 (feat: implement PDF export functionality for attendance logs and add corresponding view)
+=======
+         * Enable inline JavaScript
+>>>>>>> e1f4cfb (refactor: streamline attendance sorting logic and improve code readability)
          *
          * If this setting is set to true then DOMPDF will automatically insert JavaScript code contained
          * within <script type="text/javascript"> ... </script> tags as written into the PDF.
