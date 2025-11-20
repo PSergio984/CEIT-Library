@@ -195,25 +195,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         // Get all attendances matching current filters (no pagination)
         $query = $this->getAttendancesQuery();
 
-        if (isset($this->sortBy['column']) && isset($this->sortBy['direction'])) {
-            $column = $this->sortBy['column'];
-            $direction = $this->sortBy['direction'];
-
-            if ($column === 'user_name') {
-                $query->join('users', 'attendances.user_id', '=', 'users.id')
-                    ->orderBy('users.first_name', $direction)
-                    ->select('attendances.*');
-            } elseif ($column === 'scanned_by_name') {
-                $query->leftJoin('librarians', 'attendances.scanned_by', '=', 'librarians.id')
-                    ->leftJoin('users as librarian_users', 'librarians.user_id', '=', 'librarian_users.id')
-                    ->orderBy('librarian_users.first_name', $direction)
-                    ->select('attendances.*');
-            } else {
-                $query->orderBy($column, $direction);
-            }
-        } else {
-            $query->orderBy('time_in', 'desc');
-        }
+        $query = $this->applySorting($query);
 
         $attendances = $query->get()->map(function ($attendance) {
             return [
