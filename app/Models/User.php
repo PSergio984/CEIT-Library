@@ -142,15 +142,26 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasRole(Role::LIBRARIAN);
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->hasRole(Role::ADMIN);
+    }
+
     public function isSuperAdmin(): bool
     {
         return $this->hasRole(Role::SUPER_ADMIN);
     }
 
-    // Check if user has admin privileges (librarian or super_admin)
+    // Check if user has admin privileges (admin or super_admin)
     public function hasAdminAccess(): bool
     {
         return $this->role && $this->role->hasAdminAccess();
+    }
+
+    // Check if user has any admin-level access (librarian, admin or super_admin)
+    public function hasLibrarianOrAdminAccess(): bool
+    {
+        return $this->role && $this->role->hasLibrarianOrAdminAccess();
     }
 
     // Check if user has active librarian batch duty (for QR scanning)

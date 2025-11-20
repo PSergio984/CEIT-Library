@@ -46,6 +46,14 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property int|null $research_adviser_id
+ * @property int|null $technical_adviser_id
+ * @property int|null $dean_id
+ * @property-read \App\Models\ResearchAdviser|null $researchAdviser
+ * @property-read \App\Models\TechnicalAdviser|null $technicalAdviser
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereDeanId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereResearchAdviserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereTechnicalAdviserId($value)
  */
 	class AcademicPaper extends \Eloquent {}
 }
@@ -143,6 +151,26 @@ namespace App\Models{
 namespace App\Models{
 /**
  * @property int $id
+ * @property string $name
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AcademicPaper> $academicPapers
+ * @property-read int|null $academic_papers_count
+ * @method static \Database\Factories\DeanFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Dean whereUpdatedAt($value)
+ */
+	class Dean extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
  * @property int $academic_paper_id
  * @property int $copy_number
  * @property string $status
@@ -192,40 +220,98 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUserId($value)
  * @mixin \Eloquent
+ * @property int|null $batch_no
+ * @property \Illuminate\Support\Carbon|null $start_date
+ * @property \Illuminate\Support\Carbon|null $end_date
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereBatchNo($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereEndDate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereStartDate($value)
  */
 	class Librarian extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
+ * @property int $id
+ * @property string $name
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AcademicPaper> $academicPapers
+ * @property-read int|null $academic_papers_count
+ * @method static \Database\Factories\ResearchAdviserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ResearchAdviser whereUpdatedAt($value)
+ */
+	class ResearchAdviser extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $display_name
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
  * @property-read int|null $users_count
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereDisplayName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereUpdatedAt($value)
  */
 	class Role extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
+ * @property int $id
+ * @property string $title
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\RuleRegulation> $ruleRegulations
  * @property-read int|null $rule_regulations_count
  * @method static \Database\Factories\RuleHeaderFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereTitle($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleHeader whereUpdatedAt($value)
  */
 	class RuleHeader extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
- * @property-read \App\Models\RuleHeader|null $ruleHeader
+ * @property int $id
+ * @property int $rule_header_id
+ * @property string $content
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\RuleHeader $ruleHeader
  * @method static \Database\Factories\RuleRegulationFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereContent($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereRuleHeaderId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|RuleRegulation whereUpdatedAt($value)
  */
 	class RuleRegulation extends \Eloquent {}
 }
@@ -255,10 +341,34 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUserId($value)
  * @mixin \Eloquent
+ * @property int|null $related_attendance_id
+ * @property int|null $related_borrow_transaction_id
  * @property-read \App\Models\Attendance|null $attendance
  * @property-read \App\Models\BorrowTransaction|null $borrowTransaction
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereRelatedAttendanceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereRelatedBorrowTransactionId($value)
  */
 	class ScoreIncrement extends \Eloquent {}
+}
+
+namespace App\Models{
+/**
+ * @property int $id
+ * @property string $name
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\AcademicPaper> $academicPapers
+ * @property-read int|null $academic_papers_count
+ * @method static \Database\Factories\TechnicalAdviserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|TechnicalAdviser whereUpdatedAt($value)
+ */
+	class TechnicalAdviser extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -300,10 +410,12 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRememberToken($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @mixin \Eloquent
+ * @property int $role_id
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Attendance> $attendances
  * @property-read int|null $attendances_count
- * @property-read \App\Models\Role|null $role
+ * @property-read \App\Models\Role $role
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAccountStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereRoleId($value)
  */
 	class User extends \Eloquent implements \Illuminate\Contracts\Auth\MustVerifyEmail {}
 }
@@ -366,7 +478,10 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationId($value)
  * @mixin \Eloquent
+ * @property int $violation_penalty
  * @property-read \App\Models\Attendance|null $attendance
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereAttendanceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationPenalty($value)
  */
 	class ViolationTransaction extends \Eloquent {}
 }

@@ -28,8 +28,13 @@ class AppServiceProvider extends ServiceProvider
 
         // SUPER ADMIN ONLY GATES
 
-        // User role management (Super Admin only)
+        // User role management - Only Super Admin can promote users to Admin
         Gate::define('manage-user-roles', function ($user) {
+            return $user->isSuperAdmin();
+        });
+
+        // Promote users to admin role (Super Admin only)
+        Gate::define('promote-to-admin', function ($user) {
             return $user->isSuperAdmin();
         });
 
@@ -55,68 +60,68 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
-        // GRANULAR PERMISSIONS - Super Admin only gates
+        // GRANULAR PERMISSIONS
 
-        // Academic Papers - VIEW (Librarian can view, but not edit/delete)
+        // Academic Papers - VIEW (Librarian, Admin, and Super Admin can view)
         Gate::define('view-academic-papers', function ($user) {
-            return $user->hasAdminAccess() || $user->isLibrarian();
+            return $user->hasLibrarianOrAdminAccess();
         });
 
-        // Academic Papers - MANAGE (Super Admin only - edit/delete)
+        // Academic Papers - MANAGE (Admin and Super Admin - edit/delete)
         Gate::define('manage-academic-papers', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
-        // Attendance logs (Super Admin only)
+        // Attendance logs (Admin and Super Admin)
         Gate::define('view-attendance-logs', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
-        // Student management (Super Admin only)
+        // Student management (Admin and Super Admin)
         Gate::define('manage-students', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
-        // Librarian batches (Super Admin only)
+        // Librarian batches (Admin and Super Admin)
         Gate::define('manage-librarian-batches', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
-        // Rules and Regulations - View only (Librarian can view)
+        // Rules and Regulations - View (Librarian, Admin, Super Admin)
         Gate::define('view-rules', function ($user) {
-            return $user->hasAdminAccess() || $user->isLibrarian();
+            return $user->hasLibrarianOrAdminAccess();
         });
 
-        // Rules and Regulations - Edit (Super Admin only)
+        // Rules and Regulations - Edit (Admin and Super Admin)
         Gate::define('manage-rules', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
         // LIBRARIAN READ-ONLY ACCESS - Can view but not edit
 
-        // Dashboard access (Librarian and Super Admin)
+        // Dashboard access (Librarian, Admin, and Super Admin)
         Gate::define('access-admin-dashboard', function ($user) {
-            return $user->hasAdminAccess() || $user->isLibrarian();
+            return $user->hasLibrarianOrAdminAccess();
         });
 
-        // Borrow logs - VIEW (Librarian can view)
+        // Borrow logs - VIEW (Librarian, Admin, Super Admin)
         Gate::define('view-borrow-logs', function ($user) {
-            return $user->hasAdminAccess() || $user->isLibrarian();
+            return $user->hasLibrarianOrAdminAccess();
         });
 
-        // Borrow logs - MANAGE (Super Admin only - edit/update status)
+        // Borrow logs - MANAGE (Admin and Super Admin - edit/update status)
         Gate::define('manage-borrow-logs', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
-        // Violation logs - VIEW (Librarian and Super Admin)
+        // Violation logs - VIEW (Librarian, Admin, Super Admin)
         Gate::define('view-violation-logs', function ($user) {
-            return $user->hasAdminAccess() || $user->isLibrarian();
+            return $user->hasLibrarianOrAdminAccess();
         });
 
-        // Violation logs - MANAGE (Super Admin only - add/edit/delete violations)
+        // Violation logs - MANAGE (Admin and Super Admin - add/edit/delete violations)
         Gate::define('manage-violation-logs', function ($user) {
-            return $user->isSuperAdmin();
+            return $user->hasAdminAccess();
         });
 
         // Advisers & Deans management (Super Admin only)

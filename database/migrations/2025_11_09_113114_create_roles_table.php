@@ -37,6 +37,13 @@ return new class extends Migration
                 'updated_at' => now(),
             ],
             [
+                'name' => 'admin',
+                'display_name' => 'Admin',
+                'description' => 'Administrator with full system access except for promoting users to admin role',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
                 'name' => 'super_admin',
                 'display_name' => 'Super Admin',
                 'description' => 'Super administrator with complete system access and ability to manage user roles',

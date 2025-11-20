@@ -93,15 +93,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
 // Schedule the command to run daily at 12:30 AM
 Schedule::command('attendance:check-missing-timeouts')->dailyAt('00:30');
 
-// Schedule librarian role updates to run every hour and at midnight
-Schedule::command('librarian:update-roles')->hourly();
-Schedule::command('librarian:update-roles')->dailyAt('00:00');
+// Schedule librarian batch status updates to run every hour
+Schedule::command('librarian:update-batch-statuses')->hourly();
 
-// Schedule overdue transaction checks to run every hour
-// This will update 'started' transactions to 'overdue' and send email notifications
-// Use withoutOverlapping and onOneServer to prevent concurrent/multi-server runs
-// Set lock timeout to 55 minutes (allows next hourly job to proceed if lock gets stuck while preventing normal overlaps)
-Schedule::command('transactions:check-overdue')
-    ->hourly()
-    ->withoutOverlapping(55) // Prevent overlap, 55 min lock timeout (slightly less than interval)
-    ->onOneServer(); // Only one instance across all servers
+Schedule::command('librarian:update-roles')->hourly();
