@@ -18,7 +18,7 @@ class LoginForm extends Form
      * Cached validated login attempt limit.
      * Validated once per request lifecycle to avoid repeated config reads and logging.
      */
-    private static ?int $validatedLoginLimit = null;
+    protected static ?int $validatedLoginLimit = null;
 
     #[Validate(['required', 'string', 'email', new PlvEmailDomain])]
     public string $email = '';
@@ -28,6 +28,45 @@ class LoginForm extends Form
 
     #[Validate('boolean')]
     public bool $remember = false;
+
+    /**
+     * Validate and return [limit, decay] for a given throttle config.
+     * Applies sensible bounds and logs warnings if invalid.
+     *
+     * @param mixed $limitRaw
+     * @param mixed $decayRaw
+     * @param string $context (e.g. 'login', 'verify_email')
+     * @return array{int,int} [limit, decay]
+     */
+    public static function validatedThrottleConfig($limitRaw, $decayRaw, string $context = 'login'): array
+    {
+        static $cache = [];
+        $key = $context . '|' . var_export($limitRaw, true) . '|' . var_export($decayRaw, true);
+        if (isset($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $limit = (int) $limitRaw;
+        $decay = (int) $decayRaw;
+        $defaultLimit = 5;
+        $defaultDecay = 60;
+
+        if ($limit < 1) {
+            Log::warning("Invalid throttle.$context.limit config: " . var_export($limitRaw, true) . ". Falling back to $defaultLimit.");
+            $limit = $defaultLimit;
+        } elseif ($limit > 100) {
+            Log::warning("Excessive throttle.$context.limit config: " . var_export($limitRaw, true) . ". Capping to 100.");
+            $limit = 100;
+        }
+
+        if ($decay < 1) {
+            Log::warning("Invalid throttle.$context.decay config: " . var_export($decayRaw, true) . ". Falling back to $defaultDecay.");
+            $decay = $defaultDecay;
+        }
+
+        $cache[$key] = [$limit, $decay];
+        return $cache[$key];
+    }
 
     /**
      * Attempt to authenticate the request's credentials.

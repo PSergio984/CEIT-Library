@@ -4,7 +4,7 @@ use App\Livewire\Actions\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Session;
-use Illuminate\Validation\ValidationException;
+// ...existing code...
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
@@ -28,8 +28,13 @@ class extends Component
         }
 
         $key = 'verify-email|' . Auth::id() . '|' . request()->ip();
-        $maxAttempts = config('throttle.verify_email.limit', 5);
-        $decaySeconds = config('throttle.verify_email.decay', 60);
+
+        // Validate throttle config using shared helper
+        [$maxAttempts, $decaySeconds] = \App\Livewire\Forms\LoginForm::validatedThrottleConfig(
+            config('throttle.verify_email.limit'),
+            config('throttle.verify_email.decay'),
+            'verify_email'
+        );
 
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $this->throttleSeconds = RateLimiter::availableIn($key);
@@ -41,9 +46,11 @@ class extends Component
         }
 
         RateLimiter::hit($key, $decaySeconds);
-            $this->throttleSeconds = null;
-            Auth::user()->sendEmailVerificationNotification();
-            Session::flash('status', 'verification-link-sent');
+        $this->throttleSeconds = null;
+        Auth::user()->sendEmailVerificationNotification();
+
+        Session::flash('status', 'verification-link-sent');
+    }
 
     /**
      * Log the current user out of the application.

@@ -23,7 +23,7 @@ class extends Component
             'email' => ['required', 'string', 'email', new PlvEmailDomain],
         ]);
 
-        $key = 'forgot-password|' . strtolower($this->email) . '|' . request()->ip();
+        $key = 'forgot-password|'.strtolower($this->email).'|'.request()->ip();
         $maxAttempts = config('throttle.forgot_password.limit', 3);
         $decaySeconds = config('throttle.forgot_password.decay', 60);
 
@@ -33,6 +33,7 @@ class extends Component
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]));
+
             return;
         }
 
@@ -40,9 +41,10 @@ class extends Component
             $this->only('email')
         );
 
-        if ($status != Password::RESET_LINK_SENT) {
+        if ($status !== Password::RESET_LINK_SENT) {
             $this->addError('email', __($status));
             RateLimiter::hit($key, $decaySeconds);
+
             return;
         }
 
