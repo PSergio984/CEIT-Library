@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->foreignId('role_id')->nullable()->constrained('roles')->nullOnDelete();
+            $table->unsignedBigInteger('role_id')->nullable();
             $table->timestamp('time_in')->nullable();
             $table->timestamp('time_out')->nullable();
             $table->enum('status', ['active', 'completed'])->default('active');
