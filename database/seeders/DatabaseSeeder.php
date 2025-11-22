@@ -392,6 +392,7 @@ class DatabaseSeeder extends Seeder
 
                 Attendance::factory()->completed()->create([
                     'user_id' => $libraryVisitorStudent->id,
+                    'role_id' => $libraryVisitorStudent->role_id,
                     'scanned_by' => $librarianRecord ? $librarianRecord->id : null,
                 ]);
             }
@@ -429,6 +430,7 @@ class DatabaseSeeder extends Seeder
             if ($status === 'completed') {
                 Attendance::factory()->completed()->create([
                     'user_id' => $specificStudent->id,
+                    'role_id' => $specificStudent->role_id,
                     'scanned_by' => $scannedBy,
                     'created_at' => $date->copy()->setTime($createdHour, $createdMinute, 0),
                     'updated_at' => $date->copy()->setTime($updatedHour, $updatedMinute, 0),
@@ -436,6 +438,7 @@ class DatabaseSeeder extends Seeder
             } else {
                 Attendance::factory()->active()->create([
                     'user_id' => $specificStudent->id,
+                    'role_id' => $specificStudent->role_id,
                     'scanned_by' => $scannedBy,
                     'created_at' => $date->copy()->setTime($createdHour, $createdMinute, 0),
                     'updated_at' => $date->copy()->setTime($updatedHour, $updatedMinute, 0),
@@ -451,6 +454,7 @@ class DatabaseSeeder extends Seeder
 
             Attendance::factory()->active()->create([
                 'user_id' => $currentLibraryUser->id,
+                'role_id' => $currentLibraryUser->role_id,
                 'scanned_by' => $activeLibrarian ? $activeLibrarian->id : null,
             ]);
         }

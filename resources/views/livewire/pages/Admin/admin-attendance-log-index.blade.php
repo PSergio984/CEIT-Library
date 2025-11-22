@@ -3,9 +3,14 @@
         <div>
             <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
         </div>
-        <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
-            Scan QR Code
-        </x-mary-button>
+        <div class="flex gap-2">
+            <x-mary-button wire:click="exportPdf" class="btn-primary" icon="o-arrow-down-tray">
+                Export PDF
+            </x-mary-button>
+            <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
+                Scan QR Code
+            </x-mary-button>
+        </div>
     </div>
 
     {{-- QR Scanner Component --}}
@@ -31,7 +36,7 @@
     </div>
 
     <div class="bg-base-200 p-4 rounded-lg mb-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
                 <x-mary-input label="Search" wire:model.live.debounce.200ms="search"
                               placeholder="Search by name or librarian..." icon="o-magnifying-glass" />
@@ -43,6 +48,12 @@
                     ['id' => 'active', 'name' => 'Active'],
                     ['id' => 'completed', 'name' => 'Completed'],
                 ]" option-value="id" option-label="name" />
+            </div>
+
+            <div>
+                <x-mary-select label="Role" wire:model.live="roleFilter"
+                               :options="collect([['id' => '', 'name' => 'All Roles']])->merge($this->roles)"
+                               option-value="id" option-label="name" />
             </div>
 
             <div>
@@ -69,7 +80,10 @@
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
                         <h3 class="font-semibold text-base">{{ $attendance['user_name'] }}</h3>
-                        <p class="text-base-content/50 font-medium">Scanned By:</p>
+                        <p class="text-xs text-base-content/60 mt-1">
+                            <span class="badge {{ $attendance['role_badge_color'] }} badge-sm">{{ $attendance['role_name'] }}</span>
+                        </p>
+                        <p class="text-base-content/50 font-medium mt-2">Scanned By:</p>
                         <p class="text-sm text-base-content/70">{{ $attendance['scanned_by_name'] }}</p>
                     </div>
                     <span class="badge badge-{{ $attendance['status'] == 'completed' ? 'success' : 'warning' }} badge-sm">
@@ -132,6 +146,10 @@
 
             @scope('cell_user_name', $row)
             <div class="font-medium">{{ $row['user_name'] }}</div>
+            @endscope
+
+            @scope('cell_role_name', $row)
+            <span class="badge {{ $row['role_badge_color'] }} badge-sm">{{ $row['role_name'] }}</span>
             @endscope
 
             @scope('cell_email', $row)
