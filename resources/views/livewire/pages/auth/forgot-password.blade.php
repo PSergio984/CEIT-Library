@@ -15,8 +15,7 @@ class extends Component
 
     /**
      * Send a password reset link to the provided email address.
-     * Throttle: 3 attempts per 60 seconds per user+IP
-     * Uses manual RateLimiter to avoid duplicate errors from Laravel's built-in throttling
+     * Throttle logic matches verify-email
      */
     public function sendPasswordResetLink(): void
     {
@@ -26,14 +25,13 @@ class extends Component
 
         $key = 'forgot-password|'.strtolower($this->email).'|'.request()->ip();
 
-        // Validate throttle config using shared helper (consistent with login/verify-email)
+        // Validate throttle config using shared helper
         [$maxAttempts, $decaySeconds] = \App\Livewire\Forms\LoginForm::validatedThrottleConfig(
             config('throttle.forgot_password.limit'),
             config('throttle.forgot_password.decay'),
             'forgot_password'
         );
 
-        // Check throttle BEFORE attempting to send
         if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
             $seconds = RateLimiter::availableIn($key);
             $this->addError('email', trans_choice('passwords.throttle', $seconds, [
@@ -48,25 +46,16 @@ class extends Component
             $this->only('email')
         );
 
-        // Handle different response statuses
-        if ($status === Password::RESET_LINK_SENT) {
-            // Success - clear throttle and show success message
-            RateLimiter::clear($key);
-            $this->reset('email');
-            session()->flash('status', __($status));
-        } elseif ($status === Password::RESET_THROTTLED) {
-            // Laravel's internal throttle - treat as failed attempt, increment our counter
-            RateLimiter::hit($key, $decaySeconds);
-            $seconds = RateLimiter::availableIn($key);
-            $this->addError('email', trans_choice('passwords.throttle', $seconds, [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]));
-        } else {
-            // Other errors (invalid email, etc.) - increment throttle counter
-            RateLimiter::hit($key, $decaySeconds);
+        if ($status !== Password::RESET_LINK_SENT) {
             $this->addError('email', __($status));
+            RateLimiter::hit($key, $decaySeconds);
+            return;
         }
+
+        RateLimiter::clear($key);
+        $this->reset('email');
+        // Restore default Laravel behavior: flash the raw status
+        session()->flash('status', $status);
     }
 }; ?>
 
