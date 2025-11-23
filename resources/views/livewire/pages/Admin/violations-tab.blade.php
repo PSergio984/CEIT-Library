@@ -3,10 +3,12 @@
     <div class="mt-6">
         <div class="flex justify-between items-center mb-6">
             <h3 class="text-lg font-semibold">Violation Types</h3>
-            <x-mary-button wire:click="openCreateDrawer" class="btn-primary btn-sm" icon="o-plus" spinner
-                           tooltip-left="Create a Violation">
-                Add Violation
-            </x-mary-button>
+            @can('Admin-access')
+                <x-mary-button wire:click="openCreateDrawer" class="btn-primary btn-sm" icon="o-plus" spinner
+                               tooltip-left="Create a Violation">
+                    Add Violation
+                </x-mary-button>
+            @endcan
         </div>
 
         <div class="bg-base-200 p-4 rounded-lg mb-6">
@@ -51,12 +53,14 @@
                         </div>
                     </div>
 
+                    @can('Admin-access')
                     <div class="flex gap-2 mt-4 pt-3 border-t border-base-300">
                         <x-mary-button icon="o-pencil" wire:click="openEditDrawer({{ $violation->id }})"
                                        class="btn-sm btn-ghost flex-1" label="Edit"/>
                         <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $violation->id }})"
                                        class="btn-sm btn-ghost text-error flex-1" label="Delete"/>
                     </div>
+                    @endcan
                 </div>
             @endforeach
 
@@ -91,12 +95,14 @@
                 @endscope
 
                 @scope('actions', $row)
+                @can('Admin-access')
                 <div class="flex gap-2">
                     <x-mary-button icon="o-pencil" wire:click="openEditDrawer({{ $row->id }})" spinner
                                    class="btn-sm btn-ghost" tooltip-left="Edit"/>
                     <x-mary-button icon="o-trash" wire:click="confirmDelete({{ $row->id }})" spinner
                                    class="btn-sm btn-ghost text-error" tooltip-left="Delete"/>
                 </div>
+                @endcan
                 @endscope
             </x-mary-table>
         </div>
@@ -114,60 +120,64 @@
     </div>
 
 
-    {{-- Create/Edit Violation Drawer For Violation Data --}}
-    <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
-        <div class="px-2 py-3">
-            <h3 class="text-lg font-semibold mb-4">
-                {{ $isEdit ? 'Edit Violation' : 'Create Violation' }}
-            </h3>
+    @can('Admin-access')
+        {{-- Create/Edit Violation Drawer For Violation Data --}}
+        <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
+            <div class="px-2 py-3">
+                <h3 class="text-lg font-semibold mb-4">
+                    {{ $isEdit ? 'Edit Violation' : 'Create Violation' }}
+                </h3>
 
-            <x-mary-form wire:submit.prevent="save" class="space-y-4">
-                <x-mary-input
-                    label="Name"
-                    wire:model="form.name"
-                    placeholder="Enter violation name"
-                    required
-                />
+                <x-mary-form wire:submit.prevent="save" class="space-y-4">
+                    <x-mary-input
+                        label="Name"
+                        wire:model="form.name"
+                        placeholder="Enter violation name"
+                        required
+                    />
 
-                <x-mary-textarea
-                    label="Description"
-                    rows="6"
-                    wire:model="form.description"
-                    placeholder="Enter violation description"
-                    required
-                />
+                    <x-mary-textarea
+                        label="Description"
+                        rows="6"
+                        wire:model="form.description"
+                        placeholder="Enter violation description"
+                        required
+                    />
 
-                <x-mary-input
-                    label="Penalty Score"
-                    type="number"
-                    wire:model="form.penalty_score"
-                    placeholder="Enter penalty score"
-                    min="1"
-                    max="100"
-                    value="{{ old('form.penalty_score', 1) }}"
-                    required
-                />
+                    <x-mary-input
+                        label="Penalty Score"
+                        type="number"
+                        wire:model="form.penalty_score"
+                        placeholder="Enter penalty score"
+                        min="1"
+                        max="100"
+                        value="{{ old('form.penalty_score', 1) }}"
+                        required
+                    />
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <x-mary-button type="button" label="Cancel" @click="$wire.openDrawer = false"/>
-                    <x-mary-button type="submit" class="btn-primary" label="{{ $isEdit ? 'Update' : 'Create' }}"
-                                   spinner/>
-                </div>
-            </x-mary-form>
-        </div>
-    </x-mary-drawer>
-
-    {{-- Delete Confirmation Modal --}}
-    <x-mary-modal wire:model="confirmDeleteModal" position="center" centered>
-        <div class="p-4">
-            <h3 class="text-lg font-semibold mb-2">Delete Violation</h3>
-            <p class="text-sm text-base-content/70">
-                Are you sure you want to delete this violation? This action cannot be undone.
-            </p>
-            <div class="flex justify-end gap-2 mt-4">
-                <x-mary-button type="button" label="Cancel" @click="$wire.confirmDeleteModal = false"/>
-                <x-mary-button type="button" class="btn-error" label="Delete" wire:click="deleteConfirmed" spinner/>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <x-mary-button type="button" label="Cancel" @click="$wire.openDrawer = false"/>
+                        <x-mary-button type="submit" class="btn-primary" label="{{ $isEdit ? 'Update' : 'Create' }}"
+                                       spinner/>
+                    </div>
+                </x-mary-form>
             </div>
-        </div>
-    </x-mary-modal>
+        </x-mary-drawer>
+    @endcan
+
+    @can('Admin-access')
+        {{-- Delete Confirmation Modal --}}
+        <x-mary-modal wire:model="confirmDeleteModal" position="center" centered>
+            <div class="p-4">
+                <h3 class="text-lg font-semibold mb-2">Delete Violation</h3>
+                <p class="text-sm text-base-content/70">
+                    Are you sure you want to delete this violation? This action cannot be undone.
+                </p>
+                <div class="flex justify-end gap-2 mt-4">
+                    <x-mary-button type="button" label="Cancel" @click="$wire.confirmDeleteModal = false"/>
+                    <x-mary-button type="button" class="btn-error" label="Delete" wire:click="deleteConfirmed" spinner/>
+                </div>
+            </div>
+        </x-mary-modal>
+    @endcan
 </div>
