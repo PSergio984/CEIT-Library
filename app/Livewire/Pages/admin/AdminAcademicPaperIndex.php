@@ -1044,6 +1044,20 @@ class AdminAcademicPaperIndex extends AdminComponent
                 return;
             }
 
+            // Prevent deletion of the last/only copy
+            $academicPaper = $copy->academicPaper;
+            $totalCopies = $academicPaper->copies()->count();
+
+            if ($totalCopies <= 1) {
+                $this->error(
+                    'Cannot delete the only remaining copy. To remove this paper entirely, please delete the academic paper record from the main list.',
+                    'Last Copy Protection'
+                );
+                $this->copyToDelete = null;
+                $this->dispatch('close-copy-delete-modal');
+                return;
+            }
+
             $copy->delete();
 
             // Invalidate caches to reflect the change
