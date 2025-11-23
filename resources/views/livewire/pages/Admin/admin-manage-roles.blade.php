@@ -53,7 +53,7 @@
                             <div>
                                 <p class="text-sm text-base-content/70">{{ $role->display_name }}s</p>
                                 <p class="text-2xl font-bold text-base-content">
-                                    {{ $users->where('role_id', $role->id)->count() }}
+                                    {{ $this->allUsers->where('role_id', $role->id)->count() }}
                                 </p>
                             </div>
                             <div
@@ -78,21 +78,31 @@
             </div>
 
             <!-- Users Table -->
-            <div class="overflow-x-auto rounded-lg">
+            <div class="overflow-x-auto rounded-lg relative">
+                <!-- Loading overlay for pagination -->
+                <div wire:loading.delay wire:target="gotoPage, previousPage, nextPage"
+                    class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-lg">
+                    <div class="flex flex-col items-center gap-3">
+                        <span class="loading loading-spinner loading-lg text-primary"></span>
+                        <p class="text-sm font-medium text-base-content">Loading users...</p>
+                    </div>
+                </div>
+
                 <table class="table table-zebra w-full">
                     <thead class="bg-base-200 sticky top-0 z-10">
                         <tr class="text-base-content text-sm border-b border-base-300">
                             <th class="w-8">#</th>
                             <th>Name</th>
-                            <th>Email</th>
+                            <th class="hidden sm:table-cell">Email</th>
                             <th>Current Role</th>
-                            <th class="text-center w-32">Action</th>
+                            <th class="text-center w-20 sm:w-32">Action</th>
                         </tr>
                     </thead>
                     <tbody class="text-base-content text-sm">
                         @forelse($users as $index => $user)
                             <tr class="border-b border-base-300 hover:bg-base-300/30 transition">
-                                <td class="text-base-content/60">{{ $index + 1 }}</td>
+                                <td class="text-base-content/60">
+                                    {{ ($users->currentPage() - 1) * $users->perPage() + $index + 1 }}</td>
                                 <td>
                                     <div class="flex items-center gap-2">
                                         <span class="font-medium">{{ $user->first_name }}
@@ -104,8 +114,9 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td class="text-base-content/80">{{ $user->email }}</td>
-                                <td class="py-3 px-4">
+                                <td class="hidden sm:table-cell text-base-content/80 text-xs sm:text-sm">
+                                    {{ $user->email }}</td>
+                                <td class="py-2 px-2 sm:py-3 sm:px-4">
                                     <span
                                         class="px-3 py-1 rounded-full text-xs font-semibold
                                         {{ $user->role->name === 'super_admin' ? 'bg-red-500/20 text-red-400' : '' }}
@@ -144,6 +155,13 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            @if ($users->hasPages())
+                <div class="mt-6">
+                    {{ $users->links() }}
+                </div>
+            @endif
         </div>
     </div>
 
@@ -193,14 +211,6 @@
                                                     <div class="flex items-center gap-2">
                                                         <span
                                                             class="font-medium text-base-content">{{ $role->display_name }}</span>
-                                                        <span
-                                                            class="px-2 py-0.5 rounded text-xs font-semibold
-                                                            {{ $role->name === 'super_admin' ? 'bg-red-500/20 text-red-400' : '' }}
-                                                            {{ $role->name === 'admin' ? 'bg-purple-500/20 text-purple-400' : '' }}
-                                                            {{ $role->name === 'librarian' ? 'bg-blue-500/20 text-blue-400' : '' }}
-                                                            {{ $role->name === 'student' ? 'bg-green-500/20 text-green-400' : '' }}">
-                                                            {{ $role->name }}
-                                                        </span>
                                                         @if (in_array($role->name, ['admin', 'super_admin']))
                                                             <span class="badge badge-warning badge-sm">
                                                                 Super Admin Only

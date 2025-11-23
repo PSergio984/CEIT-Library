@@ -27,6 +27,7 @@ class QrScanner extends Component
 
     public bool $isScanning = false;
     public ?string $scannedData = null;
+    public bool $hasError = false;
 
     // Listeners for parent components to control the scanner
     protected $listeners = ['startScanning', 'stopScanning', 'scannerError', 'handleFileUploadScan'];
@@ -35,6 +36,7 @@ class QrScanner extends Component
     {
         $this->isScanning = true;
         $this->scannedData = null;
+        $this->hasError = false;
     }
 
     public function stopScanning()
@@ -60,16 +62,19 @@ class QrScanner extends Component
             $decryptedData = $this->decryptAndValidateAttendanceData($data);
 
             if ($decryptedData === self::VALIDATION_EXPIRED) {
+                $this->hasError = true;
                 $this->error('QR code has expired. Please refresh the page and generate a new QR code.', 'QR Code Expired');
                 $this->stopScanning();
                 return;
             }
             if ($decryptedData === self::VALIDATION_REPLAY) {
+                $this->hasError = true;
                 $this->error('This QR code has already been used twice (check-in and check-out). Please refresh the page to generate a new QR code.', 'QR Code Already Used');
                 $this->stopScanning();
                 return;
             }
             if ($decryptedData === self::VALIDATION_INVALID) {
+                $this->hasError = true;
                 $this->error('Invalid QR code. This could be due to tampering, incorrect format, or network issues. Please try generating a new QR code.', 'Invalid QR Code');
                 $this->stopScanning();
                 return;
@@ -96,6 +101,7 @@ class QrScanner extends Component
                     'nonce_usage_count' => $decryptedData['current_usage_count'],
                 ]);
 
+                $this->hasError = true;
                 $this->error($result['message'], $result['title']);
             }
 
@@ -107,6 +113,7 @@ class QrScanner extends Component
                 'data_length' => strlen($data ?? ''),
             ]);
 
+            $this->hasError = true;
             $this->error('An error occurred while processing the QR code', 'System Error');
             $this->stopScanning();
         }
@@ -355,9 +362,14 @@ class QrScanner extends Component
         }
     }
 
-    public function scannerError($message, $title = 'Scanner Error')
+    public function scannerError($message, $title = 'Scanner Error', $skipToast = false)
     {
-        $this->error($message, $title);
+        $this->hasError = true;
+
+        // Only show toast if not skipped (for inline errors we skip the toast)
+        if (!$skipToast) {
+            $this->error($message, $title);
+        }
     }
 
     public function scannerWarning($message, $title = 'Warning')
