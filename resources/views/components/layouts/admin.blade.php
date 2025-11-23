@@ -76,6 +76,15 @@
                 @endcan
 
                 <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
+                
+                {{-- Notifications with Badge --}}
+                <x-mary-menu-item title="Notifications" icon="o-bell" link="/admin/notifications">
+                    @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
+                        <x-slot:actions>
+                            <span class="badge badge-primary badge-sm">{{ auth()->user()->unreadNotifications()->count() }}</span>
+                        </x-slot:actions>
+                    @endif
+                </x-mary-menu-item>
 
                 {{-- @can('manage-students')
                     <x-mary-menu-item title="Students" icon="o-academic-cap" link="/admin/students" />

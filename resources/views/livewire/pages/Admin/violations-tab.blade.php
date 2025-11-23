@@ -1,7 +1,6 @@
 <div>
-    {{-- Violations CRUD Content --}}
     <div class="mt-6">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <h3 class="text-lg font-semibold">Violation Types</h3>
             @can('Admin-access')
                 <x-mary-button wire:click="openCreateDrawer" class="btn-primary btn-sm" icon="o-plus" spinner

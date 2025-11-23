@@ -1,6 +1,5 @@
 <div>
-    <x-mary-tab name="active-users-tab" label="Active Users" icon="o-users">
-        <div class="mt-6">
+    <div class="mt-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-lg font-semibold">Users Currently in Library (Today)</h3>
             </div>
@@ -129,8 +128,7 @@
                     <p class="text-base-content/50 mt-4">No active users in library today</p>
                 </div>
             @endif
-        </div>
-    </x-mary-tab>
+    </div>
 
     {{-- Record Violation Drawer --}}
     <x-mary-drawer wire:model="ViolationDrawer" class="w-11/12 lg:w-1/3" right>

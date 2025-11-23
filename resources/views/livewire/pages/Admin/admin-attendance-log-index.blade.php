@@ -1,15 +1,19 @@
 <div class="p-6">
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
-        </div>
-        <div class="flex gap-2">
-            <x-mary-button wire:click="exportPdf" class="btn-primary" icon="o-arrow-down-tray">
-                Export PDF
-            </x-mary-button>
-            <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
-                Scan QR Code
-            </x-mary-button>
+    <div class="mb-6">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div class="flex-1">
+                <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
+            </div>
+            <div class="flex gap-2 md:flex-shrink-0">
+                <x-mary-button wire:click="exportPdf" class="btn-primary flex-1 md:flex-none" icon="o-arrow-down-tray">
+                    <span class="hidden sm:inline">Export PDF</span>
+                    <span class="sm:hidden text-xs">Export PDF</span>
+                </x-mary-button>
+                <x-mary-button wire:click="openScanner" class="btn-primary flex-1 md:flex-none" icon="o-qr-code">
+                    <span class="hidden sm:inline text-xs">Scan QR</span>
+                    <span class="sm:hidden text-xs">Scan QR</span>
+                </x-mary-button>
+            </div>
         </div>
     </div>
 
@@ -52,7 +56,10 @@
 
             <div>
                 <x-mary-select label="Role" wire:model.live="roleFilter"
-                               :options="collect([['id' => '', 'name' => 'All Roles']])->merge($this->roles)"
+                               :options="collect([['id' => '', 'name' => 'All Roles']])->merge($this->roles->map(fn($role) => [
+                                   'id' => $role->id,
+                                   'name' => str_replace('_', ' ', ucwords(str_replace('_', ' ', $role->name)))
+                               ]))"
                                option-value="id" option-label="name" />
             </div>
 
