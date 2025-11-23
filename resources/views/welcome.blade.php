@@ -18,7 +18,7 @@
 <body class="min-h-screen font-sans relative"
     style="background-image: url('{{ asset('images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
     <!-- Dark Blue Overlay for opacity effect -->
-    <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
+    <div class="fixed inset-0 w-full h-full bg-slate-800/70 z-0"></div>
 
     <!-- Header -->
     <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative"
@@ -40,7 +40,7 @@
 
     <!-- Main Content -->
     <main
-        class="flex items-center justify-center min-h-[70vh] text-center relative z-20 my-8 sm:my-12 md:my-16 lg:my-20 px-4 sm:px-6 md:px-8">
+        class="flex items-center justify-center min-h-screen text-center relative z-20 px-4 sm:px-6 md:px-8">
         <div
             class="bg-white/50 p-4 sm:p-6 md:p-8 lg:p-12 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-7xl flex flex-col items-center justify-center mx-auto">
             <h1
