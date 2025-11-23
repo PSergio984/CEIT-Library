@@ -74,7 +74,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Attendance logs (Admin and Super Admin)
         Gate::define('view-attendance-logs', function ($user) {
-            return $user->hasAdminAccess();
+            return $user->hasLibrarianOrAdminAccess();
         });
 
         // Student management (Admin and Super Admin)
