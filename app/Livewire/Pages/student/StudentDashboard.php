@@ -169,7 +169,7 @@ class StudentDashboard extends Component
     {
         return view('components.loading-placeholder', [
             'message' => 'Loading Student Dashboard...',
-            'subtext' => 'Please wait while we fetch the your dashboard data',
+            'subtext' => 'Please wait while we fetch your dashboard data',
         ]);
     }
 

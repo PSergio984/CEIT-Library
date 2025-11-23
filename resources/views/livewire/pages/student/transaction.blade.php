@@ -132,7 +132,7 @@
                                 <div x-data="{ open: false }" class="relative">
                                     <button type="button"
                                         class="font-mono text-xs underline decoration-dotted focus:outline-none focus:ring-2 focus:ring-primary/60"
-                                        aria-describedby="tooltip-inventory-{{ $transaction['id'] }}"
+                                        :aria-describedby="open ? 'tooltip-inventory-{{ $transaction['id'] }}' : null"
                                         @mouseenter="open = true" @mouseleave="open = false"
                                         @focus="open = true" @blur="open = false"
                                     >
@@ -140,10 +140,11 @@
                                     </button>
                                     <div
                                         x-show="open"
+                                        x-transition.opacity
                                         id="tooltip-inventory-{{ $transaction['id'] }}"
                                         role="tooltip"
-                                        class="absolute left-1/2 z-20 mt-2 w-56 -translate-x-1/2 rounded bg-base-200 px-3 py-2 text-xs text-base-content shadow-lg border border-base-300 transition-opacity duration-150"
-                                        style="display: none;"
+                                        aria-hidden="false"
+                                        class="absolute left-1/2 z-20 mt-2 w-56 -translate-x-1/2 rounded bg-base-200 px-3 py-2 text-xs text-base-content shadow-lg border border-base-300"
                                     >
                                         Inventory ID: {{ $transaction['inventory']->id }}
                                     </div>
@@ -259,33 +260,7 @@
                                     Duration
                                 </div>
                                 <div class="text-base md:text-lg font-bold text-base-content">
-                                    @php
-                                        $duration = $transaction['duration'];
-                                        if (!function_exists('formatDuration')) {
-                                            function formatDuration($minutes) {
-                                                $totalSeconds = (int) round($minutes * 60);
-                                                $hours = intdiv($totalSeconds, 3600);
-                                                $mins = intdiv($totalSeconds % 3600, 60);
-                                                $secs = $totalSeconds % 60;
-                                                $parts = [];
-                                                if ($hours > 0) {
-                                                    $parts[] = $hours . 'h';
-                                                }
-                                                if ($mins > 0 || $hours > 0) {
-                                                    $parts[] = $mins . 'm';
-                                                }
-                                                if ($secs > 0 && $hours == 0) {
-                                                    $parts[] = $secs . 's';
-                                                }
-                                                return implode(' ', $parts);
-                                            }
-                                        }
-                                        if (is_numeric($duration)) {
-                                            echo formatDuration($duration);
-                                        } else {
-                                            echo e($duration);
-                                        }
-                                    @endphp
+                                    {{ $transaction['duration'] }}
                                 </div>
                             @endif
                         </div>

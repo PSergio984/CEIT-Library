@@ -48,7 +48,7 @@ class Violation extends Model
     // Get users who have this violation
     public function users()
     {
-        return $this->belongsToMany(User::class, 'user_violations')
+        return $this->belongsToMany(User::class, 'violation_transactions')
             ->withPivot(['date_occurred', 'remarks'])
             ->withTimestamps();
     }
