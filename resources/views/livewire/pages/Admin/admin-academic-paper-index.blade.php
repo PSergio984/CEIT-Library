@@ -211,7 +211,7 @@
                         class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
                     <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
                     <p class="text-sm text-base-content/70">
-                        @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                @if ($this->selectedCopy && $qrCode)
                             No papers match your current filters
                         @else
                             No academic papers are available at the moment
@@ -331,6 +331,9 @@
         x-show="showQrModal"
         @click.self="showQrModal = false; $wire.closeQrModal()"
         class="modal backdrop-blur"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="qrModalLabel"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0"
         x-transition:enter-end="opacity-100"
@@ -353,20 +356,18 @@
                 <button @click="showQrModal = false; $wire.closeQrModal()" 
                     class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
             </form>
-            
+
             @if ($this->selectedCopy && $qrCode)
                 <div class="space-y-6">
-                    <h3 class="font-bold text-lg">QR Code for Copy #{{ $this->selectedCopy->id }}</h3>
-                    
+                    <h3 id="qrModalLabel" class="font-bold text-lg">QR Code for Copy #{{ $this->selectedCopy->id }}</h3>
                     <!-- QR Code Display -->
                     <div class="flex flex-col items-center justify-center p-6 bg-base-200 rounded-lg">
                         <div class="bg-white p-4 rounded-lg shadow-lg">
                             <img src="data:image/svg+xml;base64,{{ $qrCode }}" 
-                                alt="QR Code" 
+                                alt="QR code for Copy #{{ $this->selectedCopy->id }} to present to librarian for borrowing"
                                 class="w-64 h-64">
                         </div>
                     </div>
-
                     <!-- Copy Information -->
                     <div class="space-y-2 text-center">
                         <h4 class="font-semibold text-lg">{{ $this->selectedCopy->academicPaper->title }}</h4>
@@ -378,7 +379,6 @@
                             Valid for 5 minutes
                         </p>
                     </div>
-
                     <!-- Instructions -->
                     <div class="alert alert-info">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
@@ -386,7 +386,6 @@
                         </svg>
                         <span class="text-sm">Present this QR code to the librarian to borrow this academic paper.</span>
                     </div>
-
                     <!-- Action Buttons -->
                     <div class="flex gap-2 justify-center">
                         <button 
@@ -397,13 +396,23 @@
                             </svg>
                             Download QR
                         </button>
-                        
                         <button 
                             @click="showQrModal = false; $wire.closeQrModal()"
                             class="btn btn-ghost">
                             Close
                         </button>
                     </div>
+                </div>
+            @else
+                <div class="flex flex-col items-center justify-center p-8 gap-4">
+                    <x-mary-icon name="o-x-circle" class="w-12 h-12 text-error" />
+                    <div class="text-lg font-semibold text-error">Unable to generate QR at this time</div>
+                    <div class="text-base-content/70 text-center">No QR code is available for this copy. Please try again or contact support if the problem persists.</div>
+                    <button 
+                        @click="showQrModal = false; $wire.closeQrModal()"
+                        class="btn btn-primary mt-4">
+                        Close
+                    </button>
                 </div>
             @endif
         </div>
