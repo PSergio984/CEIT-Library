@@ -164,11 +164,9 @@ class ActiveUsersTab extends AdminComponent
                 ViolationTransaction::create([
                     'user_id'       => $attendance->user_id,
                     'violation_id'  => $violation->id,
-                    'severity'      => 'Minor',
                     'remarks'       => 'Declared by admin: forgot to time out',
                     'date_occurred' => now(),
                 ]);
-
             });
 
             $this->dispatch('refreshViolationTransactionsTab');

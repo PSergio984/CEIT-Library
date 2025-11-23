@@ -110,7 +110,6 @@ class WorkingTest extends TestCase
         $violationTransaction = ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation->id,
-            'severity' => 'Minor', // Use severity instead of violation_type
             'remarks' => 'Late return violation', // Use remarks instead of penalty
             'date_occurred' => Carbon::now(),
         ]);
@@ -118,7 +117,6 @@ class WorkingTest extends TestCase
         $this->assertDatabaseHas('violation_transactions', [
             'user_id' => $user->id,
             'violation_id' => $violation->id,
-            'severity' => 'Minor',
         ]);
     }
 

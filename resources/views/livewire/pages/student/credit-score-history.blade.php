@@ -88,12 +88,8 @@
                             <div class="flex-1">
                                 <div class="flex items-center gap-2 mb-2">
                                     @if ($item['type'] === 'penalty')
-                                        <span class="badge 
-                                            @if ($item['severity'] === 'Critical') badge-error 
-                                            @elseif($item['severity'] === 'Major') badge-warning 
-                                            @else badge-info 
-                                            @endif font-medium">
-                                            {{ $item['severity'] }}
+                                        <span class="badge badge-error font-medium">
+                                            Penalty
                                         </span>
                                     @else
                                         <span class="badge badge-success font-medium">

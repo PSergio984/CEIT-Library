@@ -104,24 +104,28 @@ class StudentDashboard extends Component
             ->take(3)
             ->get()
             ->map(function ($increment) {
+                $name = trim($increment->name ?? '');
+                $score = $increment->score_value ?? 0;
                 return [
                     'type' => 'reward',
-                    'points' => '+' . $increment->points,
-                    'reason' => $increment->reason,
+                    'points' => $score > 0 ? "+$score" : (string) $score,
+                    'reason' => $name !== '' ? $name : 'Credit Score Reward',
                     'date' => $increment->created_at,
                 ];
             });
 
         // Get violations (penalties)
         $violations = ViolationTransaction::where('user_id', $userId)
+            ->with('violation')
             ->latest()
             ->take(3)
             ->get()
             ->map(function ($violation) {
+                $penalty = $violation->violation_penalty ?? $violation->penalty_points ?? 0;
                 return [
                     'type' => 'penalty',
-                    'points' => '-' . $violation->penalty_points,
-                    'reason' => $violation->violation?->violation ?? 'Violation',
+                    'points' => $penalty > 0 ? "-$penalty" : (string) $penalty,
+                    'reason' => $violation->violation?->name ?? 'Violation',
                     'date' => $violation->created_at,
                 ];
             });
