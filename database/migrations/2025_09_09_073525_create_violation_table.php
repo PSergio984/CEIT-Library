@@ -19,7 +19,7 @@ return new class extends Migration
             $table->timestamps();
 
             // Add indexes for better performance
-            $table->index('penalty_score'); // For filtering by severity/penalty
+            $table->index('penalty_score'); // For filtering by penalty
             $table->index('name'); // For quick violation lookup by name
         });
     }

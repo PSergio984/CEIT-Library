@@ -28,11 +28,15 @@ class DatabaseSeeder extends Seeder
         $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
         $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
 
+        // Ensure test users are unique by deleting any existing ones
+        User::where('email', 'sampleadmin@plv.edu.ph')->delete();
+        User::where('email', 'librarian@plv.edu.ph')->delete();
+
         // Create the ONLY super_admin user
         $superAdmin = User::factory()->create([
             'first_name' => 'Janrel',
             'last_name' => 'Motovlogs',
-            'email' => 'admin@plv.edu.ph',
+            'email' => 'superadmin@plv.edu.ph',
             'role_id' => $superAdminRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
@@ -59,22 +63,22 @@ class DatabaseSeeder extends Seeder
         // Create regular student users (including former librarian as student)
         $students = User::factory(50)->create();
 
-        // Create a test librarian student (starts as student, can be promoted by super_admin)
+        // Create a test librarian account (ensure role is librarian)
         $testLibrarian = User::factory()->create([
             'first_name' => 'Test',
             'last_name' => 'Librarian',
             'email' => 'librarian@plv.edu.ph',
-            'role_id' => $studentRoleId,
+            'role_id' => $librarianRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
 
         $students->push($testLibrarian);
 
-        // Create a specific admin user for testing
-        User::factory()->create([
+        // Create a specific admin user for testing (ensure role is admin)
+        $sampleAdmin = User::factory()->create([
             'first_name' => 'Sample',
             'last_name' => 'Admin',
-            'email' => 'sampleadmin@plv.edu.ph',
+            'email' => 'admin@plv.edu.ph',
             'role_id' => $adminRoleId,
             'password' => bcrypt('Pwd@12345'),
         ]);
@@ -220,7 +224,10 @@ class DatabaseSeeder extends Seeder
 
         // 1. Create 1 ACTIVE batch (on duty today) - exactly 5 students
         $this->command->info('Creating active batch for today...');
-        $activeBatchStudents = $students->random(5);
+        // Exclude special users from librarian batch selection
+        $excludedIds = collect([$sampleAdmin->id]);
+        $filteredStudents = $students->filter(fn($s) => !$excludedIds->contains($s->id));
+        $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
 
         foreach ($activeBatchStudents as $student) {

@@ -176,8 +176,11 @@
                                 {{ $history['points'] }}
                             </span>
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <div class="text-xs text-base-content/60">
+                        <div class="flex-1 min-w-0 flex flex-col justify-center">
+                            <div class="font-bold text-base-content text-sm">
+                                {{ $history['reason'] }}
+                            </div>
+                            <div class="text-xs text-base-content/60 mt-1">
                                 {{ $history['date']->format('M d, Y') }}
                             </div>
                         </div>

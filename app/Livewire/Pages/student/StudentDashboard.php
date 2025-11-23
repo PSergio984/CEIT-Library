@@ -8,12 +8,13 @@ use App\Models\BorrowTransaction;
 use App\Models\ScoreIncrement;
 use App\Models\ViolationTransaction;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Title('Student Dashboard')]
+#[Lazy]
 class StudentDashboard extends Component
 {
     #[Computed]
@@ -103,24 +104,30 @@ class StudentDashboard extends Component
             ->take(3)
             ->get()
             ->map(function ($increment) {
+                $name = trim($increment->name ?? '');
+                $score = $increment->score_value ?? 0;
                 return [
                     'type' => 'reward',
-                    'points' => '+' . $increment->points,
-                    'reason' => $increment->reason,
+                    'points' => $score > 0 ? "+$score" : (string) $score,
+                    'reason' => $name !== '' ? $name : 'Credit Score Reward',
                     'date' => $increment->created_at,
                 ];
             });
 
         // Get violations (penalties)
         $violations = ViolationTransaction::where('user_id', $userId)
+            ->with('violation')
             ->latest()
             ->take(3)
             ->get()
             ->map(function ($violation) {
+                $penalty = $violation->violation_penalty
+                    ?? ($violation->violation ? $violation->violation->penalty_score : 0)
+                    ?? 0;
                 return [
                     'type' => 'penalty',
-                    'points' => '-' . $violation->penalty_points,
-                    'reason' => $violation->violation?->violation ?? 'Violation',
+                    'points' => $penalty > 0 ? "-$penalty" : (string) $penalty,
+                    'reason' => $violation->violation?->name ?? 'Violation',
                     'date' => $violation->created_at,
                 ];
             });
@@ -129,6 +136,7 @@ class StudentDashboard extends Component
             ->sortByDesc('date')
             ->take(5);
     }
+
 
     #[Computed]
     public function availablePapers()
@@ -154,6 +162,17 @@ class StudentDashboard extends Component
             ->orderBy('expires_at')
             ->take(3)
             ->get();
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading Student Dashboard...',
+            'subtext' => 'Please wait while we fetch your dashboard data',
+        ]);
     }
 
     public function render()

@@ -166,6 +166,10 @@
                                     <td class="px-6 py-4">
                                         @if($isAdmin)
                                             {{-- Admin Actions: Delete Copy --}}
+                                            @php
+                                                $isOnlyCopy = $selectedPaper->copies->count() <= 1;
+                                                $canDeleteCopy = $copy->status === 'Available' && !$isOnlyCopy;
+                                            @endphp
                                             @if($copy->status === 'Available')
                                                 <button 
                                                     x-data="{ loading: false }"
@@ -173,14 +177,22 @@
                                                         loading = true;
                                                         $wire.confirmCopyDelete({{ $copy->id }}).finally(() => loading = false)
                                                     "
-                                                    :disabled="loading"
-                                                    class="btn btn-sm btn-error gap-2 shadow-sm hover:shadow-md transition-shadow">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                                                    </svg>
-                                                    <span x-show="!loading">Delete Copy</span>
-                                                    <span x-show="loading" class="loading loading-spinner loading-sm"></span>
-                                                    <span x-show="loading">Deleting...</span>
+                                                    :disabled="loading || {{ $isOnlyCopy ? 'true' : 'false' }}"
+                                                    class="btn btn-sm {{ $canDeleteCopy ? 'btn-error' : 'btn-disabled' }} gap-2 shadow-sm {{ $canDeleteCopy ? 'hover:shadow-md' : '' }} transition-shadow tooltip tooltip-left"
+                                                    data-tip="{{ $isOnlyCopy ? 'Cannot delete the only copy. Delete the entire paper instead.' : 'Delete this copy' }}">
+                                                    @if($isOnlyCopy)
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 opacity-50">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+                                                        </svg>
+                                                        <span class="opacity-50">Only Copy</span>
+                                                    @else
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+                                                        </svg>
+                                                        <span x-show="!loading">Delete Copy</span>
+                                                        <span x-show="loading" class="loading loading-spinner loading-sm"></span>
+                                                        <span x-show="loading">Deleting...</span>
+                                                    @endif
                                                 </button>
                                             @else
                                                 <div class="flex items-center gap-2 text-base-content/60">

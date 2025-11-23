@@ -63,12 +63,20 @@
         {{-- Search and Filters Component --}}
         <x-academic-paper-filters :availableYears="$this->availableYears" :availablePaperTypes="$this->availablePaperTypes" :availableDepartments="$this->availableDepartments" />
 
-        <div class="mb-4 text-xs sm:text-sm text-base-content/70">
-            Showing {{ $this->academicPapers->count() }} of {{ $this->academicPapers->total() }} results
-        </div>
+        {{-- Results Summary and Per-Page Control removed: using MaryUI table's built-in paginator --}}
 
         {{-- Mobile/Tablet Card View (for screens smaller than 1280px) --}}
-        <div class="block xl:hidden space-y-4">
+        <div class="block xl:hidden space-y-4 relative">
+            {{-- Localized loading overlay for card updates (filters, pagination, per-page) --}}
+            <div wire:loading.flex 
+                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter, clearFilters, gotoPage, nextPage, previousPage"
+                class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="text-base-content font-medium text-sm">Updating results...</p>
+                </div>
+            </div>
+            
             @forelse ($this->academicPapers as $paper)
                 <div wire:key="mobile-paper-{{ $paper->id }}"
                     class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -192,17 +200,27 @@
     </div>
     @endforelse
 
-    {{-- Mobile/Tablet Pagination --}}
+    {{-- Mobile/Tablet Pagination (left-aligned) --}}
     @if ($this->academicPapers->hasPages())
-        <div class="mt-6">
+        <div class="mt-6 flex justify-start">
             {{ $this->academicPapers->links() }}
         </div>
     @endif
 </div>
 
 {{-- Desktop Table View (for screens 1280px and wider) --}}
-<div class="hidden xl:block">
-    <div class="overflow-x-auto">
+
+<div class="hidden xl:block overflow-hidden relative">
+    {{-- Localized loading overlay for table updates (filters, pagination, per-page, clearing filters, pagination events) --}}
+    <div wire:loading.flex 
+        wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter, clearFilters, gotoPage, nextPage, previousPage"
+        class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+        <div class="flex flex-col items-center gap-2">
+            <span class="loading loading-spinner loading-lg text-primary"></span>
+            <p class="text-base-content font-medium">Updating results...</p>
+        </div>
+    </div>
+    <div class="overflow-x-visible">
         <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy" per-page="perPage"
             :per-page-values="[5, 10, 25, 50]" striped row-class="hover:bg-base-200" header-class="text-base-content bg-base-200">
             <x-slot:empty>
@@ -211,7 +229,7 @@
                         class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
                     <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
                     <p class="text-sm text-base-content/70">
-                        @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFromFilter || $yearToFilter)
+                @if ($this->selectedCopy && $qrCode)
                             No papers match your current filters
                         @else
                             No academic papers are available at the moment
@@ -294,14 +312,129 @@
 <div x-data="{
     showDeleteModal: false,
     showPaperModal: false,
-    showCopyDeleteModal: false
-}" @delete-modal.window="showDeleteModal = true"
-    @paper-modal.window="showPaperModal = true" @copy-delete-modal.window="showCopyDeleteModal = true">
+    showCopyDeleteModal: false,
+    showQrModal: false,
+    openModal(modal) {
+        this.showDeleteModal = false;
+        this.showPaperModal = false;
+        this.showCopyDeleteModal = false;
+        this.showQrModal = false;
+        if (modal === 'delete') this.showDeleteModal = true;
+        if (modal === 'paper') this.showPaperModal = true;
+        if (modal === 'copyDelete') this.showCopyDeleteModal = true;
+        if (modal === 'qr') this.showQrModal = true;
+    },
+    closeAllModals() {
+        this.showDeleteModal = false;
+        this.showPaperModal = false;
+        this.showCopyDeleteModal = false;
+        this.showQrModal = false;
+    }
+}" 
+    @delete-modal.window="openModal('delete')"
+    @paper-modal.window="openModal('paper')" 
+    @copy-delete-modal.window="openModal('copyDelete')"
+    @open-qr-modal.window="openModal('qr')"
+    @close-qr-modal.window="showQrModal = false"
+    @keydown.escape.window="closeAllModals()">
 
     {{-- Modals --}}
     <x-admin.delete-academic-paper-modal :deleteId="$deleteId" />
     <x-admin.paper-details-modal :selectedPaper="$this->selectedPaper" :isAdmin="$this->hasAdminAccess" />
     <x-admin.delete-copy-modal :copyToDelete="$copyToDelete" />
+    
+    {{-- QR Code Modal --}}
+    <dialog 
+        x-ref="qrModal"
+        x-show="showQrModal"
+        @click.self="showQrModal = false; $wire.closeQrModal()"
+        class="modal backdrop-blur"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="qrModalLabel"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0"
+        x-transition:enter-end="opacity-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100"
+        x-transition:leave-end="opacity-0"
+        x-init="$watch('showQrModal', value => { 
+            if (value) { $refs.qrModal.showModal() } 
+            else { $refs.qrModal.close() } 
+        })">
+        <div class="modal-box max-w-md w-full"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 transform scale-95"
+            x-transition:enter-end="opacity-100 transform scale-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100 transform scale-100"
+            x-transition:leave-end="opacity-0 transform scale-95"
+            @click.stop>
+            <form method="dialog">
+                <button @click="showQrModal = false; $wire.closeQrModal()" 
+                    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+            </form>
+
+            @if ($this->selectedCopy && $qrCode)
+                <div class="space-y-6">
+                    <h3 id="qrModalLabel" class="font-bold text-lg">QR Code for Copy #{{ $this->selectedCopy->id }}</h3>
+                    <!-- QR Code Display -->
+                    <div class="flex flex-col items-center justify-center p-6 bg-base-200 rounded-lg">
+                        <div class="bg-white p-4 rounded-lg shadow-lg">
+                            <img src="data:image/svg+xml;base64,{{ $qrCode }}" 
+                                alt="QR code for Copy #{{ $this->selectedCopy->id }} to present to librarian for borrowing"
+                                class="w-64 h-64">
+                        </div>
+                    </div>
+                    <!-- Copy Information -->
+                    <div class="space-y-2 text-center">
+                        <h4 class="font-semibold text-lg">{{ $this->selectedCopy->academicPaper->title }}</h4>
+                        <p class="text-sm text-base-content/70">
+                            Catalog Code: <span class="font-mono font-semibold">{{ $this->selectedCopy->academicPaper->catalog_code }}</span>
+                        </p>
+                        <p class="text-sm text-base-content/70">
+                            Copy ID: <span class="font-mono font-semibold">#{{ $this->selectedCopy->id }}</span> • 
+                            Valid for 5 minutes
+                        </p>
+                    </div>
+                    <!-- Instructions -->
+                    <div class="alert alert-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-sm">Present this QR code to the librarian to borrow this academic paper.</span>
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="flex gap-2 justify-center">
+                        <button 
+                            wire:click="downloadQr"
+                            class="btn btn-primary gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            Download QR
+                        </button>
+                        <button 
+                            @click="showQrModal = false; $wire.closeQrModal()"
+                            class="btn btn-ghost">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            @else
+                <div class="flex flex-col items-center justify-center p-8 gap-4">
+                    <x-mary-icon name="o-x-circle" class="w-12 h-12 text-error" />
+                    <div class="text-lg font-semibold text-error">Unable to generate QR at this time</div>
+                    <div class="text-base-content/70 text-center">No QR code is available for this copy. Please try again or contact support if the problem persists.</div>
+                    <button 
+                        @click="showQrModal = false; $wire.closeQrModal()"
+                        class="btn btn-primary mt-4">
+                        Close
+                    </button>
+                </div>
+            @endif
+        </div>
+    </dialog>
 </div>
 {{-- Create/Edit Academic Paper Drawer --}}
 <x-admin.academic-paper-form-drawer :formDrawer="$formDrawer" :isEditing="$isEditing" :form="$form" />

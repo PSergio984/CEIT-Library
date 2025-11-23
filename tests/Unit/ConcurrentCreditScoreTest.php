@@ -122,7 +122,6 @@ class ConcurrentCreditScoreTest extends TestCase
             'user_id' => $user->id,
             'violation_id' => $violation->id,
             'date_occurred' => now(),
-            'severity' => 'Minor',
         ]);
 
         // Should be 50 + 10 - 5 = 55
@@ -142,7 +141,6 @@ class ConcurrentCreditScoreTest extends TestCase
             'user_id' => $user->id,
             'violation_id' => $violation->id,
             'date_occurred' => now(),
-            'severity' => 'Critical',
         ]);
 
         $user->refresh();

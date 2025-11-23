@@ -67,7 +67,6 @@ Artisan::command('attendance:check-missing-timeouts', function () {
                     'violation_id' => $violation->id,
                     'attendance_id' => $session->id,
                     'date_occurred' => $session->time_in->toDateString(),
-                    'severity' => 'Minor',
                     'remarks' => ViolationTransaction::buildMissingTimeoutRemarks($session->id, $session->time_in),
                 ]);
 

@@ -12,7 +12,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $penalty_score
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read mixed $severity
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ViolationTransaction> $userViolations
  * @property-read int|null $user_violations_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
@@ -49,12 +48,12 @@ class Violation extends Model
     // Get users who have this violation
     public function users()
     {
-        return $this->belongsToMany(User::class, 'user_violations')
-                    ->withPivot(['date_occurred', 'Severity', 'remarks'])
-                    ->withTimestamps();
+        return $this->belongsToMany(User::class, 'violation_transactions')
+            ->withPivot(['date_occurred', 'remarks'])
+            ->withTimestamps();
     }
 
-    // Scope for filtering by penalty severity
+    // Scope for filtering by penalty 
     public function scopeByPenalty($query, $minPenalty = null, $maxPenalty = null)
     {
         if ($minPenalty) {
@@ -64,13 +63,5 @@ class Violation extends Model
             $query->where('penalty_score', '<=', $maxPenalty);
         }
         return $query;
-    }
-
-    // Get violation severity based on penalty score
-    public function getSeverityAttribute()
-    {
-        if ($this->penalty_score <= 10) return 'Minor';
-        if ($this->penalty_score <= 25) return 'Major';
-        return 'Critical';
     }
 }
