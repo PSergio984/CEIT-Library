@@ -428,7 +428,6 @@ namespace App\Models{
  * @property int $penalty_score
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read mixed $severity
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ViolationTransaction> $userViolations
  * @property-read int|null $user_violations_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\User> $users
@@ -456,14 +455,12 @@ namespace App\Models{
  * @property int $violation_id
  * @property int|null $attendance_id
  * @property \Illuminate\Support\Carbon $date_occurred
- * @property string $severity
  * @property string|null $remarks
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User $user
  * @property-read \App\Models\Violation $violation
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction byDateRange($startDate = null, $endDate = null)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction bySeverity($severity)
  * @method static \Database\Factories\ViolationTransactionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction newQuery()
@@ -473,7 +470,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereDateOccurred($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereRemarks($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereSeverity($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationId($value)

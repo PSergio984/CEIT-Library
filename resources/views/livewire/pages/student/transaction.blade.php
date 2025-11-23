@@ -132,7 +132,7 @@
                                 <div x-data="{ open: false }" class="relative">
                                     <button type="button"
                                         class="font-mono text-xs underline decoration-dotted focus:outline-none focus:ring-2 focus:ring-primary/60"
-                                        aria-describedby="tooltip-inventory-{{ $transaction['id'] }}"
+                                        :aria-describedby="open ? 'tooltip-inventory-{{ $transaction['id'] }}' : null"
                                         @mouseenter="open = true" @mouseleave="open = false"
                                         @focus="open = true" @blur="open = false"
                                     >
@@ -140,33 +140,15 @@
                                     </button>
                                     <div
                                         x-show="open"
+                                        x-transition.opacity
                                         id="tooltip-inventory-{{ $transaction['id'] }}"
                                         role="tooltip"
-                                        class="absolute left-1/2 z-20 mt-2 w-56 -translate-x-1/2 rounded bg-base-200 px-3 py-2 text-xs text-base-content shadow-lg border border-base-300 transition-opacity duration-150"
-                                        <div 
-                                            wire:key="transaction-{{ $transaction['id'] }}"
-                                            class="bg-base-100 rounded-lg p-4 shadow-lg border border-base-300 cursor-pointer hover:shadow-xl transition-shadow mb-6 overflow-hidden hover:border-primary/30"
-                                            tabindex="0" 
-                                            role="button"
-                                            wire:click="viewTransaction('{{ $transaction['id'] }}')"
-                                            wire:keydown.enter="viewTransaction('{{ $transaction['id'] }}')"
-                                        >
-                                            <div class="bg-gradient-to-r from-primary/10 to-secondary/10 p-4 md:p-6 rounded-t-lg border-b border-base-300">
-                                                <div class="flex items-start justify-between flex-wrap gap-4">
-                                                    {{-- ...existing code... --}}
-                                                </div>
-                                            </div>
-                                            <div class="p-4 md:p-6">
-                                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                    {{-- ...existing code... --}}
-                                                </div>
-                                                @if ($transaction['notes'])
-                                                    {{-- ...existing code... --}}
-                                                @endif
-                                            </div>
-                                        </div>
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                                </svg>
+                                        aria-hidden="false"
+                                        class="absolute left-1/2 z-20 mt-2 w-56 -translate-x-1/2 rounded bg-base-200 px-3 py-2 text-xs text-base-content shadow-lg border border-base-300"
+                                    >
+                                        Inventory ID: {{ $transaction['inventory']->id }}
+                                    </div>
+                                </div>
                                 Date Borrowed
                             </div>
                             <div class="text-base md:text-lg font-bold text-base-content">

@@ -535,7 +535,6 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation1->id,
-            'severity' => 'Minor',
             'date_occurred' => Carbon::now()->subDays(10),
             'remarks' => 'Late return violation'
         ]);
@@ -543,7 +542,6 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation2->id,
-            'severity' => 'Major',
             'date_occurred' => Carbon::now()->subDays(5),
             'remarks' => 'Damaged book violation'
         ]);
@@ -900,7 +898,6 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation1->id,
-            'severity' => 'Minor',
             'date_occurred' => Carbon::now()->subDays(10),
             'remarks' => 'Late return violation'
         ]);
@@ -908,7 +905,6 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation2->id,
-            'severity' => 'Major',
             'date_occurred' => Carbon::now()->subDays(5),
             'remarks' => 'Damaged book violation'
         ]);
@@ -935,7 +931,6 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation1->id,
-            'severity' => 'Minor',
             'date_occurred' => Carbon::now()->subDays(10),
             'remarks' => 'Late return violation'
         ]);
@@ -943,7 +938,6 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation2->id,
-            'severity' => 'Major',
             'date_occurred' => Carbon::now()->subDays(5),
             'remarks' => 'Damaged book violation'
         ]);
@@ -969,8 +963,6 @@ class UserTest extends TestCase
 
         ViolationTransaction::create([
             'user_id' => $user->id,
-            'violation_id' => $violation->id,
-            'severity' => 'Critical',
             'date_occurred' => Carbon::now(),
             'remarks' => 'Serious violation'
         ]);

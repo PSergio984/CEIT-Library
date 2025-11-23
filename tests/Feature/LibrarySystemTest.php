@@ -169,7 +169,6 @@ class LibrarySystemTest extends TestCase
         $violationTransaction = ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation->id,
-            'severity' => 'Minor',
             'remarks' => 'Late return violation',
             'date_occurred' => Carbon::now()->subDays(5),
         ]);
@@ -266,7 +265,6 @@ class LibrarySystemTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation->id,
-            'severity' => 'Minor',
             'remarks' => 'Late return violation',
             'date_occurred' => Carbon::now(),
         ]);

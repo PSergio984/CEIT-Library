@@ -46,7 +46,6 @@ class CreditScoreHistory extends Component
                     'description' => $s->description,
                     'points' => $s->score_value, // This is the points added
                     'type' => 'reward',
-                    'severity' => null,
                     'occurred_at' => $s->created_at,
                 ];
             });
@@ -65,7 +64,6 @@ class CreditScoreHistory extends Component
                     'description' => $v->remarks,
                     'points' => - ($v->violation?->penalty_score ?? 0),
                     'type' => 'penalty',
-                    'severity' => $v->severity,
                     'occurred_at' => $v->date_occurred,
                 ];
             });

@@ -306,40 +306,22 @@ class AcademicPaperIndex extends Component
         $this->dispatch('close-qr-modal');
     }
 
-    public function downloadQr()
+    public function getDownloadUrl()
     {
         if (! $this->selectedCopy) {
-            abort(400, 'No selected copy.');
+            return null;
         }
 
-        $copy = $this->selectedCopy;
+        // Generate a temporary signed URL valid for 5 minutes
+        return route('qr-code.download', [
+            'inventoryId' => $this->selectedCopyId,
+        ]);
+    }
 
-        if (! $copy->isAvailable()) {
-            abort(409, 'Copy no longer available.');
-        }
-
-        $paper = $copy->academicPaper;
-
-        $payload = [
-            'inventory_id' => $copy->id,
-            'paper_id' => $paper->id,
-            'catalog_code' => $paper->catalog_code,
-            'title' => $paper->title,
-            'requested_by' => Auth::id(),
-            'lat' => Auth::user()->email, // Add email for compatibility
-            'iat' => now()->timestamp,
-            'exp' => now()->addMinutes(5)->timestamp,
-        ];
-
-        // Encrypt the QR payload
-        $qrPayload = $this->createEncryptedQrMessage($payload);
-        $filename = 'qr-code-inv-' . $copy->id . '.png';
-
-        return response()->streamDownload(
-            fn() => print QrCode::size(500)->format('png')->generate($qrPayload),
-            $filename,
-            ['Content-Type' => 'image/png']
-        );
+    #[Computed]
+    public function downloadUrl()
+    {
+        return $this->getDownloadUrl();
     }
 
     private function resolveDepartmentName(?string $dept): ?string

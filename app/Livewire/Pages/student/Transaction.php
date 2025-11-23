@@ -135,15 +135,24 @@ class Transaction extends Component
         }
 
         $endTime = $transaction->time_out ?? now();
-        $duration = $transaction->time_in->diffInMinutes($endTime);
-
-        if ($duration < 60) {
-            return $duration . 'm';
-        } else {
-            $hours = floor($duration / 60);
-            $minutes = $duration % 60;
-            return $hours . 'h ' . $minutes . 'm';
+        $diffInSeconds = $transaction->time_in->diffInSeconds($endTime);
+        $hours = intdiv($diffInSeconds, 3600);
+        $minutes = intdiv($diffInSeconds % 3600, 60);
+        $seconds = $diffInSeconds % 60;
+        $parts = [];
+        if ($hours > 0) {
+            $parts[] = $hours . 'h';
         }
+        if ($minutes > 0 || $hours > 0) {
+            $parts[] = $minutes . 'm';
+        }
+        if ($seconds > 0 && $hours == 0) {
+            $parts[] = $seconds . 's';
+        }
+        if (empty($parts)) {
+            $parts[] = '0s';
+        }
+        return implode(' ', $parts);
     }
 
     public function clearFilters(): void

@@ -13,6 +13,9 @@ use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use Livewire\Attributes\Lazy;
+use App\Traits\CreatesQrCanonicalMessage;
+use App\Models\Inventory;
+
 
 #[Title('Academic Paper List')]
 #[Lazy]
@@ -20,6 +23,92 @@ class AdminAcademicPaperIndex extends AdminComponent
 {
     use Toast;
     use WithPagination;
+    use CreatesQrCanonicalMessage;
+    // QR Code properties for admin QR modal
+    public ?string $qrCode = null;
+    public ?int $selectedCopyId = null;
+    /**
+     * Request QR code for a specific inventory copy (admin context)
+     */
+    public function requestQr(int $inventoryId): void
+    {
+        $copy = Inventory::with('academicPaper')->find($inventoryId);
+
+        if (! $copy) {
+            session()->flash('error', 'Copy not found.');
+            return;
+        }
+
+        if (! $copy->isAvailable()) {
+            session()->flash('error', 'This copy is not available.');
+            return;
+        }
+
+        $this->selectedCopyId = $copy->id;
+
+        $issuedAt = now();
+        $expiresAt = $issuedAt->copy()->addMinutes(5);
+        $payload = [
+            'inventory_id' => $copy->id,
+            'paper_id' => $copy->academic_paper_id,
+            'catalog_code' => $copy->academicPaper->catalog_code,
+            'title' => $copy->academicPaper->title,
+            'requested_by' => Auth::id(),
+            'lat' => Auth::user()->email,
+            'iat' => $issuedAt->timestamp,
+            'exp' => $expiresAt->timestamp,
+        ];
+
+        $qrPayload = $this->createEncryptedQrMessage($payload);
+
+        $svg = app(\SimpleSoftwareIO\QrCode\Generator::class)->size(300)->generate($qrPayload);
+        $this->qrCode = base64_encode($svg);
+
+        $this->dispatch('open-qr-modal');
+    }
+
+    /**
+     * Close the QR modal and clear state
+     */
+    public function closeQrModal(): void
+    {
+        $this->qrCode = null;
+        $this->selectedCopyId = null;
+        $this->dispatch('close-qr-modal');
+    }
+
+    /**
+     * Get the download URL for the QR code (admin context)
+     */
+    public function getDownloadUrl()
+    {
+        if (! $this->selectedCopy()) {
+            return null;
+        }
+
+        // Generate a URL for download
+        return route('qr-code.download', [
+            'inventoryId' => $this->selectedCopyId,
+        ]);
+    }
+
+    #[Computed]
+    public function downloadUrl()
+    {
+        return $this->getDownloadUrl();
+    }
+
+    /**
+     * Get the selected copy model for QR actions
+     */
+    #[Computed]
+    public function selectedCopy()
+    {
+        if (! $this->selectedCopyId) {
+            return null;
+        }
+        return Inventory::with('academicPaper')->find($this->selectedCopyId);
+    }
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
 
@@ -950,6 +1039,20 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $this->error("Cannot delete copy #{$copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
                 $this->copyToDelete = null;
 
+                return;
+            }
+
+            // Prevent deletion of the last/only copy
+            $academicPaper = $copy->academicPaper;
+            $totalCopies = $academicPaper->copies()->count();
+
+            if ($totalCopies <= 1) {
+                $this->error(
+                    'Cannot delete the only remaining copy. To remove this paper entirely, please delete the academic paper record from the main list.',
+                    'Last Copy Protection'
+                );
+                $this->copyToDelete = null;
+                $this->dispatch('close-copy-delete-modal');
                 return;
             }
 

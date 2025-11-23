@@ -24,12 +24,14 @@
                 placeholder="Search rules..."
                 class="input input-bordered w-full sm:w-80"
             />
-            <button @click="$wire.openCreateDrawer()" class="btn btn-warning w-full sm:w-auto">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                </svg>
-                Add New Rule
-            </button>
+            @can('Admin-access')
+                <button @click="$wire.openCreateDrawer()" class="btn btn-warning w-full sm:w-auto">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                    </svg>
+                    Add New Rule
+                </button>
+            @endcan
         </div>
     </div>
 
@@ -62,6 +64,7 @@
                         <span class="text-xs text-base-content/50">
                             {{ $rule->updated_at ? $rule->updated_at->format('M d, Y H:i A') : '—' }}
                         </span>
+                        @can('Admin-access')
                         <div class="flex gap-2">
                             <button @click="$wire.openEditDrawer({{ $rule->id }})" 
                                 class="btn btn-sm btn-ghost"
@@ -86,6 +89,7 @@
                                 <span wire:loading wire:target="confirmDelete({{ $rule->id }})" class="loading loading-spinner loading-xs"></span>
                             </button>
                         </div>
+                        @endcan
                     </div>
                 </div>
             @endforeach
@@ -122,6 +126,7 @@
                 @endscope
 
                 @scope('actions', $rule)
+                @can('Admin-access')
                 <div class="flex gap-1">
                     <button @click="$wire.openEditDrawer({{ $rule->id }})" 
                         class="btn btn-sm btn-ghost tooltip"
@@ -148,6 +153,7 @@
                         <span wire:loading wire:target="confirmDelete({{ $rule->id }})" class="loading loading-spinner loading-xs"></span>
                     </button>
                 </div>
+                @endcan
                 @endscope
             </x-mary-table>
         </div>
@@ -159,43 +165,47 @@
         </div>
     @endif
 
-    <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
-        <div class="px-2 py-3">
-            <h3 class="text-lg font-semibold mb-4">
-                {{ $isEdit ? 'Edit Rule' : 'Create Rule' }}
-            </h3>
+    @can('Admin-access')
+        <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
+            <div class="px-2 py-3">
+                <h3 class="text-lg font-semibold mb-4">
+                    {{ $isEdit ? 'Edit Rule' : 'Create Rule' }}
+                </h3>
 
-            <x-mary-form wire:submit.prevent="save" class="space-y-4">
-                <x-mary-select label="Header" :options="$headers_list" option-label="title" option-value="id"
-                    placeholder="Select a header" wire:model="form.rule_header_id" required />
+                <x-mary-form wire:submit.prevent="save" class="space-y-4">
+                    <x-mary-select label="Header" :options="$headers_list" option-label="title" option-value="id"
+                        placeholder="Select a header" wire:model="form.rule_header_id" required />
 
-                <x-mary-textarea label="Content" rows="6" wire:model.blur="form.content"
-                    placeholder="Enter rule content" required />
+                    <x-mary-textarea label="Content" rows="6" wire:model.blur="form.content"
+                        placeholder="Enter rule content" required />
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="$wire.openDrawer = false" class="btn">Cancel</button>
-                    <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
-                        <span wire:loading.remove wire:target="save">{{ $isEdit ? 'Update' : 'Create' }}</span>
-                        <span wire:loading wire:target="save" class="loading loading-spinner loading-xs"></span>
+                    <div class="flex justify-end gap-2 pt-2">
+                        <button type="button" @click="$wire.openDrawer = false" class="btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
+                            <span wire:loading.remove wire:target="save">{{ $isEdit ? 'Update' : 'Create' }}</span>
+                            <span wire:loading wire:target="save" class="loading loading-spinner loading-xs"></span>
+                        </button>
+                    </div>
+                </x-mary-form>
+            </div>
+        </x-mary-drawer>
+    @endcan
+
+    @can('Admin-access')
+        <x-mary-modal wire:model="confirmDeleteModal" position="center" centered>
+            <div class="p-4">
+                <h3 class="text-lg font-semibold mb-2">Delete rule</h3>
+                <p class="text-sm text-base-content/70">
+                    Are you sure you want to delete this rule? This action cannot be undone.
+                </p>
+                <div class="flex justify-end gap-2 mt-4">
+                    <button type="button" @click="$wire.confirmDeleteModal = false" class="btn">Cancel</button>
+                    <button type="button" @click="$wire.deleteConfirmed" class="btn btn-error" wire:loading.attr="disabled" wire:target="deleteConfirmed">
+                        <span wire:loading.remove wire:target="deleteConfirmed">Delete</span>
+                        <span wire:loading wire:target="deleteConfirmed" class="loading loading-spinner loading-xs"></span>
                     </button>
                 </div>
-            </x-mary-form>
-        </div>
-    </x-mary-drawer>
-
-    <x-mary-modal wire:model="confirmDeleteModal" position="center" centered>
-        <div class="p-4">
-            <h3 class="text-lg font-semibold mb-2">Delete rule</h3>
-            <p class="text-sm text-base-content/70">
-                Are you sure you want to delete this rule? This action cannot be undone.
-            </p>
-            <div class="flex justify-end gap-2 mt-4">
-                <button type="button" @click="$wire.confirmDeleteModal = false" class="btn">Cancel</button>
-                <button type="button" @click="$wire.deleteConfirmed" class="btn btn-error" wire:loading.attr="disabled" wire:target="deleteConfirmed">
-                    <span wire:loading.remove wire:target="deleteConfirmed">Delete</span>
-                    <span wire:loading wire:target="deleteConfirmed" class="loading loading-spinner loading-xs"></span>
-                </button>
             </div>
-        </div>
-    </x-mary-modal>
+        </x-mary-modal>
+    @endcan
 </div>
