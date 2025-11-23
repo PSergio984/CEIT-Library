@@ -8,12 +8,13 @@ use App\Models\BorrowTransaction;
 use App\Models\ScoreIncrement;
 use App\Models\ViolationTransaction;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Title('Student Dashboard')]
+#[Lazy]
 class StudentDashboard extends Component
 {
     #[Computed]
@@ -130,6 +131,7 @@ class StudentDashboard extends Component
             ->take(5);
     }
 
+
     #[Computed]
     public function availablePapers()
     {
@@ -154,6 +156,17 @@ class StudentDashboard extends Component
             ->orderBy('expires_at')
             ->take(3)
             ->get();
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading Student Dashboard...',
+            'subtext' => 'Please wait while we fetch the your dashboard data',
+        ]);
     }
 
     public function render()

@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Locked;
-
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
@@ -16,7 +15,6 @@ use Mary\Traits\Toast;
 use Livewire\Attributes\Lazy;
 use App\Traits\CreatesQrCanonicalMessage;
 use App\Models\Inventory;
-use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 
 #[Title('Academic Paper List')]

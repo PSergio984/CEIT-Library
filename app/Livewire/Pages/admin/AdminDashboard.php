@@ -11,8 +11,10 @@ use App\Models\Librarian;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Lazy;
 
 #[Title('Admin Dashboard')]
+#[Lazy]
 class AdminDashboard extends AdminComponent
 {
     #[Computed]
@@ -79,6 +81,17 @@ class AdminDashboard extends AdminComponent
             ->orderByDesc('borrow_transactions_count')
             ->take(5)
             ->get();
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading Admin Dashboard...',
+            'subtext' => 'Please wait while we fetch the admin data',
+        ]);
     }
 
     public function render()
