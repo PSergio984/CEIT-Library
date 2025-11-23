@@ -121,7 +121,9 @@ class StudentDashboard extends Component
             ->take(3)
             ->get()
             ->map(function ($violation) {
-                $penalty = $violation->violation_penalty ?? $violation->penalty_points ?? 0;
+                $penalty = $violation->violation_penalty
+                    ?? ($violation->violation ? $violation->violation->penalty_score : 0)
+                    ?? 0;
                 return [
                     'type' => 'penalty',
                     'points' => $penalty > 0 ? "-$penalty" : (string) $penalty,
