@@ -4,11 +4,17 @@
     x-ref="paperModal" 
     x-show="showPaperModal"
     @click.self="showPaperModal = false" 
-    @close="showPaperModal = false" 
-    class="modal"
-  
+    @close="showPaperModal = false"
+    @keydown.escape="showPaperModal = false" 
+    class="modal backdrop-blur"
+    x-transition:enter="transition ease-out duration-300"
+    x-transition:enter-start="opacity-0"
+    x-transition:enter-end="opacity-100"
+    x-transition:leave="transition ease-in duration-200"
+    x-transition:leave-start="opacity-100"
+    x-transition:leave-end="opacity-0"
     x-init="$watch('showPaperModal', value => { if (value) { $refs.paperModal.showModal() } else { $refs.paperModal.close() } })">
-    <div class="modal-box w-11/12 max-w-5xl">
+    <div class="modal-box w-11/12 max-w-5xl" @click.stop>
         <form method="dialog">
             <button @click="showPaperModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>

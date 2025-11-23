@@ -3,20 +3,20 @@
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
-use App\Livewire\Pages\Admin\AdminDashboard;
-use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
-use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
-use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
+use App\Livewire\Pages\Admin\AdminBorrowTransactions;
+use App\Livewire\Pages\Admin\AdminDashboard;
+use App\Livewire\Pages\Admin\AdminManageRoles;
+use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
+use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminUserList;
 use App\Livewire\Pages\Admin\AdminViolationLogIndex;
-use App\Livewire\Pages\Admin\AdminManageRoles;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Livewire\Pages\Admin\EditAcademicPaper;
-use App\Livewire\Pages\Student\CreditScoreHistory;
 use App\Livewire\Pages\Student\AcademicPaperIndex;
-use App\Livewire\Pages\Student\ShowAcademicPaper;
+use App\Livewire\Pages\Student\CreditScoreHistory;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
+use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\StudentDashboard;
 use App\Livewire\Pages\Student\Transaction;
 use App\Livewire\TestQrScanner;
@@ -40,9 +40,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('academic-paper.show');
     Route::get('/academic-papers', AcademicPaperIndex::class)
         ->name('academic-paper.index');
-    Route::get('/rule-and-regulation',  RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
-    Route::get('/credit-score-history',  CreditScoreHistory::class)->name('CreditScoreHistory');
+    Route::get('/rule-and-regulation', RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
+    Route::get('/credit-score-history', CreditScoreHistory::class)->name('CreditScoreHistory');
     Route::get('/transactions', Transaction::class)->name('transactions');
+
+    // QR Code download route
+    Route::get('/qr-code/download/{inventoryId}', [\App\Http\Controllers\QrCodeDownloadController::class, 'download'])
+        ->whereNumber('inventoryId')
+        ->name('qr-code.download');
 });
 
 // Admin routes - Granular permission control
@@ -121,6 +126,7 @@ Route::post('/logout', function () {
     Auth::logout();
     request()->session()->invalidate();
     request()->session()->regenerateToken();
+
     return redirect('/');
 })->name('logout');
 

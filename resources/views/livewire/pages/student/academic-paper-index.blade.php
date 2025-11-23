@@ -222,14 +222,20 @@
             x-ref="paperModal"
             x-show="showPaperModal"
             @click.self="showPaperModal = false"
+            @keydown.escape="showPaperModal = false"
             class="modal backdrop-blur"
-          
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0"
+            x-transition:enter-end="opacity-100"
+            x-transition:leave="transition ease-in duration-200"
+            x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
             x-init="$watch('showPaperModal', value => { 
                 if (value) { $refs.paperModal.showModal() } 
                 else { $refs.paperModal.close() } 
             })">
             <div class="modal-box w-11/12 max-w-5xl"
-              
+                @click.stop>
                 <form method="dialog">
                     <button @click="showPaperModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                 </form>
@@ -246,8 +252,9 @@
         <dialog 
             x-ref="qrModal"
             x-show="showQrModal"
-            @click.self="showQrModal = false"
+            @click.self="showQrModal = false; $wire.closeQrModal()"
             class="modal backdrop-blur"
+            style="z-index: 9999;"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100"
@@ -264,7 +271,13 @@
                 x-transition:enter-end="opacity-100 transform scale-100"
                 x-transition:leave="transition ease-in duration-200"
                 x-transition:leave-start="opacity-100 transform scale-100"
-                x-transition:leave-end="opacity-0 transform scale-95">
+                x-transition:leave-end="opacity-0 transform scale-95"
+                @click.stop>
+                <form method="dialog">
+                    <button @click="showQrModal = false; $wire.closeQrModal()" 
+                        class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
+                
         @if ($this->selectedCopy && $qrCode)
             <div class="space-y-6">
                 <!-- QR Code Display -->
@@ -298,20 +311,19 @@
 
                 <!-- Action Buttons -->
                 <div class="flex gap-2 justify-center">
-                    <button 
-                        x-data="{ loading: false }"
-                        @click="
-                            loading = true;
-                            $wire.downloadQr().finally(() => loading = false)
-                        "
-                        :disabled="loading"
-                        class="btn btn-primary gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5" x-show="!loading">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                        </svg>
-                        <span x-show="!loading">Download QR</span>
-                        <span x-show="loading" class="loading loading-spinner loading-sm"></span>
-                    </button>
+                    @if($this->downloadUrl)
+                        <a 
+                            href="{{ $this->downloadUrl }}"
+                            download
+                            class="btn btn-primary gap-2"
+                            @click="showQrModal = false; $wire.closeQrModal()"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                            </svg>
+                            <span>Download QR</span>
+                        </a>
+                    @endif
                     
                     <button 
                         @click="showQrModal = false; $wire.closeQrModal()" 
