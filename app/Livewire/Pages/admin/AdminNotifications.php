@@ -18,14 +18,13 @@ class AdminNotifications extends AdminComponent
     public $filterRead = '';
     public $perPage = 15;
 
-    public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
-
     public function getNotificationsProperty()
     {
         $query = Auth::user()->userNotifications()
             ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
             ->when($this->filterRead === 'read', fn($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn($q) => $q->unread());
+            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
+            ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);
     }

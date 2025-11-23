@@ -18,14 +18,13 @@ class StudentNotifications extends Component
     public $filterRead = '';
     public $perPage = 15;
 
-    public array $sortBy = ['column' => 'created_at', 'direction' => 'desc'];
-
     public function getNotificationsProperty()
     {
         $query = Notification::where('user_id', Auth::id())
             ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
             ->when($this->filterRead === 'read', fn($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn($q) => $q->unread());
+            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
+            ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);
     }
@@ -84,6 +83,6 @@ class StudentNotifications extends Component
 
     public function render()
     {
-        return view('livewire.pages.Student.student-notifications');
+        return view('livewire.pages.student.student-notifications');
     }
 }

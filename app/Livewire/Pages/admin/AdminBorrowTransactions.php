@@ -491,11 +491,13 @@ class AdminBorrowTransactions extends AdminComponent
 
             // Create notification for the borrower
             $paper = \App\Models\AcademicPaper::find($this->pendingBorrowData['paper_id']);
+            $expiresAt = $transaction->expires_at;
+
             \App\Models\Notification::create([
                 'user_id' => $this->pendingBorrowData['user_id'],
                 'type' => 'paper_borrowed',
                 'title' => 'Academic Paper Borrowed Successfully',
-                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by " . \Carbon\Carbon::createFromTimestamp($this->pendingBorrowData['expires_at'])->format('M d, Y h:i A') . ".",
+                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by " . $expiresAt->format('M d, Y h:i A') . ".",
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'paper_id' => $paper->id,
