@@ -78,6 +78,10 @@ class AdminAttendanceLogIndex extends AdminComponent
                 $query->join('users', 'attendances.user_id', '=', 'users.id')
                     ->orderBy('users.first_name', $direction)
                     ->select('attendances.*');
+            } elseif ($column === 'role_name') {
+                $query->leftJoin('roles', 'attendances.role_id', '=', 'roles.id')
+                    ->orderBy('roles.name', $direction)
+                    ->select('attendances.*');
             } elseif ($column === 'scanned_by_name') {
                 $query->leftJoin('librarians', 'attendances.scanned_by', '=', 'librarians.id')
                     ->leftJoin('users as librarian_users', 'librarians.user_id', '=', 'librarian_users.id')

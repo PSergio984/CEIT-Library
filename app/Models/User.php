@@ -211,6 +211,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(ViolationTransaction::class);
     }
 
+    public function userNotifications()
+    {
+        return $this->hasMany(\App\Models\Notification::class)->orderBy('created_at', 'desc');
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->userNotifications()->unread();
+    }
+
     /**
      * Alias for librarySessions().
      * Use attendances() for general attendance queries.

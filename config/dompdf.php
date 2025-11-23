@@ -12,6 +12,8 @@ return [
     |
     */
     'show_warnings' => false,   // Throw an Exception on warnings from dompdf
+    
+    'orientation' => 'portrait',
 
     'public_path' => null,  // Override the public path if needed
 

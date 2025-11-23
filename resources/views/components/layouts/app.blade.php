@@ -71,6 +71,16 @@
                 <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />
                 <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
                 <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" />
+                
+                {{-- Notifications with Badge --}}
+                <x-mary-menu-item title="Notifications" icon="o-bell" link="/notifications">
+                    @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
+                        <x-slot:actions>
+                            <span class="badge badge-primary badge-sm">{{ auth()->user()->unreadNotifications()->count() }}</span>
+                        </x-slot:actions>
+                    @endif
+                </x-mary-menu-item>
+                
                 @can('access-admin-dashboard')
                     <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" />
                 @endcan

@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Models\Librarian;
 use App\Models\User;
+use App\Models\Notification;
 use Auth;
 use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -308,6 +309,18 @@ class AdminAssignLibrarians extends AdminComponent
                     'end_date' => null,
                     'created_by' => Auth::id(),
                 ]);
+
+                // Create notification for the assigned student
+                Notification::create([
+                    'user_id' => $userId,
+                    'type' => 'librarian_assigned',
+                    'title' => 'You have been assigned as a Librarian',
+                    'message' => "You have been assigned to librarian batch #{$this->newBatchNo}. You will be notified when your batch becomes active.",
+                    'data' => [
+                        'batch_no' => $this->newBatchNo,
+                        'assigned_by' => Auth::id(),
+                    ],
+                ]);
             }
         });
 
@@ -406,6 +419,26 @@ class AdminAssignLibrarians extends AdminComponent
                         'end_date' => null,
                         'created_by' => Auth::id(),
                     ]);
+
+                    // Create notification for newly added students
+                    if ($this->editingDateStart) {
+                        $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
+                        $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. Your duty date is scheduled for {$dutyDate}.";
+                    } else {
+                        $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. You will be notified when your duty date is scheduled.";
+                    }
+
+                    Notification::create([
+                        'user_id' => $userId,
+                        'type' => 'librarian_assigned',
+                        'title' => 'You have been assigned as a Librarian',
+                        'message' => $message,
+                        'data' => [
+                            'batch_no' => $this->editingBatchNo,
+                            'assigned_by' => Auth::id(),
+                            'start_date' => $this->editingDateStart,
+                        ],
+                    ]);
                 }
             }
 
@@ -420,6 +453,10 @@ class AdminAssignLibrarians extends AdminComponent
                 }
             }
 
+            // Check if duty date is being assigned/changed for existing members
+            $isDateChanging = $this->isDateChanging;
+            $previousDate = $currentBatch ? $currentBatch->start_date : null;
+
             // Update batch details
             Librarian::where('batch_no', $this->editingBatchNo)->update([
                 'start_date' => $this->editingDateStart,
@@ -427,6 +464,35 @@ class AdminAssignLibrarians extends AdminComponent
                 'shift_notes' => $this->editingShiftNotes,
                 'status' => $status,
             ]);
+
+            // Notify existing members if duty date is being assigned or changed
+            if ($isDateChanging && $this->editingDateStart && $currentStudents->isNotEmpty()) {
+                $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
+                
+                foreach ($currentStudents as $userId) {
+                    // Skip users who were just added (they already got notified above)
+                    if ($studentsToAdd->contains($userId)) {
+                        continue;
+                    }
+
+                    $notificationMessage = $previousDate 
+                        ? "Your duty date for librarian batch #{$this->editingBatchNo} has been updated to {$dutyDate}."
+                        : "Your duty date for librarian batch #{$this->editingBatchNo} has been scheduled for {$dutyDate}.";
+
+                    Notification::create([
+                        'user_id' => $userId,
+                        'type' => 'librarian_assigned',
+                        'title' => 'Librarian Duty Date Updated',
+                        'message' => $notificationMessage,
+                        'data' => [
+                            'batch_no' => $this->editingBatchNo,
+                            'start_date' => $this->editingDateStart,
+                            'previous_date' => $previousDate,
+                            'updated_by' => Auth::id(),
+                        ],
+                    ]);
+                }
+            }
 
             // If date is today, assign librarian role to all students in this batch
             if ($this->editingDateStart && $this->editingDateStart === date('Y-m-d')) {
@@ -472,6 +538,22 @@ class AdminAssignLibrarians extends AdminComponent
                 // Change user roles to librarian
                 $userIds = $librarians->pluck('user_id');
                 User::whereIn('id', $userIds)->update(['role_id' => $librarianRoleId]);
+
+                // Send notification to each librarian that their batch is now active
+                foreach ($librarians as $librarian) {
+                    $dutyDate = date('F j, Y', strtotime($librarian->start_date));
+                    Notification::create([
+                        'user_id' => $librarian->user_id,
+                        'type' => 'librarian_activated',
+                        'title' => 'Your Librarian Batch is Now Active',
+                        'message' => "Your librarian batch #{$batchNo} is now active. Your duty date is today, {$dutyDate}. You can now perform librarian duties.",
+                        'data' => [
+                            'batch_no' => $batchNo,
+                            'start_date' => $librarian->start_date,
+                            'end_date' => $librarian->end_date,
+                        ],
+                    ]);
+                }
             }
 
             // Update ACTIVE batches to EXPIRED if their end date has passed OR if it's past their start date

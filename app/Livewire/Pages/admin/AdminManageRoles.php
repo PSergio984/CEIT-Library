@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\Admin;
 
+use App\Models\Notification;
 use App\Models\Role;
 use App\Models\User;
 use Auth;
@@ -98,6 +99,53 @@ class AdminManageRoles extends AdminComponent
         }
 
         $user->update(['role_id' => $this->selectedRoleId]);
+
+        // Create notification for role change
+        $roleChangeMessage = "Your role has been changed from {$oldRole} to {$newRole->display_name}.";
+        
+        // Add specific message based on new role
+        if ($newRole->name === Role::LIBRARIAN) {
+            $roleChangeMessage .= " You now have librarian privileges.";
+        } elseif ($newRole->name === Role::ADMIN) {
+            $roleChangeMessage .= " You now have administrative privileges.";
+        } elseif ($newRole->name === Role::SUPER_ADMIN) {
+            $roleChangeMessage .= " You now have full system access.";
+        } elseif ($newRole->name === Role::STUDENT) {
+            $roleChangeMessage .= " Your privileges have been adjusted accordingly.";
+        }
+
+        Notification::create([
+            'user_id' => $user->id,
+            'type' => 'role_changed',
+            'title' => 'Your Role Has Been Updated',
+            'message' => $roleChangeMessage,
+            'data' => [
+                'old_role_id' => $user->role_id,
+                'old_role_name' => $oldRole,
+                'new_role_id' => $this->selectedRoleId,
+                'new_role_name' => $newRole->display_name,
+                'changed_by' => Auth::id(),
+            ],
+        ]);
+
+        // Create notification for admin who made the change
+        $adminMessage = "You successfully changed {$user->first_name} {$user->last_name}'s role from {$oldRole} to {$newRole->display_name}.";
+        
+        Notification::create([
+            'user_id' => Auth::id(),
+            'type' => 'user_activity',
+            'title' => 'Role Change Completed',
+            'message' => $adminMessage,
+            'data' => [
+                'target_user_id' => $user->id,
+                'target_user_name' => $user->first_name . ' ' . $user->last_name,
+                'old_role_id' => $user->role_id,
+                'old_role_name' => $oldRole,
+                'new_role_id' => $this->selectedRoleId,
+                'new_role_name' => $newRole->display_name,
+                'action' => 'role_change',
+            ],
+        ]);
 
         $this->success("Role updated: {$user->first_name} {$user->last_name} is now a {$newRole->display_name}");
         $this->showAssignRoleModal = false;

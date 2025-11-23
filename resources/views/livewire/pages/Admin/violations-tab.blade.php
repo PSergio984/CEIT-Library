@@ -1,9 +1,8 @@
 <div>
-    {{-- Violations CRUD Content --}}
     <div class="mt-6">
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
             <h3 class="text-lg font-semibold">Violation Types</h3>
-            <x-mary-button wire:click="openCreateDrawer" class="btn-primary btn-sm" icon="o-plus" spinner
+            <x-mary-button wire:click="openCreateDrawer" class="btn-primary btn-sm w-full sm:w-auto" icon="o-plus" spinner
                            tooltip-left="Create a Violation">
                 Add Violation
             </x-mary-button>

@@ -4,6 +4,7 @@ use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminDashboard;
+use App\Livewire\Pages\Admin\AdminNotifications;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
@@ -18,6 +19,7 @@ use App\Livewire\Pages\Student\AcademicPaperIndex;
 use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
 use App\Livewire\Pages\Student\StudentDashboard;
+use App\Livewire\Pages\Student\StudentNotifications;
 use App\Livewire\Pages\Student\Transaction;
 use App\Livewire\TestQrScanner;
 use Illuminate\Support\Facades\Auth;
@@ -43,6 +45,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/rule-and-regulation',  RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
     Route::get('/credit-score-history',  CreditScoreHistory::class)->name('CreditScoreHistory');
     Route::get('/transactions', Transaction::class)->name('transactions');
+    Route::get('/notifications', StudentNotifications::class)->name('notifications');
 });
 
 // Admin routes - Granular permission control
@@ -59,6 +62,10 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/logs', AdminBorrowTransactions::class)
             ->middleware('can:view-borrow-logs')
             ->name('borrow-logs');
+
+        // Notifications - Accessible by both Admin and Librarian
+        Route::get('/notifications', AdminNotifications::class)
+            ->name('notifications');
 
         // Rules and Regulations - Librarians can VIEW but not EDIT
         Route::get('/rule-and-regulation', AdminRuleAndRegulationIndex::class)
