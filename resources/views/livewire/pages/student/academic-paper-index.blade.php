@@ -34,12 +34,42 @@
             :availableDepartments="$this->availableDepartments"
         />
 
-        <div class="mb-4 text-xs sm:text-sm text-base-content/70">
-            Showing {{ $this->academicPapers->count() }} of {{ $this->academicPapers->total() }} results
+        {{-- Results Summary and Per-Page Control --}}
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <div class="text-xs sm:text-sm text-base-content/70">
+                Showing {{ $this->academicPapers->count() }} of {{ $this->academicPapers->total() }} results
+            </div>
+            
+            {{-- Per-Page Selector (visible on all screen sizes) --}}
+            <div class="flex items-center gap-2">
+                <label for="perPage" class="text-xs sm:text-sm text-base-content/70 whitespace-nowrap">
+                    Per page:
+                </label>
+                <select 
+                    id="perPage"
+                    wire:model.live="perPage" 
+                    class="select select-bordered select-sm w-20"
+                    aria-label="Results per page">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                </select>
+            </div>
         </div>
 
         {{-- Mobile/Tablet Card View (for screens smaller than 1280px) --}}
-        <div class="block xl:hidden space-y-4">
+        <div class="block xl:hidden space-y-4 relative">
+            {{-- Localized loading overlay for card updates (filters, pagination, per-page) --}}
+            <div wire:loading.flex 
+                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter"
+                class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="text-base-content font-medium text-sm">Updating results...</p>
+                </div>
+            </div>
+            
             @forelse ($this->academicPapers as $paper)
                 <div wire:key="mobile-paper-{{ $paper->id }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-start justify-between mb-3">
@@ -132,9 +162,19 @@
         </div>
 
         {{-- Desktop Table View (for screens 1280px and wider) --}}
-        <div class="hidden xl:block overflow-hidden">
+        <div class="hidden xl:block overflow-hidden relative">
+            {{-- Localized loading overlay for table updates (filters, pagination, per-page) --}}
+            <div wire:loading.flex 
+                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter"
+                class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="text-base-content font-medium">Updating results...</p>
+                </div>
+            </div>
+            
             <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy"
-                :per-page="$perPage" :per-page-values="[5, 10, 25, 50]"
+                wire:model="perPage" :per-page-values="[5, 10, 25, 50]"
                 striped
                 row-class="hover:bg-base-200"
                 header-class="text-base-content bg-base-200">
