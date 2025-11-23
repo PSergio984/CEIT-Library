@@ -52,7 +52,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Gate for librarian-specific actions (not admin)
         Gate::define('librarian-only', function ($user) {
-            return $user->isLibrarian() && !$user->isSuperAdmin();
+            return $user->isLibrarian() && !$user->hasAdminAccess();
         });
 
         // Gate to check if user can access privileged pages (Librarian or Admin)
@@ -72,7 +72,7 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasAdminAccess();
         });
 
-        // Attendance logs (Admin and Super Admin)
+        // Attendance logs (Librarian, Admin, and Super Admin)
         Gate::define('view-attendance-logs', function ($user) {
             return $user->hasLibrarianOrAdminAccess();
         });
