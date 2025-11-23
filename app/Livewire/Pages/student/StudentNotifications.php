@@ -22,7 +22,7 @@ class StudentNotifications extends Component
 
     public function getNotificationsProperty()
     {
-        $query = auth()->user()->userNotifications()
+        $query = Notification::where('user_id', Auth::id())
             ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
             ->when($this->filterRead === 'read', fn($q) => $q->read())
             ->when($this->filterRead === 'unread', fn($q) => $q->unread());
@@ -32,14 +32,14 @@ class StudentNotifications extends Component
 
     public function getUnreadCountProperty()
     {
-        return auth()->user()->unreadNotifications()->count();
+        return Notification::where('user_id', Auth::id())->unread()->count();
     }
 
     public function markAsRead($notificationId)
     {
         $notification = Notification::find($notificationId);
         
-        if ($notification && $notification->user_id === auth()->id()) {
+        if ($notification && $notification->user_id === Auth::id()) {
             $notification->markAsRead();
             $this->success('Notification marked as read');
         }
@@ -47,7 +47,7 @@ class StudentNotifications extends Component
 
     public function markAllAsRead()
     {
-        auth()->user()->userNotifications()->unread()->update([
+        Notification::where('user_id', Auth::id())->unread()->update([
             'is_read' => true,
             'read_at' => now(),
         ]);
@@ -59,7 +59,7 @@ class StudentNotifications extends Component
     {
         $notification = Notification::find($notificationId);
         
-        if ($notification && $notification->user_id === auth()->id()) {
+        if ($notification && $notification->user_id === Auth::id()) {
             $notification->delete();
             $this->success('Notification deleted');
         }

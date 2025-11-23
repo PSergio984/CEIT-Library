@@ -22,7 +22,7 @@ class AdminNotifications extends AdminComponent
 
     public function getNotificationsProperty()
     {
-        $query = auth()->user()->userNotifications()
+        $query = Auth::user()->userNotifications()
             ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
             ->when($this->filterRead === 'read', fn($q) => $q->read())
             ->when($this->filterRead === 'unread', fn($q) => $q->unread());
@@ -32,14 +32,14 @@ class AdminNotifications extends AdminComponent
 
     public function getUnreadCountProperty()
     {
-        return auth()->user()->unreadNotifications()->count();
+        return Auth::user()->unreadNotifications()->count();
     }
 
     public function markAsRead($notificationId)
     {
         $notification = Notification::find($notificationId);
         
-        if ($notification && $notification->user_id === auth()->id()) {
+        if ($notification && $notification->user_id === Auth::id()) {
             $notification->markAsRead();
             $this->success('Notification marked as read');
         }
@@ -47,7 +47,7 @@ class AdminNotifications extends AdminComponent
 
     public function markAllAsRead()
     {
-        auth()->user()->userNotifications()->unread()->update([
+        Auth::user()->userNotifications()->unread()->update([
             'is_read' => true,
             'read_at' => now(),
         ]);
@@ -59,7 +59,7 @@ class AdminNotifications extends AdminComponent
     {
         $notification = Notification::find($notificationId);
         
-        if ($notification && $notification->user_id === auth()->id()) {
+        if ($notification && $notification->user_id === Auth::id()) {
             $notification->delete();
             $this->success('Notification deleted');
         }
