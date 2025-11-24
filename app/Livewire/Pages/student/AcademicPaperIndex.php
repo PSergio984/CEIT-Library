@@ -68,6 +68,14 @@ class AcademicPaperIndex extends Component
         ];
     }
 
+    /**
+     * Check if the current user can borrow papers
+     */
+    public function getCanBorrowProperty(): bool
+    {
+        return Auth::check() && Auth::user()->credit_score > 0;
+    }
+
     #[Computed]
     public function academicPapers()
     {

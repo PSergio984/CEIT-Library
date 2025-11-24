@@ -7,7 +7,6 @@ use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminNotifications;
-use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminManageRoles;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
