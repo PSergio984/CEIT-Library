@@ -19,7 +19,7 @@ class CheckCreditScore
     {
         // Share credit score status with all views
         if (Auth::check()) {
-            $hasZeroCreditScore = Auth::user()->credit_score <= 0;
+            $hasZeroCreditScore = Auth::user()->credit_score < 1;
             View::share('hasZeroCreditScore', $hasZeroCreditScore);
         }
 
