@@ -16,6 +16,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin.only' => \App\Http\Middleware\AdminOnly::class,
             'librarian.or.admin' => \App\Http\Middleware\LibrarianOrAdmin::class,
         ]);
+
+        // Add CheckCreditScore middleware to web group
+        $middleware->web(append: [
+            \App\Http\Middleware\CheckCreditScore::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
