@@ -434,45 +434,34 @@
                                     }
                                 }).catch(err => {
                                     console.error('Error getting cameras:', err);
+                                    updateDebugInfo(
+                                        'Camera access failed. Please check permissions or use "Upload QR Image" instead.',
+                                        true
+                                    );
+
+                                    // Surface a clear error back to Livewire
+                                    $wire.call(
+                                        'scannerError',
+                                        'Unable to access any camera on this device. Please ensure camera permissions are granted, then try again or use the "Upload QR Image" option instead.',
+                                        'Camera Access Failed'
+                                    );
+
+                                    // Reset state and clean up instance
                                     isInitializing = false;
-
-                                    // Show file upload fallback
-                                    const qrReader = document.getElementById('qr-reader');
-                                    const fileUpload = document.getElementById('qr-file-upload');
-
-                                    if (qrReader) qrReader.classList.add('hidden');
-                                    if (fileUpload) fileUpload.classList.remove('hidden');
-
-                                    // Setup file upload handler
-                                    const fileInput = document.getElementById('qr-input-file');
-                                    if (fileInput) {
-                                        fileInput.addEventListener('change', function(e) {
-                                            if (e.target.files.length === 0) return;
-
-                                            const imageFile = e.target.files[0];
-                                            html5QrCode.scanFile(imageFile, true)
-                                                .then(decodedText => {
-                                                    console.log('QR Code from file:',
-                                                        decodedText);
-                                                    $wire.call('handleScan', decodedText);
-                                                    stopScanner();
-                                                })
-                                                .catch(err => {
-                                                    console.error('Error scanning file:', err);
-                                                    $wire.call('scannerError',
-                                                        'Could not scan QR code from image. Please try another image.',
-                                                        'Scan Failed');
-                                                });
-                                        });
+                                    isInitialized = false;
+                                    try {
+                                        if (html5QrCode) {
+                                            html5QrCode.clear();
+                                        }
+                                    } catch (clearErr) {
+                                        console.debug(
+                                            'Error clearing scanner after getCameras failure:',
+                                            clearErr
+                                        );
                                     }
+                                    html5QrCode = null;
 
-                                    console.log('Fallback to file upload enabled');
-                                    // Reject with specific error to indicate fallback mode
-                                    const fallbackError = new Error(
-                                        'Camera initialization failed, using file upload fallback');
-                                    fallbackError.isFallback = true;
-                                    fallbackError.originalError = err;
-                                    reject(fallbackError);
+                                    reject(err);
                                 });
 
                             } catch (error) {
