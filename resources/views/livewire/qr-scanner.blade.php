@@ -5,14 +5,6 @@
         if (window.forceStopScanner) {
             window.forceStopScanner();
         }
-    } else {
-        console.log('Modal opening, should initialize camera');
-        // Give time for DOM to render
-        setTimeout(() => {
-            if (window.reinitScanner) {
-                window.reinitScanner();
-            }
-        }, 150);
     }
 })">
     @if ($isScanning)
