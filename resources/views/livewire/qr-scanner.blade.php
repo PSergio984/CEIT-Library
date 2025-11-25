@@ -234,6 +234,7 @@
                 let scanCount = 0;
                 let hasLoggedInitialMessage = false;
 
+
                 console.log('QR Scanner script loaded');
 
                 // Debug logging helper
@@ -580,6 +581,8 @@
                     html5QrCode = null;
                     isInitialized = false;
                     isInitializing = false;
+                    scanCount = 0;
+                    hasLoggedInitialMessage = false;
 
                     // Also cleanup file scanner if needed
                     try {
