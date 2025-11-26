@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Mail;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
+{
+    use Queueable, SerializesModels;
+
+    public $unassignedDates;
+    public $weekStart;
+    public $weekEnd;
+
+    /**
+     * Create a new message instance.
+     */
+    public function __construct($unassignedDates, $weekStart, $weekEnd)
+    {
+        $this->unassignedDates = $unassignedDates;
+        $this->weekStart = $weekStart;
+        $this->weekEnd = $weekEnd;
+    }
+
+    /**
+     * Get the message envelope.
+     */
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Alert: Unassigned Librarian Duty Days - Week of ' . $this->weekStart->format('M d, Y'),
+        );
+    }
+
+    /**
+     * Get the message content definition.
+     */
+    public function content(): Content
+    {
+        return new Content(
+            view: 'mail.librarian-assignment-reminder',
+        );
+    }
+
+    /**
+     * Get the attachments for the message.
+     *
+     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     */
+    public function attachments(): array
+    {
+        return [];
+    }
+}

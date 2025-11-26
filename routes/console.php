@@ -97,3 +97,7 @@ Schedule::command('attendance:check-missing-timeouts')->dailyAt('00:30');
 Schedule::command('librarian:update-batch-statuses')->hourly();
 
 Schedule::command('librarian:update-roles')->hourly();
+
+// Check for unassigned librarian duty days and send alerts (runs daily at 9:00 AM)
+// Checks 3 days in advance for the upcoming week
+Schedule::command('librarian:check-assignments')->dailyAt('09:00');
