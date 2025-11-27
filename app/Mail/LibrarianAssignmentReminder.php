@@ -13,19 +13,14 @@ class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
 
-    public $unassignedDates;
-    public $weekStart;
-    public $weekEnd;
-
     /**
      * Create a new message instance.
      */
-    public function __construct($unassignedDates, $weekStart, $weekEnd)
-    {
-        $this->unassignedDates = $unassignedDates;
-        $this->weekStart = $weekStart;
-        $this->weekEnd = $weekEnd;
-    }
+    public function __construct(
+        public \Illuminate\Support\Collection $unassignedDates,
+        public \Carbon\Carbon $weekStart,
+        public \Carbon\Carbon $weekEnd
+    ) {}
 
     /**
      * Get the message envelope.
