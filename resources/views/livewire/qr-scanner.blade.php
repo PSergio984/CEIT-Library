@@ -708,9 +708,9 @@
                                 }
                                 console.log('Decoded text preview:', preview);
 
-                                // Show success feedback
+                                // Show processing feedback
                                 fileReaderElement.innerHTML =
-                                    '<div class="flex items-center justify-center h-full text-success"><svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></div>';
+                                    '<div class="flex flex-col items-center justify-center h-full text-info"><span class="loading loading-spinner loading-lg mb-2"></span><p class="text-sm">Processing QR code...</p></div>';
 
                                 // Validation result logging
                                 console.group('📋 QR Code Validation');
@@ -719,11 +719,28 @@
                                 console.log('Data Length:', decodedText.length);
                                 console.groupEnd();
 
-                                // Send to backend for processing
-                                $wire.call('handleFileUploadScan', decodedText);
-
-                                // Reset file input
-                                e.target.value = '';
+                                // Send to backend for processing and wait for response
+                                $wire.call('handleFileUploadScan', decodedText)
+                                    .then(() => {
+                                        console.log('✓ Backend processing completed successfully');
+                                        // Show success feedback
+                                        fileReaderElement.innerHTML =
+                                            '<div class="flex flex-col items-center justify-center h-full text-success"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><p class="text-sm">QR code processed!</p></div>';
+                                        
+                                        // Reset file input after successful processing
+                                        setTimeout(() => {
+                                            e.target.value = '';
+                                        }, 500);
+                                    })
+                                    .catch(error => {
+                                        console.error('❌ Backend processing failed:', error);
+                                        // Show error feedback
+                                        fileReaderElement.innerHTML =
+                                            '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Processing failed</p></div>';
+                                        
+                                        // Reset file input to allow retry
+                                        e.target.value = '';
+                                    });
                             })
                             .catch(err => {
                                 console.error('❌ Error scanning file:', err);
