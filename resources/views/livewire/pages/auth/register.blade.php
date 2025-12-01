@@ -31,8 +31,20 @@ class extends Component
     public function register(): void
     {
         $validated = $this->validate([
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+            'first_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                'regex:/^[\p{L}\s\-\']+$/u', // Letters, spaces, hyphens, apostrophes, Unicode support
+            ],
+            'last_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                'regex:/^[\p{L}\s\-\']+$/u', // Letters, spaces, hyphens, apostrophes, Unicode support
+            ],
             'email' => ['required', 'string', 'lowercase', new PlvEmailDomain, 'email', 'max:100', 'unique:'.User::class],
             'password' => [
                 'required',
@@ -72,8 +84,9 @@ class extends Component
         },
         formatName(val) {
             if (!val) return '';
+            // Trim, collapse multiple spaces, proper case each word
             val = val.trim().replace(/\s+/g, ' ');
-            return val.split(' ').map(w => w ? w.charAt(0).toUpperCase() + w.slice(1).toLowerCase() : '').filter(Boolean).join(' ');
+            return val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
         },
         updateEmail() {
             const cleanFirst = (this.$wire.first_name || '').replace(/\s+/g, '').toLowerCase();

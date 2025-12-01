@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -25,6 +25,7 @@ use Illuminate\Support\Str;
  * @property-read \App\Models\AcademicPaper $academicPaper
  * @property-read \App\Models\Inventory $inventory
  * @property-read \App\Models\User $user
+ *
  * @method static \Database\Factories\BorrowTransactionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction newQuery()
@@ -42,6 +43,7 @@ use Illuminate\Support\Str;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereTimeOut($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class BorrowTransaction extends Model
@@ -77,25 +79,79 @@ class BorrowTransaction extends Model
             $wasCompleted = $transaction->getOriginal('status') === 'completed';
             $isNowCompleted = $transaction->status === 'completed';
 
-            if (!$wasCompleted && $isNowCompleted && $transaction->time_out && $transaction->expires_at) {
+            if (! $wasCompleted && $isNowCompleted && $transaction->time_out && $transaction->expires_at) {
                 // Check if returned on time
-                if ($transaction->time_out <= $transaction->expires_at) {
+                $isOnTime = $transaction->time_out <= $transaction->expires_at;
+
+                if ($isOnTime) {
                     // Efficient idempotency check: use indexed related_borrow_transaction_id for exact lookup
                     $existingReward = ScoreIncrement::where('user_id', $transaction->user_id)
                         ->where('related_borrow_transaction_id', $transaction->id)
                         ->exists();
 
-                    if (!$existingReward) {
+                    if (! $existingReward) {
                         // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
                         ScoreIncrement::create([
                             'user_id' => $transaction->user_id,
                             'name' => 'On-Time Return',
-                            'description' => "Returned borrowed material on time",
+                            'description' => 'Returned borrowed material on time',
                             'score_value' => 10,
                             'related_borrow_transaction_id' => $transaction->id,
                         ]);
+
+                        // Create notification for on-time return with credit score increase
+                        \App\Models\Notification::create([
+                            'user_id' => $transaction->user_id,
+                            'type' => 'paper_returned',
+                            'title' => 'Book Returned Successfully!',
+                            'message' => "You successfully returned \"{$transaction->academicPaper->title}\" on time! +10 credit score awarded.",
+                            'data' => [
+                                'transaction_id' => $transaction->id,
+                                'paper_title' => $transaction->academicPaper->title,
+                                'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
+                                'score_awarded' => 10,
+                            ],
+                        ]);
                     }
+                } else {
+                    // Late return notification (no credit score)
+                    \App\Models\Notification::create([
+                        'user_id' => $transaction->user_id,
+                        'type' => 'paper_returned_late',
+                        'title' => 'Book Returned (Late)',
+                        'message' => "You returned \"{$transaction->academicPaper->title}\" late. No credit score awarded.",
+                        'data' => [
+                            'transaction_id' => $transaction->id,
+                            'paper_title' => $transaction->academicPaper->title,
+                            'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
+                            'was_overdue' => true,
+                        ],
+                    ]);
                 }
+            }
+
+            // Check if status changed from 'started' to 'overdue' and send notification
+            $wasStarted = $transaction->getOriginal('status') === 'started';
+            $isNowOverdue = $transaction->status === 'overdue';
+
+            if ($wasStarted && $isNowOverdue && ! $transaction->overdue_notified_at) {
+                // Create overdue notification
+                \App\Models\Notification::create([
+                    'user_id' => $transaction->user_id,
+                    'type' => 'paper_overdue',
+                    'title' => 'Overdue Book Alert!',
+                    'message' => "Your borrowed book \"{$transaction->academicPaper->title}\" is now overdue! Please return it as soon as possible.",
+                    'data' => [
+                        'transaction_id' => $transaction->id,
+                        'paper_title' => $transaction->academicPaper->title,
+                        'due_date' => $transaction->expires_at->format('M d, Y h:i A'),
+                        'overdue_duration' => $transaction->overdue_duration,
+                    ],
+                ]);
+
+                // Mark that we've sent the overdue notification
+                $transaction->overdue_notified_at = now();
+                $transaction->saveQuietly(); // Use saveQuietly to avoid infinite loop
             }
         });
 
@@ -166,8 +222,10 @@ class BorrowTransaction extends Model
     {
         if ($this->time_in && $this->time_out) {
             $this->duration_minutes = $this->time_in->diffInMinutes($this->time_out);
+
             return $this->duration_minutes;
         }
+
         return null;
     }
 
@@ -175,16 +233,17 @@ class BorrowTransaction extends Model
     public function isExpired(): bool
     {
         // Guard against null or invalid expires_at
-        if (!$this->expires_at || !($this->expires_at instanceof \Carbon\Carbon)) {
+        if (! $this->expires_at || ! ($this->expires_at instanceof \Carbon\Carbon)) {
             return false;
         }
+
         return $this->expires_at->isPast();
     }
 
     // Check if session is active
     public function isActive(): bool
     {
-        return $this->status === 'started' && !$this->isExpired();
+        return $this->status === 'started' && ! $this->isExpired();
     }
 
     // Check if transaction is overdue (started but past expiration)
@@ -195,18 +254,17 @@ class BorrowTransaction extends Model
 
     /**
      * Calculate time remaining until due (returns DateInterval or null)
-     *
-     * @return ?\DateInterval
      */
     public function getTimeRemainingAttribute(): ?\DateInterval
     {
         if (
             $this->status !== 'started' ||
-            !$this->expires_at ||
+            ! $this->expires_at ||
             $this->expires_at->lessThanOrEqualTo(now())
         ) {
             return null;
         }
+
         // Always use $this->expires_at->diff(now()) for consistent direction
         return $this->expires_at->diff(now());
     }
@@ -215,12 +273,12 @@ class BorrowTransaction extends Model
     public function getOverdueDurationAttribute(): ?string
     {
 
-        if (!($this->status === 'overdue' || $this->isOverdue())) {
+        if (! ($this->status === 'overdue' || $this->isOverdue())) {
             return null;
         }
 
         // Guard against null or invalid expires_at (legacy rows)
-        if (!$this->expires_at || !($this->expires_at instanceof \Carbon\Carbon)) {
+        if (! $this->expires_at || ! ($this->expires_at instanceof \Carbon\Carbon)) {
             return null;
         }
 
@@ -249,8 +307,10 @@ class BorrowTransaction extends Model
     {
         if ($this->isOverdue() && $this->status === 'started') {
             $this->update(['status' => 'overdue']);
+
             return true;
         }
+
         return false;
     }
 
@@ -275,7 +335,7 @@ class BorrowTransaction extends Model
         parent::boot();
 
         static::creating(function ($session) {
-            if (!$session->session_token) {
+            if (! $session->session_token) {
                 $session->session_token = static::generateSessionToken();
             }
         });
