@@ -8,12 +8,15 @@ use App\Models\User;
 use Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
+use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Lazy]
+#[Title('User Role Management')]
 class AdminManageRoles extends AdminComponent
 {
-    use AuthorizesRequests, Toast;
+    use AuthorizesRequests, Toast, WithPagination;
 
     public $search = '';
 
@@ -53,12 +56,33 @@ class AdminManageRoles extends AdminComponent
         return $query->orderBy('role_id', 'desc')
             ->orderBy('last_name')
             ->orderBy('first_name')
-            ->get();
+            ->paginate(10);
     }
 
     public function getRolesProperty()
     {
         return Role::all();
+    }
+
+    public function getAllUsersProperty()
+    {
+        $query = User::with('role')
+            ->where('account_status', 'active');
+
+        // Apply same filters as paginated users
+        if ($this->filterRole) {
+            $query->where('role_id', $this->filterRole);
+        }
+
+        if ($this->search) {
+            $query->where(function ($q) {
+                $q->where('first_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
+                    ->orWhere('email', 'like', '%' . $this->search . '%');
+            });
+        }
+
+        return $query->get();
     }
 
     public function openAssignRoleModal($userId)
@@ -155,6 +179,17 @@ class AdminManageRoles extends AdminComponent
     public function resetFilters()
     {
         $this->reset(['search', 'filterRole']);
+        $this->resetPage();
+    }
+
+    public function updatedSearch()
+    {
+        $this->resetPage();
+    }
+
+    public function updatedFilterRole()
+    {
+        $this->resetPage();
     }
 
     /**

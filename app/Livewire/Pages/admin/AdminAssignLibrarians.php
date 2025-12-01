@@ -8,8 +8,10 @@ use App\Models\Notification;
 use Auth;
 use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Livewire\Attributes\Title;
 use Mary\Traits\Toast;
 
+#[Title('Librarian Batch Management')]
 class AdminAssignLibrarians extends AdminComponent
 {
     use Toast, AuthorizesRequests;
@@ -78,6 +80,16 @@ class AdminAssignLibrarians extends AdminComponent
             ->whereNotNull('start_date')
             ->where('start_date', $this->editingDateStart)
             ->first();
+    }
+
+    public function getIsSundayProperty()
+    {
+        if (empty($this->editingDateStart)) {
+            return false;
+        }
+
+        $date = new \DateTime($this->editingDateStart);
+        return $date->format('w') == '0';
     }
 
     public function getAvailableBatchesProperty()
@@ -354,6 +366,15 @@ class AdminAssignLibrarians extends AdminComponent
     {
         // Ensure only super admins can modify batch assignments
         $this->authorize('manage-librarian-batches');
+
+        // Custom validation for Sunday
+        if ($this->editingDateStart) {
+            $date = new \DateTime($this->editingDateStart);
+            if ($date->format('w') == '0') {
+                $this->error('Sundays are not allowed for librarian duty', 'Invalid Date');
+                return;
+            }
+        }
 
         $this->validate([
             'editingBatchNo' => 'required',

@@ -548,9 +548,45 @@
                                     <span class="text-xs text-base-content/60">(Optional - Set when students should
                                         become
                                         librarians)</span>
+                                    <span class="block text-xs text-warning mt-1">⚠️ Note: Sundays are not available
+                                        for selection</span>
                                 </label>
                                 <input type="date" wire:model.live="editingDateStart" min="{{ date('Y-m-d') }}"
-                                    class="input input-bordered w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-datetime-edit-fields-wrapper]:py-0">
+                                    class="input input-bordered w-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-datetime-edit-fields-wrapper]:py-0"
+                                    x-data="{
+                                        init() {
+                                            const input = this.$el;
+                                            // Check on input change
+                                            input.addEventListener('input', function() {
+                                                if (this.value) {
+                                                    const selectedDate = new Date(this.value + 'T00:00:00');
+                                                    if (selectedDate.getDay() === 0) {
+                                                        this.value = '';
+                                                        $wire.dispatch('show-toast', {
+                                                            type: 'error',
+                                                            message: 'Sundays are not allowed for librarian duty',
+                                                            title: 'Invalid Date'
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                            // Check on change as well
+                                            input.addEventListener('change', function() {
+                                                if (this.value) {
+                                                    const selectedDate = new Date(this.value + 'T00:00:00');
+                                                    if (selectedDate.getDay() === 0) {
+                                                        this.value = '';
+                                                        $wire.set('editingDateStart', '');
+                                                        $wire.dispatch('show-toast', {
+                                                            type: 'error',
+                                                            message: 'Sundays are not allowed for librarian duty',
+                                                            title: 'Invalid Date'
+                                                        });
+                                                    }
+                                                }
+                                            });
+                                        }
+                                    }">
                                 <style>
                                     /* Gray out past dates in the calendar */
                                     input[type="date"]::-webkit-calendar-picker-indicator {
@@ -560,13 +596,51 @@
                                     input[type="date"]:invalid {
                                         color: rgb(156 163 175);
                                     }
+
+                                    /* Style Sundays to appear disabled in calendar */
+                                    input[type="date"]::-webkit-calendar-picker-indicator {
+                                        cursor: pointer;
+                                    }
+
+                                    /* This targets the calendar days but browser support is limited */
+                                    input[type="date"]::-webkit-datetime-edit-day-field:first-child {
+                                        color: rgb(239 68 68);
+                                    }
                                 </style>
+                                <script>
+                                    // Additional validation on date picker interaction
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        const dateInputs = document.querySelectorAll('input[type="date"]');
+                                        dateInputs.forEach(input => {
+                                            // Prevent Sunday selection more aggressively
+                                            input.addEventListener('blur', function() {
+                                                if (this.value) {
+                                                    const selectedDate = new Date(this.value + 'T00:00:00');
+                                                    if (selectedDate.getDay() === 0) {
+                                                        this.value = '';
+                                                        const event = new Event('input', {
+                                                            bubbles: true
+                                                        });
+                                                        this.dispatchEvent(event);
+                                                    }
+                                                }
+                                            });
+                                        });
+                                    });
+                                </script>
                                 @error('editingDateStart')
                                     <span class="text-error text-xs">{{ $message }}</span>
                                 @enderror
 
                                 @if ($editingDateStart)
-                                    @if ($this->conflictingBatch)
+                                    @if ($this->isSunday)
+                                        <div class="mt-2 alert alert-error rounded-lg p-3">
+                                            <p class="text-sm">
+                                                <strong>❌ Invalid Date:</strong> Sundays are not allowed for librarian
+                                                duty. Please select a different date.
+                                            </p>
+                                        </div>
+                                    @elseif ($this->conflictingBatch)
                                         <div class="mt-2 alert alert-error rounded-lg p-3">
                                             <p class="text-sm">
                                                 <strong>Date Conflict:</strong> Batch No. <span
