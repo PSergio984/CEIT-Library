@@ -350,7 +350,7 @@ class AdminBorrowTransactions extends AdminComponent
                 \Log::info('Book is unavailable - checking for active transaction');
 
                 $activeTransaction = BorrowTransaction::where('inventory_id', $inventory->id)
-                    ->where('status', 'started')
+                    ->whereIn('status', ['started', 'overdue']) // Include overdue transactions
                     ->whereNull('time_out')
                     ->first();
 
@@ -358,6 +358,12 @@ class AdminBorrowTransactions extends AdminComponent
                     // Return the book
                     \DB::beginTransaction();
                     try {
+                        // Update status to overdue if it wasn't already and the book is late
+                        if ($activeTransaction->status === 'started' && $activeTransaction->isOverdue()) {
+                            $activeTransaction->status = 'overdue';
+                        }
+
+                        // Complete the transaction
                         $activeTransaction->update([
                             'time_out' => now(),
                             'status' => 'completed',
@@ -461,17 +467,16 @@ class AdminBorrowTransactions extends AdminComponent
             // Start database transaction
             \DB::beginTransaction();
 
-            // Create borrow transaction
+            // Create borrow transaction with 3-hour expiry from time_in
+            $timeIn = now();
             $transaction = BorrowTransaction::create([
                 'user_id' => $this->pendingBorrowData['user_id'],
                 'academic_paper_id' => $this->pendingBorrowData['paper_id'],
                 'inventory_id' => $this->pendingBorrowData['inventory_id'],
-                'time_in' => now(),
+                'time_in' => $timeIn,
                 'time_out' => null,
                 'status' => 'started',
-                'expires_at' => $this->pendingBorrowData['expires_at']
-                    ? \Carbon\Carbon::createFromTimestamp($this->pendingBorrowData['expires_at'])
-                    : now()->addHours(2),
+                'expires_at' => $timeIn->copy()->addHours(3), // 3 hours from borrow time
                 'session_token' => bin2hex(random_bytes(32)),
                 'notes' => $this->borrowNotes ?: null,
             ]);
@@ -497,7 +502,7 @@ class AdminBorrowTransactions extends AdminComponent
                 'user_id' => $this->pendingBorrowData['user_id'],
                 'type' => 'paper_borrowed',
                 'title' => 'Academic Paper Borrowed Successfully',
-                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by " . $expiresAt->format('M d, Y h:i A') . ".",
+                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by " . $expiresAt->format('M d, Y h:i A') . '.',
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'paper_id' => $paper->id,
