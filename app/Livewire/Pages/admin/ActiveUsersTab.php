@@ -2,18 +2,19 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Mary\Traits\Toast;
+use App\Models\Attendance;
+use App\Models\Notification;
 use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
-use App\Models\Attendance;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 class ActiveUsersTab extends AdminComponent
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     // Refresh the table when a violation is recorded on ViolationTransactionsTab
     protected $listeners = [
@@ -21,17 +22,25 @@ class ActiveUsersTab extends AdminComponent
     ];
 
     public $search = '';
+
     public $perPage = 10;
 
     public $ViolationDrawer = false;
+
     public ?User $selectedUser = null;
+
     public $selectedUserForViolation = null;
+
     public $selectedViolationId = null;
+
     public $violationRemarks = '';
+
     public $searchActiveUsers = '';
+
     public $perPageActiveUsers = 10;
 
     public $confirmForgotTimeoutModal = false;
+
     public $attendanceToDeclare = null;
 
     public array $activeUsersHeaders = [
@@ -77,8 +86,8 @@ class ActiveUsersTab extends AdminComponent
     {
         return Violation::orderBy('name')->get()->map(function ($violation) {
             return [
-                'id'   => $violation->id,
-                'name' => $violation->name . ' (-' . $violation->penalty_score . ' points)',
+                'id' => $violation->id,
+                'name' => $violation->name.' (-'.$violation->penalty_score.' points)',
             ];
         });
     }
@@ -107,22 +116,39 @@ class ActiveUsersTab extends AdminComponent
     {
         $this->validate([
             'selectedUserForViolation' => 'required|exists:users,id',
-            'selectedViolationId'      => 'required|exists:violations,id',
-            'violationRemarks'         => 'nullable|string|max:500',
+            'selectedViolationId' => 'required|exists:violations,id',
+            'violationRemarks' => 'nullable|string|max:500',
         ]);
 
         try {
             DB::transaction(function () {
                 ViolationTransaction::create([
-                    'user_id'       => $this->selectedUserForViolation,
-                    'violation_id'  => $this->selectedViolationId,
-                    'remarks'       => $this->violationRemarks,
+                    'user_id' => $this->selectedUserForViolation,
+                    'violation_id' => $this->selectedViolationId,
+                    'remarks' => $this->violationRemarks,
                     'date_occurred' => now(),
                 ]);
             });
 
             $user = User::find($this->selectedUserForViolation);
             $violation = Violation::find($this->selectedViolationId);
+
+            // Create notification for the student
+            Notification::create([
+                'user_id' => $this->selectedUserForViolation,
+                'type' => 'violation',
+                'title' => 'Violation Recorded',
+                'message' => "A violation has been recorded: {$violation->name}. Penalty: -{$violation->penalty_score} points. Your current credit score is {$user->credit_score}/100.",
+                'data' => [
+                    'violation_id' => $violation->id,
+                    'violation_name' => $violation->name,
+                    'penalty_score' => $violation->penalty_score,
+                    'credit_score' => $user->credit_score,
+                    'remarks' => $this->violationRemarks,
+                    'recorded_by' => Auth::id(),
+                    'recorded_at' => now()->toDateTimeString(),
+                ],
+            ]);
 
             // refresh table and reset pagination after change
             $this->dispatch('refreshViolationTransactionsTab');
@@ -133,7 +159,7 @@ class ActiveUsersTab extends AdminComponent
 
             $this->reset(['selectedUser', 'selectedUserForViolation', 'selectedViolationId', 'violationRemarks']);
         } catch (\Exception $e) {
-            $this->error('An error occurred: ' . $e->getMessage());
+            $this->error('An error occurred: '.$e->getMessage());
         }
     }
 
@@ -143,7 +169,7 @@ class ActiveUsersTab extends AdminComponent
             DB::transaction(function () use ($attendanceId) {
                 $attendance = Attendance::lockForUpdate()->find($attendanceId);
 
-                if (!$attendance || !$attendance->isActive()) {
+                if (! $attendance || ! $attendance->isActive()) {
                     throw new \Exception('Attendance not found or not active.');
                 }
 
@@ -154,7 +180,7 @@ class ActiveUsersTab extends AdminComponent
                 $attendance->save();
 
                 // Create or find the "Forgot to time out" violation (uses config penalty if missing)
-                $defaultPenalty = (int)config('attendance.forgot_timeout_penalty', 5);
+                $defaultPenalty = (int) config('attendance.forgot_timeout_penalty', 5);
                 $violation = Violation::firstOrCreate(
                     ['name' => 'Forgot to time out'],
                     ['description' => 'Marked by admin as forgot to time out', 'penalty_score' => $defaultPenalty]
@@ -162,17 +188,37 @@ class ActiveUsersTab extends AdminComponent
 
                 // Record violation transaction for audit
                 ViolationTransaction::create([
-                    'user_id'       => $attendance->user_id,
-                    'violation_id'  => $violation->id,
-                    'remarks'       => 'Declared by admin: forgot to time out',
+                    'user_id' => $attendance->user_id,
+                    'violation_id' => $violation->id,
+                    'remarks' => 'Declared by admin: forgot to time out',
                     'date_occurred' => now(),
+                ]);
+
+                // Get updated user credit score
+                $user = User::find($attendance->user_id);
+
+                // Create notification for the student
+                Notification::create([
+                    'user_id' => $attendance->user_id,
+                    'type' => 'violation',
+                    'title' => 'Violation Recorded: Forgot to Time Out',
+                    'message' => "You forgot to time out from the library. Penalty: -{$violation->penalty_score} points. Your current credit score is {$user->credit_score}/100.",
+                    'data' => [
+                        'violation_id' => $violation->id,
+                        'violation_name' => $violation->name,
+                        'penalty_score' => $violation->penalty_score,
+                        'credit_score' => $user->credit_score,
+                        'remarks' => 'Declared by admin: forgot to time out',
+                        'recorded_by' => Auth::id(),
+                        'recorded_at' => now()->toDateTimeString(),
+                    ],
                 ]);
             });
 
             $this->dispatch('refreshViolationTransactionsTab');
             $this->success('Attendance closed and penalty applied.');
         } catch (\Exception $e) {
-            $this->error('Failed to declare forgot-timeout: ' . $e->getMessage());
+            $this->error('Failed to declare forgot-timeout: '.$e->getMessage());
         }
     }
 
@@ -184,8 +230,9 @@ class ActiveUsersTab extends AdminComponent
 
     public function confirmDeclareForgotTimeout()
     {
-        if (!$this->attendanceToDeclare) {
+        if (! $this->attendanceToDeclare) {
             $this->error('No attendance selected.');
+
             return;
         }
 
