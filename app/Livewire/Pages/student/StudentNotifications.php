@@ -37,7 +37,7 @@ class StudentNotifications extends Component
     public function markAsRead($notificationId)
     {
         $notification = Notification::find($notificationId);
-        
+
         if ($notification && $notification->user_id === Auth::id()) {
             $notification->markAsRead();
             $this->success('Notification marked as read');
@@ -57,7 +57,7 @@ class StudentNotifications extends Component
     public function deleteNotification($notificationId)
     {
         $notification = Notification::find($notificationId);
-        
+
         if ($notification && $notification->user_id === Auth::id()) {
             $notification->delete();
             $this->success('Notification deleted');

@@ -2,13 +2,14 @@
 
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Session;
-use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 
 new class extends Component
 {
-    public string $name = '';
+    public string $first_name = '';
+
+    public string $last_name = '';
+
     public string $email = '';
 
     /**
@@ -16,8 +17,10 @@ new class extends Component
      */
     public function mount(): void
     {
-        $this->name = Auth::user()->first_name;
-        $this->email = Auth::user()->email;
+        $user = Auth::user();
+        $this->first_name = $user->first_name;
+        $this->last_name = $user->last_name;
+        $this->email = $user->email;
     }
 
     /**
@@ -28,84 +31,102 @@ new class extends Component
         $user = Auth::user();
 
         $validated = $this->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+            'first_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                'regex:/^[\p{L}\s\-\']+$/u', // Letters, spaces, hyphens, apostrophes, Unicode support
+            ],
+            'last_name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                'regex:/^[\p{L}\s\-\']+$/u', // Letters, spaces, hyphens, apostrophes, Unicode support
+            ],
         ]);
 
-        $user->fill($validated);
+        $user->update($validated);
 
-        if ($user->isDirty('email')) {
-            $user->email_verified_at = null;
-        }
-
-        $user->save();
-
-        $this->dispatch('profile-updated', name: $user->name);
-    }
-
-    /**
-     * Send an email verification notification to the current user.
-     */
-    public function sendVerification(): void
-    {
-        $user = Auth::user();
-
-        if ($user->hasVerifiedEmail()) {
-            $this->redirectIntended(default: route('dashboard', absolute: false));
-
-            return;
-        }
-
-        $user->sendEmailVerificationNotification();
-
-        Session::flash('status', 'verification-link-sent');
+        $this->dispatch('profile-updated');
     }
 }; ?>
 
-<section>
+<section x-data="{
+    formatName(val) {
+        if (!val) return '';
+        val = val.trim().replace(/\s+/g, ' ');
+        return val.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+    }
+}">
     <header>
         <h2 class="text-lg text-base-content font-bold">
             {{ __('Profile Information') }}
         </h2>
 
         <p class="mt-1 text-sm text-base-content">
-            {{ __("Update your account's profile information and email address.") }}
+            {{ __("Update your name. Email cannot be changed.") }}
         </p>
     </header>
 
     <form wire:submit="updateProfileInformation" class="mt-6 space-y-6">
         <div>
-            <x-input-label for="name" :value="__('Name')" />
-            <x-text-input wire:model="name" id="name" name="name" type="text" class="mt-1 block w-full" required autofocus autocomplete="name" />
-            <x-input-error class="mt-2" :messages="$errors->get('name')" />
+            <x-input-label for="first_name" :value="__('First Name')" />
+            <x-text-input 
+                wire:model="first_name" 
+                id="first_name" 
+                name="first_name" 
+                type="text" 
+                class="mt-1 block w-full" 
+                required 
+                autofocus 
+                autocomplete="given-name"
+                x-on:blur="
+                    const formatted = formatName($event.target.value);
+                    $event.target.value = formatted;
+                    $wire.first_name = formatted;
+                " 
+            />
+            <x-input-error class="mt-2" :messages="$errors->get('first_name')" />
         </div>
 
         <div>
-            <x-input-label  for="email" :value="__('Email')" />
-            <x-text-input wire:model="email" id="email" name="email" type="email" class="mt-1 block w-full" required autocomplete="username" />
-            <x-input-error class="mt-2" :messages="$errors->get('email')" />
+            <x-input-label for="last_name" :value="__('Last Name')" />
+            <x-text-input 
+                wire:model="last_name" 
+                id="last_name" 
+                name="last_name" 
+                type="text" 
+                class="mt-1 block w-full" 
+                required 
+                autocomplete="family-name"
+                x-on:blur="
+                    const formatted = formatName($event.target.value);
+                    $event.target.value = formatted;
+                    $wire.last_name = formatted;
+                " 
+            />
+            <x-input-error class="mt-2" :messages="$errors->get('last_name')" />
+        </div>
 
-            @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && ! auth()->user()->hasVerifiedEmail())
-                <div>
-                    <p class="text-sm mt-2 text-base-content">
-                        {{ __('Your email address is unverified.') }}
-
-                        <button wire:click.prevent="sendVerification" class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                            {{ __('Click here to re-send the verification email.') }}
-                        </button>
-                    </p>
-
-                    @if (session('status') === 'verification-link-sent')
-                        <p class="mt-2 font-medium text-sm text-green-600">
-                            {{ __('A new verification link has been sent to your email address.') }}
-                        </p>
-                    @endif
-                </div>
-            @endif
+        <div>
+            <x-input-label for="email" :value="__('Email Address')" />
+            <x-text-input 
+                wire:model="email" 
+                id="email" 
+                name="email" 
+                type="email" 
+                class="mt-1 block w-full opacity-60 cursor-not-allowed" 
+                readonly 
+                disabled 
+                autocomplete="username" 
+            />
+            <p class="text-xs text-base-content/60 mt-1">Email address cannot be changed for security reasons.</p>
         </div>
 
         <div class="flex items-center gap-4">
-            <x-primary-button>{{ __('Save') }}</x-primary-button>
+            <x-primary-button>{{ __('Save Changes') }}</x-primary-button>
 
             <x-action-message class="me-3" on="profile-updated">
                 {{ __('Saved.') }}
