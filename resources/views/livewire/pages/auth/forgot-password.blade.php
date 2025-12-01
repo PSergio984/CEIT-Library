@@ -49,13 +49,13 @@ class extends Component
         if ($status !== Password::RESET_LINK_SENT) {
             $this->addError('email', __($status));
             RateLimiter::hit($key, $decaySeconds);
+
             return;
         }
 
         RateLimiter::clear($key);
         $this->reset('email');
-        // Restore default Laravel behavior: flash the raw status
-        session()->flash('status', $status);
+        session()->flash('status', __($status));
     }
 }; ?>
 
