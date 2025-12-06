@@ -16,6 +16,50 @@ trait CreatesTestDatabase
 
     protected function createTestTables(): void
     {
+        // Create roles table first (required for users foreign key)
+        if (!Schema::hasTable('roles')) {
+            Schema::create('roles', function ($table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->string('display_name');
+                $table->text('description')->nullable();
+                $table->timestamps();
+            });
+
+            // Insert default roles
+            \DB::table('roles')->insert([
+                ['name' => 'student', 'display_name' => 'Student', 'description' => 'Regular student user', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'librarian', 'display_name' => 'Librarian', 'description' => 'Librarian with QR scanning access', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'admin', 'display_name' => 'Admin', 'description' => 'Administrator with full system access', 'created_at' => now(), 'updated_at' => now()],
+                ['name' => 'super_admin', 'display_name' => 'Super Admin', 'description' => 'Super administrator with complete system access', 'created_at' => now(), 'updated_at' => now()],
+            ]);
+        }
+
+        // Create deans, research_advisers, technical_advisers (before academic_papers)
+        if (!Schema::hasTable('deans')) {
+            Schema::create('deans', function ($table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('research_advisers')) {
+            Schema::create('research_advisers', function ($table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
+
+        if (!Schema::hasTable('technical_advisers')) {
+            Schema::create('technical_advisers', function ($table) {
+                $table->id();
+                $table->string('name')->unique();
+                $table->timestamps();
+            });
+        }
+
         // Create users table
         if (!Schema::hasTable('users')) {
             Schema::create('users', function ($table) {
@@ -25,6 +69,9 @@ trait CreatesTestDatabase
                 $table->string('email')->unique();
                 $table->timestamp('email_verified_at')->nullable();
                 $table->string('password');
+                $table->foreignId('role_id')->default(1)->constrained('roles')->onDelete('restrict');
+                $table->integer('credit_score')->default(100);
+                $table->string('account_status')->default('active');
                 $table->rememberToken();
                 $table->timestamps();
                 $table->softDeletes();
@@ -39,14 +86,17 @@ trait CreatesTestDatabase
                 $table->string('title');
                 $table->year('publication_year');
                 $table->string('paper_type');
-                $table->string('research_project_adviser');
+                $table->foreignId('research_adviser_id')->nullable()->constrained('research_advisers')->nullOnDelete();
+                $table->foreignId('technical_adviser_id')->nullable()->constrained('technical_advisers')->nullOnDelete();
                 $table->string('department');
-                $table->string('dean');
+                $table->foreignId('dean_id')->nullable()->constrained('deans')->nullOnDelete();
+                // Legacy fields for backward compatibility
+                $table->string('research_project_adviser')->nullable();
+                $table->string('dean')->nullable();
                 $table->timestamps();
 
                 // Regular indexes only (no fulltext for SQLite)
                 $table->index('department');
-                $table->index('research_project_adviser');
                 $table->index('title');
             });
         }
@@ -122,18 +172,20 @@ trait CreatesTestDatabase
             Schema::create('librarians', function ($table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
-                $table->string('batch_no')->nullable(); // Changed to string to match migration
-                $table->enum('status', ['active', 'inactive', 'expired'])->default('active');
-                $table->timestamp('expires_at');
+                $table->integer('batch_no')->nullable();
+                $table->date('start_date')->nullable();
+                $table->date('end_date')->nullable();
+                $table->enum('status', ['active', 'inactive', 'expired'])->default('inactive');
+                $table->timestamp('expires_at')->nullable();
                 $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
                 $table->timestamp('last_login_at')->nullable();
                 $table->string('shift_notes')->nullable();
                 $table->timestamps();
 
                 $table->unique('user_id');
-                $table->index(['status', 'expires_at']);
-                $table->index('expires_at');
-                $table->index(['status', 'last_login_at']);
+                $table->index('batch_no');
+                $table->index(['start_date', 'end_date']);
+                $table->index('status');
                 $table->index('created_by');
             });
         }
@@ -181,8 +233,10 @@ trait CreatesTestDatabase
                 $table->id();
                 $table->foreignId('user_id')->constrained()->onDelete('cascade');
                 $table->foreignId('violation_id')->constrained()->onDelete('cascade');
-                $table->date('date_occurred');
+                $table->integer('violation_penalty')->default(0); // Store penalty at time of creation
+                $table->timestamp('date_occurred');
                 $table->text('remarks')->nullable();
+                $table->foreignId('attendance_id')->nullable()->constrained('attendances')->onDelete('set null');
                 $table->timestamps();
 
                 // Add indexes for better performance
@@ -190,6 +244,28 @@ trait CreatesTestDatabase
                 $table->index(['violation_id', 'date_occurred']); // For violation type reporting
                 $table->index('user_id'); // For user-specific severity queries
                 $table->index('date_occurred'); // For date-based reporting
+            });
+        }
+
+        // Create catalog_sequences table (for academic paper catalog codes)
+        if (!Schema::hasTable('catalog_sequences')) {
+            Schema::create('catalog_sequences', function ($table) {
+                $table->id();
+                $table->string('sequence_key')->unique()->comment('Format: DEPT_CODE-YEAR (e.g., IT-25, CE-24)');
+                $table->unsignedInteger('last_sequence')->default(0)->comment('Last sequence number used');
+                $table->timestamps();
+
+                $table->index('sequence_key');
+            });
+        }
+
+        // Create rule_headers table
+        if (!Schema::hasTable('rule_headers')) {
+            Schema::create('rule_headers', function ($table) {
+                $table->id();
+                $table->string('title'); // "I. General Information"
+                $table->integer('order')->default(0); // For sorting the headers
+                $table->timestamps();
             });
         }
 
@@ -213,6 +289,24 @@ trait CreatesTestDatabase
                 $table->timestamp('last_used_at')->nullable();
                 $table->timestamp('expires_at')->nullable();
                 $table->timestamps();
+            });
+        }
+
+        // Create notifications table
+        if (!Schema::hasTable('notifications')) {
+            Schema::create('notifications', function ($table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained()->onDelete('cascade');
+                $table->string('type');
+                $table->string('title');
+                $table->text('message');
+                $table->json('data')->nullable();
+                $table->boolean('is_read')->default(false);
+                $table->timestamp('read_at')->nullable();
+                $table->timestamps();
+
+                $table->index(['user_id', 'is_read']);
+                $table->index('created_at');
             });
         }
     }

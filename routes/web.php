@@ -29,7 +29,7 @@ Route::view('/', 'welcome');
 
 // Test route for QR code system (only available in non-production environments)
 if (config('app.env') !== 'production') {
-    Route::middleware(['auth', 'verified'])->group(function () {
+    Route::middleware(['auth', 'verified', 'librarian.or.admin'])->group(function () {
         Route::get('/test-qr', TestQrScanner::class)->name('test-qr');
     });
 }

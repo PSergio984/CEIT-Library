@@ -126,14 +126,31 @@ class ViolationTransaction extends Model
      * Atomically update user's credit score with proper clamping (0-100)
      * Uses a single SQL UPDATE to prevent race conditions
      * Handles missing users gracefully and uses parameterized queries for safety
+     * Supports SQLite (CASE WHEN) and MySQL/Postgres (LEAST/GREATEST) for portability
      */
     protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
     {
-        // Explicitly cast credit_score to SIGNED for arithmetic, then cast result to UNSIGNED with clamping
-        \DB::statement(
-            'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
-            [$delta, $userId]
-        );
+        // Detect the database driver to use appropriate SQL functions
+        $driver = \DB::connection()->getDriverName();
+
+        // SQLite uses CASE WHEN for clarity and reliability
+        if ($driver === 'sqlite') {
+            // SQLite syntax: Use CASE WHEN for explicit clamping
+            \DB::statement(
+                'UPDATE users SET credit_score = CASE 
+                    WHEN credit_score + ? < 0 THEN 0
+                    WHEN credit_score + ? > 100 THEN 100
+                    ELSE credit_score + ?
+                END WHERE id = ?',
+                [$delta, $delta, $delta, $userId]
+            );
+        } else {
+            // MySQL/PostgreSQL syntax: LEAST for upper bound, GREATEST for lower bound
+            \DB::statement(
+                'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
+                [$delta, $userId]
+            );
+        }
     }
 
     // Relationship with user

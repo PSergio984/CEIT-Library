@@ -60,6 +60,11 @@ class AppServiceProvider extends ServiceProvider
             return $user->hasAdminAccess() || $user->isLibrarian();
         });
 
+        // Alias for privileged-access (used in routes)
+        Gate::define('librarian-or-admin-access', function ($user) {
+            return $user->hasAdminAccess() || $user->isLibrarian();
+        });
+
         // GRANULAR PERMISSIONS
 
         // Academic Papers - VIEW (Librarian, Admin, and Super Admin can view)

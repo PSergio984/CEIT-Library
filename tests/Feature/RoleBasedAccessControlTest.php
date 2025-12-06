@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Librarian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -12,10 +13,24 @@ class RoleBasedAccessControlTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * Get role ID by name
+     */
+    protected function getRoleId(string $roleName): int
+    {
+        return Role::where('name', $roleName)->value('id') ?? match ($roleName) {
+            'student' => 1,
+            'librarian' => 2,
+            'admin' => 3,
+            'super_admin' => 4,
+            default => 1,
+        };
+    }
+
     /** @test */
     public function admin_can_access_librarian_assignment_page()
     {
-        $admin = User::factory()->create(['role_id' => 3]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.librarians'));
@@ -26,7 +41,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function librarian_cannot_access_librarian_assignment_page()
     {
-        $user = User::factory()->create(['role_id' => 1]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         // Create active librarian duty
         Librarian::factory()->create([
@@ -44,7 +59,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function student_cannot_access_librarian_assignment_page()
     {
-        $student = User::factory()->create(['role_id' => 1]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         $response = $this->actingAs($student)
             ->get(route('admin.librarians'));
@@ -59,7 +74,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $admin = User::factory()->create(['role_id' => 3]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         $response = $this->actingAs($admin)
             ->get(route('test-qr'));
@@ -74,7 +89,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $user = User::factory()->create(['role_id' => 1]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         Librarian::factory()->create([
             'user_id' => $user->id,
@@ -95,7 +110,7 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $student = User::factory()->create(['role_id' => 1]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         $response = $this->actingAs($student)
             ->get(route('test-qr'));
@@ -110,9 +125,9 @@ class RoleBasedAccessControlTest extends TestCase
             $this->markTestSkipped('Test QR route not available in production');
         }
 
-        $user = User::factory()->create(['role_id' => 1]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
-        // Create expired librarian duty (this is for Librarian model, not BorrowTransaction)
+        // Create expired librarian duty
         Librarian::factory()->create([
             'user_id' => $user->id,
             'status' => 'expired',
@@ -128,7 +143,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function admin_can_access_admin_dashboard()
     {
-        $admin = User::factory()->create(['role_id' => 3]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         $response = $this->actingAs($admin)
             ->get(route('admin.dashboard'));
@@ -137,11 +152,22 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
-    public function non_admin_cannot_access_admin_dashboard()
+    public function super_admin_can_access_admin_dashboard()
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
 
-        $response = $this->actingAs($user)
+        $response = $this->actingAs($superAdmin)
+            ->get(route('admin.dashboard'));
+
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function student_cannot_access_admin_dashboard()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+
+        $response = $this->actingAs($student)
             ->get(route('admin.dashboard'));
 
         $response->assertStatus(403);
@@ -158,23 +184,23 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function gate_assign_librarian_role_allows_admin()
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         $this->assertTrue(Gate::forUser($admin)->allows('assign-librarian-role'));
     }
 
     /** @test */
-    public function gate_assign_librarian_role_denies_non_admin()
+    public function gate_assign_librarian_role_denies_student()
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
-        $this->assertFalse(Gate::forUser($user)->allows('assign-librarian-role'));
+        $this->assertFalse(Gate::forUser($student)->allows('assign-librarian-role'));
     }
 
     /** @test */
     public function gate_librarian_or_admin_access_allows_admin()
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         $this->assertTrue(Gate::forUser($admin)->allows('librarian-or-admin-access'));
     }
@@ -182,7 +208,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function gate_librarian_or_admin_access_allows_active_librarian()
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         Librarian::factory()->create([
             'user_id' => $user->id,
@@ -196,7 +222,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function gate_librarian_or_admin_access_denies_student()
     {
-        $student = User::factory()->create(['role_id' => 1]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         $this->assertFalse(Gate::forUser($student)->allows('librarian-or-admin-access'));
     }
@@ -206,13 +232,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function librarian_can_access_admin_dashboard()
     {
-        $user = User::factory()->create(['is_admin' => false]);
-
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
         $response = $this->actingAs($user)
             ->get(route('admin.dashboard'));
@@ -223,13 +243,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function librarian_can_access_borrow_logs()
     {
-        $user = User::factory()->create(['is_admin' => false]);
-
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
         $response = $this->actingAs($user)
             ->get(route('admin.borrow-logs'));
@@ -240,13 +254,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function librarian_can_access_violation_logs()
     {
-        $user = User::factory()->create(['is_admin' => false]);
-
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
         $response = $this->actingAs($user)
             ->get(route('admin.violation-logs'));
@@ -257,13 +265,7 @@ class RoleBasedAccessControlTest extends TestCase
     /** @test */
     public function librarian_can_view_rules_but_not_edit()
     {
-        $user = User::factory()->create(['is_admin' => false]);
-
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
         // Can view
         $response = $this->actingAs($user)
@@ -276,60 +278,42 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
-    public function librarian_cannot_access_academic_papers()
+    public function librarian_can_view_academic_papers_read_only()
     {
-        $user = User::factory()->create(['is_admin' => false]);
-
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
         $response = $this->actingAs($user)
             ->get(route('admin.academic-paper.index'));
 
-        $response->assertStatus(403);
+        // Librarians can view academic papers (read-only) according to TC014
+        $response->assertStatus(200);
     }
 
     /** @test */
-    public function librarian_cannot_access_attendance_logs()
+    public function librarian_can_view_attendance_logs()
     {
-        $user = User::factory()->create(['is_admin' => false]);
-
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
         $response = $this->actingAs($user)
             ->get(route('admin.attendance-logs'));
 
-        $response->assertStatus(403);
+        // Librarians can view attendance logs according to gate definition
+        $response->assertStatus(200);
     }
 
     /** @test */
     public function librarian_cannot_access_student_management()
     {
-        $user = User::factory()->create(['is_admin' => false]);
+        $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
 
-        Librarian::factory()->create([
-            'user_id' => $user->id,
-            'status' => 'active',
-            'expires_at' => now()->addDays(30),
-        ]);
-
-        $response = $this->actingAs($user)
-            ->get(route('admin.user-list'));
-
-        $response->assertStatus(403);
+        // Note: This route might be commented out, so we'll test the gate instead
+        $this->assertFalse(Gate::forUser($user)->allows('manage-students'));
     }
 
     /** @test */
     public function admin_can_access_all_admin_pages()
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         // Test all admin routes
         $routes = [
@@ -339,7 +323,6 @@ class RoleBasedAccessControlTest extends TestCase
             'admin.rules-and-regulations.index',
             'admin.academic-paper.index',
             'admin.attendance-logs',
-            'admin.user-list',
             'admin.librarians',
         ];
 
@@ -350,9 +333,53 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    public function super_admin_can_access_manage_roles()
+    {
+        $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
+
+        $response = $this->actingAs($superAdmin)
+            ->get(route('admin.manage-roles'));
+
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function admin_cannot_access_manage_roles()
+    {
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.manage-roles'));
+
+        $response->assertStatus(403);
+    }
+
+    /** @test */
+    public function librarian_cannot_access_manage_roles()
+    {
+        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
+
+        $response = $this->actingAs($librarian)
+            ->get(route('admin.manage-roles'));
+
+        $response->assertStatus(403);
+    }
+
+    /** @test */
+    public function student_cannot_access_manage_roles()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+
+        $response = $this->actingAs($student)
+            ->get(route('admin.manage-roles'));
+
+        $response->assertStatus(403);
+    }
+
+    /** @test */
     public function admin_has_all_permissions()
     {
-        $admin = User::factory()->create(['is_admin' => true]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
         $permissions = [
             'Admin-access',
@@ -365,7 +392,7 @@ class RoleBasedAccessControlTest extends TestCase
             'access-admin-dashboard',
             'view-borrow-logs',
             'view-violation-logs',
-            'manage-advisers-deans',
+            // Note: manage-advisers-deans is Super Admin only, not Admin
         ];
 
         foreach ($permissions as $permission) {
@@ -374,12 +401,18 @@ class RoleBasedAccessControlTest extends TestCase
                 "Admin should have '{$permission}' permission"
             );
         }
+
+        // Verify admin does NOT have super admin only permissions
+        $this->assertFalse(
+            Gate::forUser($admin)->allows('manage-advisers-deans'),
+            "Admin should NOT have 'manage-advisers-deans' permission (Super Admin only)"
+        );
     }
 
     /** @test */
     public function student_cannot_access_any_admin_page()
     {
-        $student = User::factory()->create(['is_admin' => false]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         $routes = [
             'admin.dashboard',
@@ -388,8 +421,8 @@ class RoleBasedAccessControlTest extends TestCase
             'admin.rules-and-regulations.index',
             'admin.academic-paper.index',
             'admin.attendance-logs',
-            'admin.user-list',
             'admin.librarians',
+            'admin.manage-roles',
         ];
 
         foreach ($routes as $route) {

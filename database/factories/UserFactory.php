@@ -32,6 +32,8 @@ class UserFactory extends Factory
             'password' => Hash::make(fake()->password(8, 12)), // Generate random password between 8-12 characters
             'remember_token' => Str::random(10),
             'role_id' => 1, // Default to student role
+            'credit_score' => 100, // Default credit score
+            'account_status' => 'active', // Default account status
         ];
     }
 
