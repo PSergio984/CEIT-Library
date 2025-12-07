@@ -1,20 +1,19 @@
 <div class="p-6">
     <div class="mb-6">
-        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
-            <div class="flex-1">
-                <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator />
-            </div>
-            <div class="flex gap-2 md:flex-shrink-0">
-                <x-mary-button wire:click="exportPdf" class="btn-primary flex-1 md:flex-none" icon="o-arrow-down-tray">
-                    <span class="hidden sm:inline">Export PDF</span>
-                    <span class="sm:hidden text-xs">Export PDF</span>
-                </x-mary-button>
-                <x-mary-button wire:click="openScanner" class="btn-primary flex-1 md:flex-none" icon="o-qr-code">
-                    <span class="hidden sm:inline">Scan QR Code</span>
-                    <span class="sm:hidden text-xs">Scan QR</span>
-                </x-mary-button>
-            </div>
-        </div>
+        <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator>
+            <x-slot:actions>
+                <div class="flex gap-2">
+                    <x-mary-button wire:click="exportPdf" class="btn-primary" icon="o-arrow-down-tray">
+                        <span class="hidden sm:inline">Export PDF</span>
+                        <span class="sm:hidden text-xs">Export PDF</span>
+                    </x-mary-button>
+                    <x-mary-button wire:click="openScanner" class="btn-primary" icon="o-qr-code">
+                        <span class="hidden sm:inline">Scan QR Code</span>
+                        <span class="sm:hidden text-xs">Scan QR</span>
+                    </x-mary-button>
+                </div>
+            </x-slot:actions>
+        </x-mary-header>
     </div>
 
     {{-- Load QR libraries first --}}
