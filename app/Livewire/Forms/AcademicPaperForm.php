@@ -159,7 +159,7 @@ class AcademicPaperForm extends Form
         }
 
         // Filter out any invalid IDs and sync
-        $validAuthorIds = array_filter($this->author_ids, fn($id) => is_int($id) && $id > 0);
+        $validAuthorIds = array_filter($this->author_ids, fn ($id) => is_int($id) && $id > 0);
         $academicPaper->authors()->sync($validAuthorIds);
     }
 
@@ -258,7 +258,7 @@ class AcademicPaperForm extends Form
         ];
         $validPaperTypes = array_column($this->type_choices, 'id');
         if (! empty($validPaperTypes)) {
-            $paperTypeRules[] = 'in:' . implode(',', $validPaperTypes);
+            $paperTypeRules[] = 'in:'.implode(',', $validPaperTypes);
         }
 
         // Build department rules - include 'in:' validation only if config exists
@@ -269,7 +269,7 @@ class AcademicPaperForm extends Form
         ];
         $validDepartments = config('departments.valid_names', []);
         if (! empty($validDepartments)) {
-            $departmentRules[] = 'in:' . implode(',', $validDepartments);
+            $departmentRules[] = 'in:'.implode(',', $validDepartments);
         }
 
         $rules = [

@@ -22,6 +22,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property-read int|null $copies_count
  * @property-read mixed $available_copies_count
  * @property-read mixed $total_copies_count
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper byDepartment($department)
  * @method static \Database\Factories\AcademicPaperFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper newModelQuery()
@@ -38,6 +39,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereResearchProjectAdviser($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereTitle($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class AcademicPaper extends Model
@@ -179,7 +181,7 @@ class AcademicPaper extends Model
         // Ensure publication year is a string and has sufficient length
         $yearString = (string) $publicationYear;
         if (strlen($yearString) < 2) {
-            throw new \InvalidArgumentException('Publication year must be at least 2 characters long, got: ' . $yearString);
+            throw new \InvalidArgumentException('Publication year must be at least 2 characters long, got: '.$yearString);
         }
 
         $departmentCode = self::getDepartmentCode($department);
@@ -200,7 +202,7 @@ class AcademicPaper extends Model
             } catch (\Exception $e) {
                 // If we hit a duplicate or timeout, retry with exponential backoff
                 if ($attempt >= $maxRetries) {
-                    throw new \RuntimeException("Failed to generate unique catalog code after {$maxRetries} attempts. Last error: " . $e->getMessage());
+                    throw new \RuntimeException("Failed to generate unique catalog code after {$maxRetries} attempts. Last error: ".$e->getMessage());
                 }
 
                 // Exponential backoff: wait longer between retries
@@ -256,7 +258,7 @@ class AcademicPaper extends Model
 
                 // Use flexible padding: minimum 2 digits, but can grow beyond 99
                 // Examples: 01, 02, ..., 99, 100, 101, etc.
-                return str_pad($sequence, max(2, strlen((string)$sequence)), '0', STR_PAD_LEFT);
+                return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
             });
         } else {
             // MySQL: Use INSERT ... ON DUPLICATE KEY UPDATE with LAST_INSERT_ID() for atomic sequence generation
@@ -287,12 +289,13 @@ class AcademicPaper extends Model
 
             // Use flexible padding: minimum 2 digits, but can grow beyond 99
             // Examples: 01, 02, ..., 99, 100, 101, etc.
-            return str_pad($sequence, max(2, strlen((string)$sequence)), '0', STR_PAD_LEFT);
+            return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
         }
     }
 
     /**
      * Get next sequence number for department and year (legacy method for backwards compatibility)
+     *
      * @deprecated Use getNextSequenceAtomic for new implementations
      */
     private static function getNextSequence($departmentCode, $year)
@@ -314,7 +317,7 @@ class AcademicPaper extends Model
                             CAST(
                                 SUBSTR(
                                     catalog_code, 
-                                    LENGTH("CEIT-' . $departmentCode . '-' . $year . '-") + 1
+                                    LENGTH("CEIT-'.$departmentCode.'-'.$year.'-") + 1
                                 ) AS INTEGER
                             )
                         ), 
@@ -344,6 +347,7 @@ class AcademicPaper extends Model
         // Use flexible padding: minimum 2 digits, but can grow beyond 99
         // Examples: 01, 02, ..., 99, 100, 101, etc.
         $nextSequence = $highestSequence + 1;
-        return str_pad($nextSequence, max(2, strlen((string)$nextSequence)), '0', STR_PAD_LEFT);
+
+        return str_pad($nextSequence, max(2, strlen((string) $nextSequence)), '0', STR_PAD_LEFT);
     }
 }

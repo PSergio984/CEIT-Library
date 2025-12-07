@@ -75,4 +75,3 @@ class MiddlewareTest extends TestCase
         $response->assertRedirect(route('dashboard'));
     }
 }
-

@@ -6,7 +6,6 @@ use App\Models\AcademicPaper;
 use App\Models\Attendance;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
-use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -41,7 +40,7 @@ class ExportTest extends TestCase
         // This test may need adjustment based on actual implementation
         $response = $this->get(route('admin.attendance'));
         $response->assertStatus(200);
-        
+
         // PDF export functionality would be tested separately if export route exists
     }
 
@@ -55,7 +54,7 @@ class ExportTest extends TestCase
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
         $academicPaper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create(['academic_paper_id' => $academicPaper->id]);
-        
+
         BorrowTransaction::factory()->count(5)->create([
             'user_id' => $student->id,
             'academic_paper_id' => $academicPaper->id,
@@ -66,7 +65,7 @@ class ExportTest extends TestCase
         // This test may need adjustment based on actual implementation
         $response = $this->get(route('admin.logs'));
         $response->assertStatus(200);
-        
+
         // PDF export functionality would be tested separately if export route exists
     }
 
@@ -85,4 +84,3 @@ class ExportTest extends TestCase
         $response->assertStatus(200);
     }
 }
-

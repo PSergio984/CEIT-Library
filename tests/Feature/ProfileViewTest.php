@@ -34,9 +34,8 @@ class ProfileViewTest extends TestCase
 
         $response = $this->get(route('profile'));
         $response->assertStatus(200);
-        
+
         $response->assertSee('John Doe', false);
         $response->assertSee('john.doe@plv.edu.ph', false);
     }
 }
-

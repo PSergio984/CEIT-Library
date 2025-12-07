@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class ViolationManagementTest extends TestCase
@@ -98,4 +97,3 @@ class ViolationManagementTest extends TestCase
         $this->assertEquals(90, $student->credit_score);
     }
 }
-

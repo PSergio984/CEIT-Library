@@ -89,7 +89,7 @@ class AcademicPaperIndex extends Component
                 }
             })
             ->when($this->search, function ($q) {
-                $search = '%' . $this->search . '%';
+                $search = '%'.$this->search.'%';
                 $q->where(function ($query) use ($search) {
                     $query->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
@@ -255,11 +255,11 @@ class AcademicPaperIndex extends Component
         }
 
         return AcademicPaper::with([
-            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'authors' => fn ($q) => $q->select('authors.id', 'authors.name'),
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
+            'copies' => fn ($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 

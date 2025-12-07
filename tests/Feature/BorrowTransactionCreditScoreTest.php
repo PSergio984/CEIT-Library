@@ -2,14 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Livewire;
 use Tests\TestCase;
 
 class BorrowTransactionCreditScoreTest extends TestCase
@@ -58,10 +56,9 @@ class BorrowTransactionCreditScoreTest extends TestCase
         // Since borrow transactions are created via QR scanner, we'll test the access control
         $response = $this->get(route('admin.borrow-logs'));
         $response->assertStatus(200);
-        
+
         // The actual credit score validation would be tested in the QR scanner flow
         // For now, we verify the page is accessible and the student has low credit score
         $this->assertEquals(20, $student->credit_score);
     }
 }
-

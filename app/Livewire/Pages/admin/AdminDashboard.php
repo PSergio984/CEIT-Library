@@ -3,15 +3,15 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\AcademicPaper;
-use App\Models\User;
 use App\Models\Attendance;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\Librarian;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
 
 #[Title('Admin Dashboard')]
 #[Lazy]
@@ -45,9 +45,9 @@ class AdminDashboard extends AdminComponent
         return AcademicPaper::select('department', DB::raw('count(*) as count'))
             ->groupBy('department')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'name' => $item->department,
-                'value' => $item->count
+                'value' => $item->count,
             ]);
     }
 
@@ -57,9 +57,9 @@ class AdminDashboard extends AdminComponent
         return AcademicPaper::select('paper_type', DB::raw('count(*) as count'))
             ->groupBy('paper_type')
             ->get()
-            ->map(fn($item) => [
+            ->map(fn ($item) => [
                 'name' => $item->paper_type,
-                'value' => $item->count
+                'value' => $item->count,
             ]);
     }
 

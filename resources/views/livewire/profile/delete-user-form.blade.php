@@ -23,7 +23,22 @@ new class extends Component
     }
 }; ?>
 
-<section class="space-y-6">
+<section class="space-y-6" x-data="{
+    password: '',
+    touched: false,
+    error: '',
+    validatePassword() {
+        this.touched = true;
+        if (!this.password) {
+            this.error = 'Password is required to delete your account.';
+        } else {
+            this.error = '';
+        }
+    },
+    get isFormValid() {
+        return this.password && !this.error;
+    }
+}">
     <header>
         <h2 class="text-lg font-medium text-base-content">
             {{ __('Delete Account') }}
@@ -60,9 +75,14 @@ new class extends Component
                     type="password"
                     class="mt-1 block w-3/4"
                     placeholder="{{ __('Password') }}"
+                    x-on:input="password = $event.target.value"
+                    x-on:blur="validatePassword()"
                 />
 
                 <x-input-error :messages="$errors->get('password')" class="mt-2" />
+                <template x-if="touched && error && !$wire.__instance.snapshot.memo.errors?.password">
+                    <p class="text-red-500 text-xs mt-1" x-text="error"></p>
+                </template>
             </div>
 
             <div class="mt-6 flex justify-end">
@@ -70,7 +90,9 @@ new class extends Component
                     {{ __('Cancel') }}
                 </x-secondary-button>
 
-                <x-danger-button class="ms-3">
+                <x-danger-button class="ms-3"
+                    x-bind:disabled="!isFormValid"
+                    x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
                     {{ __('Delete Account') }}
                 </x-danger-button>
             </div>

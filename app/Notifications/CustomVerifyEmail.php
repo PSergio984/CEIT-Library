@@ -14,13 +14,14 @@ class CustomVerifyEmail extends VerifyEmail implements ShouldQueue
     /**
      * Build the mail representation of the notification.
      *
-     * @param mixed $notifiable
+     * @param  mixed  $notifiable
      * @return \Illuminate\Notifications\Messages\MailMessage
      */
     public function toMail($notifiable)
     {
         $verificationUrl = $this->verificationUrl($notifiable);
         $logoPath = public_path('images/ceit-logo.png');
+
         return (new MailMessage)
             ->subject('Verify Your CEIT Library Account')
             ->view('emails.verify-email', [

@@ -39,9 +39,8 @@ class RulesAndRegulationsTest extends TestCase
 
         $response = $this->get(route('admin.rule-and-regulation'));
         $response->assertStatus(200);
-        
+
         $response->assertSee('General Conduct', false);
         $response->assertSee('Borrowing Policy', false);
     }
 }
-

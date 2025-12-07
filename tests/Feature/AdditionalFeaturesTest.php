@@ -2,14 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicPaper;
+use App\Models\BorrowTransaction;
+use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\Librarian;
-use App\Models\BorrowTransaction;
-use App\Models\AcademicPaper;
 use App\Models\Violation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 
 class AdditionalFeaturesTest extends TestCase
@@ -241,4 +240,3 @@ class AdditionalFeaturesTest extends TestCase
         $this->assertTrue($response->status() === 200);
     }
 }
-

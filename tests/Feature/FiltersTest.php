@@ -116,10 +116,10 @@ class FiltersTest extends TestCase
 
         $response = $this->get(route('admin.academic-paper.index'));
         $response->assertStatus(200);
-        
+
         // Verify department filter dropdown exists
         $response->assertSeeHtml('Department');
-        
+
         // Departments should match config file (this is primarily a frontend check)
     }
 
@@ -145,4 +145,3 @@ class FiltersTest extends TestCase
         $response->assertDontSee('Data Mining', false);
     }
 }
-

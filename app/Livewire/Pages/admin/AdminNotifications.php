@@ -4,26 +4,27 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Component;
-use Livewire\WithPagination;
 use Livewire\Attributes\Title;
+use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Title('Notifications')]
 class AdminNotifications extends AdminComponent
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     public $filterType = '';
+
     public $filterRead = '';
+
     public $perPage = 15;
 
     public function getNotificationsProperty()
     {
         $query = Auth::user()->userNotifications()
-            ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
-            ->when($this->filterRead === 'read', fn($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
+            ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
+            ->when($this->filterRead === 'read', fn ($q) => $q->read())
+            ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);
@@ -37,7 +38,7 @@ class AdminNotifications extends AdminComponent
     public function markAsRead($notificationId)
     {
         $notification = Notification::find($notificationId);
-        
+
         if ($notification && $notification->user_id === Auth::id()) {
             $notification->markAsRead();
             $this->success('Notification marked as read');
@@ -57,7 +58,7 @@ class AdminNotifications extends AdminComponent
     public function deleteNotification($notificationId)
     {
         $notification = Notification::find($notificationId);
-        
+
         if ($notification && $notification->user_id === Auth::id()) {
             $notification->delete();
             $this->success('Notification deleted');

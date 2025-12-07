@@ -43,11 +43,11 @@ class CheckLibrarianAssignments extends Command
         $assignedDates = Librarian::whereNotNull('start_date')
             ->whereBetween('start_date', [$checkStart, $checkEnd])
             ->pluck('start_date')
-            ->map(fn($date) => Carbon::parse($date)->format('Y-m-d'))
+            ->map(fn ($date) => Carbon::parse($date)->format('Y-m-d'))
             ->unique()
             ->toArray();
 
-        $this->info('Assigned dates: ' . (empty($assignedDates) ? 'None' : implode(', ', $assignedDates)));
+        $this->info('Assigned dates: '.(empty($assignedDates) ? 'None' : implode(', ', $assignedDates)));
 
         // Generate all weekday dates (Monday to Saturday, excluding Sunday)
         $allWeekdayDates = [];
@@ -63,7 +63,7 @@ class CheckLibrarianAssignments extends Command
 
         // Find unassigned dates (only future dates)
         $unassignedDates = collect($allWeekdayDates)->filter(function ($date) use ($assignedDates) {
-            return !in_array($date->format('Y-m-d'), $assignedDates) && $date->isFuture();
+            return ! in_array($date->format('Y-m-d'), $assignedDates) && $date->isFuture();
         })->values();
 
         if ($unassignedDates->isEmpty()) {
@@ -88,8 +88,8 @@ class CheckLibrarianAssignments extends Command
         $admins = User::whereHas('role', function ($query) {
             $query->whereIn('name', ['admin', 'super_admin']);
         })
-        ->where('account_status', 'active')
-        ->get();
+            ->where('account_status', 'active')
+            ->get();
 
         if ($admins->isEmpty()) {
             $this->error('✗ No active admins found to send alerts to.');

@@ -26,7 +26,7 @@ class SessionManagementTest extends TestCase
     public function user_is_logged_out_after_session_timeout()
     {
         $user = User::factory()->create();
-        
+
         // Login
         $this->actingAs($user);
         $this->get(route('dashboard'))->assertStatus(200);
@@ -39,4 +39,3 @@ class SessionManagementTest extends TestCase
         $response->assertRedirect(route('login'));
     }
 }
-

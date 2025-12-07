@@ -231,6 +231,7 @@ class CatalogSequenceTest extends TestCase
         // Extract sequence numbers from catalog codes
         $sequences = $papers->map(function ($paper) {
             preg_match('/CEIT-IT-25-(\d+)/', $paper->catalog_code, $matches);
+
             return (int) $matches[1];
         })->sort()->values();
 

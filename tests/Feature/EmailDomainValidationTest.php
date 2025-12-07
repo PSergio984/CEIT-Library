@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Role;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
@@ -50,4 +49,3 @@ class EmailDomainValidationTest extends TestCase
         $this->assertDatabaseHas('users', ['email' => 'janesmith@plv.edu.ph']);
     }
 }
-

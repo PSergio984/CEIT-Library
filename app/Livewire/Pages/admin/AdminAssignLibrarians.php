@@ -3,8 +3,8 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\Librarian;
-use App\Models\User;
 use App\Models\Notification;
+use App\Models\User;
 use Auth;
 use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -14,23 +14,34 @@ use Mary\Traits\Toast;
 #[Title('Librarian Batch Management')]
 class AdminAssignLibrarians extends AdminComponent
 {
-    use Toast, AuthorizesRequests;
+    use AuthorizesRequests, Toast;
 
     public $search = '';
+
     public $batchSearch = '';
+
     public $editModalSearch = '';
+
     public $showCreateModal = false;
+
     public $showEditModal = false;
+
     public $selectedStudents = [];
+
     public $editingBatchNo = null;
+
     public $editingDateStart = null;
+
     public $editingShiftNotes = '';
+
     public $editingSelectedStudents = [];
 
     public $newBatchNo = '';
+
     public $selectedDate = '';
 
     public $filterStatus = '';
+
     public $filterDateStart = null;
 
     protected $listeners = ['batchUpdated' => 'render'];
@@ -43,7 +54,6 @@ class AdminAssignLibrarians extends AdminComponent
         // Automatically update batch statuses based on current date
         $this->updateBatchStatuses();
     }
-
 
     public function getGroupedLibrariansProperty()
     {
@@ -67,12 +77,12 @@ class AdminAssignLibrarians extends AdminComponent
         $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
         $currentDate = $currentBatch && $currentBatch->start_date ? date('Y-m-d', strtotime($currentBatch->start_date)) : null;
 
-        return $currentDate != $this->editingDateStart && !empty($this->editingDateStart);
+        return $currentDate != $this->editingDateStart && ! empty($this->editingDateStart);
     }
 
     public function getConflictingBatchProperty()
     {
-        if (!$this->isDateChanging || empty($this->editingDateStart)) {
+        if (! $this->isDateChanging || empty($this->editingDateStart)) {
             return null;
         }
 
@@ -89,6 +99,7 @@ class AdminAssignLibrarians extends AdminComponent
         }
 
         $date = new \DateTime($this->editingDateStart);
+
         return $date->format('w') == '0';
     }
 
@@ -102,9 +113,9 @@ class AdminAssignLibrarians extends AdminComponent
                 return [
                     'batch_no' => $batchNo,
                     'members' => $librarians->map(function ($lib) {
-                        return $lib->user->first_name . ' ' . $lib->user->last_name;
+                        return $lib->user->first_name.' '.$lib->user->last_name;
                     })->toArray(),
-                    'librarians' => $librarians
+                    'librarians' => $librarians,
                 ];
             });
     }
@@ -113,17 +124,18 @@ class AdminAssignLibrarians extends AdminComponent
     {
         return $this->getLibrariansQueryProperty()
             ->filter(function ($librarians) {
-                return !is_null($librarians->first()->start_date);
+                return ! is_null($librarians->first()->start_date);
             })
             ->map(function ($librarians, $batchNo) {
                 $first = $librarians->first();
+
                 return [
                     'batch_no' => $batchNo,
                     'members' => $librarians->map(function ($lib) {
-                        return $lib->user->first_name . ' ' . $lib->user->last_name;
+                        return $lib->user->first_name.' '.$lib->user->last_name;
                     })->toArray(),
                     'date_assigned' => $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : 'N/A',
-                    'librarians' => $librarians
+                    'librarians' => $librarians,
                 ];
             });
     }
@@ -159,11 +171,12 @@ class AdminAssignLibrarians extends AdminComponent
             $grouped = $grouped->filter(function ($librarians, $batchNo) use ($search) {
                 $first = $librarians->first();
 
-                $createdBy = strtolower(($first->createdBy->first_name ?? '') . ' ' . ($first->createdBy->last_name ?? ''));
+                $createdBy = strtolower(($first->createdBy->first_name ?? '').' '.($first->createdBy->last_name ?? ''));
                 $shiftNotes = strtolower($first->shift_notes ?? '');
 
                 $studentMatch = $librarians->contains(function ($lib) use ($search) {
-                    $fullName = strtolower($lib->user->first_name . ' ' . $lib->user->last_name);
+                    $fullName = strtolower($lib->user->first_name.' '.$lib->user->last_name);
+
                     return stripos($fullName, $search) !== false;
                 });
 
@@ -176,14 +189,15 @@ class AdminAssignLibrarians extends AdminComponent
 
         return $grouped->map(function ($librarians, $batchNo) {
             $first = $librarians->first();
+
             return [
                 'batch_no' => $batchNo,
                 'date_range' => ($first->start_date ? date('Y-m-d', strtotime($first->start_date)) : 'N/A'),
                 'shift_notes' => $first->shift_notes ?? 'N/A',
-                'created_by' => ($first->createdBy->first_name ?? '') . ' ' . ($first->createdBy->last_name ?? ''),
+                'created_by' => ($first->createdBy->first_name ?? '').' '.($first->createdBy->last_name ?? ''),
                 'status' => $first->status,
                 'librarians' => $librarians,
-                'first' => $first
+                'first' => $first,
             ];
         })->values();
     }
@@ -233,12 +247,12 @@ class AdminAssignLibrarians extends AdminComponent
         // Get available students: either students not in any batch, OR users in the current batch (can be librarians)
         // No search or sorting here - Alpine.js handles that client-side for instant response
         $availableStudents = User::where('account_status', 'active')
-            ->where(function($query) use ($studentRoleId, $librarianRoleId, $currentBatchUserIds) {
+            ->where(function ($query) use ($studentRoleId, $librarianRoleId, $currentBatchUserIds) {
                 $query->where('role_id', $studentRoleId)
-                      ->orWhere(function($q) use ($librarianRoleId, $currentBatchUserIds) {
-                          $q->where('role_id', $librarianRoleId)
+                    ->orWhere(function ($q) use ($librarianRoleId, $currentBatchUserIds) {
+                        $q->where('role_id', $librarianRoleId)
                             ->whereIn('id', $currentBatchUserIds);
-                      });
+                    });
             })
             ->whereNotIn('id', $usedUserIds)
             ->select('id', 'first_name', 'last_name', 'email', 'role_id')
@@ -247,7 +261,9 @@ class AdminAssignLibrarians extends AdminComponent
             ->get();
 
         return $availableStudents;
-    }    public function resetFilters()
+    }
+
+    public function resetFilters()
     {
         $this->reset(['batchSearch', 'filterStatus', 'filterDateStart']);
     }
@@ -258,7 +274,7 @@ class AdminAssignLibrarians extends AdminComponent
         $yearPrefix = $currentYear;
 
         // Get the highest batch number for the current year
-        $latestBatch = Librarian::where('batch_no', 'like', $yearPrefix . '%')
+        $latestBatch = Librarian::where('batch_no', 'like', $yearPrefix.'%')
             ->orderBy('batch_no', 'desc')
             ->first();
 
@@ -271,7 +287,7 @@ class AdminAssignLibrarians extends AdminComponent
         }
 
         // Format: YYYY0001, YYYY0002, etc.
-        return $yearPrefix . str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
+        return $yearPrefix.str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function openCreateModal()
@@ -306,7 +322,7 @@ class AdminAssignLibrarians extends AdminComponent
 
             if ($alreadyAssigned->isNotEmpty()) {
                 $studentNames = $alreadyAssigned->map(function ($lib) {
-                    return $lib->user->first_name . ' ' . $lib->user->last_name . ' (Batch: ' . $lib->batch_no . ')';
+                    return $lib->user->first_name.' '.$lib->user->last_name.' (Batch: '.$lib->batch_no.')';
                 })->join(', ');
 
                 throw new \Exception("The following students are already assigned to batches: {$studentNames}");
@@ -347,6 +363,7 @@ class AdminAssignLibrarians extends AdminComponent
 
         if ($librarians->isEmpty()) {
             $this->error('Batch not found.');
+
             return;
         }
 
@@ -355,7 +372,7 @@ class AdminAssignLibrarians extends AdminComponent
         $this->editingBatchNo = $batchNo;
         $this->editingDateStart = $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : '';
         $this->editingShiftNotes = $first->shift_notes ?? '';
-        $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn($id) => (string) $id)->toArray();
+        $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn ($id) => (string) $id)->toArray();
         $this->editModalSearch = ''; // Reset search when opening modal
 
         $this->resetErrorBag();
@@ -372,6 +389,7 @@ class AdminAssignLibrarians extends AdminComponent
             $date = new \DateTime($this->editingDateStart);
             if ($date->format('w') == '0') {
                 $this->error('Sundays are not allowed for librarian duty', 'Invalid Date');
+
                 return;
             }
         }
@@ -387,146 +405,146 @@ class AdminAssignLibrarians extends AdminComponent
 
         try {
             DB::transaction(function () {
-            $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
-            $currentBatchDate = $currentBatch ? $currentBatch->start_date : null;
+                $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
+                $currentBatchDate = $currentBatch ? $currentBatch->start_date : null;
 
-            $isDateChanging = $currentBatchDate != $this->editingDateStart;
-            if ($isDateChanging && $this->editingDateStart) {
-                $conflictingBatch = Librarian::where('batch_no', '!=', $this->editingBatchNo)
-                    ->whereNotNull('start_date')
-                    ->where('start_date', $this->editingDateStart)
-                    ->lockForUpdate()
-                    ->first();
+                $isDateChanging = $currentBatchDate != $this->editingDateStart;
+                if ($isDateChanging && $this->editingDateStart) {
+                    $conflictingBatch = Librarian::where('batch_no', '!=', $this->editingBatchNo)
+                        ->whereNotNull('start_date')
+                        ->where('start_date', $this->editingDateStart)
+                        ->lockForUpdate()
+                        ->first();
 
-                if ($conflictingBatch) {
-                    throw new \Exception("Cannot assign to this date. Batch No. {$conflictingBatch->batch_no} is already assigned to " . date('F j, Y', strtotime($this->editingDateStart)));
-                }
-            }
-
-            $currentStudents = Librarian::where('batch_no', $this->editingBatchNo)->pluck('user_id');
-            $newStudents = collect($this->editingSelectedStudents)->map(fn($id) => (int) $id);
-
-            $studentsToRemove = $currentStudents->diff($newStudents);
-            $studentsToAdd = $newStudents->diff($currentStudents);
-
-            if ($studentsToAdd->isNotEmpty()) {
-                $alreadyAssigned = Librarian::whereIn('user_id', $studentsToAdd)
-                    ->where('batch_no', '!=', $this->editingBatchNo)
-                    ->with('user')
-                    ->get();
-
-                if ($alreadyAssigned->isNotEmpty()) {
-                    $studentNames = $alreadyAssigned->map(function ($lib) {
-                        return $lib->user->first_name . ' ' . $lib->user->last_name . ' (Batch: ' . $lib->batch_no . ')';
-                    })->join(', ');
-
-                    throw new \Exception("The following students are already assigned to other batches: {$studentNames}");
-                }
-            }
-
-            if ($studentsToRemove->isNotEmpty()) {
-                Librarian::where('batch_no', $this->editingBatchNo)
-                    ->whereIn('user_id', $studentsToRemove)
-                    ->delete();
-            }
-
-            if ($studentsToAdd->isNotEmpty()) {
-                foreach ($studentsToAdd as $userId) {
-                    Librarian::create([
-                        'user_id' => $userId,
-                        'batch_no' => $this->editingBatchNo,
-                        'status' => 'inactive',
-                        'start_date' => $this->editingDateStart,
-                        'end_date' => null,
-                        'created_by' => Auth::id(),
-                    ]);
-
-                    // Create notification for newly added students
-                    if ($this->editingDateStart) {
-                        $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
-                        $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. Your duty date is scheduled for {$dutyDate}.";
-                    } else {
-                        $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. You will be notified when your duty date is scheduled.";
+                    if ($conflictingBatch) {
+                        throw new \Exception("Cannot assign to this date. Batch No. {$conflictingBatch->batch_no} is already assigned to ".date('F j, Y', strtotime($this->editingDateStart)));
                     }
-
-                    Notification::create([
-                        'user_id' => $userId,
-                        'type' => 'librarian_assigned',
-                        'title' => 'You have been assigned as a Librarian',
-                        'message' => $message,
-                        'data' => [
-                            'batch_no' => $this->editingBatchNo,
-                            'assigned_by' => Auth::id(),
-                            'start_date' => $this->editingDateStart,
-                        ],
-                    ]);
                 }
-            }
 
-            // Determine status based on date
-            $status = 'inactive';
-            if ($this->editingDateStart) {
-                $today = date('Y-m-d');
-                if ($this->editingDateStart == $today) {
-                    $status = 'active';
-                } elseif ($this->editingDateStart < $today) {
-                    $status = 'expired';
-                }
-            }
+                $currentStudents = Librarian::where('batch_no', $this->editingBatchNo)->pluck('user_id');
+                $newStudents = collect($this->editingSelectedStudents)->map(fn ($id) => (int) $id);
 
-            // Check if duty date is being assigned/changed for existing members
-            $isDateChanging = $this->isDateChanging;
-            $previousDate = $currentBatch ? $currentBatch->start_date : null;
+                $studentsToRemove = $currentStudents->diff($newStudents);
+                $studentsToAdd = $newStudents->diff($currentStudents);
 
-            // Update batch details
-            Librarian::where('batch_no', $this->editingBatchNo)->update([
-                'start_date' => $this->editingDateStart,
-                'end_date' => null,
-                'shift_notes' => $this->editingShiftNotes,
-                'status' => $status,
-            ]);
+                if ($studentsToAdd->isNotEmpty()) {
+                    $alreadyAssigned = Librarian::whereIn('user_id', $studentsToAdd)
+                        ->where('batch_no', '!=', $this->editingBatchNo)
+                        ->with('user')
+                        ->get();
 
-            // Notify existing members if duty date is being assigned or changed
-            if ($isDateChanging && $this->editingDateStart && $currentStudents->isNotEmpty()) {
-                $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
-                
-                foreach ($currentStudents as $userId) {
-                    // Skip users who were just added (they already got notified above)
-                    if ($studentsToAdd->contains($userId)) {
-                        continue;
+                    if ($alreadyAssigned->isNotEmpty()) {
+                        $studentNames = $alreadyAssigned->map(function ($lib) {
+                            return $lib->user->first_name.' '.$lib->user->last_name.' (Batch: '.$lib->batch_no.')';
+                        })->join(', ');
+
+                        throw new \Exception("The following students are already assigned to other batches: {$studentNames}");
                     }
-
-                    $notificationMessage = $previousDate 
-                        ? "Your duty date for librarian batch #{$this->editingBatchNo} has been updated to {$dutyDate}."
-                        : "Your duty date for librarian batch #{$this->editingBatchNo} has been scheduled for {$dutyDate}.";
-
-                    Notification::create([
-                        'user_id' => $userId,
-                        'type' => 'librarian_assigned',
-                        'title' => 'Librarian Duty Date Updated',
-                        'message' => $notificationMessage,
-                        'data' => [
-                            'batch_no' => $this->editingBatchNo,
-                            'start_date' => $this->editingDateStart,
-                            'previous_date' => $previousDate,
-                            'updated_by' => Auth::id(),
-                        ],
-                    ]);
                 }
-            }
 
-            // If date is today, assign librarian role to all students in this batch
-            if ($this->editingDateStart && $this->editingDateStart === date('Y-m-d')) {
-                $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
-                User::whereIn('id', $this->editingSelectedStudents)
-                    ->update(['role_id' => $librarianRoleId]);
-            }
-        });
+                if ($studentsToRemove->isNotEmpty()) {
+                    Librarian::where('batch_no', $this->editingBatchNo)
+                        ->whereIn('user_id', $studentsToRemove)
+                        ->delete();
+                }
+
+                if ($studentsToAdd->isNotEmpty()) {
+                    foreach ($studentsToAdd as $userId) {
+                        Librarian::create([
+                            'user_id' => $userId,
+                            'batch_no' => $this->editingBatchNo,
+                            'status' => 'inactive',
+                            'start_date' => $this->editingDateStart,
+                            'end_date' => null,
+                            'created_by' => Auth::id(),
+                        ]);
+
+                        // Create notification for newly added students
+                        if ($this->editingDateStart) {
+                            $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
+                            $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. Your duty date is scheduled for {$dutyDate}.";
+                        } else {
+                            $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. You will be notified when your duty date is scheduled.";
+                        }
+
+                        Notification::create([
+                            'user_id' => $userId,
+                            'type' => 'librarian_assigned',
+                            'title' => 'You have been assigned as a Librarian',
+                            'message' => $message,
+                            'data' => [
+                                'batch_no' => $this->editingBatchNo,
+                                'assigned_by' => Auth::id(),
+                                'start_date' => $this->editingDateStart,
+                            ],
+                        ]);
+                    }
+                }
+
+                // Determine status based on date
+                $status = 'inactive';
+                if ($this->editingDateStart) {
+                    $today = date('Y-m-d');
+                    if ($this->editingDateStart == $today) {
+                        $status = 'active';
+                    } elseif ($this->editingDateStart < $today) {
+                        $status = 'expired';
+                    }
+                }
+
+                // Check if duty date is being assigned/changed for existing members
+                $isDateChanging = $this->isDateChanging;
+                $previousDate = $currentBatch ? $currentBatch->start_date : null;
+
+                // Update batch details
+                Librarian::where('batch_no', $this->editingBatchNo)->update([
+                    'start_date' => $this->editingDateStart,
+                    'end_date' => null,
+                    'shift_notes' => $this->editingShiftNotes,
+                    'status' => $status,
+                ]);
+
+                // Notify existing members if duty date is being assigned or changed
+                if ($isDateChanging && $this->editingDateStart && $currentStudents->isNotEmpty()) {
+                    $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
+
+                    foreach ($currentStudents as $userId) {
+                        // Skip users who were just added (they already got notified above)
+                        if ($studentsToAdd->contains($userId)) {
+                            continue;
+                        }
+
+                        $notificationMessage = $previousDate
+                            ? "Your duty date for librarian batch #{$this->editingBatchNo} has been updated to {$dutyDate}."
+                            : "Your duty date for librarian batch #{$this->editingBatchNo} has been scheduled for {$dutyDate}.";
+
+                        Notification::create([
+                            'user_id' => $userId,
+                            'type' => 'librarian_assigned',
+                            'title' => 'Librarian Duty Date Updated',
+                            'message' => $notificationMessage,
+                            'data' => [
+                                'batch_no' => $this->editingBatchNo,
+                                'start_date' => $this->editingDateStart,
+                                'previous_date' => $previousDate,
+                                'updated_by' => Auth::id(),
+                            ],
+                        ]);
+                    }
+                }
+
+                // If date is today, assign librarian role to all students in this batch
+                if ($this->editingDateStart && $this->editingDateStart === date('Y-m-d')) {
+                    $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
+                    User::whereIn('id', $this->editingSelectedStudents)
+                        ->update(['role_id' => $librarianRoleId]);
+                }
+            });
         } catch (\Exception $e) {
             $this->error($e->getMessage());
+
             return;
         }
-
 
         $this->success('Batch assignment and members updated successfully! ');
         $this->showEditModal = false;
@@ -581,16 +599,16 @@ class AdminAssignLibrarians extends AdminComponent
             // (assuming batches are for one day only if no end_date is set)
             $activeBatches = Librarian::where('status', 'active')
                 ->whereNotNull('start_date')
-                ->where(function($query) use ($today) {
+                ->where(function ($query) use ($today) {
                     // Either has end_date in the past, or start_date is before today (one-day duty)
-                    $query->where(function($q) use ($today) {
+                    $query->where(function ($q) use ($today) {
                         $q->whereNotNull('end_date')
-                          ->where('end_date', '<', $today);
+                            ->where('end_date', '<', $today);
                     })
-                    ->orWhere(function($q) use ($today) {
-                        $q->whereNull('end_date')
-                          ->where('start_date', '<', $today);
-                    });
+                        ->orWhere(function ($q) use ($today) {
+                            $q->whereNull('end_date')
+                                ->where('start_date', '<', $today);
+                        });
                 })
                 ->get()
                 ->groupBy('batch_no');
@@ -621,7 +639,7 @@ class AdminAssignLibrarians extends AdminComponent
             'availableStudents' => $this->availableStudents,
             'studentBatchAssignments' => $this->studentBatchAssignments,
             'conflictingBatch' => $this->conflictingBatch,
-            'isDateChanging' => $this->isDateChanging
+            'isDateChanging' => $this->isDateChanging,
         ]);
     }
 }

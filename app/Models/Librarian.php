@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 /**
  * @property int $id
@@ -18,6 +18,7 @@ use Carbon\Carbon;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User|null $createdBy
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian active()
  * @method static \Database\Factories\LibrarianFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian newModelQuery()
@@ -32,6 +33,7 @@ use Carbon\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class Librarian extends Model
@@ -88,6 +90,7 @@ class Librarian extends Model
     public function hasPermission($permission)
     {
         $defaultPermissions = ['scan_qr', 'create_violations', 'view_library_logs'];
+
         return in_array($permission, $defaultPermissions);
     }
 
@@ -100,13 +103,13 @@ class Librarian extends Model
             // Start date is today or in the past (or null for no start constraint)
             $q->where(function ($q2) use ($today) {
                 $q2->whereNull('start_date')
-                   ->orWhere('start_date', '<=', $today);
+                    ->orWhere('start_date', '<=', $today);
             })
               // AND (no end date OR end date is in the future)
-              ->where(function ($q2) use ($today) {
-                  $q2->whereNull('end_date')
-                    ->orWhere('end_date', '>', $today); // Note: excludes duties ending today
-              });
+                ->where(function ($q2) use ($today) {
+                    $q2->whereNull('end_date')
+                        ->orWhere('end_date', '>', $today); // Note: excludes duties ending today
+                });
         });
     }
 
@@ -114,8 +117,8 @@ class Librarian extends Model
     public static function getActiveLibrarianByUser($userId)
     {
         return static::where('user_id', $userId)
-                    ->active()
-                    ->first();
+            ->active()
+            ->first();
     }
 
     // Boot method to handle auto-expiry

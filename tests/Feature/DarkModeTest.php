@@ -31,11 +31,10 @@ class DarkModeTest extends TestCase
 
         $response = $this->get(route('student.dashboard'));
         $response->assertStatus(200);
-        
+
         // Dark mode toggle is primarily a frontend feature
         // This test verifies the page loads correctly
         // Check for theme controller if it exists
         $response->assertSeeHtml('theme-controller', false);
     }
 }
-

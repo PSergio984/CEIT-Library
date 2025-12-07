@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\Librarian;
 use App\Models\User;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
 class UpdateLibrarianBatchStatuses extends Command
@@ -60,16 +60,16 @@ class UpdateLibrarianBatchStatuses extends Command
             // Update ACTIVE batches to EXPIRED if their end date has passed OR if it's past their start date
             $activeBatches = Librarian::where('status', 'active')
                 ->whereNotNull('start_date')
-                ->where(function($query) use ($today) {
+                ->where(function ($query) use ($today) {
                     // Either has end_date in the past, or start_date is before today (one-day duty)
-                    $query->where(function($q) use ($today) {
+                    $query->where(function ($q) use ($today) {
                         $q->whereNotNull('end_date')
-                          ->where('end_date', '<', $today);
+                            ->where('end_date', '<', $today);
                     })
-                    ->orWhere(function($q) use ($today) {
-                        $q->whereNull('end_date')
-                          ->where('start_date', '<', $today);
-                    });
+                        ->orWhere(function ($q) use ($today) {
+                            $q->whereNull('end_date')
+                                ->where('start_date', '<', $today);
+                        });
                 })
                 ->get()
                 ->groupBy('batch_no');

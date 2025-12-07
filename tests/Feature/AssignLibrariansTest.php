@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\Librarian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -99,4 +99,3 @@ class AssignLibrariansTest extends TestCase
         $this->assertTrue($nextSunday->isSunday());
     }
 }
-

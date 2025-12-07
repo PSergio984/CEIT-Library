@@ -55,9 +55,8 @@ class TransactionBadgesTest extends TestCase
 
         $response = $this->get(route('admin.logs'));
         $response->assertStatus(200);
-        
+
         // Verify badges are displayed (this is primarily a frontend check)
         // The transactions should be visible with their respective statuses
     }
 }
-

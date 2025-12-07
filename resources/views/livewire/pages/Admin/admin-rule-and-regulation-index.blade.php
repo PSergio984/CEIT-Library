@@ -167,38 +167,110 @@
 
     @can('Admin-access')
         <x-mary-drawer wire:model="openDrawer" class="w-11/12 lg:w-1/3" right>
-            <div class="px-2 py-3">
+            <div class="px-2 py-3" x-data="{
+                rule_header_id: @entangle('form.rule_header_id'),
+                content: @entangle('form.content'),
+                isEditMode: @entangle('isEdit'),
+                originalFields: {
+                    rule_header_id: '',
+                    content: ''
+                },
+                touched: { rule_header_id: false, content: false },
+                errors: { rule_header_id: '', content: '' },
+                resetState() {
+                    this.touched = { rule_header_id: false, content: false };
+                    this.errors = { rule_header_id: '', content: '' };
+                    this.originalFields.rule_header_id = String(this.rule_header_id || '');
+                    this.originalFields.content = this.content || '';
+                },
+                init() {
+                    // Watch for form changes to sync Alpine with Livewire
+                    $watch('$wire.form.rule_header_id', (value) => { this.rule_header_id = value !== undefined && value !== null ? value : ''; if (this.touched.rule_header_id) this.validateField('rule_header_id'); });
+                    $watch('$wire.form.content', (value) => { this.content = value !== undefined && value !== null ? value : ''; if (this.touched.content) this.validateField('content'); });
+                },
+                get isDirty() {
+                    return String(this.rule_header_id) !== String(this.originalFields.rule_header_id) ||
+                           this.content !== this.originalFields.content;
+                },
+                validateField(field) {
+                    this.touched[field] = true;
+                    if (field === 'rule_header_id') {
+                        if (!this.rule_header_id) {
+                            this.errors.rule_header_id = 'Please select a rule category.';
+                        } else {
+                            this.errors.rule_header_id = '';
+                        }
+                    }
+                    if (field === 'content') {
+                        const contentVal = this.content || '';
+                        if (!contentVal) {
+                            this.errors.content = 'Content is required.';
+                        } else if (contentVal.length < 5) {
+                            this.errors.content = 'Content must be at least 5 characters.';
+                        } else if (contentVal.length > 2000) {
+                            this.errors.content = 'Content must not exceed 2000 characters.';
+                        } else {
+                            this.errors.content = '';
+                        }
+                    }
+                },
+                get isFormValid() {
+                    const headerId = this.rule_header_id;
+                    const contentVal = this.content || '';
+                    const fieldsValid = headerId && contentVal.length >= 5 && contentVal.length <= 2000 &&
+                                        !this.errors.rule_header_id && !this.errors.content;
+                    // For edit mode, also require changes to be made
+                    return this.isEditMode ? (this.isDirty && fieldsValid) : fieldsValid;
+                }
+            }" x-init="init(); $watch('$wire.openDrawer', (open) => { if (open) { $nextTick(() => resetState()); } })">
                 <h3 class="text-lg font-semibold mb-4">
                     {{ $isEdit ? 'Edit Rule' : 'Create Rule' }}
                 </h3>
 
                 <x-mary-form wire:submit.prevent="save" class="space-y-4">
-                    <x-mary-select 
-                        label="Header" 
-                        :options="$headers_list" 
-                        option-label="title" 
-                        option-value="id"
-                        placeholder="Select a rule category" 
-                        wire:model="form.rule_header_id" 
-                        hint="Choose the category this rule belongs to"
-                        required 
-                    />
+                    <div>
+                        <x-mary-select 
+                            label="Header" 
+                            :options="$headers_list" 
+                            option-label="title" 
+                            option-value="id"
+                            placeholder="Select a rule category" 
+                            wire:model.live.debounce.300ms="form.rule_header_id"
+                            x-model="rule_header_id"
+                            hint="Choose the category this rule belongs to"
+                            x-on:change="validateField('rule_header_id')"
+                        />
+                        <div x-show="touched.rule_header_id && errors.rule_header_id" x-cloak class="text-red-500 text-xs mt-1" x-text="errors.rule_header_id"></div>
+                    </div>
 
-                    <x-mary-textarea 
-                        label="Content" 
-                        rows="6" 
-                        wire:model.blur="form.content"
-                        placeholder="Enter the rule content (e.g., 'Students must return books within 7 days')"
-                        minlength="5"
-                        maxlength="2000"
-                        hint="Provide clear rule description (5-2000 characters)"
-                        required 
-                    />
+                    <div>
+                        <x-mary-textarea 
+                            label="Content" 
+                            rows="6" 
+                            wire:model.live.debounce.300ms="form.content"
+                            x-model="content"
+                            placeholder="Enter the rule content (e.g., 'Students must return books within 7 days')"
+                            minlength="5"
+                            maxlength="2000"
+                            hint="Provide clear rule description (5-2000 characters)"
+                            x-on:input="validateField('content')"
+                            x-on:blur="validateField('content')"
+                        />
+                        <div x-show="touched.content && errors.content" x-cloak class="text-red-500 text-xs mt-1" x-text="errors.content"></div>
+                    </div>
+
+                    <div x-show="isEditMode && !isDirty && !errors.rule_header_id && !errors.content" x-cloak class="text-base-content/50 text-xs mb-2">
+                        Make changes to enable update
+                    </div>
 
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" @click="$wire.openDrawer = false" class="btn">Cancel</button>
-                        <button type="submit" class="btn btn-primary" wire:loading.attr="disabled" wire:target="save">
-                            <span wire:loading.remove wire:target="save">{{ $isEdit ? 'Update' : 'Create' }}</span>
+                        <button type="submit" class="btn btn-primary" 
+                            wire:loading.attr="disabled" 
+                            wire:target="save"
+                            x-bind:disabled="!isFormValid"
+                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isFormValid }">
+                            <span wire:loading.remove wire:target="save" x-text="isEditMode ? 'Update' : 'Create'"></span>
                             <span wire:loading wire:target="save" class="loading loading-spinner loading-xs"></span>
                         </button>
                     </div>

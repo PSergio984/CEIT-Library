@@ -2,13 +2,13 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use App\Models\User;
 use App\Models\ScoreIncrement;
-use App\Models\ViolationTransaction;
+use App\Models\User;
 use App\Models\Violation;
+use App\Models\ViolationTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Tests\TestCase;
 
 class ConcurrentCreditScoreTest extends TestCase
 {
@@ -56,7 +56,7 @@ class ConcurrentCreditScoreTest extends TestCase
         for ($i = 0; $i < 5; $i++) {
             $increments->push(ScoreIncrement::create([
                 'user_id' => $user->id,
-                'name' => 'Test Reward ' . $i,
+                'name' => 'Test Reward '.$i,
                 'description' => 'Test',
                 'score_value' => 10,
             ]));
@@ -183,7 +183,7 @@ class ConcurrentCreditScoreTest extends TestCase
             for ($i = 0; $i < 10; $i++) {
                 ScoreIncrement::create([
                     'user_id' => $user->id,
-                    'name' => 'Rapid Reward ' . $i,
+                    'name' => 'Rapid Reward '.$i,
                     'description' => 'Race condition test',
                     'score_value' => 5,
                 ]);

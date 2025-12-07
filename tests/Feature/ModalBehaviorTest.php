@@ -32,7 +32,7 @@ class ModalBehaviorTest extends TestCase
 
         $response = $this->get(route('admin.academic-paper.index'));
         $response->assertStatus(200);
-        
+
         // Modal behavior is tested in frontend/browser tests
         // This test verifies the page loads correctly
     }
@@ -46,8 +46,7 @@ class ModalBehaviorTest extends TestCase
 
         $response = $this->get(route('admin.academic-paper.index'));
         $response->assertStatus(200);
-        
+
         // Modal behavior is tested in frontend/browser tests
     }
 }
-

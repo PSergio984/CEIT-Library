@@ -4,9 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Tests\TestCase;
@@ -76,7 +74,7 @@ class EmailVerificationTest extends TestCase
         );
 
         $this->actingAs($user)->get($verificationUrl);
-        
+
         // Welcome email should be sent after verification
         Mail::assertSent(function ($mail) use ($user) {
             return str_contains($mail->subject, 'Welcome') &&
@@ -124,4 +122,3 @@ class EmailVerificationTest extends TestCase
         });
     }
 }
-

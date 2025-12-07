@@ -16,8 +16,7 @@ class ResponsiveDesignTest extends TestCase
         // We can verify the page loads correctly
         $response = $this->get('/');
         $response->assertStatus(200);
-        
+
         // Responsive design is tested with browser tools or visual regression testing
     }
 }
-

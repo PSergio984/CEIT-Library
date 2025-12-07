@@ -30,8 +30,9 @@ class SendTestLibrarianAlertUrgent extends Command
     {
         $email = $this->argument('email');
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $this->error("Invalid email address: {$email}");
+
             return Command::FAILURE;
         }
 
@@ -71,6 +72,7 @@ class SendTestLibrarianAlertUrgent extends Command
 
         } catch (\Exception $e) {
             $this->error("✗ Failed to send test email: {$e->getMessage()}");
+
             return Command::FAILURE;
         }
     }

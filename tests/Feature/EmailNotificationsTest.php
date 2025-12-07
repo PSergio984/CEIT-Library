@@ -76,4 +76,3 @@ class EmailNotificationsTest extends TestCase
         // Actual email content verification would be in integration tests
     }
 }
-

@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\AcademicPaper;
-use App\Models\Inventory;
-use App\Models\BorrowTransaction;
 use App\Models\Attendance;
+use App\Models\BorrowTransaction;
+use App\Models\Inventory;
 use App\Models\Librarian;
+use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
@@ -17,6 +17,7 @@ use Tests\Traits\TestHelper;
 class WorkingTest extends TestCase
 {
     use TestHelper;
+
     public function test_basic_models_work()
     {
         // Test User creation
@@ -126,7 +127,7 @@ class WorkingTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         // Test user relationships

@@ -1,10 +1,6 @@
 {
-    "agents": [
-        "cursor"
-    ],
-    "editors": [
-        "cursor"
-    ],
+    "agents": ["vscode"],
+    "editors": ["vscode"],
     "guidelines": [],
     "herd_mcp": true
 }

@@ -8,18 +8,19 @@ use Mary\Traits\Toast;
 class CreateAcademicPaper extends AdminComponent
 {
     use Toast;
+
     public AcademicPaperForm $form;
 
     public function save()
     {
-        //returns the created academic paper
+        // returns the created academic paper
         $this->form->store();
 
         // using maryui toast, notify the user of success, then redirects them to their previous page
         $this->success(
-            "New Academic Paper created",
+            'New Academic Paper created',
             'Academic Paper Created Successfully!',
-            redirectTo: "/admin/academic-papers"
+            redirectTo: '/admin/academic-papers'
         );
     }
 

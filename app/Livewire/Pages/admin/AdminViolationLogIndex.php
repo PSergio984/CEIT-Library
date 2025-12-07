@@ -2,10 +2,8 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
-
-use Livewire\Attributes\Title;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
 
 #[Title('Violation Management')]
 #[Lazy]

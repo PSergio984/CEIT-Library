@@ -4,29 +4,31 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
+use App\Models\Inventory;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
-use Livewire\Attributes\Lazy;
-use App\Traits\CreatesQrCanonicalMessage;
-use App\Models\Inventory;
-
 
 #[Title('Academic Paper List')]
 #[Lazy]
 class AdminAcademicPaperIndex extends AdminComponent
 {
+    use CreatesQrCanonicalMessage;
     use Toast;
     use WithPagination;
-    use CreatesQrCanonicalMessage;
+
     // QR Code properties for admin QR modal
     public ?string $qrCode = null;
+
     public ?int $selectedCopyId = null;
+
     /**
      * Request QR code for a specific inventory copy (admin context)
      */
@@ -36,11 +38,13 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         if (! $copy) {
             session()->flash('error', 'Copy not found.');
+
             return;
         }
 
         if (! $copy->isAvailable()) {
             session()->flash('error', 'This copy is not available.');
+
             return;
         }
 
@@ -107,6 +111,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         if (! $this->selectedCopyId) {
             return null;
         }
+
         return Inventory::with('academicPaper')->find($this->selectedCopyId);
     }
 
@@ -310,7 +315,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 }
             })
             ->when($this->search, function ($query) {
-                $search = '%' . $this->search . '%';
+                $search = '%'.$this->search.'%';
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
@@ -422,7 +427,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function performDelete(?int $paperId = null): void
     {
         // Only admin and super_admin can delete academic papers
-        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
+        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can delete academic papers.');
             $this->deleteId = null;
             $this->dispatch('close-delete-modal');
@@ -445,8 +450,8 @@ class AdminAcademicPaperIndex extends AdminComponent
 
             if ($borrowedCopies > 0) {
                 $this->error(
-                    "Cannot delete this academic paper. {$borrowedCopies} " .
-                        ($borrowedCopies === 1 ? 'copy is' : 'copies are') .
+                    "Cannot delete this academic paper. {$borrowedCopies} ".
+                        ($borrowedCopies === 1 ? 'copy is' : 'copies are').
                         ' currently borrowed.',
                     'Deletion Not Allowed'
                 );
@@ -481,7 +486,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->dispatch('close-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
-            $this->error('Failed to delete academic paper: ' . $e->getMessage());
+            $this->error('Failed to delete academic paper: '.$e->getMessage());
             $this->deleteId = null;
         }
     }
@@ -500,7 +505,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         return Cache::remember(
             "academic_paper_{$this->form->academicPaperId}_copy_count",
             60, // 1 minute cache
-            fn() => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
+            fn () => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
         );
     }
 
@@ -508,7 +513,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function create(): void
     {
         // Only admin and super_admin can create academic papers
-        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
+        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can create academic papers.');
 
             return;
@@ -539,7 +544,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function edit(int $id): void
     {
         // Only admin and super_admin can edit academic papers
-        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
+        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can edit academic papers.');
 
             return;
@@ -773,15 +778,15 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->lastAuthorSearch = $value;
 
         // Use persistent cache with short TTL for search results
-        $cacheKey = 'author_search_' . md5(strtolower(trim($value)));
+        $cacheKey = 'author_search_'.md5(strtolower(trim($value)));
 
         $results = Cache::remember($cacheKey, 300, function () use ($value) {
             $query = \App\Models\Author::query()
                 ->select('id', 'name')
                 ->orderBy('name');
 
-            if (!empty($value)) {
-                $query->where('name', 'like', '%' . $value . '%');
+            if (! empty($value)) {
+                $query->where('name', 'like', '%'.$value.'%');
             }
 
             return $query->limit(50)->get();
@@ -789,10 +794,10 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Always include selected authors in options for correct tag rendering
         $selectedIds = $this->form->author_ids ?? [];
-        $selectedAuthors = !empty($selectedIds)
+        $selectedAuthors = ! empty($selectedIds)
             ? \App\Models\Author::whereIn('id', $selectedIds)
-            ->select('id', 'name')
-            ->get()
+                ->select('id', 'name')
+                ->get()
             : collect();
 
         // Merge search results and selected authors, remove duplicates
@@ -958,11 +963,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         return AcademicPaper::with([
-            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'authors' => fn ($q) => $q->select('authors.id', 'authors.name'),
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
+            'copies' => fn ($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 
@@ -1002,7 +1007,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function confirmDelete(int $paperId): void
     {
         // Only admin and super_admin can delete academic papers
-        if (!Auth::check() || !Auth::user()->hasAdminAccess()) {
+        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
             $this->error('Only administrators can delete academic papers.');
 
             return;
@@ -1053,6 +1058,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 );
                 $this->copyToDelete = null;
                 $this->dispatch('close-copy-delete-modal');
+
                 return;
             }
 
@@ -1090,7 +1096,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->dispatch('close-copy-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
-            $this->error('Failed to delete copy: ' . $e->getMessage());
+            $this->error('Failed to delete copy: '.$e->getMessage());
             $this->copyToDelete = null;
         }
     }

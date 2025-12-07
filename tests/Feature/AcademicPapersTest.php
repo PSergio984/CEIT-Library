@@ -2,14 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
-use App\Models\User;
 use App\Models\AcademicPaper;
 use App\Models\Dean;
 use App\Models\ResearchAdviser;
+use App\Models\Role;
 use App\Models\TechnicalAdviser;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class AcademicPapersTest extends TestCase
@@ -129,4 +128,3 @@ class AcademicPapersTest extends TestCase
         $this->assertTrue($response->status() === 200);
     }
 }
-

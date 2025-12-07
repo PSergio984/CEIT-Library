@@ -48,7 +48,7 @@ class StudentDashboardTest extends TestCase
 
         $response = $this->get(route('dashboard'));
         $response->assertStatus(200);
-        
+
         // Verify personal stats are displayed
         $response->assertSee('Credit Score', false);
     }
@@ -61,7 +61,7 @@ class StudentDashboardTest extends TestCase
 
         $academicPaper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create(['academic_paper_id' => $academicPaper->id]);
-        
+
         BorrowTransaction::factory()->create([
             'user_id' => $student->id,
             'academic_paper_id' => $academicPaper->id,
@@ -78,9 +78,8 @@ class StudentDashboardTest extends TestCase
         // Student borrow history is accessible through transactions route
         $response = $this->get(route('transactions'));
         $response->assertStatus(200);
-        
+
         // Verify only student's own transactions are shown
         $response->assertSee($academicPaper->title, false);
     }
 }
-

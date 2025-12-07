@@ -18,6 +18,7 @@ class VerifyEmailController extends Controller
         if ($request->user()->hasVerifiedEmail()) {
             // Logout user even if already verified for security
             Auth::logout();
+
             return redirect()->route('login')->with('verified', 'Email already verified. You can now log in.');
         }
 

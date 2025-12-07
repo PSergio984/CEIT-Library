@@ -5,7 +5,6 @@ namespace Tests\Feature;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
@@ -160,4 +159,3 @@ class ManageRolesTest extends TestCase
         $this->assertTrue($student->isSuperAdmin());
     }
 }
-

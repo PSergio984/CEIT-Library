@@ -110,6 +110,16 @@ class extends Component
         <form wire:submit="resetPassword" class="space-y-7" x-data="{
             showPassword: false,
             showConfirmPassword: false,
+            password: '',
+            password_confirmation: '',
+            touched: {
+                password: false,
+                password_confirmation: false
+            },
+            errors: {
+                password: '',
+                password_confirmation: ''
+            },
             requirements: {
                 length: false,
                 uppercase: false,
@@ -118,11 +128,43 @@ class extends Component
                 symbol: false
             },
             evaluatePassword(value) {
+                this.password = value;
                 this.requirements.length = value && value.length >= 8;
                 this.requirements.uppercase = /[A-Z]/.test(value || '');
                 this.requirements.lowercase = /[a-z]/.test(value || '');
                 this.requirements.number = /\d/.test(value || '');
                 this.requirements.symbol = /[!@#$%^&*(),.?:{}|<>\[\]\\\/]/.test(value || '');
+            },
+            validateField(field) {
+                this.touched[field] = true;
+                if (field === 'password') {
+                    if (!this.password) {
+                        this.errors.password = 'Password is required.';
+                    } else if (!this.requirements.length || !this.requirements.uppercase || !this.requirements.lowercase || !this.requirements.number || !this.requirements.symbol) {
+                        this.errors.password = 'Password does not meet all requirements.';
+                    } else {
+                        this.errors.password = '';
+                    }
+                    // Also validate confirmation if touched
+                    if (this.touched.password_confirmation) {
+                        this.validateField('password_confirmation');
+                    }
+                } else if (field === 'password_confirmation') {
+                    if (!this.password_confirmation) {
+                        this.errors.password_confirmation = 'Please confirm your password.';
+                    } else if (this.password_confirmation !== this.password) {
+                        this.errors.password_confirmation = 'Passwords do not match.';
+                    } else {
+                        this.errors.password_confirmation = '';
+                    }
+                }
+            },
+            get isFormValid() {
+                const allReqsMet = this.requirements.length && this.requirements.uppercase && 
+                                  this.requirements.lowercase && this.requirements.number && 
+                                  this.requirements.symbol;
+                return this.password && this.password_confirmation && 
+                       allReqsMet && this.password === this.password_confirmation;
             }
         }">
             <div>
@@ -133,6 +175,7 @@ class extends Component
                                   class="block w-full px-4 py-3 pr-12 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500 transition-all duration-200"
                                   autocomplete="new-password"
                                   x-on:input="evaluatePassword($event.target.value)"
+                                  x-on:blur="validateField('password')"
                     />
                     <button type="button" 
                             @click="showPassword = !showPassword"
@@ -188,7 +231,9 @@ class extends Component
                                   ::type="showConfirmPassword ? 'text' : 'password'"
                                   placeholder="Confirm Password"
                                   class="block w-full px-4 py-3 pr-12 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500 transition-all duration-200"
-                                  autocomplete="new-password"/>
+                                  autocomplete="new-password"
+                                  x-on:input="password_confirmation = $event.target.value"
+                                  x-on:blur="validateField('password_confirmation')"/>
                     <button type="button" 
                             @click="showConfirmPassword = !showConfirmPassword"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700 transition-colors duration-200">
@@ -202,11 +247,21 @@ class extends Component
                     </button>
                 </div>
                 <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2"/>
+                <template x-if="touched.password_confirmation && errors.password_confirmation && !$wire.__instance.snapshot.memo.errors?.password_confirmation">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.password_confirmation"></p>
+                </template>
             </div>
             <div class="flex flex-col items-center mt-6">
                 <button type="submit"
-                        class="w-full bg-[#273F4F] text-white font-bold rounded-lg py-4 text-lg shadow-md hover:bg-[#1d2c38] hover:shadow-lg active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#273F4F] focus:ring-offset-2">
-                    {{ __('Reset Password') }}
+                        class="w-full bg-[#273F4F] text-white font-bold rounded-lg py-4 text-lg shadow-md hover:bg-[#1d2c38] hover:shadow-lg active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#273F4F] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        x-bind:disabled="!isFormValid"
+                        wire:loading.attr="disabled"
+                        wire:target="resetPassword">
+                    <span wire:loading.remove wire:target="resetPassword">{{ __('Reset Password') }}</span>
+                    <span wire:loading wire:target="resetPassword" class="flex items-center justify-center">
+                        <span class="loading loading-spinner loading-sm mr-2"></span>
+                        Processing...
+                    </span>
                 </button>
             </div>
         </form>

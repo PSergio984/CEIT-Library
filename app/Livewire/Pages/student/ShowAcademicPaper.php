@@ -11,8 +11,10 @@ class ShowAcademicPaper extends Component
 {
     use WithPagination;
 
-    public array $sortBy = ['column' => 'id', 'direction' => 'asc',];
+    public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
+
     public int $perPage = 2;
+
     public bool $isModalOpen = false;
 
     public array $headers = [
@@ -23,7 +25,7 @@ class ShowAcademicPaper extends Component
 
     public ?AcademicPaper $academicPaper = null;
 
-    public function mount(AcademicPaper $academicPaper = null)
+    public function mount(?AcademicPaper $academicPaper = null)
     {
         if ($academicPaper) {
             $this->academicPaper = $academicPaper->load('authors', 'copies');
@@ -45,7 +47,7 @@ class ShowAcademicPaper extends Component
 
     public function updatedIsModalOpen(): void
     {
-        if (!$this->isModalOpen) {
+        if (! $this->isModalOpen) {
             $this->academicPaper = null;
         }
     }
@@ -53,7 +55,7 @@ class ShowAcademicPaper extends Component
     #[Computed]
     public function rows(): array
     {
-        if (!$this->academicPaper) {
+        if (! $this->academicPaper) {
             return [];
         }
 
@@ -70,6 +72,7 @@ class ShowAcademicPaper extends Component
     }
 
     public function requestQr($_id) {}
+
     public function render()
     {
         return view('livewire.pages.student.show-academic-paper');

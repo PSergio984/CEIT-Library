@@ -286,20 +286,20 @@ class BorrowTransaction extends Model
 
         $parts = [];
         if ($diff->d > 0) {
-            $parts[] = $diff->d . ' ' . \Illuminate\Support\Str::plural('day', $diff->d);
+            $parts[] = $diff->d.' '.\Illuminate\Support\Str::plural('day', $diff->d);
         }
         if ($diff->h > 0) {
-            $parts[] = $diff->h . ' ' . \Illuminate\Support\Str::plural('hour', $diff->h);
+            $parts[] = $diff->h.' '.\Illuminate\Support\Str::plural('hour', $diff->h);
         }
         if ($diff->i > 0 && $diff->d === 0) {
-            $parts[] = $diff->i . ' ' . \Illuminate\Support\Str::plural('minute', $diff->i);
+            $parts[] = $diff->i.' '.\Illuminate\Support\Str::plural('minute', $diff->i);
         }
 
         if (empty($parts)) {
             return 'less than a minute overdue';
         }
 
-        return implode(', ', $parts) . ' overdue';
+        return implode(', ', $parts).' overdue';
     }
 
     // Update status to expired if overdue

@@ -30,7 +30,7 @@ class NavigationTest extends TestCase
 
         $response = $this->get(route('admin.manage-roles'));
         $response->assertStatus(200);
-        
+
         // Verify breadcrumb is present (this is primarily a frontend check)
         $response->assertSee('Dashboard', false);
         $response->assertSee('Manage Roles', false);
@@ -48,7 +48,7 @@ class NavigationTest extends TestCase
 
         $response = $this->get(route('admin.academic-paper.index'));
         $response->assertStatus(200);
-        
+
         // Active menu highlighting is primarily a frontend feature
     }
 
@@ -60,8 +60,7 @@ class NavigationTest extends TestCase
 
         $response = $this->get(route('admin.dashboard'));
         $response->assertStatus(200);
-        
+
         // Sidebar collapse/expand is primarily a frontend feature
     }
 }
-

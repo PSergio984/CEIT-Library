@@ -82,7 +82,7 @@ class ProfileManagementTest extends TestCase
             $user->refresh();
             $this->assertTrue(Hash::check($newPassword, $user->password));
         } catch (\Exception $e) {
-            $this->markTestSkipped('Volt component profile.update-password-form not found: ' . $e->getMessage());
+            $this->markTestSkipped('Volt component profile.update-password-form not found: '.$e->getMessage());
         }
     }
 
@@ -105,8 +105,7 @@ class ProfileManagementTest extends TestCase
 
             $component->assertHasErrors('password');
         } catch (\Exception $e) {
-            $this->markTestSkipped('Volt component profile.update-password-form not found: ' . $e->getMessage());
+            $this->markTestSkipped('Volt component profile.update-password-form not found: '.$e->getMessage());
         }
     }
 }
-

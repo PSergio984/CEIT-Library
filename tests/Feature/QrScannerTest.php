@@ -42,10 +42,9 @@ class QrScannerTest extends TestCase
             ->set('qrCode', 'invalid-qr-code-data');
 
         $component->call('scanQrCode');
-        
+
         // Verify error is shown inline (not in modal)
         $component->assertHasErrors();
         // The error should be displayed in a dismissible panel within the scanner
     }
 }
-

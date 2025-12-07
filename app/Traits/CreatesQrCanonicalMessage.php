@@ -38,9 +38,10 @@ trait CreatesQrCanonicalMessage
         try {
             $json = json_encode($data);
             $encrypted = Crypt::encryptString($json);
+
             return $encrypted;
         } catch (\Exception $e) {
-            \Log::error('QR Encryption Error: ' . $e->getMessage());
+            \Log::error('QR Encryption Error: '.$e->getMessage());
             throw $e;
         }
     }
@@ -53,9 +54,11 @@ trait CreatesQrCanonicalMessage
         try {
             $decrypted = Crypt::decryptString($encryptedData);
             $data = json_decode($decrypted, true);
+
             return $data;
         } catch (\Exception $e) {
-            \Log::error('QR Decryption Error: ' . $e->getMessage());
+            \Log::error('QR Decryption Error: '.$e->getMessage());
+
             return null;
         }
     }

@@ -2,11 +2,11 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
 use App\Models\Attendance;
-use App\Models\User;
 use App\Models\Librarian;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Attendance>
@@ -33,7 +33,7 @@ class AttendanceFactory extends Factory
         $status = $timeOut ? 'completed' : 'active';
 
         // Only pick students for attendance, not super_admin
-        $user = User::whereHas('role', function($q) {
+        $user = User::whereHas('role', function ($q) {
             $q->where('name', 'student');
         })->inRandomOrder()->first() ?? User::factory()->create();
 
@@ -55,6 +55,7 @@ class AttendanceFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $timeIn = Carbon::now()->subMinutes($this->faker->numberBetween(30, 300));
+
             return [
                 'time_in' => $timeIn,
                 'time_out' => null,

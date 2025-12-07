@@ -35,9 +35,8 @@ class TransactionHistoryTest extends TestCase
 
         $response = $this->get(route('admin.logs'));
         $response->assertStatus(200);
-        
+
         // Verify sidebar is visible (this is primarily a frontend check)
         // The page should load successfully with transaction data
     }
 }
-

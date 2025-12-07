@@ -3,8 +3,8 @@
 namespace Tests\Feature;
 
 use App\Models\Role;
-use App\Models\User;
 use App\Models\ScoreIncrement;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -45,4 +45,3 @@ class CreditScoreHistoryTest extends TestCase
         // Note: Exact implementation depends on the actual page
     }
 }
-

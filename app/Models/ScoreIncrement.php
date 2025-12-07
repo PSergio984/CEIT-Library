@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read mixed $status
  * @property-read \App\Models\User $user
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement byScoreRange($minScore = null, $maxScore = null)
  * @method static \Database\Factories\ScoreIncrementFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement goodStanding()
@@ -28,6 +29,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereScoreValue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ScoreIncrement whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class ScoreIncrement extends Model
@@ -138,10 +140,19 @@ class ScoreIncrement extends Model
     // Get credit score status
     public function getStatusAttribute()
     {
-        if ($this->score_value >= 70) return 'Excellent';
-        if ($this->score_value >= 50) return 'Good';
-        if ($this->score_value >= 30) return 'Fair';
-        if ($this->score_value >= 10) return 'Poor';
+        if ($this->score_value >= 70) {
+            return 'Excellent';
+        }
+        if ($this->score_value >= 50) {
+            return 'Good';
+        }
+        if ($this->score_value >= 30) {
+            return 'Fair';
+        }
+        if ($this->score_value >= 10) {
+            return 'Poor';
+        }
+
         return 'Critical';
     }
 
@@ -175,6 +186,7 @@ class ScoreIncrement extends Model
         if ($maxScore !== null) {
             $query->where('score_value', '<=', $maxScore);
         }
+
         return $query;
     }
 

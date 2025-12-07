@@ -49,4 +49,3 @@ class PageTitleTest extends TestCase
         $response->assertSee('Profile', false);
     }
 }
-

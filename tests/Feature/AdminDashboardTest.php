@@ -2,11 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\AcademicPaper;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\AcademicPaper;
-use App\Models\BorrowTransaction;
-use App\Models\Attendance;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -100,4 +98,3 @@ class AdminDashboardTest extends TestCase
         $this->assertEquals($paperCount, AcademicPaper::count());
     }
 }
-

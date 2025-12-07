@@ -53,11 +53,11 @@ class QrCodeDownloadController extends Controller
 
         // Encrypt the QR payload
         $qrPayload = $this->createEncryptedQrMessage($payload);
-        $filename = 'qr-code-inv-' . $copy->id . '.png';
+        $filename = 'qr-code-inv-'.$copy->id.'.png';
 
         // Generate and stream the QR code
         return response()->streamDownload(
-            fn() => print QrCode::size(500)->format('png')->generate($qrPayload),
+            fn () => print QrCode::size(500)->format('png')->generate($qrPayload),
             $filename,
             ['Content-Type' => 'image/png']
         );

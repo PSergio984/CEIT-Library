@@ -6,8 +6,8 @@ use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminDashboard;
-use App\Livewire\Pages\Admin\AdminNotifications;
 use App\Livewire\Pages\Admin\AdminManageRoles;
+use App\Livewire\Pages\Admin\AdminNotifications;
 use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
 use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
 use App\Livewire\Pages\Admin\AdminUserList;
@@ -137,4 +137,4 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

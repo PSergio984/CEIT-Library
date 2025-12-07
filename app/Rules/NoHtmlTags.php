@@ -13,8 +13,6 @@ class NoHtmlTags implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  string  $attribute
-     * @param  mixed  $value
      * @param  \Closure(string $message, ?string $attribute = null): void  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void

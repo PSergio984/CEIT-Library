@@ -42,7 +42,7 @@ class DatePickerValidationTest extends TestCase
         // The component should prevent past dates when saving
         // This is tested by checking the isSunday property and date validation logic
         $component->assertSet('editingDateStart', now()->subDay()->toDateString());
-        
+
         // The actual validation would occur when calling updateBatchDate or similar method
         // For now, we verify the component loads and can set dates
     }
@@ -55,4 +55,3 @@ class DatePickerValidationTest extends TestCase
         Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin', 'description' => 'Super Admin']);
     }
 }
-

@@ -8,7 +8,6 @@ use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Violation;
-use App\Models\ViolationTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -51,7 +50,7 @@ class AttendanceManagementTest extends TestCase
         ]);
 
         $student = User::factory()->create(['role_id' => $this->getRoleId('student'), 'credit_score' => 100]);
-        
+
         // Create active attendance (forgot to time out) using the active() state
         $attendance = Attendance::factory()->active()->create([
             'user_id' => $student->id,
@@ -93,4 +92,3 @@ class AttendanceManagementTest extends TestCase
         $this->assertLessThan(100, $student->credit_score);
     }
 }
-

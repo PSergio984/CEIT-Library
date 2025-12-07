@@ -3,11 +3,12 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Rules\ProperName;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Lazy;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -15,7 +16,7 @@ use Mary\Traits\Toast;
 #[Lazy]
 class AdminAdvisersDeans extends AdminComponent
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     // Active tab: 'research', 'technical', 'deans', or 'authors'
     public string $activeTab = 'research';
@@ -25,13 +26,20 @@ class AdminAdvisersDeans extends AdminComponent
 
     // Modal visibility
     public bool $showCreateModal = false;
+
     public bool $showEditModal = false;
+
     public bool $showDeleteModal = false;
 
     // Form data (primitives only)
     public ?int $editingId = null;
+
+    #[Validate]
     public string $name = '';
+
     public ?int $deleteId = null;
+
+    private ?string $originalName = null;
 
     // Table headers
     public array $headers = [
@@ -51,7 +59,7 @@ class AdminAdvisersDeans extends AdminComponent
         $allowedTables = ['research_advisers', 'technical_advisers', 'deans', 'authors'];
         $table = $this->getTableName();
 
-        if (!in_array($table, $allowedTables, true)) {
+        if (! in_array($table, $allowedTables, true)) {
             \Log::warning('Invalid table name requested', ['table' => $table, 'activeTab' => $this->activeTab]);
             throw new \InvalidArgumentException('Invalid data source requested.');
         }
@@ -80,7 +88,7 @@ class AdminAdvisersDeans extends AdminComponent
                     "{$table}.id",
                     "{$table}.name",
                     "{$table}.created_at",
-                    DB::raw("COUNT(academic_paper_authors.academic_paper_id) as papers_count")
+                    DB::raw('COUNT(academic_paper_authors.academic_paper_id) as papers_count'),
                 ])
                 ->leftJoin('academic_paper_authors', 'academic_paper_authors.author_id', '=', "{$table}.id")
                 ->when($searchPattern, function ($query) use ($table, $searchPattern) {
@@ -96,7 +104,7 @@ class AdminAdvisersDeans extends AdminComponent
                 "{$table}.id",
                 "{$table}.name",
                 "{$table}.created_at",
-                DB::raw("COUNT(academic_papers.id) as papers_count")
+                DB::raw('COUNT(academic_papers.id) as papers_count'),
             ])
             ->leftJoin('academic_papers', "academic_papers.{$relatedColumn}", '=', "{$table}.id")
             ->when($searchPattern, function ($query) use ($table, $searchPattern) {
@@ -152,6 +160,7 @@ class AdminAdvisersDeans extends AdminComponent
     public function openCreateModal()
     {
         $this->reset(['name', 'editingId']);
+        $this->originalName = null;
         $this->showCreateModal = true;
     }
 
@@ -159,36 +168,21 @@ class AdminAdvisersDeans extends AdminComponent
     {
         $entry = DB::table($this->getTableName())->find($id);
 
-        if (!$entry) {
+        if (! $entry) {
             $this->error('Entry not found');
+
             return;
         }
 
         $this->editingId = $id;
         $this->name = $entry->name;
+        $this->originalName = $entry->name;
         $this->showEditModal = true;
     }
 
     public function save()
     {
-        $entityType = $this->getEntityType();
-
-        $this->validate([
-            'name' => [
-                'required',
-                'string',
-                'min:2',
-                'max:255',
-                new ProperName,
-                'unique:' . $this->getTableName() . ',name,' . ($this->editingId ?? 'NULL') . ',id',
-            ],
-        ], [
-            'name.required' => "The {$entityType} name is required.",
-            'name.string' => "The {$entityType} name must be valid text.",
-            'name.min' => "The {$entityType} name must be at least 2 characters.",
-            'name.max' => "The {$entityType} name cannot exceed 255 characters.",
-            'name.unique' => "This {$entityType} name already exists.",
-        ]);
+        $this->validate();
 
         $table = $this->getTableName();
         $trimmedName = trim($this->name);
@@ -234,8 +228,9 @@ class AdminAdvisersDeans extends AdminComponent
 
     public function delete(): void
     {
-        if (!$this->deleteId) {
+        if (! $this->deleteId) {
             $this->closeModals();
+
             return;
         }
 
@@ -258,6 +253,7 @@ class AdminAdvisersDeans extends AdminComponent
             $this->error('Cannot delete: This entry is being used by academic papers');
             $this->showDeleteModal = false;
             $this->deleteId = null;
+
             return;
         }
 
@@ -274,6 +270,71 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showEditModal = false;
         $this->showDeleteModal = false;
         $this->reset(['name', 'editingId', 'deleteId']);
+        $this->originalName = null;
+    }
+
+    public function rules(): array
+    {
+        $entityType = $this->getEntityType();
+
+        // Build unique rule conditionally: exclude ID only when editing
+        $uniqueRule = 'unique:' . $this->getTableName() . ',name';
+        if ($this->editingId) {
+            $uniqueRule .= ',' . $this->editingId . ',id';
+        }
+
+        return [
+            'name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:255',
+                new ProperName,
+                $uniqueRule,
+            ],
+        ];
+    }
+
+    public function messages(): array
+    {
+        $entityType = $this->getEntityType();
+
+        return [
+            'name.required' => "The {$entityType} name is required.",
+            'name.string' => "The {$entityType} name must be valid text.",
+            'name.min' => "The {$entityType} name must be at least 2 characters.",
+            'name.max' => "The {$entityType} name cannot exceed 255 characters.",
+            'name.unique' => "This {$entityType} name already exists.",
+        ];
+    }
+
+    public function getIsFormValidProperty(): bool
+    {
+        $name = trim($this->name ?? '');
+
+        // Check if name is filled and valid
+        $nameValid = !empty($name) && strlen($name) >= 2 && strlen($name) <= 255;
+
+        // Check for validation errors
+        $hasErrors = $this->getErrorBag()->has('name');
+
+        $fieldsValid = $nameValid && !$hasErrors;
+
+        // For edit mode, also require form to be dirty
+        if ($this->editingId) {
+            return $fieldsValid && $this->isFormDirty();
+        }
+
+        return $fieldsValid;
+    }
+
+    private function isFormDirty(): bool
+    {
+        if (!$this->editingId || $this->originalName === null) {
+            return false;
+        }
+
+        return trim($this->name) !== trim($this->originalName);
     }
 
     private function clearCaches()

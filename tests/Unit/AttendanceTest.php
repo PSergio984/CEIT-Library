@@ -24,7 +24,7 @@ class AttendanceTest extends TestCase
         $user = User::factory()->create();
 
         $attendance = Attendance::factory()->create([
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         $this->assertInstanceOf(Attendance::class, $attendance);
@@ -33,7 +33,7 @@ class AttendanceTest extends TestCase
 
     public function test_attendance_has_fillable_attributes()
     {
-        $attendance = new Attendance();
+        $attendance = new Attendance;
         $fillable = $attendance->getFillable();
 
         $this->assertContains('user_id', $fillable);
@@ -52,7 +52,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Check if the relationship exists
@@ -62,7 +62,7 @@ class AttendanceTest extends TestCase
         } else {
             // If relationship doesn't exist, just verify the attendance was created
             $this->assertDatabaseHas('attendances', [
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         }
     }
@@ -75,7 +75,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => Carbon::now()->addHours(2),
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         $this->assertInstanceOf(Carbon::class, $attendance->time_in);
@@ -90,7 +90,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $this->assertNull($attendance->time_out);
@@ -104,7 +104,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Check if the isActive method exists
@@ -124,7 +124,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now()->subHours(2),
             'time_out' => Carbon::now(),
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         // Check if the isActive method exists
@@ -150,7 +150,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => $timeIn,
             'time_out' => $timeOut,
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         // Check if the accessor exists
@@ -170,7 +170,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Check if the accessor exists
@@ -190,7 +190,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now()->subHours(2),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Check if the method exists
@@ -212,7 +212,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         // Check if the isActive method exists
@@ -233,14 +233,14 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $completedAttendance = Attendance::create([
             'user_id' => $user->id,
             'time_in' => Carbon::now()->subHours(2),
             'time_out' => Carbon::now(),
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         $this->assertEquals('active', $activeAttendance->status);
@@ -255,7 +255,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $this->assertNotNull($attendance->created_at);
@@ -272,7 +272,7 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => Carbon::now(),
             'time_out' => null,
-            'status' => 'active'
+            'status' => 'active',
         ]);
 
         $attendanceId = $attendance->id;
@@ -295,14 +295,14 @@ class AttendanceTest extends TestCase
             'user_id' => $user->id,
             'time_in' => $fixedTime->copy()->subHours(2),   // 13:00
             'time_out' => $fixedTime->copy(),               // 15:00 (2 hours)
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         Attendance::create([
             'user_id' => $user->id,
             'time_in' => $fixedTime->copy()->subHours(3),   // 12:00
             'time_out' => $fixedTime->copy()->subHours(1),  // 14:00 (2 hours)
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         // Check if the relationship exists
@@ -314,6 +314,7 @@ class AttendanceTest extends TestCase
                     if ($attendance->time_in && $attendance->time_out) {
                         return $attendance->time_in->diffInHours($attendance->time_out);
                     }
+
                     return 0;
                 });
 

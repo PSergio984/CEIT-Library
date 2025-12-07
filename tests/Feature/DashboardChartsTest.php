@@ -36,9 +36,8 @@ class DashboardChartsTest extends TestCase
 
         $response = $this->get(route('admin.dashboard'));
         $response->assertStatus(200);
-        
+
         // Verify charts are present (this is primarily a frontend check)
         $response->assertSee('Dashboard', false);
     }
 }
-

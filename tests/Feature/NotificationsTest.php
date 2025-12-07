@@ -57,4 +57,3 @@ class NotificationsTest extends TestCase
         ]);
     }
 }
-

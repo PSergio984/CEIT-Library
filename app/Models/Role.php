@@ -15,8 +15,11 @@ class Role extends Model
 
     // Role constants
     const STUDENT = 'student';
+
     const LIBRARIAN = 'librarian';
+
     const ADMIN = 'admin';
+
     const SUPER_ADMIN = 'super_admin';
 
     /**

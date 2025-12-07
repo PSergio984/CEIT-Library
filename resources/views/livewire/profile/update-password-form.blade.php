@@ -67,7 +67,65 @@ new class extends Component
             <form wire:submit="updatePassword" class="space-y-5" x-data="{
                 showCurrentPassword: false,
                 showNewPassword: false,
-                showConfirmPassword: false
+                showConfirmPassword: false,
+                fields: {
+                    current_password: '',
+                    password: '',
+                    password_confirmation: ''
+                },
+                touched: {
+                    current_password: false,
+                    password: false,
+                    password_confirmation: false
+                },
+                errors: {
+                    current_password: '',
+                    password: '',
+                    password_confirmation: ''
+                },
+                validateField(field) {
+                    this.touched[field] = true;
+                    const value = this.fields[field] || '';
+                    
+                    switch(field) {
+                        case 'current_password':
+                            if (!value) {
+                                this.errors.current_password = 'Current password is required.';
+                            } else {
+                                this.errors.current_password = '';
+                            }
+                            break;
+                        case 'password':
+                            if (!value) {
+                                this.errors.password = 'New password is required.';
+                            } else if (value.length < 8) {
+                                this.errors.password = 'Password must be at least 8 characters.';
+                            } else {
+                                this.errors.password = '';
+                            }
+                            // Also validate confirmation if touched
+                            if (this.touched.password_confirmation) {
+                                this.validateField('password_confirmation');
+                            }
+                            break;
+                        case 'password_confirmation':
+                            if (!value) {
+                                this.errors.password_confirmation = 'Please confirm your password.';
+                            } else if (value !== this.fields.password) {
+                                this.errors.password_confirmation = 'Passwords do not match.';
+                            } else {
+                                this.errors.password_confirmation = '';
+                            }
+                            break;
+                    }
+                },
+                get isFormValid() {
+                    return this.fields.current_password && this.fields.password && 
+                           this.fields.password_confirmation && 
+                           this.fields.password.length >= 8 &&
+                           this.fields.password === this.fields.password_confirmation &&
+                           !this.errors.current_password && !this.errors.password && !this.errors.password_confirmation;
+                }
             }">
                 {{-- Current Password --}}
                 <div class="form-control">
@@ -83,6 +141,8 @@ new class extends Component
                             placeholder="Enter your current password"
                             class="input input-bordered focus:input-primary w-full transition-all pr-12"
                             autocomplete="current-password"
+                            x-on:input="fields.current_password = $event.target.value"
+                            x-on:blur="validateField('current_password')"
                         />
                         <button 
                             type="button" 
@@ -100,6 +160,9 @@ new class extends Component
                         </button>
                     </div>
                     <x-input-error :messages="$errors->get('current_password')" class="mt-2" />
+                    <template x-if="touched.current_password && errors.current_password && !$wire.__instance.snapshot.memo.errors?.current_password">
+                        <p class="text-red-500 text-xs mt-1" x-text="errors.current_password"></p>
+                    </template>
                 </div>
 
                 {{-- New Password --}}
@@ -116,6 +179,8 @@ new class extends Component
                             placeholder="Enter your new password"
                             class="input input-bordered focus:input-primary w-full transition-all pr-12"
                             autocomplete="new-password"
+                            x-on:input="fields.password = $event.target.value"
+                            x-on:blur="validateField('password')"
                         />
                         <button 
                             type="button" 
@@ -159,6 +224,8 @@ new class extends Component
                             placeholder="Re-enter your new password"
                             class="input input-bordered focus:input-primary w-full transition-all pr-12"
                             autocomplete="new-password"
+                            x-on:input="fields.password_confirmation = $event.target.value"
+                            x-on:blur="validateField('password_confirmation')"
                         />
                         <button 
                             type="button" 
@@ -176,6 +243,9 @@ new class extends Component
                         </button>
                     </div>
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
+                    <template x-if="touched.password_confirmation && errors.password_confirmation && !$wire.__instance.snapshot.memo.errors?.password_confirmation">
+                        <p class="text-red-500 text-xs mt-1" x-text="errors.password_confirmation"></p>
+                    </template>
                 </div>
 
                 {{-- Submit Button & Success Message --}}
@@ -184,7 +254,9 @@ new class extends Component
                         type="submit"
                         wire:loading.attr="disabled"
                         wire:target="updatePassword"
-                        class="btn btn-primary btn-block gap-2 shadow-lg">
+                        x-bind:disabled="!isFormValid"
+                        class="btn btn-primary btn-block gap-2 shadow-lg"
+                        x-bind:class="{ 'btn-disabled opacity-50': !isFormValid }">
                         <svg wire:loading.remove wire:target="updatePassword" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                         </svg>

@@ -57,4 +57,3 @@ class NameInputValidationTest extends TestCase
         $component->assertHasNoErrors();
     }
 }
-

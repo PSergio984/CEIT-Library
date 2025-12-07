@@ -47,9 +47,9 @@ class AdminManageRoles extends AdminComponent
         // Search by name or email
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('first_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%');
+                $q->where('first_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('last_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('email', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -76,9 +76,9 @@ class AdminManageRoles extends AdminComponent
 
         if ($this->search) {
             $query->where(function ($q) {
-                $q->where('first_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('last_name', 'like', '%' . $this->search . '%')
-                    ->orWhere('email', 'like', '%' . $this->search . '%');
+                $q->where('first_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('last_name', 'like', '%'.$this->search.'%')
+                    ->orWhere('email', 'like', '%'.$this->search.'%');
             });
         }
 
@@ -116,8 +116,9 @@ class AdminManageRoles extends AdminComponent
 
         // Only super admins can promote to admin or super_admin role
         if (in_array($newRole->name, [Role::ADMIN, Role::SUPER_ADMIN])) {
-            if (!Auth::user()->isSuperAdmin()) {
+            if (! Auth::user()->isSuperAdmin()) {
                 $this->error('Only Super Admins can promote users to Admin or Super Admin roles!');
+
                 return;
             }
         }
@@ -126,16 +127,16 @@ class AdminManageRoles extends AdminComponent
 
         // Create notification for role change
         $roleChangeMessage = "Your role has been changed from {$oldRole} to {$newRole->display_name}.";
-        
+
         // Add specific message based on new role
         if ($newRole->name === Role::LIBRARIAN) {
-            $roleChangeMessage .= " You now have librarian privileges.";
+            $roleChangeMessage .= ' You now have librarian privileges.';
         } elseif ($newRole->name === Role::ADMIN) {
-            $roleChangeMessage .= " You now have administrative privileges.";
+            $roleChangeMessage .= ' You now have administrative privileges.';
         } elseif ($newRole->name === Role::SUPER_ADMIN) {
-            $roleChangeMessage .= " You now have full system access.";
+            $roleChangeMessage .= ' You now have full system access.';
         } elseif ($newRole->name === Role::STUDENT) {
-            $roleChangeMessage .= " Your privileges have been adjusted accordingly.";
+            $roleChangeMessage .= ' Your privileges have been adjusted accordingly.';
         }
 
         Notification::create([
@@ -154,7 +155,7 @@ class AdminManageRoles extends AdminComponent
 
         // Create notification for admin who made the change
         $adminMessage = "You successfully changed {$user->first_name} {$user->last_name}'s role from {$oldRole} to {$newRole->display_name}.";
-        
+
         Notification::create([
             'user_id' => Auth::id(),
             'type' => 'user_activity',
@@ -162,7 +163,7 @@ class AdminManageRoles extends AdminComponent
             'message' => $adminMessage,
             'data' => [
                 'target_user_id' => $user->id,
-                'target_user_name' => $user->first_name . ' ' . $user->last_name,
+                'target_user_name' => $user->first_name.' '.$user->last_name,
                 'old_role_id' => $user->role_id,
                 'old_role_name' => $oldRole,
                 'new_role_id' => $this->selectedRoleId,

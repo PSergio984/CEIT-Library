@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Models\Attendance;
-use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,9 +39,8 @@ class RealtimeUpdatesTest extends TestCase
 
         $response = $this->get(route('admin.attendance'));
         $response->assertStatus(200);
-        
+
         // Verify page loads (real-time updates are primarily a frontend feature)
         // Wire polling should be configured in the Livewire component
     }
 }
-

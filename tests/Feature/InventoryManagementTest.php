@@ -39,4 +39,3 @@ class InventoryManagementTest extends TestCase
         $response->assertStatus(200);
     }
 }
-

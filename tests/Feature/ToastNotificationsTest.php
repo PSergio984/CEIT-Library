@@ -63,7 +63,7 @@ class ToastNotificationsTest extends TestCase
 
         $component->call('store');
         $component->assertHasNoErrors();
-        
+
         // Success toast should be dispatched (this is primarily a frontend check)
     }
 
@@ -81,8 +81,7 @@ class ToastNotificationsTest extends TestCase
 
         $component->call('store');
         $component->assertHasErrors();
-        
+
         // Error toast should be dispatched (this is primarily a frontend check)
     }
 }
-

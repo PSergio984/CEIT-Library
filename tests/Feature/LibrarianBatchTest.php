@@ -79,4 +79,3 @@ class LibrarianBatchTest extends TestCase
         ]);
     }
 }
-

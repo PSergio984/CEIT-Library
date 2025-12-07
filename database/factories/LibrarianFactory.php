@@ -7,7 +7,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Librarian>
  */
@@ -45,7 +44,7 @@ class LibrarianFactory extends Factory
     {
         return $this->afterCreating(function (Librarian $librarian) {
             $year = date('Y');
-            $librarian->batch_no = $year . str_pad($librarian->id, 4, '0', STR_PAD_LEFT);
+            $librarian->batch_no = $year.str_pad($librarian->id, 4, '0', STR_PAD_LEFT);
             $librarian->save();
         });
     }

@@ -30,9 +30,8 @@ class QrCodeGenerationTest extends TestCase
 
         $response = $this->get(route('profile'));
         $response->assertStatus(200);
-        
+
         // Verify QR code is displayed (this is primarily a frontend check)
         $response->assertSee('QR', false);
     }
 }
-

@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\Librarian;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Tests\TestCase;

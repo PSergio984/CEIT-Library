@@ -52,10 +52,10 @@ class PaginationAndLoadingTest extends TestCase
 
         $response = $this->get(route('admin.manage-roles'));
         $response->assertStatus(200);
-        
+
         // Verify page loads (pagination is handled by Livewire lazy loading)
         // Pagination controls would be visible after content loads
-        
+
         // When clicking next page, loading overlay should appear
         // Note: This is primarily a frontend behavior, but we can verify pagination works
         $response = $this->get(route('admin.manage-roles', ['page' => 2]));
@@ -75,14 +75,14 @@ class PaginationAndLoadingTest extends TestCase
 
         $response = $this->get(route('admin.manage-roles'));
         $response->assertStatus(200);
-        
+
         // Verify page loads (statistics cards are loaded via Livewire lazy loading)
         // Statistics cards would show total counts after content loads
-        
+
         // Change to page 2
         $response = $this->get(route('admin.manage-roles', ['page' => 2]));
         $response->assertStatus(200);
-        
+
         // Statistics should remain the same (showing totals, not page counts)
         // This is verified by the fact that the page loads successfully
     }
@@ -99,14 +99,14 @@ class PaginationAndLoadingTest extends TestCase
 
         $response = $this->get(route('admin.academic-paper.index'));
         $response->assertStatus(200);
-        
+
         // Verify page loads (pagination is handled by Livewire lazy loading)
         // Pagination controls would be visible after content loads
-        
+
         // Navigate to page 2
         $response = $this->get(route('admin.academic-paper.index', ['page' => 2]));
         $response->assertStatus(200);
-        
+
         // Verify no duplicate records (this is handled by Laravel pagination)
     }
 
@@ -121,7 +121,7 @@ class PaginationAndLoadingTest extends TestCase
 
         $response = $this->get(route('admin.academic-paper.index'));
         $response->assertStatus(200);
-        
+
         // Verify page loads (lazy loading is primarily a frontend feature)
         // The backend should return data efficiently
     }
@@ -145,9 +145,8 @@ class PaginationAndLoadingTest extends TestCase
             'department' => 'Computer Science',
         ]));
         $response->assertStatus(200);
-        
+
         // Verify filtered results are returned
         // Loading state is primarily a frontend feature
     }
 }
-

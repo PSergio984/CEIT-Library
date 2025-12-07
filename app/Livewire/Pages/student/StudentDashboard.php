@@ -8,8 +8,8 @@ use App\Models\BorrowTransaction;
 use App\Models\ScoreIncrement;
 use App\Models\ViolationTransaction;
 use Illuminate\Support\Facades\Auth;
-use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
@@ -63,8 +63,8 @@ class StudentDashboard extends Component
             ->map(function ($borrow) {
                 return [
                     'type' => 'borrow',
-                    'title' => 'Borrowed: ' . $borrow->inventory->academicPaper->title,
-                    'description' => 'Status: ' . ucfirst($borrow->status),
+                    'title' => 'Borrowed: '.$borrow->inventory->academicPaper->title,
+                    'description' => 'Status: '.ucfirst($borrow->status),
                     'date' => $borrow->created_at,
                     'icon' => 'o-book-open',
                     'color' => $borrow->status === 'started' ? 'text-warning' : 'text-success',
@@ -106,6 +106,7 @@ class StudentDashboard extends Component
             ->map(function ($increment) {
                 $name = trim($increment->name ?? '');
                 $score = $increment->score_value ?? 0;
+
                 return [
                     'type' => 'reward',
                     'points' => $score > 0 ? "+$score" : (string) $score,
@@ -124,6 +125,7 @@ class StudentDashboard extends Component
                 $penalty = $violation->violation_penalty
                     ?? ($violation->violation ? $violation->violation->penalty_score : 0)
                     ?? 0;
+
                 return [
                     'type' => 'penalty',
                     'points' => $penalty > 0 ? "-$penalty" : (string) $penalty,
@@ -131,12 +133,12 @@ class StudentDashboard extends Component
                     'date' => $violation->created_at,
                 ];
             });
+
         return $history->merge($increments)
             ->merge($violations)
             ->sortByDesc('date')
             ->take(5);
     }
-
 
     #[Computed]
     public function availablePapers()

@@ -6,7 +6,6 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
-use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class PasswordValidationTest extends TestCase
@@ -49,4 +48,3 @@ class PasswordValidationTest extends TestCase
         $response->assertStatus(429); // Too Many Requests
     }
 }
-

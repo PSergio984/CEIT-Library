@@ -74,4 +74,3 @@ class AuthorManagementTest extends TestCase
         $this->assertTrue($paper->authors->contains($author));
     }
 }
-

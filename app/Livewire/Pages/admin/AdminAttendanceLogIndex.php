@@ -294,14 +294,14 @@ class AdminAttendanceLogIndex extends AdminComponent
 
             // Validate HMAC secret
             $secret = config('app.qr_hmac_secret');
-            if (!is_string($secret) || strlen($secret) < 16) {
+            if (! is_string($secret) || strlen($secret) < 16) {
                 Log::error('QR HMAC secret missing or insecure');
 
                 return 'invalid';
             }
 
             // Validate required fields
-            if (!isset($data['user_id']) || !isset($data['timestamp']) || !isset($data['nonce']) || !isset($data['hash'])) {
+            if (! isset($data['user_id']) || ! isset($data['timestamp']) || ! isset($data['nonce']) || ! isset($data['hash'])) {
                 Log::warning('QR code missing required fields');
 
                 return 'invalid';
@@ -354,16 +354,19 @@ class AdminAttendanceLogIndex extends AdminComponent
             }
 
             // Verify hash for tamper protection
-            $canonicalMessage = $this->createCanonicalMessage($data);
+            // Remove hash from data before creating canonical message to avoid circular dependency
+            $dataForCanonical = $data;
+            unset($dataForCanonical['hash']);
+            $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
             $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
-            if (!hash_equals($expectedHash, $data['hash'])) {
+            if (! hash_equals($expectedHash, $data['hash'])) {
                 Log::warning('QR code hash mismatch - possible tampering detected');
 
                 return 'invalid';
             }
 
             $user = \App\Models\User::find($data['user_id']);
-            if (!$user) {
+            if (! $user) {
                 Log::warning('User not found in QR code', ['user_id' => $data['user_id']]);
 
                 return 'invalid';
@@ -538,7 +541,7 @@ class AdminAttendanceLogIndex extends AdminComponent
             $filterDescription[] = 'Date: ' . date('M d, Y', strtotime($this->selectedDate));
         }
 
-        $filterText = !empty($filterDescription) ? implode(' | ', $filterDescription) : 'All Records';
+        $filterText = ! empty($filterDescription) ? implode(' | ', $filterDescription) : 'All Records';
 
         // Generate PDF
         $pdf = Pdf::loadView('pdf.attendance-log', [

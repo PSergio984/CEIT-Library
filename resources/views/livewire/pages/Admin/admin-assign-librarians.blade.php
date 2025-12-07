@@ -360,7 +360,7 @@
                 <div class="bg-base-300 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2 rounded-b-lg">
                     <button type="button" wire:click="createBatch"
                         {{ $this->availableStudents->isEmpty() || count($selectedStudents) !== 5 ? 'disabled' : '' }}
-                        class="btn btn-primary w-full sm:w-auto">
+                        class="btn btn-primary w-full sm:w-auto {{ $this->availableStudents->isEmpty() || count($selectedStudents) !== 5 ? 'opacity-50 cursor-not-allowed' : '' }}">
                         Create Batch
                     </button>
                     <button type="button" wire:click="$set('showCreateModal', false)"
@@ -685,7 +685,7 @@
                     <div class="bg-base-300 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse gap-2 rounded-b-lg">
                         <button type="button" wire:click="saveBatchAssignment"
                             {{ $this->conflictingBatch || count($editingSelectedStudents) !== 5 ? 'disabled' : '' }}
-                            class="btn btn-primary w-full sm:w-auto">
+                            class="btn btn-primary w-full sm:w-auto {{ $this->conflictingBatch || count($editingSelectedStudents) !== 5 ? 'opacity-50 cursor-not-allowed' : '' }}">
                             {{ $editingDateStart ? 'Save & Assign Date' : 'Save Batch' }}
                         </button>
                         <button type="button" wire:click="$set('showEditModal', false)"
