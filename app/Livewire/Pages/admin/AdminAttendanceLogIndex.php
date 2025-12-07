@@ -4,7 +4,11 @@ namespace App\Livewire\Pages\admin;
 
 use App\Models\Attendance;
 use App\Models\Role;
+use App\Traits\CreatesQrCanonicalMessage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
@@ -14,7 +18,7 @@ use Mary\Traits\Toast;
 #[Lazy]
 class AdminAttendanceLogIndex extends AdminComponent
 {
-    use Toast, WithPagination;
+    use CreatesQrCanonicalMessage, Toast, WithPagination;
 
     public $perPage = 20;
 
@@ -25,6 +29,13 @@ class AdminAttendanceLogIndex extends AdminComponent
     public $roleFilter = '';
 
     public $selectedDate = '';
+
+    // QR Scanner modal properties
+    public $showQrModal = false;
+
+    public $scannedQrData = '';
+
+    public $isProcessingQr = false;
 
     // Listeners for QR scanner events
     protected $listeners = ['attendanceRecorded'];
@@ -110,7 +121,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                     'id' => $attendance->id,
                     'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
                     'role_name' => $attendance->role?->name ?? 'N/A',
-                    'role_badge_color' => match(strtolower($attendance->role?->name ?? '')) {
+                    'role_badge_color' => match (strtolower($attendance->role?->name ?? '')) {
                         'student' => 'badge-success',
                         'librarian' => 'badge-info',
                         'admin', 'super_admin', 'super admin' => 'badge-error',
@@ -180,8 +191,304 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     public function openScanner()
     {
-        // Dispatch event to QR scanner component to start scanning
-        $this->dispatch('startScanning');
+        $this->showQrModal = true;
+        $this->scannedQrData = '';
+        $this->isProcessingQr = false;
+        $this->dispatch('qr-modal-opened');
+    }
+
+    public function closeQrModal()
+    {
+        $this->showQrModal = false;
+        $this->scannedQrData = '';
+        $this->isProcessingQr = false;
+        $this->dispatch('qr-modal-closed');
+    }
+
+    public function processScannedQr($qrData)
+    {
+        Log::info('=== Attendance QR Processing Started ===');
+        Log::info('Raw QR Data:', ['data' => $qrData]);
+
+        $this->isProcessingQr = true;
+
+        try {
+            $this->scannedQrData = $qrData;
+
+            // Basic validation
+            $data = trim($qrData);
+
+            if (empty($data)) {
+                $this->error('Invalid QR code: Empty data', 'Scan Error');
+                $this->isProcessingQr = false;
+
+                return ['found' => false];
+            }
+
+            // Decrypt and validate the attendance data
+            $decryptedData = $this->decryptAndValidateAttendanceData($data);
+
+            if ($decryptedData === 'expired') {
+                $this->error('QR code has expired. Please refresh the page and generate a new QR code.', 'QR Code Expired');
+                $this->isProcessingQr = false;
+
+                return ['found' => false];
+            }
+            if ($decryptedData === 'replay_attack') {
+                $this->error('This QR code has already been used twice (check-in and check-out). Please refresh the page to generate a new QR code.', 'QR Code Already Used');
+                $this->isProcessingQr = false;
+
+                return ['found' => false];
+            }
+            if ($decryptedData === 'invalid') {
+                $this->error('Invalid QR code. This could be due to tampering, incorrect format, or network issues. Please try generating a new QR code.', 'Invalid QR Code');
+                $this->isProcessingQr = false;
+
+                return ['found' => false];
+            }
+
+            // Process the attendance
+            $result = $this->processAttendance($decryptedData);
+
+            if ($result['success']) {
+                Log::info('Attendance recorded successfully', [
+                    'user_id' => $decryptedData['user_id'],
+                    'action' => $result['action'],
+                ]);
+
+                $this->success($result['message'], $result['title']);
+                $this->dispatch('attendanceRecorded', attendance: $result['attendance']);
+                $this->resetPage();
+                $this->isProcessingQr = false;
+
+                return ['found' => true];
+            } else {
+                $this->error($result['message'], $result['title']);
+                $this->isProcessingQr = false;
+
+                return ['found' => false];
+            }
+        } catch (\Exception $e) {
+            Log::error('QR Scanner Error: ' . $e->getMessage(), [
+                'exception' => $e,
+                'data_length' => strlen($qrData ?? ''),
+            ]);
+
+            $this->error('An error occurred while processing the QR code', 'System Error');
+            $this->isProcessingQr = false;
+
+            return ['found' => false];
+        }
+    }
+
+    /**
+     * Decrypt and validate the attendance QR code data
+     * Copied from QrScanner component
+     */
+    private function decryptAndValidateAttendanceData(string $encryptedData)
+    {
+        try {
+            // Decrypt the data
+            $decryptedJson = Crypt::decryptString($encryptedData);
+            $data = json_decode($decryptedJson, true);
+
+            // Validate HMAC secret
+            $secret = config('app.qr_hmac_secret');
+            if (!is_string($secret) || strlen($secret) < 16) {
+                Log::error('QR HMAC secret missing or insecure');
+
+                return 'invalid';
+            }
+
+            // Validate required fields
+            if (!isset($data['user_id']) || !isset($data['timestamp']) || !isset($data['nonce']) || !isset($data['hash'])) {
+                Log::warning('QR code missing required fields');
+
+                return 'invalid';
+            }
+
+            // Check nonce usage (prevent replay attacks)
+            $nonce = $data['nonce'];
+            $cacheKey = 'qr_nonce:' . hash('sha256', $nonce);
+            $usageCount = Cache::increment($cacheKey, 1);
+
+            // Set TTL on first use
+            if ($usageCount === 1) {
+                Cache::put($cacheKey, 1, 86400); // 24 hours
+            }
+
+            // Allow max 2 uses (check-in and check-out)
+            if ($usageCount > 2) {
+                Log::warning('QR code nonce already used more than twice', [
+                    'usage_count' => $usageCount,
+                    'nonce_hash' => hash('sha256', $nonce),
+                ]);
+
+                return 'replay_attack';
+            }
+
+            // Validate timestamp (prevent expired QR codes)
+            $qrTimestamp = (int) $data['timestamp'];
+            $now = time();
+            $maxFuture = $now + 300; // 5 minutes clock skew tolerance
+            $minPast = $now - 86400; // 24 hours validity
+
+            if ($qrTimestamp > $maxFuture) {
+                Log::warning('QR code timestamp is in the future', [
+                    'qrTimestamp' => $qrTimestamp,
+                    'now' => $now,
+                    'maxFuture' => $maxFuture,
+                ]);
+
+                return 'invalid';
+            }
+            if ($qrTimestamp < $minPast) {
+                Log::info('QR code has expired', [
+                    'qrTimestamp' => $qrTimestamp,
+                    'now' => $now,
+                    'minPast' => $minPast,
+                    'maxFuture' => $maxFuture,
+                ]);
+
+                return 'expired';
+            }
+
+            // Verify hash for tamper protection
+            $canonicalMessage = $this->createCanonicalMessage($data);
+            $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+            if (!hash_equals($expectedHash, $data['hash'])) {
+                Log::warning('QR code hash mismatch - possible tampering detected');
+
+                return 'invalid';
+            }
+
+            $user = \App\Models\User::find($data['user_id']);
+            if (!$user) {
+                Log::warning('User not found in QR code', ['user_id' => $data['user_id']]);
+
+                return 'invalid';
+            }
+
+            return [
+                'user_id' => $data['user_id'],
+                'timestamp' => $qrTimestamp,
+                'user' => $user,
+                'nonce_cache_key' => $cacheKey,
+                'current_usage_count' => $usageCount,
+            ];
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            Log::warning('QR code decryption failed - possible tampering', ['error' => $e->getMessage()]);
+
+            return 'invalid';
+        } catch (\Exception $e) {
+            Log::error('Unexpected error during QR validation', ['error' => $e->getMessage()]);
+
+            return 'invalid';
+        }
+    }
+
+    /**
+     * Process the attendance based on scanned QR data
+     * Copied from QrScanner component
+     */
+    private function processAttendance(array $data): array
+    {
+        $userId = $data['user_id'];
+        $user = $data['user'];
+
+        // Get the librarian ID of the current user
+        $currentUser = \Illuminate\Support\Facades\Auth::user();
+        $scannedBy = $currentUser?->librarianDuty?->id;
+
+        // Check if user has an active session
+        $activeSession = Attendance::getActiveSession($userId);
+
+        if ($activeSession) {
+            // User is checking out (time out)
+            try {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($activeSession, $user) {
+                    $activeSession->time_out = \Carbon\Carbon::now();
+                    $activeSession->status = 'completed';
+                    $activeSession->calculateDuration();
+                    $activeSession->save();
+
+                    $minutes = (int) $activeSession->duration_minutes;
+                    $durationText = $this->formatDuration($minutes);
+
+                    return [
+                        'success' => true,
+                        'message' => "Goodbye, {$user->first_name}! You stayed for {$durationText}.",
+                        'title' => 'Check-out Successful',
+                        'attendance' => $activeSession,
+                        'action' => 'checkout',
+                    ];
+                });
+            } catch (\Exception $e) {
+                Log::error('Check-out transaction failed', [
+                    'user_id' => $activeSession->user_id,
+                    'attendance_id' => $activeSession->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => "Database error during check-out: {$e->getMessage()}. Please contact the librarian for assistance.",
+                    'title' => 'Check-out Failed',
+                ];
+            }
+        } else {
+            // User is checking in (time in)
+            try {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $scannedBy, $user) {
+                    $attendance = Attendance::create([
+                        'user_id' => $userId,
+                        'scanned_by' => $scannedBy,
+                        'time_in' => \Carbon\Carbon::now(),
+                        'status' => 'active',
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'message' => "Welcome, {$user->first_name}! You've been checked in successfully.",
+                        'title' => 'Check-in Successful',
+                        'attendance' => $attendance,
+                        'action' => 'checkin',
+                    ];
+                });
+            } catch (\Exception $e) {
+                Log::error('Check-in transaction failed', [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => "Database error during check-in: {$e->getMessage()}. Please contact the librarian for assistance.",
+                    'title' => 'Check-in Failed',
+                ];
+            }
+        }
+    }
+
+    /**
+     * Format duration in a human-readable way
+     */
+    private function formatDuration(int $minutes): string
+    {
+        if ($minutes < 1) {
+            return 'less than 1 minute';
+        } elseif ($minutes < 60) {
+            return $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes');
+        } else {
+            $hours = (int) floor($minutes / 60);
+            $remainingMinutes = $minutes % 60;
+            $hoursText = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
+            if ($remainingMinutes > 0) {
+                return $hoursText . ' and ' . $remainingMinutes . ' ' . ($remainingMinutes === 1 ? 'minute' : 'minutes');
+            }
+
+            return $hoursText;
+        }
     }
 
     public function attendanceRecorded()

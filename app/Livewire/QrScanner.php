@@ -286,7 +286,7 @@ class QrScanner extends Component
         } elseif ($minutes < 60) {
             return $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes');
         } else {
-            $hours = floor($minutes / 60);
+            $hours = (int) floor($minutes / 60);
             $remainingMinutes = $minutes % 60;
             $hoursText = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
             if ($remainingMinutes > 0) {

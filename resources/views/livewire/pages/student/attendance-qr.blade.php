@@ -26,8 +26,8 @@
             <div class="bg-white p-6 rounded-xl shadow-inner">
              <img src="{{ $this->qrCodeDataUri }}" 
                  alt="Student attendance QR code for {{ $user->first_name ?? 'Unknown' }} {{ $user->last_name ?? '' }}. Scan to record attendance at the library."
-                 class="w-64 h-64"
-                 style="image-rendering: pixelated;"/>
+                 class="w-64 h-64 sm:w-80 sm:h-80"
+                 style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;"/>
             </div>
             
             {{-- Valid badge --}}
