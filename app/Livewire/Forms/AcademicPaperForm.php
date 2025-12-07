@@ -26,7 +26,7 @@ class AcademicPaperForm extends Form
     public ?int $publication_year = null;
 
     #[Validate('required')]
-    public string $paper_type = '';
+    public string $paper_type = 'Thesis';
 
     #[Validate('required|integer|exists:research_advisers,id')]
     public ?int $research_adviser_id = null;
@@ -35,7 +35,7 @@ class AcademicPaperForm extends Form
     public ?int $technical_adviser_id = null;
 
     #[Validate('required')]
-    public string $department = '';
+    public string $department = 'Information Technology';
 
     #[Validate('required|integer|exists:deans,id')]
     public ?int $dean_id = null;
@@ -91,6 +91,11 @@ class AcademicPaperForm extends Form
         }
         if ($this->author_options === null) {
             $this->author_options = [];
+        }
+
+        // Set default publication year if not set
+        if ($this->publication_year === null) {
+            $this->publication_year = (int) date('Y');
         }
 
         // Lazy load choices only when needed
@@ -501,11 +506,11 @@ class AcademicPaperForm extends Form
         if (empty($properties)) {
             // Reset all properties
             $this->title = '';
-            $this->publication_year = null;
-            $this->paper_type = '';
+            $this->publication_year = (int) date('Y'); // Default to current year
+            $this->paper_type = 'Thesis'; // Default to Thesis
             $this->research_adviser_id = null;
             $this->technical_adviser_id = null;
-            $this->department = '';
+            $this->department = 'Information Technology'; // Default to Information Technology
             $this->dean_id = null;
             $this->author_ids = [];
             $this->number_of_copies = 1;
@@ -517,10 +522,10 @@ class AcademicPaperForm extends Form
                         $this->title = '';
                         break;
                     case 'publication_year':
-                        $this->publication_year = null;
+                        $this->publication_year = (int) date('Y'); // Default to current year
                         break;
                     case 'paper_type':
-                        $this->paper_type = '';
+                        $this->paper_type = 'Thesis'; // Default to Thesis
                         break;
                     case 'research_adviser_id':
                         $this->research_adviser_id = null;
@@ -529,7 +534,7 @@ class AcademicPaperForm extends Form
                         $this->technical_adviser_id = null;
                         break;
                     case 'department':
-                        $this->department = '';
+                        $this->department = 'Information Technology'; // Default to Information Technology
                         break;
                     case 'dean_id':
                         $this->dean_id = null;

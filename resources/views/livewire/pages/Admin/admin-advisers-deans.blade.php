@@ -213,10 +213,10 @@
             placeholder="Enter full name (e.g., Juan Dela Cruz)" 
             minlength="2"
             maxlength="255"
-            pattern="^[A-Za-zÀ-ÖØ-öø-ÿĀ-žÑñ\s\-'\.,()''"]+$"
-            title="Please enter a valid name using letters, spaces, hyphens, and apostrophes only. Numbers are not allowed."
+            pattern="^[\p{L}\s\-'.,()\u2018\u2019\u201C\u201D]+$"
+            title="Please enter a valid name using letters, spaces, hyphens, apostrophes, and periods only. Numbers are not allowed."
             required
-            hint="Only letters, spaces, hyphens, and apostrophes are allowed."
+            hint="Only letters, spaces, hyphens, apostrophes, and periods are allowed."
         />
         
         <x-slot:actions>
@@ -232,10 +232,10 @@
             placeholder="Enter full name (e.g., Juan Dela Cruz)"
             minlength="2"
             maxlength="255"
-            pattern="^[A-Za-zÀ-ÖØ-öø-ÿĀ-žÑñ\s\-'\.,()''"]+$"
-            title="Please enter a valid name using letters, spaces, hyphens, and apostrophes only. Numbers are not allowed."
+            pattern="^[\p{L}\s\-'.,()\u2018\u2019\u201C\u201D]+$"
+            title="Please enter a valid name using letters, spaces, hyphens, apostrophes, and periods only. Numbers are not allowed."
             required
-            hint="Only letters, spaces, hyphens, and apostrophes are allowed."
+            hint="Only letters, spaces, hyphens, apostrophes, and periods are allowed."
         />
         
         <x-slot:actions>
