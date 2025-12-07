@@ -150,6 +150,26 @@ class AcademicPaperForm extends Form
         });
     }
 
+    /**
+     * Handle author_ids updates - prevent removing last author when editing
+     */
+    public function updatedAuthorIds($value): void
+    {
+        // If editing and trying to remove all authors, restore at least one
+        if ($this->academicPaperId !== null && empty($value)) {
+            // Get the original authors from the paper
+            $paper = AcademicPaper::find($this->academicPaperId);
+            if ($paper && $paper->authors()->count() > 0) {
+                // Restore the first author to prevent empty selection
+                $firstAuthor = $paper->authors()->first();
+                if ($firstAuthor) {
+                    $this->author_ids = [$firstAuthor->id];
+                    $this->addError('author_ids', 'At least one author is required. Cannot remove all authors.');
+                }
+            }
+        }
+    }
+
     private function syncAuthors(\App\Models\AcademicPaper $academicPaper)
     {
         if (empty($this->author_ids)) {
@@ -159,7 +179,7 @@ class AcademicPaperForm extends Form
         }
 
         // Filter out any invalid IDs and sync
-        $validAuthorIds = array_filter($this->author_ids, fn ($id) => is_int($id) && $id > 0);
+        $validAuthorIds = array_filter($this->author_ids, fn($id) => is_int($id) && $id > 0);
         $academicPaper->authors()->sync($validAuthorIds);
     }
 
@@ -258,7 +278,7 @@ class AcademicPaperForm extends Form
         ];
         $validPaperTypes = array_column($this->type_choices, 'id');
         if (! empty($validPaperTypes)) {
-            $paperTypeRules[] = 'in:'.implode(',', $validPaperTypes);
+            $paperTypeRules[] = 'in:' . implode(',', $validPaperTypes);
         }
 
         // Build department rules - include 'in:' validation only if config exists
@@ -269,7 +289,7 @@ class AcademicPaperForm extends Form
         ];
         $validDepartments = config('departments.valid_names', []);
         if (! empty($validDepartments)) {
-            $departmentRules[] = 'in:'.implode(',', $validDepartments);
+            $departmentRules[] = 'in:' . implode(',', $validDepartments);
         }
 
         $rules = [

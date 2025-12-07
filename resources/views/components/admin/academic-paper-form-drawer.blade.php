@@ -113,18 +113,35 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_ids" @endif>
                     Authors @if($isEditing) <span wire:dirty wire:target="form.author_ids" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-choices 
-                    wire:model.blur="form.author_ids" 
-                    searchable 
-                    clearable
-                    search-function="searchAuthors" 
-                    icon="o-user-group" 
-                    min-chars="0" 
-                    debounce="300ms" 
-                    :options="$form->author_options ?? []" 
-                    hint="Start typing to search for authors" 
-                    placeholder="Select Authors" 
-                    error-field="form.author_ids" />
+                @if($isEditing)
+                    <x-mary-choices 
+                        wire:model.blur="form.author_ids" 
+                        searchable 
+                        search-function="searchAuthors" 
+                        icon="o-user-group" 
+                        min-chars="0" 
+                        debounce="300ms" 
+                        :options="$form->author_options ?? []" 
+                        hint="Start typing to search for authors" 
+                        placeholder="Select Authors" 
+                        error-field="form.author_ids" />
+                @else
+                    <x-mary-choices 
+                        wire:model.blur="form.author_ids" 
+                        searchable 
+                        clearable
+                        search-function="searchAuthors" 
+                        icon="o-user-group" 
+                        min-chars="0" 
+                        debounce="300ms" 
+                        :options="$form->author_options ?? []" 
+                        hint="Start typing to search for authors" 
+                        placeholder="Select Authors" 
+                        error-field="form.author_ids" />
+                @endif
+                @error('form.author_ids')
+                    <div class="text-error text-xs mt-1">{{ $message }}</div>
+                @enderror
             </div>
 
             {{-- Number of Copies Field --}}
@@ -276,13 +293,13 @@
                         </button>
                     </div>
                 @else
-                    {{-- Save button for Create mode: disabled when there are errors --}}
+                    {{-- Save button for Create mode: disabled when form is invalid --}}
                     <button 
                         type="submit"
-                        class="btn btn-primary {{ $errors->any() ? 'btn-disabled opacity-50 cursor-not-allowed' : '' }}"
+                        class="btn btn-primary {{ !$this->isFormValid ? 'btn-disabled opacity-50 cursor-not-allowed' : '' }}"
                         wire:loading.attr="disabled"
                         wire:target="saveAcademicPaper"
-                        @disabled($errors->any())>
+                        @disabled(!$this->isFormValid)>
                         <span wire:loading.remove wire:target="saveAcademicPaper">Save</span>
                         <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
                     </button>

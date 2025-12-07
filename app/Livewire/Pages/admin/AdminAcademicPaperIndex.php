@@ -154,6 +154,48 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public AcademicPaperForm $form;
 
+    /**
+     * Check if form is valid for submission
+     */
+    #[Computed]
+    public function isFormValid(): bool
+    {
+        // Check if all required fields are filled
+        $hasTitle = !empty(trim($this->form->title ?? ''));
+        $hasDepartment = !empty($this->form->department ?? '');
+        $hasPublicationYear = !empty($this->form->publication_year);
+        $hasPaperType = !empty($this->form->paper_type ?? '');
+        $hasResearchAdviser = !empty($this->form->research_adviser_id);
+        $hasTechnicalAdviser = !empty($this->form->technical_adviser_id);
+        $hasDean = !empty($this->form->dean_id);
+        $hasAuthors = !empty($this->form->author_ids) && count($this->form->author_ids) > 0;
+        $hasCopies = !empty($this->form->number_of_copies) && $this->form->number_of_copies >= 1;
+
+        // Check for validation errors
+        $hasErrors = $this->getErrorBag()->hasAny([
+            'form.title',
+            'form.department',
+            'form.publication_year',
+            'form.paper_type',
+            'form.research_adviser_id',
+            'form.technical_adviser_id',
+            'form.dean_id',
+            'form.author_ids',
+            'form.number_of_copies',
+        ]);
+
+        return $hasTitle
+            && $hasDepartment
+            && $hasPublicationYear
+            && $hasPaperType
+            && $hasResearchAdviser
+            && $hasTechnicalAdviser
+            && $hasDean
+            && $hasAuthors
+            && $hasCopies
+            && !$hasErrors;
+    }
+
     #[Locked]
     public ?int $selectedPaperId = null;
 
