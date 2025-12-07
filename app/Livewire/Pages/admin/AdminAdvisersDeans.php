@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\Admin;
 
+use App\Rules\ProperName;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Title;
@@ -170,21 +171,37 @@ class AdminAdvisersDeans extends AdminComponent
 
     public function save()
     {
+        $entityType = $this->getEntityType();
+
         $this->validate([
-            'name' => 'required|string|max:255|unique:' . $this->getTableName() . ',name,' . ($this->editingId ?? 'NULL') . ',id',
+            'name' => [
+                'required',
+                'string',
+                'min:2',
+                'max:255',
+                new ProperName,
+                'unique:' . $this->getTableName() . ',name,' . ($this->editingId ?? 'NULL') . ',id',
+            ],
+        ], [
+            'name.required' => "The {$entityType} name is required.",
+            'name.string' => "The {$entityType} name must be valid text.",
+            'name.min' => "The {$entityType} name must be at least 2 characters.",
+            'name.max' => "The {$entityType} name cannot exceed 255 characters.",
+            'name.unique' => "This {$entityType} name already exists.",
         ]);
 
         $table = $this->getTableName();
+        $trimmedName = trim($this->name);
 
         if ($this->editingId) {
             DB::table($table)->where('id', $this->editingId)->update([
-                'name' => $this->name,
+                'name' => $trimmedName,
                 'updated_at' => now(),
             ]);
             $this->success('Updated successfully!');
         } else {
             DB::table($table)->insert([
-                'name' => $this->name,
+                'name' => $trimmedName,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -193,6 +210,20 @@ class AdminAdvisersDeans extends AdminComponent
 
         $this->clearCaches();
         $this->closeModals();
+    }
+
+    /**
+     * Get human-readable entity type for messages
+     */
+    private function getEntityType(): string
+    {
+        return match ($this->activeTab) {
+            'research' => 'research adviser',
+            'technical' => 'technical adviser',
+            'deans' => 'dean',
+            'authors' => 'author',
+            default => 'entry',
+        };
     }
 
     public function confirmDelete(int $id)

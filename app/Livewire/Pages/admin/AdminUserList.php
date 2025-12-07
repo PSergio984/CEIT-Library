@@ -2,6 +2,8 @@
 
 namespace App\Livewire\Pages\Admin;
 
+use App\Rules\PlvEmailDomain;
+use App\Rules\ProperName;
 use Livewire\WithPagination;
 use App\Models\User;
 use Mary\Traits\Toast;
@@ -223,18 +225,67 @@ class AdminUserList extends AdminComponent
     public function saveChanges()
     {
         $this->validate([
-            'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->studentId,
-            'creditScore' => 'required|integer|min:0|max:100',
-            'accountStatus' => 'required|in:active,suspended',
+            'firstName' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                new ProperName,
+            ],
+            'lastName' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                new ProperName,
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:100',
+                new PlvEmailDomain,
+                'unique:users,email,' . $this->studentId,
+            ],
+            'creditScore' => [
+                'required',
+                'integer',
+                'min:0',
+                'max:100',
+            ],
+            'accountStatus' => [
+                'required',
+                'string',
+                'in:active,suspended',
+            ],
+        ], [
+            'firstName.required' => 'First name is required.',
+            'firstName.min' => 'First name must be at least 2 characters.',
+            'firstName.max' => 'First name cannot exceed 50 characters.',
+
+            'lastName.required' => 'Last name is required.',
+            'lastName.min' => 'Last name must be at least 2 characters.',
+            'lastName.max' => 'Last name cannot exceed 50 characters.',
+
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.max' => 'Email cannot exceed 100 characters.',
+            'email.unique' => 'This email is already taken by another user.',
+
+            'creditScore.required' => 'Credit score is required.',
+            'creditScore.integer' => 'Credit score must be a whole number.',
+            'creditScore.min' => 'Credit score cannot be negative.',
+            'creditScore.max' => 'Credit score cannot exceed 100.',
+
+            'accountStatus.required' => 'Account status is required.',
+            'accountStatus.in' => 'Account status must be either active or suspended.',
         ]);
 
         $user = User::findOrFail($this->studentId);
         $user->update([
-            'first_name' => $this->firstName,
-            'last_name' => $this->lastName,
-            'email' => $this->email,
+            'first_name' => trim($this->firstName),
+            'last_name' => trim($this->lastName),
+            'email' => strtolower(trim($this->email)),
             'credit_score' => $this->creditScore,
             'account_status' => $this->accountStatus,
         ]);

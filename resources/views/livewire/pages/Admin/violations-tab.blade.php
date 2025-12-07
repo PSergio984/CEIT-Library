@@ -131,7 +131,10 @@
                     <x-mary-input
                         label="Name"
                         wire:model="form.name"
-                        placeholder="Enter violation name"
+                        placeholder="e.g., Overdue Book Return"
+                        minlength="3"
+                        maxlength="255"
+                        hint="Letters, spaces, and basic punctuation (hyphens, apostrophes, periods, &, commas, parentheses). Validation occurs on submit. (3-255 characters)"
                         required
                     />
 
@@ -139,7 +142,10 @@
                         label="Description"
                         rows="6"
                         wire:model="form.description"
-                        placeholder="Enter violation description"
+                        placeholder="Describe the violation and when it applies..."
+                        minlength="10"
+                        maxlength="1000"
+                        hint="Provide a clear description (10-1000 characters)"
                         required
                     />
 
@@ -150,7 +156,8 @@
                         placeholder="Enter penalty score"
                         min="1"
                         max="100"
-                        value="{{ old('form.penalty_score', 1) }}"
+                        step="1"
+                        hint="Credit points deducted for this violation (1-100)"
                         required
                     />
 

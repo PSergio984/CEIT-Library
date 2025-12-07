@@ -207,7 +207,17 @@
 
     {{-- Create/Edit Modal --}}
     <x-mary-modal wire:model="showCreateModal" title="Add {{ ucfirst($activeTab === 'deans' ? 'Dean' : ($activeTab === 'authors' ? 'Author' : 'Adviser')) }}" class="backdrop-blur">
-        <x-mary-input label="Name" wire:model="name" placeholder="Enter full name" />
+        <x-mary-input 
+            label="Name" 
+            wire:model="name" 
+            placeholder="Enter full name (e.g., Juan Dela Cruz)" 
+            minlength="2"
+            maxlength="255"
+            pattern="^[A-Za-zÀ-ÖØ-öø-ÿĀ-žÑñ\s\-'\.,()''"]+$"
+            title="Please enter a valid name using letters, spaces, hyphens, and apostrophes only. Numbers are not allowed."
+            required
+            hint="Only letters, spaces, hyphens, and apostrophes are allowed."
+        />
         
         <x-slot:actions>
             <x-mary-button label="Cancel" wire:click="closeModals" />
@@ -216,7 +226,17 @@
     </x-mary-modal>
 
     <x-mary-modal wire:model="showEditModal" title="Edit {{ ucfirst($activeTab === 'deans' ? 'Dean' : ($activeTab === 'authors' ? 'Author' : 'Adviser')) }}" class="backdrop-blur">
-        <x-mary-input label="Name" wire:model="name" placeholder="Enter full name" />
+        <x-mary-input 
+            label="Name" 
+            wire:model="name" 
+            placeholder="Enter full name (e.g., Juan Dela Cruz)"
+            minlength="2"
+            maxlength="255"
+            pattern="^[A-Za-zÀ-ÖØ-öø-ÿĀ-žÑñ\s\-'\.,()''"]+$"
+            title="Please enter a valid name using letters, spaces, hyphens, and apostrophes only. Numbers are not allowed."
+            required
+            hint="Only letters, spaces, hyphens, and apostrophes are allowed."
+        />
         
         <x-slot:actions>
             <x-mary-button label="Cancel" wire:click="closeModals" />

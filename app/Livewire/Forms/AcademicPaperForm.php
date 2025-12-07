@@ -3,6 +3,8 @@
 namespace App\Livewire\Forms;
 
 use App\Models\AcademicPaper;
+use App\Rules\NoHtmlTags;
+use App\Rules\SafeText;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -14,23 +16,33 @@ class AcademicPaperForm extends Form
     public ?int $academicPaperId = null;
 
     public ?int $id = null;
+
     public ?string $catalog_code = null;
+
     #[Validate('required')]
     public string $title = '';
+
     #[Validate('required|integer|min:2002|max:2100')]
     public ?int $publication_year = null;
+
     #[Validate('required')]
     public string $paper_type = '';
+
     #[Validate('required|integer|exists:research_advisers,id')]
     public ?int $research_adviser_id = null;
+
     #[Validate('required|integer|exists:technical_advisers,id')]
     public ?int $technical_adviser_id = null;
+
     #[Validate('required')]
     public string $department = '';
+
     #[Validate('required|integer|exists:deans,id')]
     public ?int $dean_id = null;
+
     #[Validate('required|array|min:1')]
     public array $author_ids = [];
+
     #[Validate('required|integer|min:1|max:100')]
     public int $number_of_copies = 1;
 
@@ -38,13 +50,18 @@ class AcademicPaperForm extends Form
     private ?int $initialCopyCount = null;
 
     public array $type_choices = [];
+
     public array $department_choices = [];
 
     public array $year_choices = [];
-    public ?\Illuminate\Support\Collection $research_adviser_options = null;
-    public ?\Illuminate\Support\Collection $technical_adviser_options = null;
-    public ?\Illuminate\Support\Collection $dean_options = null;
-    public ?\Illuminate\Support\Collection $author_options = null;
+
+    public ?array $research_adviser_options = null;
+
+    public ?array $technical_adviser_options = null;
+
+    public ?array $dean_options = null;
+
+    public ?array $author_options = null;
 
     /**
      * Get the academic paper model from the stored ID
@@ -62,18 +79,18 @@ class AcademicPaperForm extends Form
      */
     public function boot(): void
     {
-        // Ensure collections are initialized
+        // Ensure arrays are initialized
         if ($this->research_adviser_options === null) {
-            $this->research_adviser_options = collect();
+            $this->research_adviser_options = [];
         }
         if ($this->technical_adviser_options === null) {
-            $this->technical_adviser_options = collect();
+            $this->technical_adviser_options = [];
         }
         if ($this->dean_options === null) {
-            $this->dean_options = collect();
+            $this->dean_options = [];
         }
         if ($this->author_options === null) {
-            $this->author_options = collect();
+            $this->author_options = [];
         }
 
         // Lazy load choices only when needed
@@ -105,7 +122,7 @@ class AcademicPaperForm extends Form
             $validNames = config('departments.valid_names', [
                 'Information Technology',
                 'Civil Engineering',
-                'Electrical Engineering'
+                'Electrical Engineering',
             ]);
 
             return collect($validNames)->map(function ($name) {
@@ -123,15 +140,16 @@ class AcademicPaperForm extends Form
             for ($y = $currentYear; $y >= 2002; $y--) {
                 $years[] = ['id' => $y, 'name' => $y];
             }
+
             return $years;
         });
     }
-
 
     private function syncAuthors(\App\Models\AcademicPaper $academicPaper)
     {
         if (empty($this->author_ids)) {
             $academicPaper->authors()->detach();
+
             return;
         }
 
@@ -224,22 +242,94 @@ class AcademicPaperForm extends Form
      */
     private function validationRules(): array
     {
+        // Current year for publication year validation
+        $currentYear = (int) date('Y');
+
+        // Build paper_type rules - include 'in:' validation only if choices exist
+        $paperTypeRules = [
+            'required',
+            'string',
+            'max:50',
+        ];
+        $validPaperTypes = array_column($this->type_choices, 'id');
+        if (! empty($validPaperTypes)) {
+            $paperTypeRules[] = 'in:' . implode(',', $validPaperTypes);
+        }
+
+        // Build department rules - include 'in:' validation only if config exists
+        $departmentRules = [
+            'required',
+            'string',
+            'max:100',
+        ];
+        $validDepartments = config('departments.valid_names', []);
+        if (! empty($validDepartments)) {
+            $departmentRules[] = 'in:' . implode(',', $validDepartments);
+        }
+
         $rules = [
-            'title' => 'required',
-            'publication_year' => 'required',
-            'paper_type' => 'required',
-            'research_adviser_id' => 'required|integer|exists:research_advisers,id',
-            'technical_adviser_id' => 'required|integer|exists:technical_advisers,id',
-            'department' => 'required',
-            'dean_id' => 'required|integer|exists:deans,id',
-            'author_ids' => 'required|array|min:1',
-            'author_ids.*' => 'integer|exists:authors,id',
-            'number_of_copies' => 'required|integer|min:1|max:100',
+            'title' => [
+                'required',
+                'string',
+                'min:5',
+                'max:500',
+                new NoHtmlTags,
+                new SafeText,
+            ],
+            'publication_year' => [
+                'required',
+                'integer',
+                'min:2002',
+                "max:{$currentYear}",
+            ],
+            'paper_type' => $paperTypeRules,
+            'research_adviser_id' => [
+                'required',
+                'integer',
+                'min:1',
+                'exists:research_advisers,id',
+            ],
+            'technical_adviser_id' => [
+                'required',
+                'integer',
+                'min:1',
+                'exists:technical_advisers,id',
+            ],
+            'department' => $departmentRules,
+            'dean_id' => [
+                'required',
+                'integer',
+                'min:1',
+                'exists:deans,id',
+            ],
+            'author_ids' => [
+                'required',
+                'array',
+                'min:1',
+                'max:20', // Reasonable max number of authors
+            ],
+            'author_ids.*' => [
+                'integer',
+                'min:1',
+                'distinct', // No duplicate author IDs
+                'exists:authors,id',
+            ],
+            'number_of_copies' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:100',
+            ],
         ];
 
         // In edit mode, enforce minimum to prevent reduction via form
         if ($this->initialCopyCount !== null) {
-            $rules['number_of_copies'] = "required|integer|min:{$this->initialCopyCount}|max:100";
+            $rules['number_of_copies'] = [
+                'required',
+                'integer',
+                "min:{$this->initialCopyCount}",
+                'max:100',
+            ];
         }
 
         return $rules;
@@ -250,27 +340,68 @@ class AcademicPaperForm extends Form
      */
     private function validationMessages(): array
     {
+        $currentYear = date('Y');
+
         return [
+            // Title validation messages
             'title.required' => 'The title field is required.',
+            'title.string' => 'The title must be a valid text string.',
+            'title.min' => 'The title must be at least 5 characters.',
+            'title.max' => 'The title cannot exceed 500 characters.',
+
+            // Publication year validation messages
             'publication_year.required' => 'The publication year field is required.',
+            'publication_year.integer' => 'The publication year must be a valid year.',
+            'publication_year.min' => 'The publication year cannot be before 2002.',
+            'publication_year.max' => "The publication year cannot be after {$currentYear}.",
+
+            // Paper type validation messages
             'paper_type.required' => 'The paper type field is required.',
+            'paper_type.string' => 'The paper type must be valid text.',
+            'paper_type.max' => 'The paper type is too long.',
+            'paper_type.in' => 'Please select a valid paper type from the list.',
+
+            // Research adviser validation messages
             'research_adviser_id.required' => 'The research adviser field is required.',
+            'research_adviser_id.integer' => 'Invalid research adviser selection.',
+            'research_adviser_id.min' => 'Invalid research adviser selection.',
+            'research_adviser_id.exists' => 'The selected research adviser is invalid.',
+
+            // Technical adviser validation messages
             'technical_adviser_id.required' => 'The technical adviser field is required.',
+            'technical_adviser_id.integer' => 'Invalid technical adviser selection.',
+            'technical_adviser_id.min' => 'Invalid technical adviser selection.',
+            'technical_adviser_id.exists' => 'The selected technical adviser is invalid.',
+
+            // Department validation messages
             'department.required' => 'The department field is required.',
+            'department.string' => 'The department must be valid text.',
+            'department.max' => 'The department name is too long.',
+            'department.in' => 'Please select a valid department from the list.',
+
+            // Dean validation messages
             'dean_id.required' => 'The dean field is required.',
+            'dean_id.integer' => 'Invalid dean selection.',
+            'dean_id.min' => 'Invalid dean selection.',
             'dean_id.exists' => 'The selected dean is invalid.',
+
+            // Authors validation messages
             'author_ids.required' => 'At least one author is required.',
+            'author_ids.array' => 'Invalid author selection format.',
             'author_ids.min' => 'At least one author must be specified.',
+            'author_ids.max' => 'You cannot add more than 20 authors.',
+            'author_ids.*.integer' => 'Invalid author selection.',
+            'author_ids.*.min' => 'Invalid author selection.',
+            'author_ids.*.distinct' => 'Each author can only be selected once.',
             'author_ids.*.exists' => 'One or more selected authors are invalid.',
+
+            // Number of copies validation messages
             'number_of_copies.required' => 'The number of copies field is required.',
             'number_of_copies.integer' => 'The number of copies must be a valid number.',
             'number_of_copies.min' => $this->initialCopyCount !== null
                 ? "Cannot reduce copies below current count ({$this->initialCopyCount}). Use the copy deletion modal instead."
                 : 'The number of copies must be at least 1.',
             'number_of_copies.max' => 'The number of copies cannot exceed 100.',
-            'research_adviser_id.exists' => 'The selected research adviser is invalid.',
-            'technical_adviser_id.exists' => 'The selected technical adviser is invalid.',
-            'dean_id.exists' => 'The selected dean is invalid.',
         ];
     }
 
@@ -336,7 +467,7 @@ class AcademicPaperForm extends Form
     {
         $paper = $this->academicPaper();
 
-        if (!$paper) {
+        if (! $paper) {
             throw new \RuntimeException('No academic paper set for update.');
         }
 
@@ -418,10 +549,10 @@ class AcademicPaperForm extends Form
         $this->id = null;
         $this->catalog_code = null;
         $this->initialCopyCount = null; // Reset initial count tracker
-        $this->research_adviser_options = collect();
-        $this->technical_adviser_options = collect();
-        $this->dean_options = collect();
-        $this->author_options = collect();
+        $this->research_adviser_options = [];
+        $this->technical_adviser_options = [];
+        $this->dean_options = [];
+        $this->author_options = [];
         $this->populateYearChoices();
         $this->loadStaticChoices();
     }

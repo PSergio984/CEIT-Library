@@ -185,11 +185,11 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
-        // Initialize empty collections to avoid null references
-        $this->form->research_adviser_options = collect();
-        $this->form->technical_adviser_options = collect();
-        $this->form->dean_options = collect();
-        $this->form->author_options = collect();
+        // Initialize empty arrays to avoid null references
+        $this->form->research_adviser_options = [];
+        $this->form->technical_adviser_options = [];
+        $this->form->dean_options = [];
+        $this->form->author_options = [];
         $this->headers = [
             ['key' => 'id', 'label' => '#'],
             ['key' => 'catalog_code', 'label' => 'Catalog Code'],
@@ -609,14 +609,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         // Check if we have cached results for the same search
         if ($this->lastResearchAdviserSearch === $value && $this->cachedResearchAdvisers !== null) {
-            $this->form->research_adviser_options = collect($this->cachedResearchAdvisers);
+            $this->form->research_adviser_options = $this->cachedResearchAdvisers;
 
             return $this->cachedResearchAdvisers;
         }
 
         // Prevent duplicate loading for empty searches - more aggressive check
         if ($value === '' && ($this->researchAdvisersLoaded || $this->cachedResearchAdvisers !== null)) {
-            $this->form->research_adviser_options = collect($this->cachedResearchAdvisers);
+            $this->form->research_adviser_options = $this->cachedResearchAdvisers;
 
             return $this->cachedResearchAdvisers;
         }
@@ -673,7 +673,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         // Cache the results for this request
         $this->cachedResearchAdvisers = $advisers->toArray();
         $this->lastResearchAdviserSearch = $value;
-        $this->form->research_adviser_options = $advisers;
+        $this->form->research_adviser_options = $advisers->toArray();
 
         // Mark as loaded for empty searches
         if ($value === '') {
@@ -688,14 +688,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         // Check if we have cached results for the same search
         if ($this->lastTechnicalAdviserSearch === $value && $this->cachedTechnicalAdvisers !== null) {
-            $this->form->technical_adviser_options = collect($this->cachedTechnicalAdvisers);
+            $this->form->technical_adviser_options = $this->cachedTechnicalAdvisers;
 
             return $this->cachedTechnicalAdvisers;
         }
 
         // Prevent duplicate loading for empty searches - more aggressive check
         if ($value === '' && ($this->technicalAdvisersLoaded || $this->cachedTechnicalAdvisers !== null)) {
-            $this->form->technical_adviser_options = collect($this->cachedTechnicalAdvisers);
+            $this->form->technical_adviser_options = $this->cachedTechnicalAdvisers;
 
             return $this->cachedTechnicalAdvisers;
         }
@@ -752,7 +752,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         // Cache the results for this request
         $this->cachedTechnicalAdvisers = $advisers->toArray();
         $this->lastTechnicalAdviserSearch = $value;
-        $this->form->technical_adviser_options = $advisers;
+        $this->form->technical_adviser_options = $advisers->toArray();
 
         // Mark as loaded for empty searches
         if ($value === '') {
@@ -807,7 +807,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         });
 
         // Update form options
-        $this->form->author_options = $options;
+        $this->form->author_options = $options->toArray();
 
         // Cache in memory for this request
         $this->cachedAuthors = $options->toArray();
@@ -821,14 +821,14 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         // Check if we have cached results for the same search
         if ($this->lastDeanSearch === $value && $this->cachedDeans !== null) {
-            $this->form->dean_options = collect($this->cachedDeans);
+            $this->form->dean_options = $this->cachedDeans;
 
             return $this->cachedDeans;
         }
 
         // Prevent duplicate loading for empty searches - more aggressive check
         if ($value === '' && ($this->deansLoaded || $this->cachedDeans !== null)) {
-            $this->form->dean_options = collect($this->cachedDeans);
+            $this->form->dean_options = $this->cachedDeans;
 
             return $this->cachedDeans;
         }
@@ -885,7 +885,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         // Cache the results for this request
         $this->cachedDeans = $deans->toArray();
         $this->lastDeanSearch = $value;
-        $this->form->dean_options = $deans;
+        $this->form->dean_options = $deans->toArray();
 
         // Mark as loaded for empty searches
         if ($value === '') {

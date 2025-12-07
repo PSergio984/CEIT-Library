@@ -173,11 +173,27 @@
                 </h3>
 
                 <x-mary-form wire:submit.prevent="save" class="space-y-4">
-                    <x-mary-select label="Header" :options="$headers_list" option-label="title" option-value="id"
-                        placeholder="Select a header" wire:model="form.rule_header_id" required />
+                    <x-mary-select 
+                        label="Header" 
+                        :options="$headers_list" 
+                        option-label="title" 
+                        option-value="id"
+                        placeholder="Select a rule category" 
+                        wire:model="form.rule_header_id" 
+                        hint="Choose the category this rule belongs to"
+                        required 
+                    />
 
-                    <x-mary-textarea label="Content" rows="6" wire:model.blur="form.content"
-                        placeholder="Enter rule content" required />
+                    <x-mary-textarea 
+                        label="Content" 
+                        rows="6" 
+                        wire:model.blur="form.content"
+                        placeholder="Enter the rule content (e.g., 'Students must return books within 7 days')"
+                        minlength="5"
+                        maxlength="2000"
+                        hint="Provide clear rule description (5-2000 characters)"
+                        required 
+                    />
 
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" @click="$wire.openDrawer = false" class="btn">Cancel</button>
