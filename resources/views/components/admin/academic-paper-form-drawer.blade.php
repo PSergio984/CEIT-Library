@@ -24,7 +24,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.title" @endif>
                     Title @if($isEditing) <span wire:dirty wire:target="form.title" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-input wire:model="form.title" required placeholder="Enter academic paper title" />
+                <x-mary-input wire:model.blur="form.title" required placeholder="Enter academic paper title" />
             </div>
             
             {{-- Department Field --}}
@@ -32,7 +32,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.department" @endif>
                     Department @if($isEditing) <span wire:dirty wire:target="form.department" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-building-library" wire:model="form.department" :options="$form->department_choices" required />
+                <x-mary-select icon="o-building-library" wire:model.blur="form.department" :options="$form->department_choices" required />
             </div>
             
             {{-- Publication Year Field --}}
@@ -40,7 +40,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.publication_year" @endif>
                     Publication Year @if($isEditing) <span wire:dirty wire:target="form.publication_year" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-calendar" wire:model="form.publication_year" :options="$form->year_choices" required />
+                <x-mary-select icon="o-calendar" wire:model.blur="form.publication_year" :options="$form->year_choices" required />
             </div>
             
             {{-- Paper Type Field --}}
@@ -48,7 +48,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.paper_type" @endif>
                     Paper Type @if($isEditing) <span wire:dirty wire:target="form.paper_type" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-document" wire:model="form.paper_type" :options="$form->type_choices" required />
+                <x-mary-select icon="o-document" wire:model.blur="form.paper_type" :options="$form->type_choices" required />
             </div>
             
             {{-- Research Adviser Field --}}
@@ -57,7 +57,7 @@
                     Research Adviser @if($isEditing) <span wire:dirty wire:target="form.research_adviser_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.research_adviser_id" 
+                    wire:model.blur="form.research_adviser_id" 
                     single 
                     searchable 
                     search-function="searchResearchAdvisers" 
@@ -76,7 +76,7 @@
                     Technical Adviser @if($isEditing) <span wire:dirty wire:target="form.technical_adviser_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.technical_adviser_id" 
+                    wire:model.blur="form.technical_adviser_id" 
                     single 
                     searchable 
                     search-function="searchTechnicalAdvisers" 
@@ -95,7 +95,7 @@
                     Dean @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.dean_id" 
+                    wire:model.blur="form.dean_id" 
                     single 
                     searchable 
                     search-function="searchDeans" 
@@ -114,7 +114,7 @@
                     Authors @if($isEditing) <span wire:dirty wire:target="form.author_ids" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.author_ids" 
+                    wire:model.blur="form.author_ids" 
                     searchable 
                     clearable
                     search-function="searchAuthors" 
@@ -151,7 +151,7 @@
                 @else
                     <x-mary-input 
                         type="number" 
-                        wire:model="form.number_of_copies" 
+                        wire:model.blur="form.number_of_copies" 
                         min="1" 
                         max="100" 
                         placeholder="Enter number of copies" 
@@ -161,113 +161,131 @@
                 @endif
             </div>
 
+            {{-- Validation messages and hints above separator --}}
+            @if($isEditing)
+                <div x-data="{ 
+                    isDirty: false,
+                    isInitialized: false,
+                    init() {
+                        // Initialize dirty state
+                        this.isDirty = false;
+                        this.isInitialized = false;
+                        
+                        // Check if drawer is already open on init
+                        if ($wire.get('formDrawer')) {
+                            // Drawer is already open, wait before enabling form watching
+                            setTimeout(() => {
+                                this.isInitialized = true;
+                            }, 200);
+                        }
+                        
+                        // Watch for drawer open/close to reset state
+                        $watch('$wire.formDrawer', (open) => {
+                            if (open) {
+                                // Reset dirty state when drawer opens
+                                this.isDirty = false;
+                                this.isInitialized = false;
+                                
+                                // Wait a bit before enabling form watching to avoid initial load triggering
+                                setTimeout(() => {
+                                    this.isInitialized = true;
+                                }, 200);
+                            } else {
+                                this.isInitialized = false;
+                            }
+                        });
+                        
+                        // Watch for form changes, but only after initialization
+                        $nextTick(() => {
+                            $wire.$watch('form', () => { 
+                                // Only set dirty if we've initialized (avoid initial load triggering)
+                                if (this.isInitialized) {
+                                    this.isDirty = true;
+                                }
+                            }, { deep: true });
+                        });
+                    }
+                }" class="mt-2 mb-2">
+                    <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs">Make changes to enable update</div>
+                    @if($errors->any())
+                        <div class="text-error text-xs mt-1">Please fix validation errors</div>
+                    @endif
+                </div>
+            @else
+                @if($errors->any())
+                    <div class="text-error text-xs mt-2 mb-2">Please fix validation errors</div>
+                @endif
+            @endif
+
             <x-slot:actions>
                 <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
                 @if($isEditing)
-                    {{-- Update button: disabled by default, enabled when form is dirty and no errors --}}
+                    {{-- Update button: disabled when form is not dirty or has errors --}}
                     <div x-data="{ 
                         isDirty: false,
-                        hasErrors: @js($errors->any()),
+                        isInitialized: false,
                         init() {
-                            // Reset dirty state when drawer opens
+                            // Initialize dirty state
                             this.isDirty = false;
-                            this.hasErrors = @js($errors->any());
+                            this.isInitialized = false;
+                            
+                            // Check if drawer is already open on init
+                            if ($wire.get('formDrawer')) {
+                                // Drawer is already open, wait before enabling form watching
+                                setTimeout(() => {
+                                    this.isInitialized = true;
+                                }, 200);
+                            }
                             
                             // Watch for drawer open/close to reset state
                             $watch('$wire.formDrawer', (open) => {
                                 if (open) {
+                                    // Reset dirty state when drawer opens
                                     this.isDirty = false;
-                                    this.checkErrors();
+                                    this.isInitialized = false;
+                                    
+                                    // Wait a bit before enabling form watching to avoid initial load triggering
+                                    setTimeout(() => {
+                                        this.isInitialized = true;
+                                    }, 200);
+                                } else {
+                                    this.isInitialized = false;
                                 }
                             });
                             
-                            // Watch for form changes
+                            // Watch for form changes, but only after initialization
                             $nextTick(() => {
                                 $wire.$watch('form', () => { 
-                                    this.isDirty = true;
-                                    this.checkErrors();
+                                    // Only set dirty if we've initialized (avoid initial load triggering)
+                                    if (this.isInitialized) {
+                                        this.isDirty = true;
+                                    }
                                 }, { deep: true });
                             });
-                            
-                            // Listen for Livewire validation events
-                            Livewire.on('validation-failed', () => {
-                                this.checkErrors();
-                            });
-                            
-                            Livewire.on('validation-passed', () => {
-                                this.checkErrors();
-                            });
-                        },
-                        checkErrors() {
-                            // Check if there are any validation errors
-                            const errorBag = $wire.get('errors') || {};
-                            this.hasErrors = Object.keys(errorBag).length > 0;
-                        },
-                        get isDisabled() {
-                            return !this.isDirty || this.hasErrors;
                         }
                     }">
                         <button 
                             type="submit"
                             class="btn btn-primary"
-                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': isDisabled }"
-                            x-bind:disabled="isDisabled"
+                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty || @js($errors->any()) }"
                             wire:loading.attr="disabled"
-                            wire:target="saveAcademicPaper">
+                            wire:target="saveAcademicPaper"
+                            x-bind:disabled="!isDirty || @js($errors->any())">
                             <span wire:loading.remove wire:target="saveAcademicPaper">Update</span>
                             <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
                         </button>
-                        <div x-show="!isDirty && !hasErrors" x-cloak class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
-                        <div x-show="hasErrors" x-cloak class="text-error text-xs mt-1">Please fix validation errors</div>
                     </div>
                 @else
                     {{-- Save button for Create mode: disabled when there are errors --}}
-                    <div x-data="{ 
-                        hasErrors: @js($errors->any()),
-                        init() {
-                            this.hasErrors = @js($errors->any());
-                            
-                            // Watch for drawer open/close to check errors
-                            $watch('$wire.formDrawer', (open) => {
-                                if (open) {
-                                    this.checkErrors();
-                                }
-                            });
-                            
-                            // Listen for Livewire validation events
-                            Livewire.on('validation-failed', () => {
-                                this.checkErrors();
-                            });
-                            
-                            Livewire.on('validation-passed', () => {
-                                this.checkErrors();
-                            });
-                            
-                            // Watch for form changes that might trigger validation
-                            $nextTick(() => {
-                                $wire.$watch('form', () => {
-                                    this.checkErrors();
-                                }, { deep: true });
-                            });
-                        },
-                        checkErrors() {
-                            // Check if there are any validation errors
-                            const errorBag = $wire.get('errors') || {};
-                            this.hasErrors = Object.keys(errorBag).length > 0;
-                        }
-                    }">
-                        <button 
-                            type="submit"
-                            class="btn btn-primary"
-                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': hasErrors }"
-                            x-bind:disabled="hasErrors"
-                            wire:loading.attr="disabled"
-                            wire:target="saveAcademicPaper">
-                            <span wire:loading.remove wire:target="saveAcademicPaper">Save</span>
-                            <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
-                        </button>
-                        <div x-show="hasErrors" x-cloak class="text-error text-xs mt-1">Please fix validation errors</div>
-                    </div>
+                    <button 
+                        type="submit"
+                        class="btn btn-primary {{ $errors->any() ? 'btn-disabled opacity-50 cursor-not-allowed' : '' }}"
+                        wire:loading.attr="disabled"
+                        wire:target="saveAcademicPaper"
+                        @disabled($errors->any())>
+                        <span wire:loading.remove wire:target="saveAcademicPaper">Save</span>
+                        <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
+                    </button>
                 @endif
             </x-slot:actions>
         </x-mary-form>
