@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
-use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -34,7 +33,6 @@ class AdminAdvisersDeans extends AdminComponent
     // Form data (primitives only)
     public ?int $editingId = null;
 
-    #[Validate]
     public string $name = '';
 
     public ?int $deleteId = null;
@@ -176,16 +174,19 @@ class AdminAdvisersDeans extends AdminComponent
 
         $this->editingId = $id;
         $this->name = $entry->name;
-        $this->originalName = $entry->name;
+        $this->originalName = trim($entry->name); // Store trimmed original for consistent comparison
         $this->showEditModal = true;
     }
 
     public function save()
     {
+        // Trim the name before validation to prevent whitespace-only changes from being considered dirty
+        $this->name = trim($this->name);
+
         $this->validate();
 
         $table = $this->getTableName();
-        $trimmedName = trim($this->name);
+        $trimmedName = $this->name; // Already trimmed above
 
         if ($this->editingId) {
             DB::table($table)->where('id', $this->editingId)->update([
@@ -313,7 +314,14 @@ class AdminAdvisersDeans extends AdminComponent
         $name = trim($this->name ?? '');
 
         // Check if name is filled and valid
-        $nameValid = !empty($name) && strlen($name) >= 2 && strlen($name) <= 255;
+        // Must be 2-255 characters AND contain at least 2 letters (matching ProperName rule)
+        $lettersOnly = preg_replace('/[^\p{L}]/u', '', $name);
+        $letterCount = mb_strlen($lettersOnly);
+
+        $nameValid = !empty($name)
+            && strlen($name) >= 2
+            && strlen($name) <= 255
+            && $letterCount >= 2; // ProperName requires at least 2 letters, not just 2 characters
 
         // Check for validation errors
         $hasErrors = $this->getErrorBag()->has('name');
@@ -334,7 +342,9 @@ class AdminAdvisersDeans extends AdminComponent
             return false;
         }
 
-        return trim($this->name) !== trim($this->originalName);
+        // Compare trimmed values to match the save() method behavior
+        // This ensures consistency: if trimmed values are the same, form is not dirty
+        return trim($this->name) !== $this->originalName;
     }
 
     private function clearCaches()

@@ -315,7 +315,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 }
             })
             ->when($this->search, function ($query) {
-                $search = '%'.$this->search.'%';
+                $search = '%' . $this->search . '%';
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
@@ -450,8 +450,8 @@ class AdminAcademicPaperIndex extends AdminComponent
 
             if ($borrowedCopies > 0) {
                 $this->error(
-                    "Cannot delete this academic paper. {$borrowedCopies} ".
-                        ($borrowedCopies === 1 ? 'copy is' : 'copies are').
+                    "Cannot delete this academic paper. {$borrowedCopies} " .
+                        ($borrowedCopies === 1 ? 'copy is' : 'copies are') .
                         ' currently borrowed.',
                     'Deletion Not Allowed'
                 );
@@ -486,7 +486,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->dispatch('close-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
-            $this->error('Failed to delete academic paper: '.$e->getMessage());
+            $this->error('Failed to delete academic paper: ' . $e->getMessage());
             $this->deleteId = null;
         }
     }
@@ -505,7 +505,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         return Cache::remember(
             "academic_paper_{$this->form->academicPaperId}_copy_count",
             60, // 1 minute cache
-            fn () => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
+            fn() => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
         );
     }
 
@@ -670,8 +670,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         if (! empty($this->form->research_adviser_id)) {
             $selectedAdviser = \App\Models\ResearchAdviser::find($this->form->research_adviser_id);
             if ($selectedAdviser) {
-                $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
-                $advisers = $advisers->merge($selectedOption)->unique('id');
+                $selectedOption = ['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name];
+                // Check if already exists, if not add it
+                $exists = $advisers->contains(function ($item) use ($selectedAdviser) {
+                    return isset($item['id']) && $item['id'] === $selectedAdviser->id;
+                });
+                if (! $exists) {
+                    $advisers = $advisers->push($selectedOption);
+                }
             }
         }
 
@@ -745,12 +751,23 @@ class AdminAcademicPaperIndex extends AdminComponent
                 });
         }
 
+        // Ensure $advisers is always a collection
+        if (! $advisers instanceof \Illuminate\Support\Collection) {
+            $advisers = collect($advisers ?? []);
+        }
+
         // Include selected option if it exists and is not in search results
         if (! empty($this->form->technical_adviser_id)) {
             $selectedAdviser = \App\Models\TechnicalAdviser::find($this->form->technical_adviser_id);
             if ($selectedAdviser) {
-                $selectedOption = collect([['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name]]);
-                $advisers = $advisers->merge($selectedOption)->unique('id');
+                $selectedOption = ['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name];
+                // Check if already exists, if not add it
+                $exists = $advisers->contains(function ($item) use ($selectedAdviser) {
+                    return isset($item['id']) && $item['id'] === $selectedAdviser->id;
+                });
+                if (! $exists) {
+                    $advisers = $advisers->push($selectedOption);
+                }
             }
         }
 
@@ -778,7 +795,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->lastAuthorSearch = $value;
 
         // Use persistent cache with short TTL for search results
-        $cacheKey = 'author_search_'.md5(strtolower(trim($value)));
+        $cacheKey = 'author_search_' . md5(strtolower(trim($value)));
 
         $results = Cache::remember($cacheKey, 300, function () use ($value) {
             $query = \App\Models\Author::query()
@@ -786,7 +803,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 ->orderBy('name');
 
             if (! empty($value)) {
-                $query->where('name', 'like', '%'.$value.'%');
+                $query->where('name', 'like', '%' . $value . '%');
             }
 
             return $query->limit(50)->get();
@@ -796,8 +813,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         $selectedIds = $this->form->author_ids ?? [];
         $selectedAuthors = ! empty($selectedIds)
             ? \App\Models\Author::whereIn('id', $selectedIds)
-                ->select('id', 'name')
-                ->get()
+            ->select('id', 'name')
+            ->get()
             : collect();
 
         // Merge search results and selected authors, remove duplicates
@@ -882,8 +899,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         if (! empty($this->form->dean_id)) {
             $selectedDean = \App\Models\Dean::find($this->form->dean_id);
             if ($selectedDean) {
-                $selectedOption = collect([['id' => $selectedDean->id, 'name' => $selectedDean->name]]);
-                $deans = $deans->merge($selectedOption)->unique('id');
+                $selectedOption = ['id' => $selectedDean->id, 'name' => $selectedDean->name];
+                // Check if already exists, if not add it
+                $exists = $deans->contains(function ($item) use ($selectedDean) {
+                    return isset($item['id']) && $item['id'] === $selectedDean->id;
+                });
+                if (! $exists) {
+                    $deans = $deans->push($selectedOption);
+                }
             }
         }
 
@@ -963,11 +986,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         return AcademicPaper::with([
-            'authors' => fn ($q) => $q->select('authors.id', 'authors.name'),
+            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn ($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
+            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 
@@ -1096,7 +1119,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->dispatch('close-copy-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
-            $this->error('Failed to delete copy: '.$e->getMessage());
+            $this->error('Failed to delete copy: ' . $e->getMessage());
             $this->copyToDelete = null;
         }
     }

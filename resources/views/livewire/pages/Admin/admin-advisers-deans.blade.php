@@ -236,9 +236,28 @@
 
     {{-- Edit Modal --}}
     <x-mary-modal wire:model="showEditModal" title="Edit {{ ucfirst($activeTab === 'deans' ? 'Dean' : ($activeTab === 'authors' ? 'Author' : 'Adviser')) }}" class="backdrop-blur">
-        <x-mary-form wire:submit.prevent="save">
-            {{-- Dirty Indicator --}}
-            <div wire:dirty wire:target="name" class="alert alert-info mb-4 shadow-sm">
+        <x-mary-form wire:submit.prevent="save" x-data="{ 
+            isDirty: false,
+            originalName: @js(trim($name ?? '')),
+            init() {
+                // Watch for name changes and check if trimmed values differ
+                $watch('$wire.name', (newValue) => {
+                    const trimmedNew = (newValue || '').trim();
+                    const trimmedOriginal = (this.originalName || '').trim();
+                    this.isDirty = trimmedNew !== trimmedOriginal;
+                });
+                
+                // Update original when modal opens
+                $watch('$wire.showEditModal', (open) => {
+                    if (open) {
+                        this.originalName = ($wire.name || '').trim();
+                        this.isDirty = false;
+                    }
+                });
+            }
+        }">
+            {{-- Dirty Indicator - only show when form is actually dirty (trimmed values differ) --}}
+            <div x-show="isDirty" x-cloak class="alert alert-info mb-4 shadow-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 <span>You have unsaved changes</span>
             </div>
@@ -254,7 +273,7 @@
             @error('name')
                 <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
             @enderror
-            <div wire:dirty.remove wire:target="name" class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
+            <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
         
             <x-slot:actions>
                 <x-mary-button label="Cancel" wire:click="closeModals" />

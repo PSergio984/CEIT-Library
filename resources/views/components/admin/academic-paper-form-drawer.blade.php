@@ -164,46 +164,110 @@
             <x-slot:actions>
                 <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
                 @if($isEditing)
-                    {{-- Update button: disabled by default, enabled when form is dirty --}}
+                    {{-- Update button: disabled by default, enabled when form is dirty and no errors --}}
                     <div x-data="{ 
                         isDirty: false,
+                        hasErrors: @js($errors->any()),
                         init() {
                             // Reset dirty state when drawer opens
                             this.isDirty = false;
+                            this.hasErrors = @js($errors->any());
+                            
                             // Watch for drawer open/close to reset state
                             $watch('$wire.formDrawer', (open) => {
                                 if (open) {
                                     this.isDirty = false;
+                                    this.checkErrors();
                                 }
                             });
+                            
                             // Watch for form changes
                             $nextTick(() => {
                                 $wire.$watch('form', () => { 
                                     this.isDirty = true;
+                                    this.checkErrors();
                                 }, { deep: true });
                             });
+                            
+                            // Listen for Livewire validation events
+                            Livewire.on('validation-failed', () => {
+                                this.checkErrors();
+                            });
+                            
+                            Livewire.on('validation-passed', () => {
+                                this.checkErrors();
+                            });
+                        },
+                        checkErrors() {
+                            // Check if there are any validation errors
+                            const errorBag = $wire.get('errors') || {};
+                            this.hasErrors = Object.keys(errorBag).length > 0;
+                        },
+                        get isDisabled() {
+                            return !this.isDirty || this.hasErrors;
                         }
                     }">
                         <button 
                             type="submit"
                             class="btn btn-primary"
-                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty }"
-                            x-bind:disabled="!isDirty"
+                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': isDisabled }"
+                            x-bind:disabled="isDisabled"
                             wire:loading.attr="disabled"
                             wire:target="saveAcademicPaper">
                             <span wire:loading.remove wire:target="saveAcademicPaper">Update</span>
                             <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
                         </button>
-                        <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
+                        <div x-show="!isDirty && !hasErrors" x-cloak class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
+                        <div x-show="hasErrors" x-cloak class="text-error text-xs mt-1">Please fix validation errors</div>
                     </div>
                 @else
-                    {{-- Save button for Create mode --}}
-                    <x-mary-button 
-                        type="submit"
-                        label="Save"
-                        class="btn-primary"
-                        spinner="saveAcademicPaper"
-                    />
+                    {{-- Save button for Create mode: disabled when there are errors --}}
+                    <div x-data="{ 
+                        hasErrors: @js($errors->any()),
+                        init() {
+                            this.hasErrors = @js($errors->any());
+                            
+                            // Watch for drawer open/close to check errors
+                            $watch('$wire.formDrawer', (open) => {
+                                if (open) {
+                                    this.checkErrors();
+                                }
+                            });
+                            
+                            // Listen for Livewire validation events
+                            Livewire.on('validation-failed', () => {
+                                this.checkErrors();
+                            });
+                            
+                            Livewire.on('validation-passed', () => {
+                                this.checkErrors();
+                            });
+                            
+                            // Watch for form changes that might trigger validation
+                            $nextTick(() => {
+                                $wire.$watch('form', () => {
+                                    this.checkErrors();
+                                }, { deep: true });
+                            });
+                        },
+                        checkErrors() {
+                            // Check if there are any validation errors
+                            const errorBag = $wire.get('errors') || {};
+                            this.hasErrors = Object.keys(errorBag).length > 0;
+                        }
+                    }">
+                        <button 
+                            type="submit"
+                            class="btn btn-primary"
+                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': hasErrors }"
+                            x-bind:disabled="hasErrors"
+                            wire:loading.attr="disabled"
+                            wire:target="saveAcademicPaper">
+                            <span wire:loading.remove wire:target="saveAcademicPaper">Save</span>
+                            <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
+                        </button>
+                        <div x-show="hasErrors" x-cloak class="text-error text-xs mt-1">Please fix validation errors</div>
+                    </div>
                 @endif
             </x-slot:actions>
         </x-mary-form>
