@@ -3,11 +3,11 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\BorrowTransaction;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Computed;
-use Illuminate\Support\Facades\Auth;
 
 #[Title('Transaction History')]
 class Transaction extends Component
@@ -15,11 +15,14 @@ class Transaction extends Component
     use WithPagination;
 
     public string $search = '';
-    public string $statusFilter = '';
-    public string $paperTypeFilter = '';
-    public string $selectedDate = '';
-    public int $perPage = 10;
 
+    public string $statusFilter = '';
+
+    public string $paperTypeFilter = '';
+
+    public string $selectedDate = '';
+
+    public int $perPage = 10;
 
     /**
      * Get distinct paper types for filter dropdown
@@ -44,7 +47,7 @@ class Transaction extends Component
     {
         $query = BorrowTransaction::with([
             'user',
-            'inventory.academicPaper'
+            'inventory.academicPaper',
         ])
             ->where('user_id', Auth::id());
 
@@ -130,7 +133,7 @@ class Transaction extends Component
 
     private function formatDuration($transaction): string
     {
-        if (!$transaction->time_in) {
+        if (! $transaction->time_in) {
             return 'N/A';
         }
 
@@ -141,17 +144,18 @@ class Transaction extends Component
         $seconds = $diffInSeconds % 60;
         $parts = [];
         if ($hours > 0) {
-            $parts[] = $hours . 'h';
+            $parts[] = $hours.'h';
         }
         if ($minutes > 0 || $hours > 0) {
-            $parts[] = $minutes . 'm';
+            $parts[] = $minutes.'m';
         }
         if ($seconds > 0 && $hours == 0) {
-            $parts[] = $seconds . 's';
+            $parts[] = $seconds.'s';
         }
         if (empty($parts)) {
             $parts[] = '0s';
         }
+
         return implode(' ', $parts);
     }
 
@@ -180,11 +184,11 @@ class Transaction extends Component
 
         if ($transaction && $transaction->expires_at > now()) {
             $transaction->update([
-                'expires_at' => $transaction->expires_at->addDays(7)
+                'expires_at' => $transaction->expires_at->addDays(7),
             ]);
 
             $this->dispatch('transaction-extended', [
-                'message' => 'Transaction extended by 7 days successfully!'
+                'message' => 'Transaction extended by 7 days successfully!',
             ]);
         }
     }

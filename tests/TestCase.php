@@ -2,8 +2,8 @@
 
 namespace Tests;
 
-use Tests\Traits\CreatesTestDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Tests\Traits\CreatesTestDatabase;
 
 abstract class TestCase extends BaseTestCase
 {

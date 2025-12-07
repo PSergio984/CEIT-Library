@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 /**
  * @property int $id
@@ -18,6 +18,7 @@ use Carbon\Carbon;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\Librarian|null $scannedByLibrarian
  * @property-read \App\Models\User $user
+ *
  * @method static \Database\Factories\AttendanceFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance newQuery()
@@ -31,6 +32,7 @@ use Carbon\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereTimeOut($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance whereUserId($value)
+ *
  * @mixin \Eloquent
  */
 class Attendance extends Model
@@ -60,7 +62,7 @@ class Attendance extends Model
             $wasCompleted = $attendance->getOriginal('status') === 'completed';
             $isNowCompleted = $attendance->status === 'completed';
 
-            if (!$wasCompleted && $isNowCompleted) {
+            if (! $wasCompleted && $isNowCompleted) {
                 // Use the existing duration_minutes property instead of recalculating
                 if ($attendance->duration_minutes >= 30) {
                     // Efficient idempotency check: use indexed related_attendance_id for exact lookup
@@ -68,7 +70,7 @@ class Attendance extends Model
                         ->where('related_attendance_id', $attendance->id)
                         ->exists();
 
-                    if (!$existingReward) {
+                    if (! $existingReward) {
                         // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
                         ScoreIncrement::create([
                             'user_id' => $attendance->user_id,
@@ -114,15 +116,17 @@ class Attendance extends Model
     {
         if ($this->time_in && $this->time_out) {
             $this->duration_minutes = $this->time_in->diffInMinutes($this->time_out);
+
             return $this->duration_minutes;
         }
+
         return null;
     }
 
     // Check if session is currently active (user is in library)
     public function isActive()
     {
-        return $this->status === 'active' && $this->time_in && !$this->time_out;
+        return $this->status === 'active' && $this->time_in && ! $this->time_out;
     }
 
     // Complete the session (time out)

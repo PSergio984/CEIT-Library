@@ -2,15 +2,14 @@
 
 namespace App\Livewire\Pages\Student;
 
-
 use App\Models\ScoreIncrement;
 use App\Models\ViolationTransaction;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Computed;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Livewire\Attributes\Title;
 
 #[Title('Credit Score History')]
 class CreditScoreHistory extends Component
@@ -18,8 +17,11 @@ class CreditScoreHistory extends Component
     use WithPagination;
 
     public string $search = '';
+
     public string $typeFilter = ''; // 'reward', 'penalty', or '' for all
+
     public string $selectedDate = '';
+
     public int $perPage = 10;
 
     #[Computed]
@@ -27,6 +29,7 @@ class CreditScoreHistory extends Component
     {
         return Auth::user()?->credit_score ?? 0;
     }
+
     #[Computed]
     public function history()
     {
@@ -41,7 +44,7 @@ class CreditScoreHistory extends Component
             ->get()
             ->map(function ($s) {
                 return [
-                    'id' => 'reward-score-' . $s->id,
+                    'id' => 'reward-score-'.$s->id,
                     'action' => $s->name,
                     'description' => $s->description,
                     'points' => $s->score_value, // This is the points added
@@ -59,10 +62,10 @@ class CreditScoreHistory extends Component
             ->get()
             ->map(function ($v) {
                 return [
-                    'id' => 'penalty-' . $v->id,
+                    'id' => 'penalty-'.$v->id,
                     'action' => $v->violation?->name ?? 'Violation',
                     'description' => $v->remarks,
-                    'points' => - ($v->violation?->penalty_score ?? 0),
+                    'points' => -($v->violation?->penalty_score ?? 0),
                     'type' => 'penalty',
                     'occurred_at' => $v->date_occurred,
                 ];

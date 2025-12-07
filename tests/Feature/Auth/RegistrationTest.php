@@ -100,7 +100,6 @@ class RegistrationTest extends TestCase
         $this->assertTrue($component->instance()->getErrorBag()->has('email'));
     }
 
-
     public function test_registration_requires_valid_email_format(): void
     {
         $component = Volt::test('pages.auth.register')

@@ -63,7 +63,7 @@ class UserTest extends TestCase
      */
     public function test_user_has_correct_fillable_attributes()
     {
-        $user = new User();
+        $user = new User;
         $fillable = $user->getFillable();
 
         $this->assertContains('first_name', $fillable);
@@ -149,11 +149,11 @@ class UserTest extends TestCase
 
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $academicPaper1->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $academicPaper2->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         BorrowTransaction::create([
@@ -162,7 +162,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => $this->generateSessionToken('test-token-1')
+            'session_token' => $this->generateSessionToken('test-token-1'),
         ]);
 
         BorrowTransaction::create([
@@ -171,7 +171,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now()->subDays(3),
             'expires_at' => Carbon::now()->addDays(11),
-            'session_token' => $this->generateSessionToken('test-token-2')
+            'session_token' => $this->generateSessionToken('test-token-2'),
         ]);
 
         $this->assertCount(2, $user->borrowTransactions);
@@ -536,14 +536,14 @@ class UserTest extends TestCase
             'user_id' => $user->id,
             'violation_id' => $violation1->id,
             'date_occurred' => Carbon::now()->subDays(10),
-            'remarks' => 'Late return violation'
+            'remarks' => 'Late return violation',
         ]);
 
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation2->id,
             'date_occurred' => Carbon::now()->subDays(5),
-            'remarks' => 'Damaged book violation'
+            'remarks' => 'Damaged book violation',
         ]);
 
         $this->assertCount(2, $user->violations);
@@ -744,7 +744,6 @@ class UserTest extends TestCase
         $this->assertNull(User::find($userId));
     }
 
-
     /**
      * Test user credit score starts at default value.
      *
@@ -788,11 +787,11 @@ class UserTest extends TestCase
         // Create inventory items
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $paper1->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $paper2->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         // Create borrow transactions
@@ -802,7 +801,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => $this->generateSessionToken('test-token-1')
+            'session_token' => $this->generateSessionToken('test-token-1'),
         ]);
 
         BorrowTransaction::create([
@@ -811,7 +810,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now()->subDays(3),
             'expires_at' => Carbon::now()->addDays(11),
-            'session_token' => $this->generateSessionToken('test-token-2')
+            'session_token' => $this->generateSessionToken('test-token-2'),
         ]);
 
         $this->assertCount(2, $user->borrowTransactions);
@@ -836,7 +835,7 @@ class UserTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         // Create overdue transaction
@@ -846,7 +845,7 @@ class UserTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $overdueTransactions = $user->borrowTransactions()
@@ -899,14 +898,14 @@ class UserTest extends TestCase
             'user_id' => $user->id,
             'violation_id' => $violation1->id,
             'date_occurred' => Carbon::now()->subDays(10),
-            'remarks' => 'Late return violation'
+            'remarks' => 'Late return violation',
         ]);
 
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation2->id,
             'date_occurred' => Carbon::now()->subDays(5),
-            'remarks' => 'Damaged book violation'
+            'remarks' => 'Damaged book violation',
         ]);
 
         $this->assertCount(2, $user->violations);
@@ -932,14 +931,14 @@ class UserTest extends TestCase
             'user_id' => $user->id,
             'violation_id' => $violation1->id,
             'date_occurred' => Carbon::now()->subDays(10),
-            'remarks' => 'Late return violation'
+            'remarks' => 'Late return violation',
         ]);
 
         ViolationTransaction::create([
             'user_id' => $user->id,
             'violation_id' => $violation2->id,
             'date_occurred' => Carbon::now()->subDays(5),
-            'remarks' => 'Damaged book violation'
+            'remarks' => 'Damaged book violation',
         ]);
 
         // Verify violations were created
@@ -964,7 +963,7 @@ class UserTest extends TestCase
         ViolationTransaction::create([
             'user_id' => $user->id,
             'date_occurred' => Carbon::now(),
-            'remarks' => 'Serious violation'
+            'remarks' => 'Serious violation',
         ]);
 
         // Credit score should be reduced by penalty (100 - 150 = -50)
@@ -996,8 +995,6 @@ class UserTest extends TestCase
 
     /**
      * Cleanup after tests.
-     *
-     * @return void
      */
     protected function tearDown(): void
     {

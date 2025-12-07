@@ -2,24 +2,29 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
+use App\Livewire\Forms\ViolationForm;
+use App\Models\Violation;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
-use App\Models\Violation;
-use App\Livewire\Forms\ViolationForm;
 
 class ViolationsTab extends AdminComponent
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     public ViolationForm $form;
 
     public $search = '';
+
     public $perPage = 10;
+
     public $sortBy = ['column' => 'name', 'direction' => 'asc'];
+
     public $openDrawer = false;
+
     public $confirmDeleteModal = false;
+
     public $isEdit = false;
+
     public $editingId = null;
 
     public array $headers = [
@@ -48,6 +53,7 @@ class ViolationsTab extends AdminComponent
     public function openCreateDrawer()
     {
         $this->form->reset();
+        $this->form->penalty_score = 0; // Use 0 as sentinel value for "not set" in create mode
         $this->isEdit = false;
         $this->openDrawer = true;
     }
@@ -60,8 +66,24 @@ class ViolationsTab extends AdminComponent
         $this->openDrawer = true;
     }
 
+    public function updatedFormPenaltyScore()
+    {
+        // Clamp penalty score to valid range (1-100) when value changes
+        if ($this->form->penalty_score < 1) {
+            $this->form->penalty_score = 1;
+        } elseif ($this->form->penalty_score > 100) {
+            $this->form->penalty_score = 100;
+        }
+    }
+
     public function save()
     {
+        // Validate penalty score range before saving
+        if ($this->form->penalty_score < 1 || $this->form->penalty_score > 100) {
+            $this->addError('form.penalty_score', 'The penalty score must be between 1 and 100.');
+            return;
+        }
+
         $this->isEdit
             ? $this->form->update($this->editingId)
             : $this->form->store();
@@ -89,9 +111,49 @@ class ViolationsTab extends AdminComponent
         $this->sortBy = ['column' => 'name', 'direction' => 'asc'];
     }
 
+    public function getIsFormValidProperty(): bool
+    {
+        $name = trim($this->form->name ?? '');
+        $description = trim($this->form->description ?? '');
+        $penaltyScore = $this->form->penalty_score ?? 0;
+
+        // Check if fields are filled and valid
+        $nameValid = !empty($name) && strlen($name) >= 3 && strlen($name) <= 255;
+        $descValid = !empty($description) && strlen($description) >= 10 && strlen($description) <= 1000;
+        // Strictly enforce 1-100 range (not 0, not >100)
+        $penaltyValid = is_numeric($penaltyScore) && $penaltyScore >= 1 && $penaltyScore <= 100;
+
+        // Check for validation errors from Livewire
+        $hasErrors = $this->getErrorBag()->hasAny(['form.name', 'form.description', 'form.penalty_score']);
+
+        $fieldsValid = $nameValid && $descValid && $penaltyValid && !$hasErrors;
+
+        // For edit mode, also require form to be dirty
+        if ($this->isEdit) {
+            return $fieldsValid && $this->isFormDirty();
+        }
+
+        return $fieldsValid;
+    }
+
+    private function isFormDirty(): bool
+    {
+        if (!$this->isEdit || !$this->editingId) {
+            return false;
+        }
+
+        $violation = Violation::find($this->editingId);
+        if (!$violation) {
+            return false;
+        }
+
+        return trim($this->form->name) !== trim($violation->name) ||
+            trim($this->form->description) !== trim($violation->description) ||
+            $this->form->penalty_score !== $violation->penalty_score;
+    }
+
     public function render()
     {
         return view('livewire.pages.admin.violations-tab');
     }
 }
-

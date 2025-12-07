@@ -5,7 +5,6 @@ namespace Tests\Feature\Livewire\Student;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
-
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -44,7 +43,7 @@ class RuleAndRegulationTest extends TestCase
             ->assertSeeInOrder(['First', 'Second'])
             ->assertSee('Alpha')
             ->assertSee('Beta')
-            ->assertSee('header-' . $h1->id)
-            ->assertSee('header-' . $h2->id);
+            ->assertSee('header-'.$h1->id)
+            ->assertSee('header-'.$h2->id);
     }
 }

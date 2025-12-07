@@ -17,7 +17,7 @@ class TechnicalAdviserFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Engr. ' . $this->faker->name(),
+            'name' => 'Engr. '.$this->faker->name(),
         ];
     }
 }

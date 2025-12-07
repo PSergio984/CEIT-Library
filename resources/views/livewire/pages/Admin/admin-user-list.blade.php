@@ -281,18 +281,62 @@
                 <x-mary-input label="Student ID" wire:model="studentId" readonly disabled />
 
                 <div class="grid grid-cols-2 gap-4">
-                    <x-mary-input label="First Name" wire:model="firstName" />
-                    <x-mary-input label="Last Name" wire:model="lastName" />
+                    <x-mary-input 
+                        label="First Name" 
+                        wire:model="firstName" 
+                        minlength="2"
+                        maxlength="50"
+                        pattern="[A-Za-zÀ-ÿ\s\-'\.]+"
+                        title="Please enter a valid first name using letters only. Numbers are not allowed."
+                        required
+                        placeholder="e.g., Juan"
+                        hint="Letters, spaces, hyphens, and apostrophes only"
+                    />
+                    <x-mary-input 
+                        label="Last Name" 
+                        wire:model="lastName" 
+                        minlength="2"
+                        maxlength="50"
+                        pattern="[A-Za-zÀ-ÿ\s\-'\.]+"
+                        title="Please enter a valid last name using letters only. Numbers are not allowed."
+                        required
+                        placeholder="e.g., Dela Cruz"
+                        hint="Letters, spaces, hyphens, and apostrophes only"
+                    />
                 </div>
 
-                <x-mary-input label="Email" wire:model="email" type="email" />
+                <x-mary-input 
+                    label="Email" 
+                    wire:model="email" 
+                    type="email" 
+                    maxlength="100"
+                    pattern="^[A-Za-z0-9._%+-]+@plv\.edu\.ph$"
+                    title="Email must be a valid PLV email address ending with @plv.edu.ph"
+                    required
+                    placeholder="e.g., juandelacruz@plv.edu.ph"
+                    hint="Must be a valid @plv.edu.ph email"
+                />
 
                 <div class="grid grid-cols-2 gap-4">
-                    <x-mary-input label="Credit Score" wire:model="creditScore" type="number" min="0"
-                        max="100" />
+                    <x-mary-input 
+                        label="Credit Score" 
+                        wire:model="creditScore" 
+                        type="number" 
+                        min="0"
+                        max="100"
+                        step="1"
+                        required
+                        hint="Value between 0 and 100"
+                    />
 
-                    <x-mary-select label="Account Status" wire:model="accountStatus" :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'suspended', 'name' => 'Suspended']]"
-                        option-value="id" option-label="name" />
+                    <x-mary-select 
+                        label="Account Status" 
+                        wire:model="accountStatus" 
+                        :options="[['id' => 'active', 'name' => 'Active'], ['id' => 'suspended', 'name' => 'Suspended']]"
+                        option-value="id" 
+                        option-label="name" 
+                        required
+                    />
                 </div>
 
                 <x-mary-checkbox label="Admin User" wire:model="isAdmin" />

@@ -33,15 +33,15 @@ class LoginForm extends Form
      * Validate and return [limit, decay] for a given throttle config.
      * Applies sensible bounds and logs warnings if invalid.
      *
-     * @param mixed $limitRaw
-     * @param mixed $decayRaw
-     * @param string $context (e.g. 'login', 'verify_email')
+     * @param  mixed  $limitRaw
+     * @param  mixed  $decayRaw
+     * @param  string  $context  (e.g. 'login', 'verify_email')
      * @return array{int,int} [limit, decay]
      */
     public static function validatedThrottleConfig($limitRaw, $decayRaw, string $context = 'login'): array
     {
         static $cache = [];
-        $key = $context . '|' . var_export($limitRaw, true) . '|' . var_export($decayRaw, true);
+        $key = $context.'|'.var_export($limitRaw, true).'|'.var_export($decayRaw, true);
         if (isset($cache[$key])) {
             return $cache[$key];
         }
@@ -52,19 +52,20 @@ class LoginForm extends Form
         $defaultDecay = 60;
 
         if ($limit < 1) {
-            Log::warning("Invalid throttle.$context.limit config: " . var_export($limitRaw, true) . ". Falling back to $defaultLimit.");
+            Log::warning("Invalid throttle.$context.limit config: ".var_export($limitRaw, true).". Falling back to $defaultLimit.");
             $limit = $defaultLimit;
         } elseif ($limit > 100) {
-            Log::warning("Excessive throttle.$context.limit config: " . var_export($limitRaw, true) . ". Capping to 100.");
+            Log::warning("Excessive throttle.$context.limit config: ".var_export($limitRaw, true).'. Capping to 100.');
             $limit = 100;
         }
 
         if ($decay < 1) {
-            Log::warning("Invalid throttle.$context.decay config: " . var_export($decayRaw, true) . ". Falling back to $defaultDecay.");
+            Log::warning("Invalid throttle.$context.decay config: ".var_export($decayRaw, true).". Falling back to $defaultDecay.");
             $decay = $defaultDecay;
         }
 
         $cache[$key] = [$limit, $decay];
+
         return $cache[$key];
     }
 
@@ -100,10 +101,10 @@ class LoginForm extends Form
             $maxAttempts = (int) $raw;
 
             if ($maxAttempts < 1) {
-                Log::warning('Invalid throttle.login.limit config: ' . var_export($raw, true) . '. Falling back to 5.');
+                Log::warning('Invalid throttle.login.limit config: '.var_export($raw, true).'. Falling back to 5.');
                 self::$validatedLoginLimit = 5;
             } elseif ($maxAttempts > 100) {
-                Log::warning('Excessive throttle.login.limit config: ' . var_export($raw, true) . '. Capping to 100.');
+                Log::warning('Excessive throttle.login.limit config: '.var_export($raw, true).'. Capping to 100.');
                 self::$validatedLoginLimit = 100;
             } else {
                 self::$validatedLoginLimit = $maxAttempts;
@@ -131,6 +132,6 @@ class LoginForm extends Form
      */
     protected function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->email) . '|' . request()->ip());
+        return Str::transliterate(Str::lower($this->email).'|'.request()->ip());
     }
 }

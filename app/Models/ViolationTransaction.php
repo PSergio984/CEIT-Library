@@ -2,9 +2,9 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Carbon\Carbon;
 
 /**
  * @property int $id
@@ -17,6 +17,7 @@ use Carbon\Carbon;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \App\Models\User $user
  * @property-read \App\Models\Violation $violation
+ *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction byDateRange($startDate = null, $endDate = null)
  * @method static \Database\Factories\ViolationTransactionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction newModelQuery()
@@ -30,6 +31,7 @@ use Carbon\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|ViolationTransaction whereViolationId($value)
+ *
  * @mixin \Eloquent
  */
 class ViolationTransaction extends Model
@@ -49,11 +51,12 @@ class ViolationTransaction extends Model
         'date_occurred' => 'datetime',
         'violation_penalty' => 'integer',
     ];
+
     /**
      * Build the remarks string for a missing timeout violation.
-     * @param int $attendanceId
-     * @param Carbon|string $date
-     * @return string
+     *
+     * @param  int  $attendanceId
+     * @param  Carbon|string  $date
      */
     public static function buildMissingTimeoutRemarks($attendanceId, $date): string
     {
@@ -70,6 +73,7 @@ class ViolationTransaction extends Model
                 throw new \InvalidArgumentException("Invalid date format: {$date}", 0, $e);
             }
         }
+
         return "Failed to check out from session on {$dateStr}.";
     }
 
@@ -78,7 +82,7 @@ class ViolationTransaction extends Model
         // Store the original penalty when creating a violation transaction
         static::creating(function ($violationTransaction) {
             // If violation_penalty not explicitly set, fetch it from the violation
-            if (!$violationTransaction->violation_penalty) {
+            if (! $violationTransaction->violation_penalty) {
                 $violation = Violation::find($violationTransaction->violation_id);
                 if ($violation) {
                     $violationTransaction->violation_penalty = $violation->penalty_score;
@@ -126,14 +130,31 @@ class ViolationTransaction extends Model
      * Atomically update user's credit score with proper clamping (0-100)
      * Uses a single SQL UPDATE to prevent race conditions
      * Handles missing users gracefully and uses parameterized queries for safety
+     * Supports SQLite (CASE WHEN) and MySQL/Postgres (LEAST/GREATEST) for portability
      */
     protected static function updateUserCreditScoreAtomic(int $userId, int $delta): void
     {
-        // Explicitly cast credit_score to SIGNED for arithmetic, then cast result to UNSIGNED with clamping
-        \DB::statement(
-            'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
-            [$delta, $userId]
-        );
+        // Detect the database driver to use appropriate SQL functions
+        $driver = \DB::connection()->getDriverName();
+
+        // SQLite uses CASE WHEN for clarity and reliability
+        if ($driver === 'sqlite') {
+            // SQLite syntax: Use CASE WHEN for explicit clamping
+            \DB::statement(
+                'UPDATE users SET credit_score = CASE 
+                    WHEN credit_score + ? < 0 THEN 0
+                    WHEN credit_score + ? > 100 THEN 100
+                    ELSE credit_score + ?
+                END WHERE id = ?',
+                [$delta, $delta, $delta, $userId]
+            );
+        } else {
+            // MySQL/PostgreSQL syntax: LEAST for upper bound, GREATEST for lower bound
+            \DB::statement(
+                'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
+                [$delta, $userId]
+            );
+        }
     }
 
     // Relationship with user
@@ -174,6 +195,7 @@ class ViolationTransaction extends Model
         if ($endDate) {
             $query->where('date_occurred', '<=', $endDate);
         }
+
         return $query;
     }
 

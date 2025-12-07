@@ -128,36 +128,77 @@
                 </h3>
 
                 <x-mary-form wire:submit.prevent="save" class="space-y-4">
-                    <x-mary-input
-                        label="Name"
-                        wire:model="form.name"
-                        placeholder="Enter violation name"
-                        required
-                    />
+                    {{-- Dirty Indicator for Edit Mode --}}
+                    @if($isEdit)
+                        <div wire:dirty wire:target="form" class="alert alert-info mb-4 shadow-sm">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <span>You have unsaved changes</span>
+                        </div>
+                    @endif
 
-                    <x-mary-textarea
-                        label="Description"
-                        rows="6"
-                        wire:model="form.description"
-                        placeholder="Enter violation description"
-                        required
-                    />
+                    <div>
+                        <x-mary-input
+                            label="Name"
+                            wire:model.blur="form.name"
+                            placeholder="e.g., Overdue Book Return"
+                            minlength="3"
+                            maxlength="255"
+                            hint="Letters, spaces, and basic punctuation (hyphens, apostrophes, periods, &, commas, parentheses). (3-255 characters)"
+                        />
+                        @error('form.name')
+                            <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
 
-                    <x-mary-input
-                        label="Penalty Score"
-                        type="number"
-                        wire:model="form.penalty_score"
-                        placeholder="Enter penalty score"
-                        min="1"
-                        max="100"
-                        value="{{ old('form.penalty_score', 1) }}"
-                        required
-                    />
+                    <div>
+                        <x-mary-textarea
+                            label="Description"
+                            rows="6"
+                            wire:model.blur="form.description"
+                            placeholder="Describe the violation and when it applies..."
+                            minlength="10"
+                            maxlength="1000"
+                            hint="Provide a clear description (10-1000 characters)"
+                        />
+                        @error('form.description')
+                            <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    <div>
+                        <x-mary-input
+                            label="Penalty Score"
+                            type="number"
+                            wire:model.live="form.penalty_score"
+                            placeholder="Enter penalty score (1-100)"
+                            min="1"
+                            max="100"
+                            step="1"
+                            hint="Credit points deducted for this violation (1-100)"
+                        />
+                        @error('form.penalty_score')
+                            <div class="text-red-500 text-xs mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
+
+                    @if($isEdit)
+                        <div wire:dirty.remove wire:target="form" class="text-base-content/50 text-xs mb-2">
+                            Make changes to enable update
+                        </div>
+                    @endif
 
                     <div class="flex justify-end gap-2 pt-2">
-                        <x-mary-button type="button" label="Cancel" @click="$wire.openDrawer = false"/>
-                        <x-mary-button type="submit" class="btn-primary" label="{{ $isEdit ? 'Update' : 'Create' }}"
-                                       spinner/>
+                        <button type="button" wire:click="$set('openDrawer', false)" class="btn">Cancel</button>
+                        <button type="submit" 
+                            class="btn btn-primary {{ $errors->any() || !$this->isFormValid ? 'btn-disabled opacity-50 cursor-not-allowed' : '' }}" 
+                            wire:loading.attr="disabled" 
+                            wire:target="save"
+                            @disabled($errors->any() || !$this->isFormValid)>
+                            <span wire:loading.remove wire:target="save">
+                                {{ $isEdit ? 'Update' : 'Create' }}
+                            </span>
+                            <span wire:loading wire:target="save" class="loading loading-spinner loading-xs"></span>
+                        </button>
                     </div>
                 </x-mary-form>
             </div>

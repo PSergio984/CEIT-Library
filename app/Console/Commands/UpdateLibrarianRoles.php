@@ -6,7 +6,6 @@ use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\DB;
 
 class UpdateLibrarianRoles extends Command
 {
@@ -38,7 +37,7 @@ class UpdateLibrarianRoles extends Command
             ->whereDate('start_date', '<=', $today)
             ->where(function ($q) use ($today) {
                 $q->whereNull('end_date')
-                  ->orWhereDate('end_date', '>', $today);
+                    ->orWhereDate('end_date', '>', $today);
             })
             ->get()
             ->groupBy('batch_no');
@@ -65,10 +64,10 @@ class UpdateLibrarianRoles extends Command
                 // Has end_date and it's in the past
                 $q->whereDate('end_date', '<', $today)
                   // OR start_date was in the past but no longer active
-                  ->orWhere(function ($q2) use ($today) {
-                      $q2->whereDate('start_date', '<', $today)
-                         ->where('status', 'active');
-                  });
+                    ->orWhere(function ($q2) use ($today) {
+                        $q2->whereDate('start_date', '<', $today)
+                            ->where('status', 'active');
+                    });
             })
             ->get()
             ->groupBy('batch_no');
@@ -96,7 +95,7 @@ class UpdateLibrarianRoles extends Command
 
         $this->info("Promoted {$promotedCount} students to librarian role");
         $this->info("Demoted {$demotedCount} librarians back to student role");
-        $this->info("Librarian roles updated successfully!");
+        $this->info('Librarian roles updated successfully!');
 
         return Command::SUCCESS;
     }

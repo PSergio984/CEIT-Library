@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -52,11 +51,16 @@ class AppServiceProvider extends ServiceProvider
 
         // Gate for librarian-specific actions (not admin)
         Gate::define('librarian-only', function ($user) {
-            return $user->isLibrarian() && !$user->hasAdminAccess();
+            return $user->isLibrarian() && ! $user->hasAdminAccess();
         });
 
         // Gate to check if user can access privileged pages (Librarian or Admin)
         Gate::define('privileged-access', function ($user) {
+            return $user->hasAdminAccess() || $user->isLibrarian();
+        });
+
+        // Alias for privileged-access (used in routes)
+        Gate::define('librarian-or-admin-access', function ($user) {
             return $user->hasAdminAccess() || $user->isLibrarian();
         });
 

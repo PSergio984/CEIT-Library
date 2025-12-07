@@ -82,6 +82,28 @@ class extends Component
             uppercase: false,
             lowercase: false
         },
+        // Form field tracking for validation
+        fields: {
+            first_name: '',
+            last_name: '',
+            email: '',
+            password: '',
+            password_confirmation: ''
+        },
+        touched: {
+            first_name: false,
+            last_name: false,
+            email: false,
+            password: false,
+            password_confirmation: false
+        },
+        errors: {
+            first_name: '',
+            last_name: '',
+            email: '',
+            password: '',
+            password_confirmation: ''
+        },
         formatName(val) {
             if (!val) return '';
             // Trim, collapse multiple spaces, proper case each word
@@ -92,6 +114,8 @@ class extends Component
             const cleanFirst = (this.$wire.first_name || '').replace(/\s+/g, '').toLowerCase();
             const cleanLast = (this.$wire.last_name || '').replace(/\s+/g, '').toLowerCase();
             this.$wire.email = (cleanFirst && cleanLast) ? cleanFirst + cleanLast + '@plv.edu.ph' : '';
+            this.fields.email = this.$wire.email;
+            this.validateField('email');
         },
         evaluatePassword(value) {
             this.requirements.length = value && value.length >= 8;
@@ -104,7 +128,76 @@ class extends Component
             const score = Object.values(this.requirements).filter(Boolean).length;
             this.passwordStrength = (score / 5) * 100;
             this.passwordLabel = score <= 2 ? 'Weak' : score === 3 ? 'Fair' : score === 4 ? 'Good' : 'Strong';
+            this.fields.password = value;
             return { ...this.requirements, score, passwordStrength: this.passwordStrength, passwordLabel: this.passwordLabel };
+        },
+        validateField(field) {
+            this.touched[field] = true;
+            const value = this.fields[field] || '';
+            
+            switch(field) {
+                case 'first_name':
+                case 'last_name':
+                    if (!value.trim()) {
+                        this.errors[field] = 'This field is required.';
+                    } else if (value.length < 2) {
+                        this.errors[field] = 'Must be at least 2 characters.';
+                    } else if (value.length > 50) {
+                        this.errors[field] = 'Must not exceed 50 characters.';
+                    } else if (!/^[\p{L}\s\-']+$/u.test(value)) {
+                        this.errors[field] = 'Only letters, spaces, hyphens, and apostrophes allowed.';
+                    } else {
+                        this.errors[field] = '';
+                    }
+                    break;
+                case 'email':
+                    if (!value.trim()) {
+                        this.errors.email = 'Email is required.';
+                    } else if (!value.endsWith('@plv.edu.ph')) {
+                        this.errors.email = 'Email must end with @plv.edu.ph';
+                    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                        this.errors.email = 'Please enter a valid email address.';
+                    } else {
+                        this.errors.email = '';
+                    }
+                    break;
+                case 'password':
+                    if (!value) {
+                        this.errors.password = 'Password is required.';
+                    } else if (!this.requirements.length || !this.requirements.uppercase || !this.requirements.lowercase || !this.requirements.number || !this.requirements.symbol) {
+                        this.errors.password = 'Password does not meet all requirements.';
+                    } else {
+                        this.errors.password = '';
+                    }
+                    // Also validate confirmation if touched
+                    if (this.touched.password_confirmation) {
+                        this.validateField('password_confirmation');
+                    }
+                    break;
+                case 'password_confirmation':
+                    if (!value) {
+                        this.errors.password_confirmation = 'Please confirm your password.';
+                    } else if (value !== this.fields.password) {
+                        this.errors.password_confirmation = 'Passwords do not match.';
+                    } else {
+                        this.errors.password_confirmation = '';
+                    }
+                    break;
+            }
+        },
+        get isFormValid() {
+            // All fields must be filled and have no errors
+            const allFilled = this.fields.first_name && this.fields.last_name && 
+                             this.fields.email && this.fields.password && 
+                             this.fields.password_confirmation;
+            const noErrors = !this.errors.first_name && !this.errors.last_name && 
+                            !this.errors.email && !this.errors.password && 
+                            !this.errors.password_confirmation;
+            const passwordValid = this.requirements.length && this.requirements.uppercase && 
+                                 this.requirements.lowercase && this.requirements.number && 
+                                 this.requirements.symbol;
+            const passwordsMatch = this.fields.password === this.fields.password_confirmation;
+            return allFilled && noErrors && passwordValid && passwordsMatch;
         }
     }">
     <!-- Card Header with curve and logo -->
@@ -133,12 +226,18 @@ class extends Component
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
                     error-field="first_name"
+                    x-on:input="fields.first_name = $event.target.value"
                     x-on:blur="
                         const formatted = formatName($event.target.value);
                         $event.target.value = formatted;
                         $wire.first_name = formatted;
+                        fields.first_name = formatted;
+                        validateField('first_name');
                         $nextTick(() => updateEmail());
                     " />
+                <template x-if="touched.first_name && errors.first_name && !$wire.__instance.snapshot.memo.errors?.first_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.first_name"></p>
+                </template>
             </div>
             
             <!-- Last Name -->
@@ -151,12 +250,18 @@ class extends Component
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
                     error-field="last_name"
+                    x-on:input="fields.last_name = $event.target.value"
                     x-on:blur="
                         const formatted = formatName($event.target.value);
                         $event.target.value = formatted;
                         $wire.last_name = formatted;
+                        fields.last_name = formatted;
+                        validateField('last_name');
                         $nextTick(() => updateEmail());
                     " />
+                <template x-if="touched.last_name && errors.last_name && !$wire.__instance.snapshot.memo.errors?.last_name">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.last_name"></p>
+                </template>
             </div>
             
             <!-- Email Address (Auto-filled, with suffix) -->
@@ -169,8 +274,13 @@ class extends Component
                     type="email"
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
-                    error-field="email" />
+                    error-field="email"
+                    x-on:input="fields.email = $event.target.value"
+                    x-on:blur="fields.email = $event.target.value; validateField('email')" />
                 <p class="text-xs text-gray-600 mt-1">Email is suggested from your name but you can edit it</p>
+                <template x-if="touched.email && errors.email && !$wire.__instance.snapshot.memo.errors?.email">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.email"></p>
+                </template>
             </div>
             
             <!-- Password with Strength Meter -->
@@ -183,7 +293,8 @@ class extends Component
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
                     error-field="password"
-                    x-on:input="evaluatePassword($event.target.value)" />
+                    x-on:input="evaluatePassword($event.target.value)"
+                    x-on:blur="validateField('password')" />
                 
                 <!-- Password Strength Bar -->
                 <div class="mt-2" role="status" aria-live="polite">
@@ -255,7 +366,12 @@ class extends Component
                     autocomplete="new-password"
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
-                    error-field="password_confirmation" />
+                    error-field="password_confirmation"
+                    x-on:input="fields.password_confirmation = $event.target.value"
+                    x-on:blur="validateField('password_confirmation')" />
+                <template x-if="touched.password_confirmation && errors.password_confirmation && !$wire.__instance.snapshot.memo.errors?.password_confirmation">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.password_confirmation"></p>
+                </template>
             </div>
             
             <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
@@ -263,8 +379,12 @@ class extends Component
                    href="{{ route('login') }}" wire:navigate>
                     {{ __('Already registered?') }}
                 </a>
-                <x-primary-button class="sm:ml-auto order-1 sm:order-2 w-full sm:w-auto" wire:target="register"
-                                  icon="o-user-plus">
+                <x-primary-button 
+                    class="sm:ml-auto order-1 sm:order-2 w-full sm:w-auto" 
+                    wire:target="register"
+                    icon="o-user-plus"
+                    x-bind:disabled="!isFormValid"
+                    x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
                     {{ __('Register') }}
                 </x-primary-button>
             </div>

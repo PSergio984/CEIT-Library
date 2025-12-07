@@ -2,10 +2,11 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     public function up()
     {
         Schema::table('violation_transactions', function (Blueprint $table) {
@@ -25,17 +26,17 @@ return new class extends Migration {
                         $idAttendanceMap[$vt->id] = $matches[1];
                     }
                 }
-                if (!empty($idAttendanceMap)) {
+                if (! empty($idAttendanceMap)) {
                     DB::transaction(function () use ($idAttendanceMap) {
                         $sanitizedMap = [];
                         foreach ($idAttendanceMap as $id => $attendanceId) {
-                            $sanitizedMap[(int)$id] = (int)$attendanceId;
+                            $sanitizedMap[(int) $id] = (int) $attendanceId;
                         }
                         $ids = array_keys($sanitizedMap);
                         $cases = '';
                         $bindings = [];
                         foreach ($sanitizedMap as $id => $attendanceId) {
-                            $cases .= "WHEN id = ? THEN ? ";
+                            $cases .= 'WHEN id = ? THEN ? ';
                             $bindings[] = $id;
                             $bindings[] = $attendanceId;
                         }

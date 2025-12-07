@@ -20,14 +20,14 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::factory()->create([
             'user_id' => $user->id,
             'academic_paper_id' => $paper->id,
             'inventory_id' => $inventory->id,
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $this->assertInstanceOf(BorrowTransaction::class, $transaction);
@@ -38,7 +38,7 @@ class BorrowTransactionTest extends TestCase
 
     public function test_borrow_transaction_has_fillable_attributes()
     {
-        $transaction = new BorrowTransaction();
+        $transaction = new BorrowTransaction;
         $fillable = $transaction->getFillable();
 
         $this->assertContains('user_id', $fillable);
@@ -59,7 +59,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -68,7 +68,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the relationship exists
@@ -79,7 +79,7 @@ class BorrowTransactionTest extends TestCase
             // If relationship doesn't exist, just verify the transaction was created
             $this->assertDatabaseHas('borrow_transactions', [
                 'user_id' => $user->id,
-                'academic_paper_id' => $paper->id
+                'academic_paper_id' => $paper->id,
             ]);
         }
     }
@@ -90,7 +90,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -99,7 +99,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the relationship exists
@@ -110,7 +110,7 @@ class BorrowTransactionTest extends TestCase
             // If relationship doesn't exist, just verify the transaction was created
             $this->assertDatabaseHas('borrow_transactions', [
                 'academic_paper_id' => $paper->id,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         }
     }
@@ -121,7 +121,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -130,7 +130,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the relationship exists
@@ -141,7 +141,7 @@ class BorrowTransactionTest extends TestCase
             // If relationship doesn't exist, just verify the transaction was created
             $this->assertDatabaseHas('borrow_transactions', [
                 'inventory_id' => $inventory->id,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         }
     }
@@ -152,7 +152,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -161,7 +161,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $this->assertInstanceOf(Carbon::class, $transaction->time_in);
@@ -174,7 +174,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -196,7 +196,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -205,7 +205,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $transaction->time_out = Carbon::now();
@@ -223,7 +223,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -232,7 +232,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the accessor exists
@@ -250,7 +250,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -259,7 +259,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9), // Expires in 9 days
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the accessor exists
@@ -277,7 +277,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -287,7 +287,7 @@ class BorrowTransactionTest extends TestCase
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
             'session_token' => $this->generateSessionToken(),
-            'status' => 'started'
+            'status' => 'started',
         ]);
 
         // Check if the accessor exists
@@ -305,7 +305,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -316,7 +316,7 @@ class BorrowTransactionTest extends TestCase
             'expires_at' => Carbon::now()->addDays(9),
             'session_token' => $this->generateSessionToken(),
             'time_out' => Carbon::now(),
-            'status' => 'completed'
+            'status' => 'completed',
         ]);
 
         // Check if the accessor exists
@@ -334,7 +334,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -343,7 +343,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9), // 9 days remaining
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the accessor exists
@@ -361,7 +361,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -370,7 +370,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // 5 days overdue
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Check if the accessor exists
@@ -388,7 +388,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -397,7 +397,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $this->assertNotNull($transaction->created_at);
@@ -412,7 +412,7 @@ class BorrowTransactionTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         $transaction = BorrowTransaction::create([
@@ -421,7 +421,7 @@ class BorrowTransactionTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $transactionId = $transaction->id;

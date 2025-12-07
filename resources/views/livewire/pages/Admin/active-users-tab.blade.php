@@ -132,7 +132,22 @@
 
     {{-- Record Violation Drawer --}}
     <x-mary-drawer wire:model="ViolationDrawer" class="w-11/12 lg:w-1/3" right>
-        <div class="px-2 py-3">
+        <div class="px-2 py-3" x-data="{
+            violationId: $wire.entangle('selectedViolationId'),
+            touched: false,
+            error: '',
+            validateViolation() {
+                this.touched = true;
+                if (!this.violationId) {
+                    this.error = 'Please select a violation type.';
+                } else {
+                    this.error = '';
+                }
+            },
+            get isFormValid() {
+                return !!this.violationId;
+            }
+        }">
             <h3 class="text-lg font-semibold mb-4">Record Violation</h3>
 
             @if($selectedUser)
@@ -150,14 +165,20 @@
                 </div>
 
                 <x-mary-form wire:submit.prevent="recordViolation" class="space-y-4">
-                    <x-mary-select
-                        label="Violation Type"
-                        wire:model="selectedViolationId"
-                        :options="$this->violationOptions"
-                        placeholder="Select violation"
-                        icon="o-shield-exclamation"
-                        required
-                    />
+                    <div>
+                        <x-mary-select
+                            label="Violation Type"
+                            wire:model="selectedViolationId"
+                            :options="$this->violationOptions"
+                            placeholder="Select violation"
+                            icon="o-shield-exclamation"
+                            x-on:change="validateViolation()"
+                            required
+                        />
+                        <template x-if="touched && error">
+                            <p class="text-red-500 text-xs mt-1" x-text="error"></p>
+                        </template>
+                    </div>
 
                     <x-mary-textarea
                         label="Remarks (Optional)"
@@ -168,7 +189,9 @@
 
                     <div class="flex justify-end gap-2 pt-2">
                         <x-mary-button type="button" label="Cancel" @click="$wire.ViolationDrawer = false"/>
-                        <x-mary-button type="submit" class="btn-error" label="Record Violation" spinner/>
+                        <x-mary-button type="submit" class="btn-error" label="Record Violation" spinner
+                                       x-bind:disabled="!isFormValid"
+                                       x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }"/>
                     </div>
                 </x-mary-form>
             @endif

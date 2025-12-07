@@ -132,7 +132,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.number_of_copies" @endif>
                     Number of Copies @if($isEditing) <span wire:dirty wire:target="form.number_of_copies" class="text-orange-400">*</span> @endif
                 </label>
-                @if($isEditing)
+                @if($isEditing) 
                     <x-mary-input 
                         type="number" 
                         wire:model.blur="form.number_of_copies"
@@ -165,30 +165,45 @@
                 <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
                 @if($isEditing)
                     {{-- Update button: disabled by default, enabled when form is dirty --}}
-                    <button 
-                        x-data="{ isDirty: false }"
-                        x-init="$wire.$watch('form', () => { isDirty = true })"
-                        type="submit"
-                        class="btn btn-primary"
-                        :class="{ 'btn-disabled opacity-50': !isDirty }"
-                        :disabled="!isDirty"
-                        wire:loading.attr="disabled"
-                        wire:target="saveAcademicPaper">
-                        <span wire:loading.remove wire:target="saveAcademicPaper">Update</span>
-                        <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
-                        <span wire:loading wire:target="saveAcademicPaper">Updating...</span>
-                    </button>
+                    <div x-data="{ 
+                        isDirty: false,
+                        init() {
+                            // Reset dirty state when drawer opens
+                            this.isDirty = false;
+                            // Watch for drawer open/close to reset state
+                            $watch('$wire.formDrawer', (open) => {
+                                if (open) {
+                                    this.isDirty = false;
+                                }
+                            });
+                            // Watch for form changes
+                            $nextTick(() => {
+                                $wire.$watch('form', () => { 
+                                    this.isDirty = true;
+                                }, { deep: true });
+                            });
+                        }
+                    }">
+                        <button 
+                            type="submit"
+                            class="btn btn-primary"
+                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty }"
+                            x-bind:disabled="!isDirty"
+                            wire:loading.attr="disabled"
+                            wire:target="saveAcademicPaper">
+                            <span wire:loading.remove wire:target="saveAcademicPaper">Update</span>
+                            <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
+                        </button>
+                        <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
+                    </div>
                 @else
-                    {{-- Save button: always enabled for new records --}}
-                    <button 
+                    {{-- Save button for Create mode --}}
+                    <x-mary-button 
                         type="submit"
-                        class="btn btn-primary"
-                        wire:loading.attr="disabled"
-                        wire:target="saveAcademicPaper">
-                        <span wire:loading.remove wire:target="saveAcademicPaper">Save</span>
-                        <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
-                        <span wire:loading wire:target="saveAcademicPaper">Saving...</span>
-                    </button>
+                        label="Save"
+                        class="btn-primary"
+                        spinner="saveAcademicPaper"
+                    />
                 @endif
             </x-slot:actions>
         </x-mary-form>

@@ -14,7 +14,7 @@ class PlvEmailDomain implements ValidationRule
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
-        if (!preg_match('/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/', $value)) {
+        if (! preg_match('/^[A-Za-z0-9._%+-]+@plv\.edu\.ph$/', $value)) {
             $fail('The :attribute must be a valid PLV email address ending with @plv.edu.ph.');
         }
     }

@@ -18,6 +18,6 @@ return [
     'throttled' => 'Please wait before retrying.',
     'throttle' => 'Too many password reset attempts. Please try again in :seconds second.|Too many password reset attempts. Please try again in :seconds seconds.',
     'token' => 'This password reset token is invalid.',
-    'user' => "If that email address is in our system, we have sent a password reset link.",
+    'user' => 'If that email address is in our system, we have sent a password reset link.',
 
 ];

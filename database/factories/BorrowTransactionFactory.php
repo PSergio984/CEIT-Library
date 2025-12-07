@@ -2,13 +2,8 @@
 
 namespace Database\Factories;
 
-use Illuminate\Database\Eloquent\Factories\Factory;
-use App\Models\BorrowTransaction;
-use App\Models\User;
-use App\Models\AcademicPaper;
-use App\Models\Inventory;
 use Carbon\Carbon;
-use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BorrowTransaction>
@@ -57,6 +52,7 @@ class BorrowTransactionFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $timeIn = Carbon::now()->subMinutes($this->faker->numberBetween(30, 180));
+
             return [
                 'time_in' => $timeIn,
                 'time_out' => null,

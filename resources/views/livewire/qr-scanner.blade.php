@@ -36,8 +36,9 @@
                     }
                 }
             }">
-            <div class="bg-base-100 rounded-2xl shadow-2xl p-4 sm:p-6 w-full mx-4 max-h-[90vh] overflow-y-auto"
-                :class="scanMode === null ? 'max-w-md' : 'max-w-full sm:max-w-4xl'">
+            <div class="bg-base-100 rounded-2xl shadow-2xl p-4 sm:p-6 mx-4 max-h-[95vh] overflow-y-auto"
+                :class="scanMode === null ? 'max-w-sm' : 'max-w-full sm:max-w-4xl w-full'"
+                :style="scanMode === null ? 'max-width: 24rem;' : 'max-width: calc(100vw - 2rem);'">
                 {{-- Header --}}
                 <div class="flex justify-between items-center mb-4">
                     <div class="flex items-center gap-3">
@@ -64,26 +65,45 @@
 
                 {{-- Mode Selection --}}
                 <div x-show="scanMode === null" class="space-y-4">
+                    {{-- Info Banner --}}
+                    <div class="alert alert-info mb-4">
+                        <x-mary-icon name="o-information-circle" class="w-5 h-5 flex-shrink-0" />
+                        <div class="text-sm">
+                            Upload an image containing the QR code or use your camera to scan directly.
+                        </div>
+                    </div>
+
+                    {{-- Camera Option --}}
                     <button @click="selectMode('camera')"
-                        class="w-full btn btn-lg btn-primary justify-start gap-4 h-auto py-6">
-                        <div class="bg-primary-content/20 p-3 rounded-lg">
-                            <x-mary-icon name="o-camera" class="w-8 h-8" />
+                        class="w-full btn btn-lg btn-primary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform">
+                        <div class="bg-primary-content/20 p-3 rounded-lg flex-shrink-0">
+                            <x-mary-icon name="o-camera" class="w-6 h-6" />
                         </div>
-                        <div class="text-left">
-                            <div class="font-bold text-lg">Scan with Camera</div>
-                            <div class="text-sm opacity-80 font-normal">Use your device camera to scan QR code</div>
+                        <div class="flex-1 text-left">
+                            <div class="font-bold text-base">Use Camera</div>
+                            <div class="text-xs opacity-80 font-normal mt-1">Scan QR code with your device camera</div>
                         </div>
+                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 opacity-60 flex-shrink-0" />
                     </button>
 
+                    {{-- Divider --}}
+                    <div class="flex items-center gap-4 my-4">
+                        <div class="flex-1 border-t border-base-300"></div>
+                        <span class="text-xs text-base-content/50 font-medium">OR</span>
+                        <div class="flex-1 border-t border-base-300"></div>
+                    </div>
+
+                    {{-- File Upload Option --}}
                     <button @click="selectMode('file')"
-                        class="w-full btn btn-lg btn-secondary justify-start gap-4 h-auto py-6">
-                        <div class="bg-secondary-content/20 p-3 rounded-lg">
-                            <x-mary-icon name="o-photo" class="w-8 h-8" />
+                        class="w-full btn btn-lg btn-outline btn-secondary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform">
+                        <div class="bg-secondary-content/20 p-3 rounded-lg flex-shrink-0">
+                            <x-mary-icon name="o-photo" class="w-6 h-6" />
                         </div>
-                        <div class="text-left">
-                            <div class="font-bold text-lg">Upload QR Image</div>
-                            <div class="text-sm opacity-80 font-normal">Select a QR code image from your device</div>
+                        <div class="flex-1 text-left">
+                            <div class="font-bold text-base">Upload Image</div>
+                            <div class="text-xs opacity-80 font-normal mt-1">Select a QR code image from your device</div>
                         </div>
+                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 opacity-60 flex-shrink-0" />
                     </button>
                 </div>
 
@@ -129,26 +149,28 @@
                     </div>
 
                     {{-- QR Scanner Container with Enhanced Frame --}}
-                    <div class="relative mb-4">
+                    <div class="relative mb-4 flex justify-center">
                         {{-- Decorative scanning frame --}}
-                        <div class="absolute inset-0 pointer-events-none z-10">
-                            <div
-                                class="absolute top-2 left-2 sm:top-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-l-4 border-primary rounded-tl-lg">
-                            </div>
-                            <div
-                                class="absolute top-2 right-2 sm:top-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-r-4 border-primary rounded-tr-lg">
-                            </div>
-                            <div
-                                class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-l-4 border-primary rounded-bl-lg">
-                            </div>
-                            <div
-                                class="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-r-4 border-primary rounded-br-lg">
+                        <div class="absolute inset-0 pointer-events-none z-10 flex items-center justify-center">
+                            <div class="relative w-full h-full flex items-center justify-center">
+                                <div
+                                    class="absolute top-2 left-2 sm:top-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-l-4 border-primary rounded-tl-lg">
+                                </div>
+                                <div
+                                    class="absolute top-2 right-2 sm:top-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-t-4 border-r-4 border-primary rounded-tr-lg">
+                                </div>
+                                <div
+                                    class="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-l-4 border-primary rounded-bl-lg">
+                                </div>
+                                <div
+                                    class="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 w-12 h-12 sm:w-16 sm:h-16 border-b-4 border-r-4 border-primary rounded-br-lg">
+                                </div>
                             </div>
                         </div>
 
                         <div id="qr-reader"
-                            class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner aspect-video sm:aspect-auto"
-                            style="min-height: 300px;"></div>
+                            class="w-full rounded-xl overflow-hidden bg-gray-900 shadow-inner aspect-square sm:aspect-video"
+                            style="min-height: 300px; max-height: min(80vh, 600px); width: 100%;"></div>
                     </div>
 
                     {{-- Instructions --}}
@@ -177,8 +199,8 @@
 
                     <div class="border-2 border-dashed border-primary/30 rounded-xl p-4 sm:p-8 bg-base-200/50 mb-4">
                         <div id="file-qr-reader"
-                            class="w-full rounded-xl overflow-hidden bg-gray-900 aspect-video sm:aspect-auto"
-                            style="min-height: 300px;"></div>
+                            class="w-full rounded-xl overflow-hidden bg-gray-900 aspect-square sm:aspect-video"
+                            style="min-height: 300px; max-height: 60vh;"></div>
                     </div>
 
                     <div class="bg-base-200 border border-base-300 rounded-lg p-4 mb-4">
@@ -293,11 +315,14 @@
                                 console.log('Creating Html5Qrcode instance for camera');
                                 html5QrCode = new Html5Qrcode("qr-reader");
 
-                                // Responsive QR box sizing
+                                // Responsive QR box sizing - ensure square on mobile for better scanning
                                 const isMobile = window.innerWidth < 640;
+                                // Calculate optimal qrbox size - use 80% of viewport width on mobile for square
+                                const viewportWidth = window.innerWidth;
+                                const viewportHeight = window.innerHeight;
                                 const qrBoxSize = isMobile ?
-                                    Math.min(250, window.innerWidth - 80) :
-                                    Math.min(350, window.innerWidth - 100);
+                                    Math.min(Math.min(viewportWidth, viewportHeight) * 0.75, 350) :
+                                    Math.min(400, viewportWidth - 200);
 
                                 scannerConfig = {
                                     fps: 10,
@@ -305,7 +330,11 @@
                                         width: qrBoxSize,
                                         height: qrBoxSize
                                     },
-                                    aspectRatio: isMobile ? 1.0 : 1.777778 // 1:1 for mobile, 16:9 for desktop
+                                    aspectRatio: isMobile ? 1.0 : 1.777778, // 1:1 square for mobile, 16:9 for desktop
+                                    disableFlip: false, // Allow rotation for better scanning
+                                    videoConstraints: {
+                                        facingMode: "environment" // Prefer back camera
+                                    }
                                 };
 
                                 successCallback = (decodedText) => {

@@ -2,43 +2,57 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\WithPagination;
 use App\Models\User;
-use Mary\Traits\Toast;
-use Livewire\Attributes\Title;
-use Livewire\Attributes\Computed;
+use App\Rules\PlvEmailDomain;
+use App\Rules\ProperName;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
+use Livewire\Attributes\Title;
+use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 #[Title('Admin User List')]
 #[Lazy]
 class AdminUserList extends AdminComponent
 {
-    use WithPagination, Toast, AuthorizesRequests;
+    use AuthorizesRequests, Toast, WithPagination;
 
     public $perPage = 20;
+
     public $search = '';
+
     public $statusFilter = '';
+
     public $creditScoreFilter = '';
+
     public $roleFilter = '';
 
     // Modal visibility
     public $showStudentModal = false;
+
     public $showEditModal = false;
+
     public $showDeleteModal = false;
 
     // Modal data properties (primitives only - no Eloquent models)
     public $selectedStudentId = null;
+
     public $selectedStudentData = [];
 
     public $studentId;
+
     public $firstName;
+
     public $lastName;
+
     public $email;
+
     public $creditScore;
+
     public $accountStatus;
+
     public $isAdmin;
 
     public array $headers = [
@@ -57,6 +71,7 @@ class AdminUserList extends AdminComponent
 
     // Credit score thresholds
     public const CREDIT_SCORE_HIGH = 75;
+
     public const CREDIT_SCORE_MEDIUM = 50;
 
     /**
@@ -69,6 +84,7 @@ class AdminUserList extends AdminComponent
         } elseif ($score >= self::CREDIT_SCORE_MEDIUM) {
             return 'warning';
         }
+
         return 'error';
     }
 
@@ -138,7 +154,7 @@ class AdminUserList extends AdminComponent
             ->through(function ($user) {
                 return [
                     'id' => $user->id,
-                    'name' => trim($user->first_name . ' ' . $user->last_name),
+                    'name' => trim($user->first_name.' '.$user->last_name),
                     'email' => $user->email,
                     'credit_score' => $user->credit_score,
                     'credit_score_color' => $this->getCreditScoreColor($user->credit_score),
@@ -152,7 +168,7 @@ class AdminUserList extends AdminComponent
     #[Computed]
     public function totalStudents()
     {
-        $cacheKey = 'admin_user_list_total_students_' . md5(serialize([
+        $cacheKey = 'admin_user_list_total_students_'.md5(serialize([
             $this->search,
             $this->statusFilter,
             $this->roleFilter,
@@ -169,6 +185,7 @@ class AdminUserList extends AdminComponent
     {
         return Cache::remember('admin_user_list_total_borrowers', 300, function () {
             $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+
             return User::where('role_id', $studentRoleId)
                 ->whereHas('borrowTransactions', function ($query) {
                     $query->where('status', 'started');
@@ -223,18 +240,67 @@ class AdminUserList extends AdminComponent
     public function saveChanges()
     {
         $this->validate([
-            'firstName' => 'required|string|max:255',
-            'lastName' => 'required|string|max:255',
-            'email' => 'required|email|unique:users,email,' . $this->studentId,
-            'creditScore' => 'required|integer|min:0|max:100',
-            'accountStatus' => 'required|in:active,suspended',
+            'firstName' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                new ProperName,
+            ],
+            'lastName' => [
+                'required',
+                'string',
+                'min:2',
+                'max:50',
+                new ProperName,
+            ],
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:100',
+                new PlvEmailDomain,
+                'unique:users,email,'.$this->studentId,
+            ],
+            'creditScore' => [
+                'required',
+                'integer',
+                'min:0',
+                'max:100',
+            ],
+            'accountStatus' => [
+                'required',
+                'string',
+                'in:active,suspended',
+            ],
+        ], [
+            'firstName.required' => 'First name is required.',
+            'firstName.min' => 'First name must be at least 2 characters.',
+            'firstName.max' => 'First name cannot exceed 50 characters.',
+
+            'lastName.required' => 'Last name is required.',
+            'lastName.min' => 'Last name must be at least 2 characters.',
+            'lastName.max' => 'Last name cannot exceed 50 characters.',
+
+            'email.required' => 'Email is required.',
+            'email.email' => 'Please enter a valid email address.',
+            'email.max' => 'Email cannot exceed 100 characters.',
+            'email.unique' => 'This email is already taken by another user.',
+
+            'creditScore.required' => 'Credit score is required.',
+            'creditScore.integer' => 'Credit score must be a whole number.',
+            'creditScore.min' => 'Credit score cannot be negative.',
+            'creditScore.max' => 'Credit score cannot exceed 100.',
+
+            'accountStatus.required' => 'Account status is required.',
+            'accountStatus.in' => 'Account status must be either active or suspended.',
         ]);
 
         $user = User::findOrFail($this->studentId);
         $user->update([
-            'first_name' => $this->firstName,
-            'last_name' => $this->lastName,
-            'email' => $this->email,
+            'first_name' => trim($this->firstName),
+            'last_name' => trim($this->lastName),
+            'email' => strtolower(trim($this->email)),
             'credit_score' => $this->creditScore,
             'account_status' => $this->accountStatus,
         ]);
@@ -276,6 +342,7 @@ class AdminUserList extends AdminComponent
 
             if ($hasActiveBorrows) {
                 $this->error('Cannot delete student: active borrow transactions exist.');
+
                 return;
             }
 
@@ -302,8 +369,8 @@ class AdminUserList extends AdminComponent
             foreach (
                 [
                     'admin_user_list_total_borrowers',
-                    'admin_user_list_total_students_' . md5(serialize(['', '', '', ''])),
-                    'admin_user_list_total_students_' . md5(serialize([$this->search, $this->statusFilter, $this->roleFilter, $this->creditScoreFilter])),
+                    'admin_user_list_total_students_'.md5(serialize(['', '', '', ''])),
+                    'admin_user_list_total_students_'.md5(serialize([$this->search, $this->statusFilter, $this->roleFilter, $this->creditScoreFilter])),
                 ] as $key
             ) {
                 Cache::forget($key);

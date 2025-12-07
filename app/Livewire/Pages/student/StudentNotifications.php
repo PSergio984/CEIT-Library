@@ -4,26 +4,28 @@ namespace App\Livewire\Pages\Student;
 
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
-use Livewire\Attributes\Title;
 use Mary\Traits\Toast;
 
 #[Title('Notifications')]
 class StudentNotifications extends Component
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     public $filterType = '';
+
     public $filterRead = '';
+
     public $perPage = 15;
 
     public function getNotificationsProperty()
     {
         $query = Notification::where('user_id', Auth::id())
-            ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
-            ->when($this->filterRead === 'read', fn($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
+            ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
+            ->when($this->filterRead === 'read', fn ($q) => $q->read())
+            ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);

@@ -8,8 +8,8 @@ use Mary\Traits\Toast;
 
 class EditAcademicPaper extends AdminComponent
 {
-
     use Toast;
+
     public AcademicPaperForm $form;
 
     public function mount(AcademicPaper $academicPaper)
@@ -20,7 +20,7 @@ class EditAcademicPaper extends AdminComponent
     public function save()
     {
         $paper = $this->form->update();
-        $this->success("{$paper->title} updated", 'Updated Successfully!', redirectTo: "/admin/academic-papers");
+        $this->success("{$paper->title} updated", 'Updated Successfully!', redirectTo: '/admin/academic-papers');
     }
 
     public function render()

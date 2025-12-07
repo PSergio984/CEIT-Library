@@ -5,8 +5,8 @@ namespace Tests\Feature\Auth;
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 // use Illuminate\Foundation\Testing\RefreshDatabase; // Using custom test database creation
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
@@ -29,7 +29,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'email' => 'test.user@plv.edu.ph' // Use valid PLV email
+            'email' => 'test.user@plv.edu.ph', // Use valid PLV email
         ]);
 
         $component = Volt::test('pages.auth.forgot-password')
@@ -54,7 +54,7 @@ class PasswordResetTest extends TestCase
         Notification::fake();
 
         $user = User::factory()->create([
-            'email' => 'test.user2@plv.edu.ph' // Use valid PLV email
+            'email' => 'test.user2@plv.edu.ph', // Use valid PLV email
         ]);
 
         $component = Volt::test('pages.auth.forgot-password')
@@ -69,6 +69,7 @@ class PasswordResetTest extends TestCase
         try {
             Notification::assertSentTo($user, ResetPassword::class, function ($notification) use (&$resetToken) {
                 $resetToken = $notification->token;
+
                 return true;
             });
         } catch (\Exception $e) {
@@ -80,7 +81,7 @@ class PasswordResetTest extends TestCase
         $this->assertNotNull($resetToken, 'Failed to obtain password reset token');
 
         // Test that the reset screen can be rendered with the token
-        $response = $this->get('/reset-password/' . $resetToken);
+        $response = $this->get('/reset-password/'.$resetToken);
 
         $response
             ->assertSeeVolt('pages.auth.reset-password')
@@ -93,7 +94,7 @@ class PasswordResetTest extends TestCase
 
         $user = User::factory()->create([
             'email' => 'test.user3@plv.edu.ph', // Use valid PLV email
-            'password' => Hash::make('old-password')
+            'password' => Hash::make('old-password'),
         ]);
 
         $component = Volt::test('pages.auth.forgot-password')
@@ -108,6 +109,7 @@ class PasswordResetTest extends TestCase
         try {
             Notification::assertSentTo($user, ResetPassword::class, function ($notification) use (&$resetToken) {
                 $resetToken = $notification->token;
+
                 return true;
             });
         } catch (\Exception $e) {
@@ -151,8 +153,6 @@ class PasswordResetTest extends TestCase
         $component = Volt::test('pages.auth.forgot-password')
             ->set('email', 'nonexistent@plv.edu.ph')
             ->call('sendPasswordResetLink');
-
-
 
         // Verify the application handles non-existent users gracefully
         // Either shows a generic success message (security best practice)

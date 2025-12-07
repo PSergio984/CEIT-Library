@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\RuleHeader;
-use App\Models\User;
 use App\Models\AcademicPaper;
+use App\Models\Attendance;
+use App\Models\BorrowTransaction;
+use App\Models\Inventory;
+use App\Models\Librarian;
+use App\Models\RuleHeader;
+use App\Models\RuleRegulation;
+use App\Models\ScoreIncrement;
+use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
-use App\Models\ScoreIncrement;
-use App\Models\Attendance;
-use App\Models\Librarian;
-use App\Models\Inventory;
-use App\Models\BorrowTransaction;
-use App\Models\RuleRegulation;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -120,9 +120,9 @@ class DatabaseSeeder extends Seeder
 
         // Create academic papers with adviser and dean relationships
         $academicPapers = AcademicPaper::factory(30)->create([
-            'research_adviser_id' => fn() => $researchAdvisers->random()->id,
-            'technical_adviser_id' => fn() => $technicalAdvisers->random()->id,
-            'dean_id' => fn() => $deans->random()->id,
+            'research_adviser_id' => fn () => $researchAdvisers->random()->id,
+            'technical_adviser_id' => fn () => $technicalAdvisers->random()->id,
+            'dean_id' => fn () => $deans->random()->id,
         ]);
 
         // Create authors
@@ -215,8 +215,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-
-
         // Create librarian batches
         $today = \Carbon\Carbon::today();
         $currentYear = date('Y');
@@ -226,7 +224,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Creating active batch for today...');
         // Exclude special users from librarian batch selection
         $excludedIds = collect([$sampleAdmin->id]);
-        $filteredStudents = $students->filter(fn($s) => !$excludedIds->contains($s->id));
+        $filteredStudents = $students->filter(fn ($s) => ! $excludedIds->contains($s->id));
         $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
 
@@ -234,7 +232,7 @@ class DatabaseSeeder extends Seeder
             $student->update(['role_id' => $librarianRoleId]);
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0001',
+                'batch_no' => $currentYear.'0001',
                 'start_date' => $today,
                 'end_date' => null,
                 'status' => 'active',
@@ -256,7 +254,7 @@ class DatabaseSeeder extends Seeder
         foreach ($expiredBatch1Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0002',
+                'batch_no' => $currentYear.'0002',
                 'start_date' => $today->copy()->subDays(10),
                 'end_date' => $today->copy()->subDays(3),
                 'status' => 'expired',
@@ -274,7 +272,7 @@ class DatabaseSeeder extends Seeder
         foreach ($expiredBatch2Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0003',
+                'batch_no' => $currentYear.'0003',
                 'start_date' => $today->copy()->subDays(20),
                 'end_date' => $today->copy()->subDays(7),
                 'status' => 'expired',
@@ -295,7 +293,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch1Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0004',
+                'batch_no' => $currentYear.'0004',
                 'start_date' => $today->copy()->addDays(2),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -313,7 +311,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch2Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0005',
+                'batch_no' => $currentYear.'0005',
                 'start_date' => $today->copy()->addDays(5),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -330,7 +328,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch3Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0006',
+                'batch_no' => $currentYear.'0006',
                 'start_date' => $today->copy()->addDays(7),
                 'end_date' => null,
                 'status' => 'inactive',

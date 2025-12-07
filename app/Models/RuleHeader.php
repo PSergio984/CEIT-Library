@@ -11,7 +11,6 @@ class RuleHeader extends Model
     /** @use HasFactory<\Database\Factories\RuleHeaderFactory> */
     use HasFactory;
 
-
     protected $fillable = ['title', 'order'];
 
     public function ruleRegulations(): HasMany

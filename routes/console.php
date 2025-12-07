@@ -6,8 +6,8 @@ use App\Models\ViolationTransaction;
 use Carbon\Carbon;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schedule;
 
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
@@ -33,6 +33,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
 
     if ($missingSessions->isEmpty()) {
         $this->info('No missing timeouts found.');
+
         return 0;
     }
 
@@ -51,16 +52,16 @@ Artisan::command('attendance:check-missing-timeouts', function () {
         ->whereIn('attendance_id', $missingSessions->pluck('id'))
         ->get()
         ->map(function ($vt) {
-            return $vt->user_id . '-' . $vt->violation_id . '-' . $vt->attendance_id;
+            return $vt->user_id.'-'.$vt->violation_id.'-'.$vt->attendance_id;
         })->toArray();
 
     $count = 0;
     foreach ($missingSessions as $session) {
         try {
-            $key = $session->user_id . '-' . $violation->id . '-' . $session->id;
+            $key = $session->user_id.'-'.$violation->id.'-'.$session->id;
             $existingViolation = in_array($key, $existingViolations);
 
-            if (!$existingViolation) {
+            if (! $existingViolation) {
                 DB::beginTransaction();
                 ViolationTransaction::create([
                     'user_id' => $session->user_id,
@@ -86,6 +87,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
     }
 
     $this->info("Created {$count} violation(s) for missing timeouts.");
+
     return 0;
 })->purpose('Check for missing timeouts and create violations');
 

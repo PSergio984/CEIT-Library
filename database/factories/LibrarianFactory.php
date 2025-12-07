@@ -7,7 +7,6 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
-
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Librarian>
  */
@@ -21,7 +20,8 @@ class LibrarianFactory extends Factory
     public function definition(): array
     {
         $dateStart = $this->faker->optional()->dateTimeBetween('-6 months', '+6 months');
-        $dateStart2 = $dateStart ? $dateStart->format('Y-m-d H:i:s') : null;
+        $startDate = $dateStart ? $dateStart->format('Y-m-d') : null;
+        $endDate = $startDate ? Carbon::parse($startDate)->addDays(30)->format('Y-m-d') : null;
 
         return [
             'user_id' => User::factory(),
@@ -29,8 +29,9 @@ class LibrarianFactory extends Factory
             'expires_at' => Carbon::today()->endOfDay(),
             'created_by' => User::factory(),
             'last_login_at' => $this->faker->optional(0.8)->dateTimeBetween('-1 week', 'now'),
-            'date_start' => $dateStart2,
-            'status' => is_null($dateStart2) ? 'inactive' : $this->faker->randomElement(['active', 'expired']),
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'status' => is_null($startDate) ? 'inactive' : $this->faker->randomElement(['active', 'expired']),
             'shift_notes' => $this->faker->optional(0.5)->sentence(),
         ];
 
@@ -43,7 +44,7 @@ class LibrarianFactory extends Factory
     {
         return $this->afterCreating(function (Librarian $librarian) {
             $year = date('Y');
-            $librarian->batch_no = $year . str_pad($librarian->id, 4, '0', STR_PAD_LEFT);
+            $librarian->batch_no = $year.str_pad($librarian->id, 4, '0', STR_PAD_LEFT);
             $librarian->save();
         });
     }

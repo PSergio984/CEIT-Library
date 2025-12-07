@@ -17,7 +17,7 @@ use Illuminate\Notifications\Notification;
 
 /**
  * Notification sent when a borrow transaction becomes overdue
- * 
+ *
  * This notification is queued for performance and sent via email
  * to alert students that their borrowed academic paper is overdue
  * and needs to be returned immediately.
@@ -56,8 +56,8 @@ class BorrowTransactionOverdue extends Notification implements ShouldQueue
         $paper = optional($inventory->academicPaper);
         $overdueDuration = $transaction->overdue_duration ?? 'N/A';
 
-        $borrowDate = $transaction->time_in ? $transaction->time_in->format('F j, Y') . ' at ' . $transaction->time_in->format('g:i A') : 'N/A';
-        $dueDate = $transaction->expires_at ? $transaction->expires_at->format('F j, Y') . ' at ' . $transaction->expires_at->format('g:i A') : 'N/A';
+        $borrowDate = $transaction->time_in ? $transaction->time_in->format('F j, Y').' at '.$transaction->time_in->format('g:i A') : 'N/A';
+        $dueDate = $transaction->expires_at ? $transaction->expires_at->format('F j, Y').' at '.$transaction->expires_at->format('g:i A') : 'N/A';
 
         $firstName = $notifiable->first_name ?? 'User';
         $title = $paper->title ?? '[Unknown Title]';
@@ -68,18 +68,18 @@ class BorrowTransactionOverdue extends Notification implements ShouldQueue
         return (new MailMessage)
             ->error()
             ->subject('⚠️ Overdue: Library Material Requires Immediate Return')
-            ->greeting('Hello ' . $firstName . ',')
+            ->greeting('Hello '.$firstName.',')
             ->line('This is an urgent notice that your borrowed library material is now **overdue**.')
             ->line('**Material Details:**')
-            ->line('📚 **Title:** ' . $title)
-            ->line('🏷️ **Type:** ' . $paperType)
-            ->line('📖 **Copy Number:** ' . $copyNumber)
-            ->line('🆔 **Catalog Code:** ' . $catalogCode)
+            ->line('📚 **Title:** '.$title)
+            ->line('🏷️ **Type:** '.$paperType)
+            ->line('📖 **Copy Number:** '.$copyNumber)
+            ->line('🆔 **Catalog Code:** '.$catalogCode)
             ->line('')
             ->line('**Transaction Details:**')
-            ->line('📅 **Borrowed On:** ' . $borrowDate)
-            ->line('⏰ **Was Due:** ' . $dueDate)
-            ->line('⚠️ **Overdue By:** ' . $overdueDuration)
+            ->line('📅 **Borrowed On:** '.$borrowDate)
+            ->line('⏰ **Was Due:** '.$dueDate)
+            ->line('⚠️ **Overdue By:** '.$overdueDuration)
             ->line('')
             ->line('**Important Notice:**')
             ->line('• Please return this material to the library **immediately**')

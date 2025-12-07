@@ -242,8 +242,8 @@
 
                 <div class="bg-base-300 px-6 py-3 flex flex-row-reverse gap-2 rounded-b-lg">
                     <button type="button" wire:click="assignRole"
-                        {{ $user && $user->id === Auth::id() && $selectedRoleId != $user->role_id ? 'disabled' : '' }}
-                        class="btn btn-primary">
+                        {{ (!$selectedRoleId || ($user && $user->role_id == $selectedRoleId) || ($user && $user->id === Auth::id() && $selectedRoleId != $user->role_id)) ? 'disabled' : '' }}
+                        class="btn btn-primary {{ (!$selectedRoleId || ($user && $user->role_id == $selectedRoleId)) ? 'opacity-50 cursor-not-allowed' : '' }}">
                         Assign Role
                     </button>
                     <button type="button" wire:click="$set('showAssignRoleModal', false)" class="btn btn-ghost">

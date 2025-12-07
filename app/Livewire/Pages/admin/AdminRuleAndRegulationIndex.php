@@ -113,13 +113,13 @@ class AdminRuleAndRegulationIndex extends AdminComponent
     {
         $query = RuleRegulation::query()
             ->reorder()
-            ->with(['ruleHeader' => fn($q) => $q->reorder()])
-            ->when($this->filterHeaderId, fn($q, $id) => $q->where('rule_header_id', $id))
+            ->with(['ruleHeader' => fn ($q) => $q->reorder()])
+            ->when($this->filterHeaderId, fn ($q, $id) => $q->where('rule_header_id', $id))
             ->when($this->search !== '', function ($q) {
                 $s = "%{$this->search}%";
                 $q->where(function ($q) use ($s) {
                     $q->where('content', 'like', $s)
-                        ->orWhereHas('ruleHeader', fn($hq) => $hq->where('title', 'like', $s));
+                        ->orWhereHas('ruleHeader', fn ($hq) => $hq->where('title', 'like', $s));
                 });
             });
 
@@ -134,7 +134,7 @@ class AdminRuleAndRegulationIndex extends AdminComponent
             );
         } elseif ($column === 'content') {
             $query->orderByRaw('CASE WHEN content IS NULL OR TRIM(content) = "" THEN 1 ELSE 0 END')
-                ->orderByRaw('LOWER(TRIM(content)) ' . ($direction === 'desc' ? 'DESC' : 'ASC'));
+                ->orderByRaw('LOWER(TRIM(content)) '.($direction === 'desc' ? 'DESC' : 'ASC'));
         } else {
             $query->orderBy($column, $direction);
         }

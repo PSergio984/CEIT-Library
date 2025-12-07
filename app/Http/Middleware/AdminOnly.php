@@ -18,7 +18,7 @@ class AdminOnly
         $user = $request->user();
 
         // Check if user is authenticated
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('login');
         }
 

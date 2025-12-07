@@ -60,7 +60,26 @@ class extends Component
 }; ?>
 
     <!-- Main Content Card -->
-    <div class="relative w-9/12 max-w-2xl mx-auto">
+    <div class="relative w-9/12 max-w-2xl mx-auto" x-data="{
+        email: '',
+        touched: false,
+        error: '',
+        validateEmail() {
+            this.touched = true;
+            if (!this.email.trim()) {
+                this.error = 'Email is required.';
+            } else if (!this.email.endsWith('@plv.edu.ph')) {
+                this.error = 'Email must end with @plv.edu.ph';
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+                this.error = 'Please enter a valid email address.';
+            } else {
+                this.error = '';
+            }
+        },
+        get isFormValid() {
+            return this.email.trim() && !this.error && this.email.endsWith('@plv.edu.ph');
+        }
+    }">
         <!-- Card Header with curve and logo -->
         <div class="relative z-20">
             <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
@@ -83,8 +102,13 @@ class extends Component
                     <x-text-input wire:model="email" id="email" name="email" type="email"
                                 placeholder="Email"
                                 class="block mt-4 w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
-                                required autofocus/>
+                                required autofocus
+                                x-on:input="email = $event.target.value"
+                                x-on:blur="validateEmail()"/>
                     <x-input-error :messages="$errors->get('email')" class="mt-2"/>
+                    <template x-if="touched && error && !$wire.__instance.snapshot.memo.errors?.email">
+                        <p class="text-red-500 text-xs mt-2" x-text="error"></p>
+                    </template>
                 </div>
 
                 <!-- Session Status -->
@@ -93,7 +117,9 @@ class extends Component
 
                 <div class="flex flex-col items-center mt-6">
                     <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="sendPasswordResetLink"
-                                    class="w-full">
+                                    class="w-full"
+                                    x-bind:disabled="!isFormValid"
+                                    x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
                         {{ __('Email Password Reset Link') }}
                     </x-primary-button>
                 </div>

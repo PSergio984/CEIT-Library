@@ -29,7 +29,7 @@ class LibrarySystemTest extends TestCase
         $paper = AcademicPaper::factory()->create(['title' => 'Test Paper']);
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         // User borrows the paper
@@ -39,7 +39,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         $this->assertDatabaseHas('borrow_transactions', [
@@ -64,7 +64,7 @@ class LibrarySystemTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
 
         // User borrows the paper
@@ -74,7 +74,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory->id,
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // User returns the paper
@@ -212,17 +212,17 @@ class LibrarySystemTest extends TestCase
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 1,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 2,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
         $inventory3 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 3,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
 
         // Check if accessor exists before testing
@@ -238,7 +238,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken()
+            'session_token' => $this->generateSessionToken(),
         ]);
 
         // Update the inventory status to Reserved (simulating the borrowing process)
@@ -250,7 +250,7 @@ class LibrarySystemTest extends TestCase
     }
 
     // TODO: Implement overdue book detection feature - add is_overdue and days_remaining accessors to BorrowTransaction model
-    // This test was disabled because the required accessor methods (getIsOverdueAttribute, getDaysRemainingAttribute) 
+    // This test was disabled because the required accessor methods (getIsOverdueAttribute, getDaysRemainingAttribute)
     // don't exist in the BorrowTransaction model. To re-enable: implement the accessors and uncomment this test.
 
     public function test_user_credit_score_system()
@@ -316,12 +316,12 @@ class LibrarySystemTest extends TestCase
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 1,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 2,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
 
         // Both users borrow different copies
@@ -331,7 +331,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory1->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken('test-token-1')
+            'session_token' => $this->generateSessionToken('test-token-1'),
         ]);
 
         BorrowTransaction::create([
@@ -340,7 +340,7 @@ class LibrarySystemTest extends TestCase
             'inventory_id' => $inventory2->id,
             'time_in' => Carbon::now(),
             'expires_at' => Carbon::now()->addDays(14),
-            'session_token' => $this->generateSessionToken('test-token-2')
+            'session_token' => $this->generateSessionToken('test-token-2'),
         ]);
 
         // Update inventory statuses to Reserved (simulating the borrowing process)

@@ -19,7 +19,7 @@ class AcademicPaperFactory extends Factory
         $departments = [
             'Civil Engineering',
             'Information Technology',
-            'Electrical Engineering'
+            'Electrical Engineering',
         ];
 
         $department = $this->faker->randomElement($departments);

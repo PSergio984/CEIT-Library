@@ -33,7 +33,54 @@ class extends Component
     }
 }; ?>
 
-<div class="relative w-full max-w-2xl mx-auto">
+<div class="relative w-full max-w-2xl mx-auto" x-data="{
+    fields: {
+        email: '',
+        password: ''
+    },
+    touched: {
+        email: false,
+        password: false
+    },
+    errors: {
+        email: '',
+        password: ''
+    },
+    validateField(field) {
+        this.touched[field] = true;
+        const value = this.fields[field] || '';
+        
+        switch(field) {
+            case 'email':
+                if (!value.trim()) {
+                    this.errors.email = 'Email is required.';
+                } else if (!value.endsWith('@plv.edu.ph')) {
+                    this.errors.email = 'Email must end with @plv.edu.ph';
+                } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    this.errors.email = 'Please enter a valid email address.';
+                } else {
+                    this.errors.email = '';
+                }
+                break;
+            case 'password':
+                if (!value) {
+                    this.errors.password = 'Password is required.';
+                } else {
+                    this.errors.password = '';
+                }
+                break;
+        }
+    },
+    get isFormValid() {
+        return this.fields.email && 
+               this.fields.email.trim().length > 0 &&
+               this.fields.email.endsWith('@plv.edu.ph') &&
+               this.fields.password && 
+               this.fields.password.trim().length > 0 &&
+               !this.errors.email && 
+               !this.errors.password;
+    }
+}">
     <!-- Card Header with curve and logo -->
     <div class="relative z-20">
         <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
@@ -86,7 +133,12 @@ class extends Component
                     required
                     autofocus
                     autocomplete="username"
-                    error-field="form.email"/>
+                    error-field="form.email"
+                    x-on:input="fields.email = $event.target.value"
+                    x-on:blur="validateField('email')"/>
+                <template x-if="touched.email && errors.email && !$wire.__instance.snapshot.memo.errors?.['form.email']">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.email"></p>
+                </template>
             </div>
 
             <!-- Password -->
@@ -98,7 +150,12 @@ class extends Component
                     autocomplete="current-password"
                     class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
                     icon-class="!text-gray-700"
-                    error-field="form.password"/>
+                    error-field="form.password"
+                    x-on:input="fields.password = $event.target.value"
+                    x-on:blur="validateField('password')"/>
+                <template x-if="touched.password && errors.password && !$wire.__instance.snapshot.memo.errors?.['form.password']">
+                    <p class="text-red-500 text-xs mt-1" x-text="errors.password"></p>
+                </template>
             </div>
 
             <!-- Remember Me -->
@@ -120,7 +177,12 @@ class extends Component
 
             <!-- Login Button -->
             <div class="mb-4 flex justify-center">
-                <x-primary-button class="w-full sm:w-2/3 md:w-1/2" wire:target="login" wire:loading.attr="disabled">
+                <x-primary-button 
+                    class="w-full sm:w-2/3 md:w-1/2" 
+                    wire:target="login" 
+                    wire:loading.attr="disabled"
+                    x-bind:disabled="!isFormValid"
+                    x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
                     {{ __('Log in') }}
                 </x-primary-button>
             </div>

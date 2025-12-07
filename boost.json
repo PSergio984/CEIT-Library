@@ -1,10 +1,6 @@
 {
-    "agents": [
-        "copilot"
-    ],
-    "editors": [
-        "vscode"
-    ],
+    "agents": ["vscode"],
+    "editors": ["vscode"],
     "guidelines": [],
     "herd_mcp": true
 }

@@ -20,5 +20,4 @@ class RuleRegulation extends Model
     {
         return $this->belongsTo(RuleHeader::class);
     }
-
 }

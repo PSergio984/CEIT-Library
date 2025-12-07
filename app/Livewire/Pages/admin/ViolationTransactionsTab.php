@@ -2,21 +2,25 @@
 
 namespace App\Livewire\Pages\Admin;
 
-use Livewire\Component;
-use Livewire\WithPagination;
-use Mary\Traits\Toast;
 use App\Models\ViolationTransaction;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Livewire\WithPagination;
+use Mary\Traits\Toast;
 
 class ViolationTransactionsTab extends AdminComponent
 {
-    use WithPagination, Toast;
+    use Toast, WithPagination;
 
     protected $listeners = ['refreshViolationTransactionsTab' => 'getViolationTransactionsProperty'];
+
     public $searchTransaction = '';
+
     public $perPageTransaction = 10;
+
     public $dateFilter = '';
+
     public $confirmUndoModal = false;
+
     public $editingId = null;
 
     public array $sortBy = ['column' => 'date_occurred', 'direction' => 'desc'];
@@ -67,6 +71,7 @@ class ViolationTransactionsTab extends AdminComponent
     protected function getSanitizedSortColumn(): string
     {
         $allowed = ['id', 'violation_penalty', 'date_occurred'];
+
         return in_array($this->sortBy['column'], $allowed)
             ? $this->sortBy['column']
             : 'date_occurred';

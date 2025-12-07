@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ *
  * @method static \Database\Factories\AuthorFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Author newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Author newQuery()
@@ -18,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Author whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Author whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Author whereUpdatedAt($value)
+ *
  * @mixin \Eloquent
  */
 class Author extends Model

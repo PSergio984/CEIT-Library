@@ -31,7 +31,7 @@ class AcademicPaperTest extends TestCase
 
     public function test_academic_paper_has_fillable_attributes()
     {
-        $paper = new AcademicPaper();
+        $paper = new AcademicPaper;
         $fillable = $paper->getFillable();
 
         $this->assertContains('catalog_code', $fillable);
@@ -64,11 +64,11 @@ class AcademicPaperTest extends TestCase
         // Create inventory items with different copy numbers to avoid unique constraint violation
         $inventory1 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 1
+            'copy_number' => 1,
         ]);
         $inventory2 = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
-            'copy_number' => 2
+            'copy_number' => 2,
         ]);
 
         $this->assertCount(2, $paper->copies);
@@ -98,7 +98,7 @@ class AcademicPaperTest extends TestCase
             // If relationship doesn't exist, just verify the transaction was created
             $this->assertDatabaseHas('borrow_transactions', [
                 'academic_paper_id' => $paper->id,
-                'user_id' => $user->id
+                'user_id' => $user->id,
             ]);
         }
     }
@@ -111,17 +111,17 @@ class AcademicPaperTest extends TestCase
         Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 1,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
         Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 2,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
         Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 3,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
 
         // Check if the accessor exists
@@ -140,7 +140,7 @@ class AcademicPaperTest extends TestCase
         $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
             'copy_number' => 1,
-            'status' => 'Available'
+            'status' => 'Available',
         ]);
 
         // Create a borrow transaction
@@ -151,7 +151,7 @@ class AcademicPaperTest extends TestCase
             'time_in' => Carbon::now()->subDays(5),
             'expires_at' => Carbon::now()->addDays(9),
             'session_token' => $this->generateSessionToken(),
-            'status' => 'started'
+            'status' => 'started',
         ]);
 
         // Update the inventory status to Reserved (simulating the borrowing process)
@@ -188,7 +188,7 @@ class AcademicPaperTest extends TestCase
     public function test_academic_paper_publication_year_is_cast_to_integer()
     {
         $paper = AcademicPaper::factory()->create([
-            'publication_year' => 2024
+            'publication_year' => 2024,
         ]);
 
         $this->assertIsInt($paper->publication_year);

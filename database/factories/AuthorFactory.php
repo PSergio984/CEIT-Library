@@ -16,4 +16,3 @@ class AuthorFactory extends Factory
         ];
     }
 }
-

@@ -17,7 +17,7 @@ class DeanFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => 'Dr. ' . $this->faker->name(),
+            'name' => 'Dr. '.$this->faker->name(),
         ];
     }
 }

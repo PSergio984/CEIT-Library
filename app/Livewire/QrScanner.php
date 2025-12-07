@@ -213,7 +213,10 @@ class QrScanner extends Component
             }
 
             // Verify hash for tamper protection covering entire payload
-            $canonicalMessage = $this->createCanonicalMessage($data);
+            // Remove hash from data before creating canonical message to avoid circular dependency
+            $dataForCanonical = $data;
+            unset($dataForCanonical['hash']);
+            $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
             $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
             if (! hash_equals($expectedHash, $data['hash'])) {
                 Log::warning('QR code hash mismatch - possible tampering detected', [
@@ -286,7 +289,7 @@ class QrScanner extends Component
         } elseif ($minutes < 60) {
             return $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes');
         } else {
-            $hours = floor($minutes / 60);
+            $hours = (int) floor($minutes / 60);
             $remainingMinutes = $minutes % 60;
             $hoursText = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
             if ($remainingMinutes > 0) {
