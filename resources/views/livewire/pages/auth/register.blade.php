@@ -62,8 +62,8 @@ class extends Component
 
         event(new Registered($user = User::create($validated)));
 
-        // Send welcome email for testing
-        Mail::to($user->email)->queue(new Welcome);
+        // Welcome email disabled - keeping code for future use if needed
+        // Mail::to($user->email)->queue(new Welcome);
 
         // Temporarily log in user to access verification notice page, then redirect there
         Auth::login($user);
