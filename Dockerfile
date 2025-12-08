@@ -1,5 +1,21 @@
+# Build stage for assets
+FROM node:20-alpine AS builder
+
+WORKDIR /tmp
+
+COPY package*.json ./
+RUN npm ci
+
+COPY . .
+RUN npm run build
+
+# Production stage
 FROM richarvey/nginx-php-fpm:latest
 
+# Copy built assets from builder stage
+COPY --from=builder /tmp/public/build /var/www/html/public/build
+
+# Copy application files
 COPY . .
 
 # Image config
