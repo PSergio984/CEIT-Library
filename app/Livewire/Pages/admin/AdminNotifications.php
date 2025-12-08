@@ -4,11 +4,13 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Title('Notifications')]
+#[Lazy]
 class AdminNotifications extends AdminComponent
 {
     use Toast, WithPagination;
@@ -22,9 +24,9 @@ class AdminNotifications extends AdminComponent
     public function getNotificationsProperty()
     {
         $query = Auth::user()->userNotifications()
-            ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
-            ->when($this->filterRead === 'read', fn ($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
+            ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
+            ->when($this->filterRead === 'read', fn($q) => $q->read())
+            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);

@@ -50,7 +50,7 @@ class AdminAdvisersDeans extends AdminComponent
 
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
 
-    #[Computed(persist: true, seconds: 5)]
+    #[Computed]
     public function entries()
     {
         // Validate table name before use

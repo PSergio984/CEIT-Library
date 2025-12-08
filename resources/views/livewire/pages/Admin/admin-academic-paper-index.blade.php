@@ -209,7 +209,6 @@
 </div>
 
 {{-- Desktop Table View (for screens 1280px and wider) --}}
-
 <div class="hidden xl:block overflow-hidden relative">
     {{-- Localized loading overlay for table updates (filters, pagination, per-page, clearing filters, pagination events) --}}
     <div wire:loading.flex 
@@ -229,7 +228,7 @@
                         class="w-16 h-16 mx-auto text-base-content/40 mb-4" />
                     <h3 class="text-lg font-medium text-base-content mb-2">No Academic Papers Found</h3>
                     <p class="text-sm text-base-content/70">
-                @if ($this->selectedCopy && $qrCode)
+                        @if ($search || $statusFilter || $departmentFilter || $paperTypeFilter || $yearFilter || $yearFromFilter || $yearToFilter)
                             No papers match your current filters
                         @else
                             No academic papers are available at the moment

@@ -1,3 +1,11 @@
+@php
+    // Livewire Lazy Loading: If this is being rendered as a placeholder, show loading skeleton
+    if (isset($placeholder) && $placeholder) {
+        echo view('components.loading-placeholder');
+        return;
+    }
+@endphp
+
 <div class="p-4 sm:p-6">
     <div class="mb-4 sm:mb-6">
         <x-mary-header title="Notifications" subtitle="Your recent notifications" separator />
@@ -53,7 +61,17 @@
     </div>
 
     {{-- Notifications List --}}
-    <div class="space-y-3">
+    <div class="space-y-3 relative">
+        {{-- Loading overlay for filter/pagination updates --}}
+        <div wire:loading.flex 
+            wire:target="filterType, filterRead, clearFilters, gotoPage, nextPage, previousPage, markAsRead, deleteNotification, markAllAsRead"
+            class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+            <div class="flex flex-col items-center gap-2">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <p class="text-base-content font-medium">Updating notifications...</p>
+            </div>
+        </div>
+        
         @forelse ($this->notifications as $notification)
             <div wire:key="notification-{{ $notification->id }}"
                 class="card bg-base-100 border border-base-300 shadow-sm hover:shadow-md transition-shadow {{ !$notification->is_read ? 'border-l-4 border-l-primary' : '' }}">

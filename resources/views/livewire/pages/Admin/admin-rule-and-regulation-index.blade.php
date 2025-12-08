@@ -1,3 +1,11 @@
+@php
+    // Livewire Lazy Loading: If this is being rendered as a placeholder, show loading skeleton
+    if (isset($placeholder) && $placeholder) {
+        echo view('components.loading-placeholder');
+        return;
+    }
+@endphp
+
 <div>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-content leading-tight">
@@ -37,7 +45,17 @@
 
     @if ($this->rules()->isNotEmpty())
         <!-- Mobile Card View -->
-        <div class="block lg:hidden space-y-4 mb-6">
+        <div class="block lg:hidden space-y-4 mb-6 relative">
+            {{-- Loading overlay for mobile view --}}
+            <div wire:loading.flex 
+                wire:target="search, filterHeaderId, gotoPage, nextPage, previousPage"
+                class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="text-base-content font-medium">Updating rules...</p>
+                </div>
+            </div>
+            
             @foreach ($this->rules() as $rule)
                 <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" wire:key="rule-card-{{ $rule->id }}">
                     <div class="flex items-start justify-between mb-3">
@@ -96,7 +114,17 @@
         </div>
 
         <!-- Desktop Table View -->
-        <div class="hidden lg:block">
+        <div class="hidden lg:block relative">
+            {{-- Loading overlay for desktop table --}}
+            <div wire:loading.flex 
+                wire:target="search, filterHeaderId, gotoPage, nextPage, previousPage"
+                class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="text-base-content font-medium">Updating rules...</p>
+                </div>
+            </div>
+            
             <x-mary-table
                 :headers="$headers"
                 :rows="$this->rules()"

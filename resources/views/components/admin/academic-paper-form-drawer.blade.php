@@ -8,8 +8,10 @@
     separator>
     <div class="p-6">
         <x-mary-form wire:submit="saveAcademicPaper">
-            {{-- Validation Errors Display --}}
-            <x-mary-errors title="Please fix the following errors:" description="Review the fields below." icon="o-exclamation-triangle" class="mb-6" />
+            {{-- Validation Errors Display - Only show if there are errors --}}
+            @if($errors->any())
+                <x-mary-errors title="Please fix the following errors:" description="Review the fields below." icon="o-exclamation-triangle" class="mb-4" />
+            @endif
             
             {{-- Change Indicator Header --}}
             @if($isEditing)
@@ -139,9 +141,6 @@
                         placeholder="Select Authors" 
                         error-field="form.author_ids" />
                 @endif
-                @error('form.author_ids')
-                    <div class="text-error text-xs mt-1">{{ $message }}</div>
-                @enderror
             </div>
 
             {{-- Number of Copies Field --}}
@@ -178,44 +177,31 @@
                 @endif
             </div>
 
-            {{-- Validation messages and hints above separator --}}
+            {{-- Hint for edit mode dirty state --}}
             @if($isEditing)
                 <div x-data="{ 
                     isDirty: false,
                     isInitialized: false,
                     init() {
-                        // Initialize dirty state
                         this.isDirty = false;
                         this.isInitialized = false;
                         
-                        // Check if drawer is already open on init
                         if ($wire.get('formDrawer')) {
-                            // Drawer is already open, wait before enabling form watching
-                            setTimeout(() => {
-                                this.isInitialized = true;
-                            }, 200);
+                            setTimeout(() => { this.isInitialized = true; }, 200);
                         }
                         
-                        // Watch for drawer open/close to reset state
                         $watch('$wire.formDrawer', (open) => {
                             if (open) {
-                                // Reset dirty state when drawer opens
                                 this.isDirty = false;
                                 this.isInitialized = false;
-                                
-                                // Wait a bit before enabling form watching to avoid initial load triggering
-                                setTimeout(() => {
-                                    this.isInitialized = true;
-                                }, 200);
+                                setTimeout(() => { this.isInitialized = true; }, 200);
                             } else {
                                 this.isInitialized = false;
                             }
                         });
                         
-                        // Watch for form changes, but only after initialization
                         $nextTick(() => {
                             $wire.$watch('form', () => { 
-                                // Only set dirty if we've initialized (avoid initial load triggering)
                                 if (this.isInitialized) {
                                     this.isDirty = true;
                                 }
@@ -224,14 +210,7 @@
                     }
                 }" class="mt-2 mb-2">
                     <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs">Make changes to enable update</div>
-                    @if($errors->any())
-                        <div class="text-error text-xs mt-1">Please fix validation errors</div>
-                    @endif
                 </div>
-            @else
-                @if($errors->any())
-                    <div class="text-error text-xs mt-2 mb-2">Please fix validation errors</div>
-                @endif
             @endif
 
             <x-slot:actions>
@@ -242,38 +221,25 @@
                         isDirty: false,
                         isInitialized: false,
                         init() {
-                            // Initialize dirty state
                             this.isDirty = false;
                             this.isInitialized = false;
                             
-                            // Check if drawer is already open on init
                             if ($wire.get('formDrawer')) {
-                                // Drawer is already open, wait before enabling form watching
-                                setTimeout(() => {
-                                    this.isInitialized = true;
-                                }, 200);
+                                setTimeout(() => { this.isInitialized = true; }, 200);
                             }
                             
-                            // Watch for drawer open/close to reset state
                             $watch('$wire.formDrawer', (open) => {
                                 if (open) {
-                                    // Reset dirty state when drawer opens
                                     this.isDirty = false;
                                     this.isInitialized = false;
-                                    
-                                    // Wait a bit before enabling form watching to avoid initial load triggering
-                                    setTimeout(() => {
-                                        this.isInitialized = true;
-                                    }, 200);
+                                    setTimeout(() => { this.isInitialized = true; }, 200);
                                 } else {
                                     this.isInitialized = false;
                                 }
                             });
                             
-                            // Watch for form changes, but only after initialization
                             $nextTick(() => {
                                 $wire.$watch('form', () => { 
-                                    // Only set dirty if we've initialized (avoid initial load triggering)
                                     if (this.isInitialized) {
                                         this.isDirty = true;
                                     }
@@ -284,25 +250,22 @@
                         <button 
                             type="submit"
                             class="btn btn-primary"
-                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty || @js($errors->any()) }"
+                            :class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty }"
+                            :disabled="!isDirty || {{ $errors->any() ? 'true' : 'false' }}"
                             wire:loading.attr="disabled"
-                            wire:target="saveAcademicPaper"
-                            x-bind:disabled="!isDirty || @js($errors->any())">
+                            wire:target="saveAcademicPaper">
                             <span wire:loading.remove wire:target="saveAcademicPaper">Update</span>
                             <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
                         </button>
                     </div>
                 @else
                     {{-- Save button for Create mode: disabled when form is invalid --}}
-                    <button 
+                    <x-mary-button 
                         type="submit"
-                        class="btn btn-primary {{ !$this->isFormValid ? 'btn-disabled opacity-50 cursor-not-allowed' : '' }}"
-                        wire:loading.attr="disabled"
-                        wire:target="saveAcademicPaper"
-                        @disabled(!$this->isFormValid)>
-                        <span wire:loading.remove wire:target="saveAcademicPaper">Save</span>
-                        <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
-                    </button>
+                        label="Save"
+                        class="btn-primary"
+                        spinner="saveAcademicPaper"
+                        :disabled="!$this->isFormValid" />
                 @endif
             </x-slot:actions>
         </x-mary-form>
