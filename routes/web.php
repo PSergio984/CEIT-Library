@@ -15,7 +15,7 @@ if (config('app.env') !== 'production') {
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', \App\Livewire\Pages\Student\StudentDashboard::class)->name('student.dashboard');
+    Route::get('/dashboard', \App\Livewire\Pages\Student\StudentDashboard::class);
     Route::get('/academic-papers/{academicPaper}', \App\Livewire\Pages\Student\ShowAcademicPaper::class)
         ->whereNumber('academicPaper')
         ->name('academic-paper.show');
