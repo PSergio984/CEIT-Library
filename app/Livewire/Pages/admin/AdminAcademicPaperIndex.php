@@ -232,6 +232,10 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
+
+        // Set default year filter to current year
+        $this->yearFromFilter = (string) date('Y');
+
         // Initialize empty arrays to avoid null references
         $this->form->research_adviser_options = [];
         $this->form->technical_adviser_options = [];
@@ -305,11 +309,18 @@ class AdminAcademicPaperIndex extends AdminComponent
         $minYear = AcademicPaper::min('publication_year');
         $maxYear = AcademicPaper::max('publication_year');
 
+        // Always include current year
+        $currentYear = (int) date('Y');
+
         if (! $minYear || ! $maxYear) {
-            return collect();
+            // If no papers exist, just return current year
+            return collect([$currentYear]);
         }
 
-        // Generate complete range from min to max (no gaps)
+        // Ensure current year is included in the range
+        $maxYear = max($maxYear, $currentYear);
+
+        // Generate complete range from max to min (descending, no gaps)
         return collect(range($maxYear, $minYear))->values();
     }
 
