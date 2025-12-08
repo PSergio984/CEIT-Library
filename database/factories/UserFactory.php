@@ -24,10 +24,10 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => $this->faker->firstName(),
-            'last_name' => $this->faker->lastName(),
+            'first_name' => fake()->firstName(),
+            'last_name' => fake()->lastName(),
             // Email must end with @plv.edu.ph for validation compatibility
-            'email' => $this->faker->unique()->userName.'@plv.edu.ph',
+            'email' => fake()->unique()->userName.'@plv.edu.ph',
             'email_verified_at' => now(),
             'password' => Hash::make(fake()->password(8, 12)), // Generate random password between 8-12 characters
             'remember_token' => Str::random(10),
