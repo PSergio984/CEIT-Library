@@ -1,3 +1,11 @@
+@php
+    // Livewire Lazy Loading: If this is being rendered as a placeholder, show loading skeleton
+    if (isset($placeholder) && $placeholder) {
+        echo view('components.loading-placeholder');
+        return;
+    }
+@endphp
+
 <div>
     <header class="px-6 py-4 bg-base-200 shadow-md">
         <h1 class="text-2xl font-bold text-base-content">Admin - Manage User Roles</h1>
@@ -79,8 +87,8 @@
 
             <!-- Users Table -->
             <div class="overflow-x-auto rounded-lg relative">
-                <!-- Loading overlay for pagination -->
-                <div wire:loading.delay wire:target="gotoPage, previousPage, nextPage"
+                <!-- Loading overlay for filters and pagination -->
+                <div wire:loading.flex wire:target="search, filterRole, resetFilters, gotoPage, previousPage, nextPage"
                     class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-20 flex items-center justify-center rounded-lg">
                     <div class="flex flex-col items-center gap-3">
                         <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -127,15 +135,19 @@
                                     </span>
                                 </td>
                                 <td class="text-center">
-                                    <button wire:click="openAssignRoleModal({{ $user->id }})"
-                                        class="btn btn-ghost btn-sm text-primary inline-flex items-center gap-1"
-                                        title="Change Role">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                        <span class="text-xs">Change</span>
-                                    </button>
+                                    @if ($user->id !== Auth::id())
+                                        <button wire:click="openAssignRoleModal({{ $user->id }})"
+                                            class="btn btn-ghost btn-sm text-primary inline-flex items-center gap-1"
+                                            title="Change Role">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            <span class="text-xs">Change</span>
+                                        </button>
+                                    @else
+                                        <span class="text-xs text-base-content/50">—</span>
+                                    @endif
                                 </td>
                             </tr>
                         @empty

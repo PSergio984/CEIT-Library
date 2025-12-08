@@ -39,7 +39,8 @@ class AdminAdvisersDeans extends AdminComponent
 
     public ?int $deleteId = null;
 
-    private ?string $originalName = null;
+    // Store original name for dirty checking (must be public to survive hydration)
+    public ?string $originalName = null;
 
     // Table headers
     public array $headers = [
@@ -52,7 +53,7 @@ class AdminAdvisersDeans extends AdminComponent
 
     public array $sortBy = ['column' => 'name', 'direction' => 'asc'];
 
-    #[Computed(persist: true, seconds: 5)]
+    #[Computed]
     public function entries()
     {
         // Validate table name before use
@@ -159,13 +160,21 @@ class AdminAdvisersDeans extends AdminComponent
 
     public function openCreateModal()
     {
-        $this->reset(['name', 'editingId']);
-        $this->originalName = null;
+        // Close any open modals first
+        $this->showEditModal = false;
+        $this->showDeleteModal = false;
+        $this->reset(['name', 'editingId', 'originalName']);
+        $this->resetValidation(); // Clear any lingering validation errors
         $this->showCreateModal = true;
     }
 
     public function openEditModal(int $id)
     {
+        // Close any open modals first
+        $this->showCreateModal = false;
+        $this->showDeleteModal = false;
+        $this->resetValidation(); // Clear any lingering validation errors
+        
         $entry = DB::table($this->getTableName())->find($id);
 
         if (! $entry) {
@@ -176,16 +185,19 @@ class AdminAdvisersDeans extends AdminComponent
 
         $this->editingId = $id;
         $this->name = $entry->name;
-        $this->originalName = $entry->name;
+        $this->originalName = trim($entry->name); // Store trimmed original for consistent comparison
         $this->showEditModal = true;
     }
 
     public function save()
     {
+        // Trim the name before validation to prevent whitespace-only changes from being considered dirty
+        $this->name = trim($this->name);
+
         $this->validate();
 
         $table = $this->getTableName();
-        $trimmedName = trim($this->name);
+        $trimmedName = $this->name; // Already trimmed above
 
         if ($this->editingId) {
             DB::table($table)->where('id', $this->editingId)->update([
@@ -269,8 +281,8 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showCreateModal = false;
         $this->showEditModal = false;
         $this->showDeleteModal = false;
-        $this->reset(['name', 'editingId', 'deleteId']);
-        $this->originalName = null;
+        $this->reset(['name', 'editingId', 'deleteId', 'originalName']);
+        $this->resetValidation(); // Clear validation errors when closing modals
     }
 
     public function rules(): array
@@ -308,12 +320,20 @@ class AdminAdvisersDeans extends AdminComponent
         ];
     }
 
-    public function getIsFormValidProperty(): bool
+    #[Computed]
+    public function isFormValid(): bool
     {
         $name = trim($this->name ?? '');
 
         // Check if name is filled and valid
-        $nameValid = !empty($name) && strlen($name) >= 2 && strlen($name) <= 255;
+        // Must be 2-255 characters AND contain at least 2 letters (matching ProperName rule)
+        $lettersOnly = preg_replace('/[^\p{L}]/u', '', $name);
+        $letterCount = mb_strlen($lettersOnly);
+
+        $nameValid = !empty($name)
+            && strlen($name) >= 2
+            && strlen($name) <= 255
+            && $letterCount >= 2; // ProperName requires at least 2 letters, not just 2 characters
 
         // Check for validation errors
         $hasErrors = $this->getErrorBag()->has('name');
@@ -328,13 +348,16 @@ class AdminAdvisersDeans extends AdminComponent
         return $fieldsValid;
     }
 
-    private function isFormDirty(): bool
+    #[Computed]
+    public function isFormDirty(): bool
     {
         if (!$this->editingId || $this->originalName === null) {
             return false;
         }
 
-        return trim($this->name) !== trim($this->originalName);
+        // Compare trimmed values to match the save() method behavior
+        // This ensures consistency: if trimmed values are the same, form is not dirty
+        return trim($this->name) !== $this->originalName;
     }
 
     private function clearCaches()

@@ -1,3 +1,11 @@
+@php
+    // Livewire Lazy Loading: If this is being rendered as a placeholder, show loading skeleton
+    if (isset($placeholder) && $placeholder) {
+        echo view('components.loading-placeholder');
+        return;
+    }
+@endphp
+
 <div class="p-6">
     {{-- Load QR libraries first --}}
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -49,7 +57,17 @@
         Showing {{ $this->transactions->count() }} of {{ $this->transactions->total() }} results
     </div>
 
-    <div class="block lg:hidden space-y-4">
+    <div class="block lg:hidden space-y-4 relative">
+        {{-- Loading overlay for mobile view --}}
+        <div wire:loading.flex 
+            wire:target="search, paperTypeFilter, statusFilter, selectedDate, clearFilters, gotoPage, nextPage, previousPage"
+            class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+            <div class="flex flex-col items-center gap-2">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <p class="text-base-content font-medium">Updating transactions...</p>
+            </div>
+        </div>
+        
         @foreach ($this->transactions as $transaction)
             <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm">
                 <div class="flex items-start justify-between mb-3">
@@ -115,7 +133,17 @@
         </div>
     </div>
 
-    <div class="hidden lg:block overflow-x-auto rounded-lg border border-base-300">
+    <div class="hidden lg:block overflow-x-auto rounded-lg border border-base-300 relative">
+        {{-- Loading overlay for desktop table --}}
+        <div wire:loading.flex 
+            wire:target="search, paperTypeFilter, statusFilter, selectedDate, clearFilters, gotoPage, nextPage, previousPage"
+            class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+            <div class="flex flex-col items-center gap-2">
+                <span class="loading loading-spinner loading-lg text-primary"></span>
+                <p class="text-base-content font-medium">Updating transactions...</p>
+            </div>
+        </div>
+        
         <x-mary-table :headers="$headers" :rows="$this->transactions" :sort-by="$sortBy" with-pagination striped
             header-class="text-base-content bg-base-200" class="w-full table-auto" row-class="hover:bg-base-200">
             @scope('cell_user_name', $row)

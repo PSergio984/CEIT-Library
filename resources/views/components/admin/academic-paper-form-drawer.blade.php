@@ -8,8 +8,10 @@
     separator>
     <div class="p-6">
         <x-mary-form wire:submit="saveAcademicPaper">
-            {{-- Validation Errors Display --}}
-            <x-mary-errors title="Please fix the following errors:" description="Review the fields below." icon="o-exclamation-triangle" class="mb-6" />
+            {{-- Validation Errors Display - Only show if there are errors --}}
+            @if($errors->any())
+                <x-mary-errors title="Please fix the following errors:" description="Review the fields below." icon="o-exclamation-triangle" class="mb-4" />
+            @endif
             
             {{-- Change Indicator Header --}}
             @if($isEditing)
@@ -24,7 +26,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.title" @endif>
                     Title @if($isEditing) <span wire:dirty wire:target="form.title" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-input wire:model="form.title" required placeholder="Enter academic paper title" />
+                <x-mary-input wire:model.blur="form.title" required placeholder="Enter academic paper title" />
             </div>
             
             {{-- Department Field --}}
@@ -32,7 +34,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.department" @endif>
                     Department @if($isEditing) <span wire:dirty wire:target="form.department" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-building-library" wire:model="form.department" :options="$form->department_choices" required />
+                <x-mary-select icon="o-building-library" wire:model.blur="form.department" :options="$form->department_choices" required />
             </div>
             
             {{-- Publication Year Field --}}
@@ -40,7 +42,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.publication_year" @endif>
                     Publication Year @if($isEditing) <span wire:dirty wire:target="form.publication_year" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-calendar" wire:model="form.publication_year" :options="$form->year_choices" required />
+                <x-mary-select icon="o-calendar" wire:model.blur="form.publication_year" :options="$form->year_choices" required />
             </div>
             
             {{-- Paper Type Field --}}
@@ -48,7 +50,7 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.paper_type" @endif>
                     Paper Type @if($isEditing) <span wire:dirty wire:target="form.paper_type" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-select icon="o-document" wire:model="form.paper_type" :options="$form->type_choices" required />
+                <x-mary-select icon="o-document" wire:model.blur="form.paper_type" :options="$form->type_choices" required />
             </div>
             
             {{-- Research Adviser Field --}}
@@ -57,7 +59,7 @@
                     Research Adviser @if($isEditing) <span wire:dirty wire:target="form.research_adviser_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.research_adviser_id" 
+                    wire:model.blur="form.research_adviser_id" 
                     single 
                     searchable 
                     search-function="searchResearchAdvisers" 
@@ -76,7 +78,7 @@
                     Technical Adviser @if($isEditing) <span wire:dirty wire:target="form.technical_adviser_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.technical_adviser_id" 
+                    wire:model.blur="form.technical_adviser_id" 
                     single 
                     searchable 
                     search-function="searchTechnicalAdvisers" 
@@ -95,7 +97,7 @@
                     Dean @if($isEditing) <span wire:dirty wire:target="form.dean_id" class="text-orange-400">*</span> @endif
                 </label>
                 <x-mary-choices 
-                    wire:model="form.dean_id" 
+                    wire:model.blur="form.dean_id" 
                     single 
                     searchable 
                     search-function="searchDeans" 
@@ -113,18 +115,32 @@
                 <label class="block text-sm font-semibold text-base-content mb-2" @if($isEditing) wire:dirty.class="text-orange-400" wire:target="form.author_ids" @endif>
                     Authors @if($isEditing) <span wire:dirty wire:target="form.author_ids" class="text-orange-400">*</span> @endif
                 </label>
-                <x-mary-choices 
-                    wire:model="form.author_ids" 
-                    searchable 
-                    clearable
-                    search-function="searchAuthors" 
-                    icon="o-user-group" 
-                    min-chars="0" 
-                    debounce="300ms" 
-                    :options="$form->author_options ?? []" 
-                    hint="Start typing to search for authors" 
-                    placeholder="Select Authors" 
-                    error-field="form.author_ids" />
+                @if($isEditing)
+                    <x-mary-choices 
+                        wire:model.blur="form.author_ids" 
+                        searchable 
+                        search-function="searchAuthors" 
+                        icon="o-user-group" 
+                        min-chars="0" 
+                        debounce="300ms" 
+                        :options="$form->author_options ?? []" 
+                        hint="Start typing to search for authors" 
+                        placeholder="Select Authors" 
+                        error-field="form.author_ids" />
+                @else
+                    <x-mary-choices 
+                        wire:model.blur="form.author_ids" 
+                        searchable 
+                        clearable
+                        search-function="searchAuthors" 
+                        icon="o-user-group" 
+                        min-chars="0" 
+                        debounce="300ms" 
+                        :options="$form->author_options ?? []" 
+                        hint="Start typing to search for authors" 
+                        placeholder="Select Authors" 
+                        error-field="form.author_ids" />
+                @endif
             </div>
 
             {{-- Number of Copies Field --}}
@@ -151,7 +167,7 @@
                 @else
                     <x-mary-input 
                         type="number" 
-                        wire:model="form.number_of_copies" 
+                        wire:model.blur="form.number_of_copies" 
                         min="1" 
                         max="100" 
                         placeholder="Enter number of copies" 
@@ -161,25 +177,72 @@
                 @endif
             </div>
 
+            {{-- Hint for edit mode dirty state --}}
+            @if($isEditing)
+                <div x-data="{ 
+                    isDirty: false,
+                    isInitialized: false,
+                    init() {
+                        this.isDirty = false;
+                        this.isInitialized = false;
+                        
+                        if ($wire.get('formDrawer')) {
+                            setTimeout(() => { this.isInitialized = true; }, 200);
+                        }
+                        
+                        $watch('$wire.formDrawer', (open) => {
+                            if (open) {
+                                this.isDirty = false;
+                                this.isInitialized = false;
+                                setTimeout(() => { this.isInitialized = true; }, 200);
+                            } else {
+                                this.isInitialized = false;
+                            }
+                        });
+                        
+                        $nextTick(() => {
+                            $wire.$watch('form', () => { 
+                                if (this.isInitialized) {
+                                    this.isDirty = true;
+                                }
+                            }, { deep: true });
+                        });
+                    }
+                }" class="mt-2 mb-2">
+                    <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs">Make changes to enable update</div>
+                </div>
+            @endif
+
             <x-slot:actions>
                 <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.formDrawer = false" />
                 @if($isEditing)
-                    {{-- Update button: disabled by default, enabled when form is dirty --}}
+                    {{-- Update button: disabled when form is not dirty or has errors --}}
                     <div x-data="{ 
                         isDirty: false,
+                        isInitialized: false,
                         init() {
-                            // Reset dirty state when drawer opens
                             this.isDirty = false;
-                            // Watch for drawer open/close to reset state
+                            this.isInitialized = false;
+                            
+                            if ($wire.get('formDrawer')) {
+                                setTimeout(() => { this.isInitialized = true; }, 200);
+                            }
+                            
                             $watch('$wire.formDrawer', (open) => {
                                 if (open) {
                                     this.isDirty = false;
+                                    this.isInitialized = false;
+                                    setTimeout(() => { this.isInitialized = true; }, 200);
+                                } else {
+                                    this.isInitialized = false;
                                 }
                             });
-                            // Watch for form changes
+                            
                             $nextTick(() => {
                                 $wire.$watch('form', () => { 
-                                    this.isDirty = true;
+                                    if (this.isInitialized) {
+                                        this.isDirty = true;
+                                    }
                                 }, { deep: true });
                             });
                         }
@@ -187,23 +250,22 @@
                         <button 
                             type="submit"
                             class="btn btn-primary"
-                            x-bind:class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty }"
-                            x-bind:disabled="!isDirty"
+                            :class="{ 'btn-disabled opacity-50 cursor-not-allowed': !isDirty }"
+                            :disabled="!isDirty || {{ $errors->any() ? 'true' : 'false' }}"
                             wire:loading.attr="disabled"
                             wire:target="saveAcademicPaper">
                             <span wire:loading.remove wire:target="saveAcademicPaper">Update</span>
                             <span wire:loading wire:target="saveAcademicPaper" class="loading loading-spinner loading-sm"></span>
                         </button>
-                        <div x-show="!isDirty" x-cloak class="text-base-content/50 text-xs mt-1">Make changes to enable update</div>
                     </div>
                 @else
-                    {{-- Save button for Create mode --}}
+                    {{-- Save button for Create mode: disabled when form is invalid --}}
                     <x-mary-button 
                         type="submit"
                         label="Save"
                         class="btn-primary"
                         spinner="saveAcademicPaper"
-                    />
+                        :disabled="!$this->isFormValid" />
                 @endif
             </x-slot:actions>
         </x-mary-form>

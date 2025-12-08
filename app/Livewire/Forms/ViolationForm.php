@@ -14,7 +14,7 @@ class ViolationForm extends Form
 
     public string $description = '';
 
-    public int $penalty_score = 1;
+    public ?int $penalty_score = null;
 
     /**
      * Get validation rules for violation form

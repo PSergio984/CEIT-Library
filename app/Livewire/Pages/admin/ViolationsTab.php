@@ -53,7 +53,7 @@ class ViolationsTab extends AdminComponent
     public function openCreateDrawer()
     {
         $this->form->reset();
-        $this->form->penalty_score = 0; // Use 0 as sentinel value for "not set" in create mode
+        $this->form->penalty_score = null; // Use null as sentinel value for "not set" in create mode
         $this->isEdit = false;
         $this->openDrawer = true;
     }
@@ -68,22 +68,21 @@ class ViolationsTab extends AdminComponent
 
     public function updatedFormPenaltyScore()
     {
-        // Clamp penalty score to valid range (1-100) when value changes
-        if ($this->form->penalty_score < 1) {
-            $this->form->penalty_score = 1;
-        } elseif ($this->form->penalty_score > 100) {
-            $this->form->penalty_score = 100;
+        // Only clamp if value is not null (the sentinel value in create mode)
+        // This preserves the sentinel value for validation
+        if ($this->form->penalty_score !== null) {
+            if ($this->form->penalty_score < 1) {
+                $this->form->penalty_score = 1;
+            } elseif ($this->form->penalty_score > 100) {
+                $this->form->penalty_score = 100;
+            }
         }
     }
 
     public function save()
     {
-        // Validate penalty score range before saving
-        if ($this->form->penalty_score < 1 || $this->form->penalty_score > 100) {
-            $this->addError('form.penalty_score', 'The penalty score must be between 1 and 100.');
-            return;
-        }
-
+        // Let the form's validate() method handle all validation including penalty_score range
+        // This ensures all validation errors are shown together, not one at a time
         $this->isEdit
             ? $this->form->update($this->editingId)
             : $this->form->store();
@@ -115,13 +114,20 @@ class ViolationsTab extends AdminComponent
     {
         $name = trim($this->form->name ?? '');
         $description = trim($this->form->description ?? '');
-        $penaltyScore = $this->form->penalty_score ?? 0;
+        $penaltyScore = $this->form->penalty_score;
 
         // Check if fields are filled and valid
-        $nameValid = !empty($name) && strlen($name) >= 3 && strlen($name) <= 255;
+        // Name: must be 3-255 chars AND match the regex pattern (letters, spaces, hyphens, apostrophes, periods, &, commas, parentheses)
+        $nameRegex = '/^[\p{L}\s\-\'\.&,()]+$/u';
+        $nameValid = !empty($name)
+            && strlen($name) >= 3
+            && strlen($name) <= 255
+            && preg_match($nameRegex, $name);
+
         $descValid = !empty($description) && strlen($description) >= 10 && strlen($description) <= 1000;
-        // Strictly enforce 1-100 range (not 0, not >100)
-        $penaltyValid = is_numeric($penaltyScore) && $penaltyScore >= 1 && $penaltyScore <= 100;
+
+        // Strictly enforce 1-100 range (null means not set, which is invalid)
+        $penaltyValid = $penaltyScore !== null && is_numeric($penaltyScore) && $penaltyScore >= 1 && $penaltyScore <= 100;
 
         // Check for validation errors from Livewire
         $hasErrors = $this->getErrorBag()->hasAny(['form.name', 'form.description', 'form.penalty_score']);
