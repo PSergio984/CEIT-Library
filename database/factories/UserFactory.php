@@ -27,9 +27,9 @@ class UserFactory extends Factory
             'first_name' => $this->fake()->firstName,
             'last_name' => $this->fake()->lastName,
             // Email must end with @plv.edu.ph for validation compatibility
-            'email' => $this->faker->unique()->userName.'@plv.edu.ph',
+            'email' => $this->fake()->unique()->userName.'@plv.edu.ph',
             'email_verified_at' => now(),
-            'password' => Hash::make($this->faker->password(8, 12)), // Generate random password between 8-12 characters
+            'password' => Hash::make($this->fake()->password(8, 12)), // Generate random password between 8-12 characters
             'remember_token' => Str::random(10),
             'role_id' => 1, // Default to student role
             'credit_score' => 100, // Default credit score
