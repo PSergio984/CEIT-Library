@@ -24,8 +24,8 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => $this->faker->firstName,
-            'last_name' => $this->faker->lastName,
+            'first_name' => $this->fake()->firstName,
+            'last_name' => $this->fake()->lastName,
             // Email must end with @plv.edu.ph for validation compatibility
             'email' => $this->faker->unique()->userName.'@plv.edu.ph',
             'email_verified_at' => now(),
