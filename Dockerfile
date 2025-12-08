@@ -18,6 +18,10 @@ COPY --from=builder /tmp/public/build /var/www/html/public/build
 # Copy application files
 COPY . .
 
+# Copy startup script to correct location
+COPY Docker/start.sh /start.sh
+RUN chmod +x /start.sh
+
 # Image config
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public

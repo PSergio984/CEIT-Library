@@ -18,23 +18,30 @@ elif [ -n "${AIVEN_CA_B64:-}" ]; then
   echo "Wrote AIVEN CA (from base64) to $CERT_PATH"
 fi
 
+echo "Clearing caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
 echo "Caching config..."
 php artisan config:cache
 
-echo "Caching routes..."
-php artisan route:cache
+# Note: Route caching is disabled because Livewire components don't work with route caching
+# Routes will be loaded dynamically on each request
+# echo "Caching routes..."
+# php artisan route:cache
 
-echo "Caching all"
-php artisan optimize
+echo "Caching views..."
+php artisan view:cache
 
 #Ensure storage link exists
 if [ ! -L /var/www/html/public/storage ]; then
-  php artisan storage:link  true
+  php artisan storage:link
 fi
 
 #Run migrations on startup
 echo "Running migrations..."
-php artisan migrate:fresh --seed --force  true
+php artisan migrate --force
 
 #Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
