@@ -3,6 +3,11 @@ echo "Running composer"
 
 composer install --no-dev --working-dir=/var/www/html
 
+echo "Clearing caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
 echo "Caching config..."
 php artisan config:cache
 
