@@ -39,9 +39,8 @@ class QrScannerFileUploadTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Generate valid QR data (same structure as AttendanceQr component)
+        // Generate valid QR data (same structure as AttendanceQr component - no timestamp)
         $secret = config('app.qr_hmac_secret');
-        $timestamp = now()->timestamp;
         $nonce = Str::random(32);
 
         $userPayload = [
@@ -51,7 +50,6 @@ class QrScannerFileUploadTest extends TestCase
 
         $data = [
             'user_id' => $student->id,
-            'timestamp' => $timestamp,
             'nonce' => $nonce,
             'user' => $userPayload,
         ];
@@ -79,9 +77,10 @@ class QrScannerFileUploadTest extends TestCase
     }
 
     /**
-     * Test that file upload scan with expired QR shows error
+     * Test that file upload scan with tampered hash shows error
+     * (Replaces the expired QR test since we no longer use timestamps)
      */
-    public function test_file_upload_scan_with_expired_qr_shows_error(): void
+    public function test_file_upload_scan_with_tampered_hash_shows_error(): void
     {
         // Create a student user
         $student = User::factory()->create([
@@ -93,9 +92,7 @@ class QrScannerFileUploadTest extends TestCase
             'role_id' => 2,
         ]);
 
-        // Generate EXPIRED QR data (25 hours ago)
-        $secret = config('app.qr_hmac_secret');
-        $timestamp = now()->subHours(25)->timestamp;
+        // Generate QR data with INVALID hash (tampered)
         $nonce = Str::random(32);
 
         $userPayload = [
@@ -105,14 +102,10 @@ class QrScannerFileUploadTest extends TestCase
 
         $data = [
             'user_id' => $student->id,
-            'timestamp' => $timestamp,
             'nonce' => $nonce,
             'user' => $userPayload,
+            'hash' => 'invalid-tampered-hash-12345', // Wrong hash
         ];
-
-        // Add hash
-        $canonicalMessage = $this->createCanonicalMessage($data);
-        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
         // Encrypt the data
         $encryptedData = Crypt::encryptString(json_encode($data));
@@ -165,7 +158,7 @@ class QrScannerFileUploadTest extends TestCase
     }
 
     /**
-     * Test that file upload scan prevents replay attacks (using nonce twice)
+     * Test that file upload scan prevents replay attacks (using nonce more than twice)
      */
     public function test_file_upload_scan_prevents_replay_attacks(): void
     {
@@ -188,9 +181,8 @@ class QrScannerFileUploadTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Generate valid QR data
+        // Generate valid QR data (no timestamp)
         $secret = config('app.qr_hmac_secret');
-        $timestamp = now()->timestamp;
         $nonce = Str::random(32);
 
         $userPayload = [
@@ -200,7 +192,6 @@ class QrScannerFileUploadTest extends TestCase
 
         $data = [
             'user_id' => $student->id,
-            'timestamp' => $timestamp,
             'nonce' => $nonce,
             'user' => $userPayload,
         ];
@@ -234,21 +225,20 @@ class QrScannerFileUploadTest extends TestCase
     /**
      * Helper method to create canonical message for HMAC
      * Must match the implementation in CreatesQrCanonicalMessage trait
+     * Note: Timestamp is no longer included in the canonical message
      */
     private function createCanonicalMessage(array $data): string
     {
-        // Sort keys to ensure consistent ordering
+        // Sort keys to ensure consistent ordering (no timestamp)
         $fields = [
             'user_id' => $data['user_id'] ?? '',
-            'timestamp' => $data['timestamp'] ?? '',
             'nonce' => $data['nonce'] ?? '',
             'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
         ];
 
-        // Create deterministic string representation
+        // Create deterministic string representation (no timestamp)
         return implode('|', [
             $fields['user_id'],
-            $fields['timestamp'],
             $fields['nonce'],
             $fields['user'],
         ]);

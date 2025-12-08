@@ -18,14 +18,7 @@ class QrScanner extends Component
 {
     use CreatesQrCanonicalMessage, Toast;
 
-    private const VALIDATION_EXPIRED = 'expired';
-
     private const VALIDATION_INVALID = 'invalid';
-
-    private const VALIDATION_REPLAY = 'replay_attack';
-
-    // QR code nonce TTL (24 hours in seconds)
-    private const NONCE_TTL_SECONDS = 86400;
 
     public bool $isScanning = false;
 
@@ -66,20 +59,6 @@ class QrScanner extends Component
             // Decrypt and validate the attendance data
             $decryptedData = $this->decryptAndValidateAttendanceData($data);
 
-            if ($decryptedData === self::VALIDATION_EXPIRED) {
-                $this->hasError = true;
-                $this->error('QR code has expired. Please refresh the page and generate a new QR code.', 'QR Code Expired');
-                $this->stopScanning();
-
-                return;
-            }
-            if ($decryptedData === self::VALIDATION_REPLAY) {
-                $this->hasError = true;
-                $this->error('This QR code has already been used twice (check-in and check-out). Please refresh the page to generate a new QR code.', 'QR Code Already Used');
-                $this->stopScanning();
-
-                return;
-            }
             if ($decryptedData === self::VALIDATION_INVALID) {
                 $this->hasError = true;
                 $this->error('Invalid QR code. This could be due to tampering, incorrect format, or network issues. Please try generating a new QR code.', 'Invalid QR Code');
@@ -95,18 +74,15 @@ class QrScanner extends Component
                 Log::info('Attendance recorded successfully', [
                     'user_id' => $decryptedData['user_id'],
                     'action' => $result['action'],
-                    'nonce_usage_count' => $decryptedData['current_usage_count'],
                 ]);
 
                 $this->success($result['message'], $result['title']);
                 $this->dispatch('attendanceRecorded', attendance: $result['attendance']);
             } else {
-                // Attendance processing failed - nonce already consumed during validation
-                // User cannot retry with this QR code
-                Log::warning('Attendance processing failed, nonce already consumed', [
+                // Attendance processing failed
+                Log::warning('Attendance processing failed', [
                     'user_id' => $decryptedData['user_id'],
                     'error_title' => $result['title'],
-                    'nonce_usage_count' => $decryptedData['current_usage_count'],
                 ]);
 
                 $this->hasError = true;
@@ -116,7 +92,7 @@ class QrScanner extends Component
             $this->scannedData = $data;
             $this->stopScanning();
         } catch (\Exception $e) {
-            Log::error('QR Scanner Error: ' . $e->getMessage(), [
+            Log::error('QR Scanner Error: '.$e->getMessage(), [
                 'exception' => $e,
                 'data_length' => strlen($data ?? ''),
             ]);
@@ -129,9 +105,11 @@ class QrScanner extends Component
 
     /**
      * Decrypt and validate the attendance QR code data
-     */
-    /**
-     * @return array|null|string 'expired' if expired, null for other failures, array for valid data
+     * Updated to match v5 QR format (no timestamp, permanent QR codes)
+     * Note: Nonce is used for HMAC integrity verification only, not for replay prevention.
+     * The QR code is permanent and can be used unlimited times.
+     *
+     * @return array|string 'invalid' for validation failures, array for valid data
      */
     private function decryptAndValidateAttendanceData(string $encryptedData)
     {
@@ -148,69 +126,16 @@ class QrScanner extends Component
                 return self::VALIDATION_INVALID;
             }
 
-            // Validate JSON structure (only require user_id, timestamp, user, hash, nonce)
-            if (! is_array($data) || ! isset($data['user_id'], $data['timestamp'], $data['user'], $data['hash'], $data['nonce'])) {
+            // Validate JSON structure (only require user_id, user, hash, nonce - no timestamp)
+            if (! is_array($data) || ! isset($data['user_id'], $data['user'], $data['hash'], $data['nonce'])) {
                 Log::warning('Invalid QR code structure', ['data_keys' => array_keys($data ?? [])]);
 
                 return self::VALIDATION_INVALID;
             }
 
-            // Check for replay attack using nonce
-            // Allow TWO uses per nonce: one for check-in, one for check-out
-            $nonce = $data['nonce'];
-            $cacheKey = 'qr_nonce:' . hash('sha256', $nonce);
-
-            // Atomically initialize the nonce counter with TTL if it doesn't exist
-            // Cache::add() only sets the value if the key doesn't exist (atomic operation)
-            Cache::add($cacheKey, 0, self::NONCE_TTL_SECONDS);
-
-            // Atomically increment the usage count
-            $usageCount = Cache::increment($cacheKey, 1);
-
-            // Check if exceeded limit
-            if ($usageCount > 2) {
-                // QR code already used twice (check-in and check-out)
-                // Don't decrement - keep the accurate count for logging/monitoring
-                Log::warning('QR code exhausted - already used for check-in and check-out', [
-                    'nonce_hash' => hash('sha256', $nonce),
-                    'user_id' => $data['user_id'],
-                    'usage_count' => $usageCount,
-                ]);
-
-                return self::VALIDATION_REPLAY;
-            }
-
-            // Validate timestamp with clock-skew tolerance
-            $qrTimestamp = $data['timestamp'];
-            if (! is_numeric($qrTimestamp)) {
-                Log::warning('QR code timestamp is not numeric', ['timestamp' => $qrTimestamp]);
-
-                return self::VALIDATION_INVALID;
-            }
-            $qrTimestamp = (int) $qrTimestamp;
-            $now = Carbon::now()->timestamp;
-            $maxFuture = $now + 600; // 10 minutes in future
-            $minPast = $now - self::NONCE_TTL_SECONDS; // 24 hours ago
-            $minAllowed = $now - 600; // 10 minutes in past
-
-            if ($qrTimestamp < $minPast || $qrTimestamp > $maxFuture) {
-                Log::warning('QR code expired or timestamp out of bounds', [
-                    'qrTimestamp' => $qrTimestamp,
-                    'now' => $now,
-                    'minPast' => $minPast,
-                    'maxFuture' => $maxFuture,
-                ]);
-
-                return self::VALIDATION_EXPIRED;
-            }
-            if ($qrTimestamp < $minAllowed) {
-                Log::info('QR code timestamp is older than allowed clock-skew tolerance', [
-                    'qrTimestamp' => $qrTimestamp,
-                    'now' => $now,
-                    'minAllowed' => $minAllowed,
-                ]);
-                // Still allow, but log info
-            }
+            // Note: Nonce is used for HMAC integrity verification only
+            // QR codes are now permanent (unlimited use) - no replay attack check needed
+            // The attendance logic itself prevents duplicate active sessions
 
             // Verify hash for tamper protection covering entire payload
             // Remove hash from data before creating canonical message to avoid circular dependency
@@ -235,7 +160,7 @@ class QrScanner extends Component
             }
 
             // Check rate limiting per user (prevent rapid repeated scans)
-            $rateLimitKey = 'qr_rate_limit:' . $data['user_id'];
+            $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
             $recentScans = Cache::get($rateLimitKey, 0);
 
             if ($recentScans >= 60) { // Max 60 scans per minute for testing
@@ -250,22 +175,14 @@ class QrScanner extends Component
             // Increment rate limit counter (1 minute TTL)
             Cache::put($rateLimitKey, $recentScans + 1, 60);
 
-            // Nonce already atomically incremented during validation check
-            // If attendance processing fails later, the nonce usage is already consumed
-            // This is acceptable as it prevents TOCTOU race conditions
-            Log::info('QR code validated successfully, nonce usage incremented', [
+            // QR code validated successfully - permanent QR codes have unlimited usage
+            Log::info('QR code validated successfully', [
                 'user_id' => $user->id,
-                'nonce_hash' => hash('sha256', $nonce),
-                'current_usage_count' => $usageCount,
-                'remaining_uses' => 2 - $usageCount,
             ]);
 
             return [
                 'user_id' => $data['user_id'],
-                'timestamp' => $qrTimestamp,
                 'user' => $user,
-                'nonce_cache_key' => $cacheKey,
-                'current_usage_count' => $usageCount,
             ];
         } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
             Log::warning('QR code decryption failed - possible tampering', ['error' => $e->getMessage()]);
@@ -287,13 +204,13 @@ class QrScanner extends Component
         if ($minutes < 1) {
             return 'less than 1 minute';
         } elseif ($minutes < 60) {
-            return $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes');
+            return $minutes.' '.($minutes === 1 ? 'minute' : 'minutes');
         } else {
             $hours = (int) floor($minutes / 60);
             $remainingMinutes = $minutes % 60;
-            $hoursText = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
+            $hoursText = $hours.' '.($hours === 1 ? 'hour' : 'hours');
             if ($remainingMinutes > 0) {
-                return $hoursText . ' and ' . $remainingMinutes . ' ' . ($remainingMinutes === 1 ? 'minute' : 'minutes');
+                return $hoursText.' and '.$remainingMinutes.' '.($remainingMinutes === 1 ? 'minute' : 'minutes');
             }
 
             return $hoursText;
@@ -308,10 +225,18 @@ class QrScanner extends Component
         $userId = $data['user_id'];
         $user = $data['user'];
 
-        // Get the librarian ID of the current user (not user ID)
-        // scanned_by must reference librarians.id, not users.id
+        // Get the current user who is scanning
         $currentUser = Auth::user();
-        $scannedBy = $currentUser?->librarianDuty?->id;
+
+        // Get the librarian ID if current user has an active librarian duty
+        // scanned_by must reference librarians.id, not users.id
+        $scannedBy = $currentUser?->getActiveLibrarianDuty()?->id;
+
+        // If no librarian duty but user has admin access, store admin user ID
+        $scannedByAdminId = null;
+        if (! $scannedBy && $currentUser?->hasAdminAccess()) {
+            $scannedByAdminId = $currentUser->id;
+        }
 
         // Check if user has an active session
         $activeSession = Attendance::getActiveSession($userId);
@@ -328,6 +253,21 @@ class QrScanner extends Component
                     // Format duration message properly
                     $minutes = (int) $activeSession->duration_minutes;
                     $durationText = $this->formatDuration($minutes);
+
+                    // Create check-out notification for the user
+                    \App\Models\Notification::create([
+                        'user_id' => $user->id,
+                        'type' => 'attendance_checkout',
+                        'title' => 'Library Check-out Successful',
+                        'message' => "You checked out of the library. Total time: {$durationText}. Thank you for visiting!",
+                        'data' => [
+                            'attendance_id' => $activeSession->id,
+                            'time_in' => $activeSession->time_in->format('M d, Y h:i A'),
+                            'time_out' => $activeSession->time_out->format('M d, Y h:i A'),
+                            'duration_minutes' => $minutes,
+                            'duration_text' => $durationText,
+                        ],
+                    ]);
 
                     return [
                         'success' => true,
@@ -354,13 +294,26 @@ class QrScanner extends Component
         } else {
             // User is checking in (time in) - wrap in transaction
             try {
-                return DB::transaction(function () use ($userId, $scannedBy, $user) {
+                return DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
                         'role_id' => $user->role_id,
                         'time_in' => Carbon::now(),
                         'status' => 'active',
                         'scanned_by' => $scannedBy,
+                        'scanned_by_admin_id' => $scannedByAdminId,
+                    ]);
+
+                    // Create check-in notification for the user
+                    \App\Models\Notification::create([
+                        'user_id' => $user->id,
+                        'type' => 'attendance_checkin',
+                        'title' => 'Library Check-in Successful',
+                        'message' => "Welcome to the library! You checked in at {$attendance->time_in->format('h:i A')}. Enjoy your time!",
+                        'data' => [
+                            'attendance_id' => $attendance->id,
+                            'time_in' => $attendance->time_in->format('M d, Y h:i A'),
+                        ],
                     ]);
 
                     return [
@@ -408,7 +361,7 @@ class QrScanner extends Component
             // Log the uploaded QR data for debugging
             Log::info('File upload scan initiated', [
                 'data_length' => strlen($data),
-                'data_preview' => substr($data, 0, 50) . '...',
+                'data_preview' => substr($data, 0, 50).'...',
             ]);
 
             // Basic validation
@@ -424,18 +377,6 @@ class QrScanner extends Component
             // Decrypt and validate the attendance data
             $decryptedData = $this->decryptAndValidateAttendanceData($data);
 
-            if ($decryptedData === self::VALIDATION_EXPIRED) {
-                $this->hasError = true;
-                $this->error('QR code has expired. Please refresh the page and generate a new QR code.', 'QR Code Expired');
-
-                return;
-            }
-            if ($decryptedData === self::VALIDATION_REPLAY) {
-                $this->hasError = true;
-                $this->error('This QR code has already been used twice (check-in and check-out). Please refresh the page to generate a new QR code.', 'QR Code Already Used');
-
-                return;
-            }
             if ($decryptedData === self::VALIDATION_INVALID) {
                 $this->hasError = true;
                 $this->error('Invalid QR code. This could be due to tampering, incorrect format, or network issues. Please try generating a new QR code.', 'Invalid QR Code');
@@ -450,7 +391,6 @@ class QrScanner extends Component
                 Log::info('Attendance recorded successfully (file upload)', [
                     'user_id' => $decryptedData['user_id'],
                     'action' => $result['action'],
-                    'nonce_usage_count' => $decryptedData['current_usage_count'],
                 ]);
 
                 $this->success($result['message'], $result['title']);
@@ -459,11 +399,10 @@ class QrScanner extends Component
                 // Stop scanning after successful processing
                 $this->stopScanning();
             } else {
-                // Attendance processing failed - nonce already consumed during validation
-                Log::warning('Attendance processing failed (file upload), nonce already consumed', [
+                // Attendance processing failed
+                Log::warning('Attendance processing failed (file upload)', [
                     'user_id' => $decryptedData['user_id'],
                     'error_title' => $result['title'],
-                    'nonce_usage_count' => $decryptedData['current_usage_count'],
                 ]);
 
                 $this->hasError = true;
@@ -473,7 +412,7 @@ class QrScanner extends Component
 
             $this->scannedData = $data;
         } catch (\Exception $e) {
-            Log::error('QR File Upload Scanner Error: ' . $e->getMessage(), [
+            Log::error('QR File Upload Scanner Error: '.$e->getMessage(), [
                 'exception' => $e,
                 'data_length' => strlen($data ?? ''),
             ]);

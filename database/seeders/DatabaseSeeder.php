@@ -186,13 +186,9 @@ class DatabaseSeeder extends Seeder
             // Note: Credit scores are now automatically updated via model events
         }
 
-        // Create at least 5 borrow transactions for each status for the specific student
-        // Use only allowed enum values for status: ['started', 'completed', 'overdue']
-        $statuses = [
-            'completed',    // completed transaction
-            'started',      // active/ongoing transaction
-            'overdue',      // overdue transaction
-        ];
+        // Create borrow transactions for the specific student using proper factory states
+        // This ensures data consistency (time_out, status, expires_at are all aligned)
+        $this->command->info('Creating borrow transactions for student@plv.edu.ph...');
 
         // Eager load copies to avoid N+1 queries
         $academicPapers->load('copies');
@@ -200,18 +196,53 @@ class DatabaseSeeder extends Seeder
             return $paper->copies->isNotEmpty();
         });
 
-        foreach ($statuses as $status) {
-            for ($i = 0; $i < 5; $i++) {
-                $paper = $academicPapersWithCopies->random();
-                $copy = $paper->copies->random();
-                if ($copy) {
-                    BorrowTransaction::factory()->state([
-                        'user_id' => $specificStudent->id,
-                        'academic_paper_id' => $paper->id,
-                        'inventory_id' => $copy->id,
-                        'status' => $status,
-                    ])->create();
-                }
+        // Track which copies are used for active transactions to avoid conflicts
+        $usedCopyIds = collect();
+
+        // Create 5 COMPLETED transactions (returned books)
+        for ($i = 0; $i < 5; $i++) {
+            $paper = $academicPapersWithCopies->random();
+            $copy = $paper->copies->whereNotIn('id', $usedCopyIds)->first() ?? $paper->copies->random();
+            if ($copy) {
+                BorrowTransaction::factory()->completed()->create([
+                    'user_id' => $specificStudent->id,
+                    'academic_paper_id' => $paper->id,
+                    'inventory_id' => $copy->id,
+                ]);
+                // Completed transactions - copy is available
+                $copy->update(['status' => 'Available']);
+            }
+        }
+
+        // Create 3 STARTED transactions (currently borrowing - active)
+        for ($i = 0; $i < 3; $i++) {
+            $paper = $academicPapersWithCopies->random();
+            $copy = $paper->copies->whereNotIn('id', $usedCopyIds)->where('status', 'Available')->first();
+            if ($copy) {
+                BorrowTransaction::factory()->started()->create([
+                    'user_id' => $specificStudent->id,
+                    'academic_paper_id' => $paper->id,
+                    'inventory_id' => $copy->id,
+                ]);
+                // Active transaction - copy is unavailable
+                $copy->update(['status' => 'Unavailable']);
+                $usedCopyIds->push($copy->id);
+            }
+        }
+
+        // Create 2 OVERDUE transactions (past due, not returned)
+        for ($i = 0; $i < 2; $i++) {
+            $paper = $academicPapersWithCopies->random();
+            $copy = $paper->copies->whereNotIn('id', $usedCopyIds)->where('status', 'Available')->first();
+            if ($copy) {
+                BorrowTransaction::factory()->overdue()->create([
+                    'user_id' => $specificStudent->id,
+                    'academic_paper_id' => $paper->id,
+                    'inventory_id' => $copy->id,
+                ]);
+                // Overdue transaction - copy is unavailable
+                $copy->update(['status' => 'Unavailable']);
+                $usedCopyIds->push($copy->id);
             }
         }
 
@@ -419,7 +450,8 @@ class DatabaseSeeder extends Seeder
             $today->copy()->subDays(9),
         ];
 
-        $attendanceStatuses = ['completed', 'active', 'completed', 'active', 'completed', 'completed', 'active', 'completed', 'active', 'completed'];
+        // Only one active attendance (the current one for today), rest are completed
+        $attendanceStatuses = ['completed', 'completed', 'completed', 'completed', 'active', 'completed', 'completed', 'completed', 'completed', 'completed'];
 
         for ($i = 0; $i < 10; $i++) {
             $date = $dates[$i];

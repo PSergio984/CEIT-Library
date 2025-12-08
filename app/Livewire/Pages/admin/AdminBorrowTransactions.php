@@ -145,7 +145,7 @@ class AdminBorrowTransactions extends AdminComponent
             ->through(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'user_name' => trim(($transaction->user?->first_name ?? '').' '.($transaction->user?->last_name ?? '')) ?: 'N/A',
+                    'user_name' => trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A',
                     'user' => $transaction->user,
                     'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
                     'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
@@ -355,6 +355,20 @@ class AdminBorrowTransactions extends AdminComponent
                     ->first();
 
                 if ($activeTransaction) {
+                    // SECURITY CHECK: Verify the QR code belongs to the original borrower
+                    // The person scanning to return must match the person who borrowed
+                    if ($activeTransaction->user_id !== $user->id) {
+                        \Log::warning('Return attempt by different user', [
+                            'borrower_id' => $activeTransaction->user_id,
+                            'qr_owner_id' => $user->id,
+                        ]);
+
+                        $this->error('This book was borrowed by another student. Only the original borrower\'s QR code can return it.');
+                        $this->isProcessingQr = false;
+
+                        return ['found' => false];
+                    }
+
                     // Return the book
                     \DB::beginTransaction();
                     try {
@@ -381,7 +395,7 @@ class AdminBorrowTransactions extends AdminComponent
                     } catch (\Exception $e) {
                         \DB::rollBack();
                         \Log::error('Return error:', ['error' => $e->getMessage()]);
-                        $this->error('Failed to return book: '.$e->getMessage());
+                        $this->error('Failed to return book: ' . $e->getMessage());
                         $this->isProcessingQr = false;
 
                         return ['found' => false];
@@ -397,9 +411,30 @@ class AdminBorrowTransactions extends AdminComponent
                 // Book is available - prepare to borrow
                 \Log::info('Book is available - preparing borrow confirmation');
 
+                // SECURITY CHECK: Double-check no active transaction exists
+                // (in case status is stale or another QR was just scanned)
+                $existingActiveTransaction = BorrowTransaction::where('inventory_id', $inventory->id)
+                    ->whereIn('status', ['started', 'overdue'])
+                    ->whereNull('time_out')
+                    ->first();
+
+                if ($existingActiveTransaction) {
+                    \Log::warning('Attempted to borrow already-borrowed book', [
+                        'inventory_id' => $inventory->id,
+                        'existing_transaction' => $existingActiveTransaction->id,
+                        'existing_borrower' => $existingActiveTransaction->user_id,
+                        'qr_requester' => $user->id,
+                    ]);
+
+                    $this->error('This book is currently borrowed and must be returned before it can be borrowed again.');
+                    $this->isProcessingQr = false;
+
+                    return ['found' => false];
+                }
+
                 $this->pendingBorrowData = [
                     'user_id' => $user->id,
-                    'user_name' => $user->first_name.' '.$user->last_name,
+                    'user_name' => $user->first_name . ' ' . $user->last_name,
                     'inventory_id' => $inventory->id,
                     'paper_id' => $paper->id,
                     'copy_number' => $inventory->copy_number,
@@ -438,7 +473,7 @@ class AdminBorrowTransactions extends AdminComponent
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            $this->error('Error processing QR code: '.$e->getMessage());
+            $this->error('Error processing QR code: ' . $e->getMessage());
             $this->isProcessingQr = false;
 
             return ['found' => false];
@@ -502,7 +537,7 @@ class AdminBorrowTransactions extends AdminComponent
                 'user_id' => $this->pendingBorrowData['user_id'],
                 'type' => 'paper_borrowed',
                 'title' => 'Academic Paper Borrowed Successfully',
-                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by ".$expiresAt->format('M d, Y h:i A').'.',
+                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by " . $expiresAt->format('M d, Y h:i A') . '.',
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'paper_id' => $paper->id,
@@ -520,8 +555,8 @@ class AdminBorrowTransactions extends AdminComponent
             $this->reset(['borrowNotes', 'pendingBorrowData']);
         } catch (\Exception $e) {
             \DB::rollBack();
-            \Log::error('Borrow Confirmation Error: '.$e->getMessage());
-            $this->error('Failed to create borrow transaction: '.$e->getMessage());
+            \Log::error('Borrow Confirmation Error: ' . $e->getMessage());
+            $this->error('Failed to create borrow transaction: ' . $e->getMessage());
         }
     }
 

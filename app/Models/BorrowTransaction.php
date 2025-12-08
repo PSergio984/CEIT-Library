@@ -73,7 +73,7 @@ class BorrowTransaction extends Model
 
     protected static function booted()
     {
-        // When borrow transaction status transitions to completed, check if on-time and create ScoreIncrement
+        // When borrow transaction status transitions to completed, check eligibility and create ScoreIncrement
         static::updated(function ($transaction) {
             // Only award points if status just transitioned to completed (not already completed)
             $wasCompleted = $transaction->getOriginal('status') === 'completed';
@@ -84,6 +84,56 @@ class BorrowTransaction extends Model
                 $isOnTime = $transaction->time_out <= $transaction->expires_at;
 
                 if ($isOnTime) {
+                    // Check if borrowed for at least 30 minutes
+                    $borrowDurationMinutes = $transaction->time_in->diffInMinutes($transaction->time_out);
+
+                    if ($borrowDurationMinutes < 30) {
+                        // Borrow duration too short - no credit score, but still notify about return
+                        \App\Models\Notification::create([
+                            'user_id' => $transaction->user_id,
+                            'type' => 'paper_returned',
+                            'title' => 'Book Returned Successfully!',
+                            'message' => "You successfully returned \"{$transaction->academicPaper->title}\" on time! (Borrowed for {$borrowDurationMinutes} min - minimum 30 min required for credit score bonus)",
+                            'data' => [
+                                'transaction_id' => $transaction->id,
+                                'paper_title' => $transaction->academicPaper->title,
+                                'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
+                                'duration_minutes' => $borrowDurationMinutes,
+                                'score_awarded' => 0,
+                                'reason' => 'duration_too_short',
+                            ],
+                        ]);
+
+                        return;
+                    }
+
+                    // Check daily limit (max 3 credit score rewards per day for borrowing)
+                    $todayBorrowRewards = ScoreIncrement::where('user_id', $transaction->user_id)
+                        ->where('name', 'On-Time Return')
+                        ->whereDate('created_at', today())
+                        ->count();
+
+                    if ($todayBorrowRewards >= 3) {
+                        // Daily limit reached - no credit score, but still notify about return
+                        \App\Models\Notification::create([
+                            'user_id' => $transaction->user_id,
+                            'type' => 'paper_returned',
+                            'title' => 'Book Returned Successfully!',
+                            'message' => "You successfully returned \"{$transaction->academicPaper->title}\" on time! (Daily credit limit reached - max 3 rewards per day)",
+                            'data' => [
+                                'transaction_id' => $transaction->id,
+                                'paper_title' => $transaction->academicPaper->title,
+                                'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
+                                'duration_minutes' => $borrowDurationMinutes,
+                                'score_awarded' => 0,
+                                'reason' => 'daily_limit_reached',
+                                'daily_count' => $todayBorrowRewards,
+                            ],
+                        ]);
+
+                        return;
+                    }
+
                     // Efficient idempotency check: use indexed related_borrow_transaction_id for exact lookup
                     $existingReward = ScoreIncrement::where('user_id', $transaction->user_id)
                         ->where('related_borrow_transaction_id', $transaction->id)
@@ -94,7 +144,7 @@ class BorrowTransaction extends Model
                         ScoreIncrement::create([
                             'user_id' => $transaction->user_id,
                             'name' => 'On-Time Return',
-                            'description' => 'Returned borrowed material on time',
+                            'description' => "Returned borrowed material on time after {$borrowDurationMinutes} minutes",
                             'score_value' => 10,
                             'related_borrow_transaction_id' => $transaction->id,
                         ]);
@@ -109,6 +159,7 @@ class BorrowTransaction extends Model
                                 'transaction_id' => $transaction->id,
                                 'paper_title' => $transaction->academicPaper->title,
                                 'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
+                                'duration_minutes' => $borrowDurationMinutes,
                                 'score_awarded' => 10,
                             ],
                         ]);

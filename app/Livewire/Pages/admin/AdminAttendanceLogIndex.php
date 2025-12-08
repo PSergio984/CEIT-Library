@@ -57,7 +57,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     {
         $search = trim($this->search);
 
-        return Attendance::with(['user', 'scannedByLibrarian.user', 'role'])
+        return Attendance::with(['user', 'scannedByLibrarian.user', 'scannedByAdmin', 'role'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     // Search student name (match full name or individual parts)
@@ -69,6 +69,12 @@ class AdminAttendanceLogIndex extends AdminComponent
                         // Search librarian name (match full name or individual parts)
                         ->orWhereHas('scannedByLibrarian.user', function ($librarianQuery) use ($search) {
                             $librarianQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                                ->orWhere('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        })
+                        // Search admin name (match full name or individual parts)
+                        ->orWhereHas('scannedByAdmin', function ($adminQuery) use ($search) {
+                            $adminQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                                 ->orWhere('first_name', 'like', "%{$search}%")
                                 ->orWhere('last_name', 'like', "%{$search}%");
                         });
@@ -127,7 +133,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                         'admin', 'super_admin', 'super admin' => 'badge-error',
                         default => 'badge-outline'
                     },
-                    'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
+                    'scanned_by_name' => $attendance->scanned_by_name,
                     'user' => $attendance->user,
                     'time_in' => $attendance->time_in,
                     'time_out' => $attendance->time_out,
@@ -228,18 +234,6 @@ class AdminAttendanceLogIndex extends AdminComponent
             // Decrypt and validate the attendance data
             $decryptedData = $this->decryptAndValidateAttendanceData($data);
 
-            if ($decryptedData === 'expired') {
-                $this->error('QR code has expired. Please refresh the page and generate a new QR code.', 'QR Code Expired');
-                $this->isProcessingQr = false;
-
-                return ['found' => false];
-            }
-            if ($decryptedData === 'replay_attack') {
-                $this->error('This QR code has already been used twice (check-in and check-out). Please refresh the page to generate a new QR code.', 'QR Code Already Used');
-                $this->isProcessingQr = false;
-
-                return ['found' => false];
-            }
             if ($decryptedData === 'invalid') {
                 $this->error('Invalid QR code. This could be due to tampering, incorrect format, or network issues. Please try generating a new QR code.', 'Invalid QR Code');
                 $this->isProcessingQr = false;
@@ -283,7 +277,11 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     /**
      * Decrypt and validate the attendance QR code data
-     * Copied from QrScanner component
+     * Updated to match v5 QR format (no timestamp, permanent QR codes)
+     * Note: Nonce is used for HMAC integrity verification only, not for replay prevention.
+     * The QR code is permanent and can be used unlimited times.
+     *
+     * @return array|string 'invalid' for validation failures, array for valid data
      */
     private function decryptAndValidateAttendanceData(string $encryptedData)
     {
@@ -300,67 +298,28 @@ class AdminAttendanceLogIndex extends AdminComponent
                 return 'invalid';
             }
 
-            // Validate required fields
-            if (! isset($data['user_id']) || ! isset($data['timestamp']) || ! isset($data['nonce']) || ! isset($data['hash'])) {
-                Log::warning('QR code missing required fields');
+            // Validate JSON structure (v5 format: user_id, user, hash, nonce - no timestamp)
+            if (! is_array($data) || ! isset($data['user_id'], $data['user'], $data['hash'], $data['nonce'])) {
+                Log::warning('Invalid QR code structure', ['data_keys' => array_keys($data ?? [])]);
 
                 return 'invalid';
             }
 
-            // Check nonce usage (prevent replay attacks)
-            $nonce = $data['nonce'];
-            $cacheKey = 'qr_nonce:' . hash('sha256', $nonce);
-            $usageCount = Cache::increment($cacheKey, 1);
+            // Note: Nonce is used for HMAC integrity verification only
+            // QR codes are now permanent (unlimited use) - no replay attack check needed
+            // The attendance logic itself prevents duplicate active sessions
 
-            // Set TTL on first use
-            if ($usageCount === 1) {
-                Cache::put($cacheKey, 1, 86400); // 24 hours
-            }
-
-            // Allow max 2 uses (check-in and check-out)
-            if ($usageCount > 2) {
-                Log::warning('QR code nonce already used more than twice', [
-                    'usage_count' => $usageCount,
-                    'nonce_hash' => hash('sha256', $nonce),
-                ]);
-
-                return 'replay_attack';
-            }
-
-            // Validate timestamp (prevent expired QR codes)
-            $qrTimestamp = (int) $data['timestamp'];
-            $now = time();
-            $maxFuture = $now + 300; // 5 minutes clock skew tolerance
-            $minPast = $now - 86400; // 24 hours validity
-
-            if ($qrTimestamp > $maxFuture) {
-                Log::warning('QR code timestamp is in the future', [
-                    'qrTimestamp' => $qrTimestamp,
-                    'now' => $now,
-                    'maxFuture' => $maxFuture,
-                ]);
-
-                return 'invalid';
-            }
-            if ($qrTimestamp < $minPast) {
-                Log::info('QR code has expired', [
-                    'qrTimestamp' => $qrTimestamp,
-                    'now' => $now,
-                    'minPast' => $minPast,
-                    'maxFuture' => $maxFuture,
-                ]);
-
-                return 'expired';
-            }
-
-            // Verify hash for tamper protection
+            // Verify hash for tamper protection covering entire payload
             // Remove hash from data before creating canonical message to avoid circular dependency
             $dataForCanonical = $data;
             unset($dataForCanonical['hash']);
             $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
             $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
             if (! hash_equals($expectedHash, $data['hash'])) {
-                Log::warning('QR code hash mismatch - possible tampering detected');
+                Log::warning('QR code hash mismatch - possible tampering detected', [
+                    'expected' => substr($expectedHash, 0, 16),
+                    'received' => substr($data['hash'], 0, 16),
+                ]);
 
                 return 'invalid';
             }
@@ -372,12 +331,30 @@ class AdminAttendanceLogIndex extends AdminComponent
                 return 'invalid';
             }
 
+            // Check rate limiting per user (prevent rapid repeated scans)
+            $rateLimitKey = 'qr_rate_limit:' . $data['user_id'];
+            $recentScans = Cache::get($rateLimitKey, 0);
+
+            if ($recentScans >= 60) { // Max 60 scans per minute for testing
+                Log::warning('Rate limit exceeded for user', [
+                    'user_id' => $data['user_id'],
+                    'scan_count' => $recentScans,
+                ]);
+
+                return 'invalid';
+            }
+
+            // Increment rate limit counter (1 minute TTL)
+            Cache::put($rateLimitKey, $recentScans + 1, 60);
+
+            // QR code validated successfully - permanent QR codes have unlimited usage
+            Log::info('QR code validated successfully', [
+                'user_id' => $user->id,
+            ]);
+
             return [
                 'user_id' => $data['user_id'],
-                'timestamp' => $qrTimestamp,
                 'user' => $user,
-                'nonce_cache_key' => $cacheKey,
-                'current_usage_count' => $usageCount,
             ];
         } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
             Log::warning('QR code decryption failed - possible tampering', ['error' => $e->getMessage()]);
@@ -399,9 +376,18 @@ class AdminAttendanceLogIndex extends AdminComponent
         $userId = $data['user_id'];
         $user = $data['user'];
 
-        // Get the librarian ID of the current user
+        // Get the current user who is scanning
         $currentUser = \Illuminate\Support\Facades\Auth::user();
-        $scannedBy = $currentUser?->librarianDuty?->id;
+
+        // Get the librarian ID if current user has an active librarian duty
+        // scanned_by must reference librarians.id, not users.id
+        $scannedBy = $currentUser?->getActiveLibrarianDuty()?->id;
+
+        // If no librarian duty but user has admin access, store admin user ID
+        $scannedByAdminId = null;
+        if (! $scannedBy && $currentUser?->hasAdminAccess()) {
+            $scannedByAdminId = $currentUser->id;
+        }
 
         // Check if user has an active session
         $activeSession = Attendance::getActiveSession($userId);
@@ -417,6 +403,21 @@ class AdminAttendanceLogIndex extends AdminComponent
 
                     $minutes = (int) $activeSession->duration_minutes;
                     $durationText = $this->formatDuration($minutes);
+
+                    // Create check-out notification for the user
+                    \App\Models\Notification::create([
+                        'user_id' => $user->id,
+                        'type' => 'attendance_checkout',
+                        'title' => 'Library Check-out Successful',
+                        'message' => "You checked out of the library. Total time: {$durationText}. Thank you for visiting!",
+                        'data' => [
+                            'attendance_id' => $activeSession->id,
+                            'time_in' => $activeSession->time_in->format('M d, Y h:i A'),
+                            'time_out' => $activeSession->time_out->format('M d, Y h:i A'),
+                            'duration_minutes' => $minutes,
+                            'duration_text' => $durationText,
+                        ],
+                    ]);
 
                     return [
                         'success' => true,
@@ -442,12 +443,26 @@ class AdminAttendanceLogIndex extends AdminComponent
         } else {
             // User is checking in (time in)
             try {
-                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $scannedBy, $user) {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
+                        'role_id' => $user->role_id,
                         'scanned_by' => $scannedBy,
+                        'scanned_by_admin_id' => $scannedByAdminId,
                         'time_in' => \Carbon\Carbon::now(),
                         'status' => 'active',
+                    ]);
+
+                    // Create check-in notification for the user
+                    \App\Models\Notification::create([
+                        'user_id' => $user->id,
+                        'type' => 'attendance_checkin',
+                        'title' => 'Library Check-in Successful',
+                        'message' => "Welcome to the library! You checked in at {$attendance->time_in->format('h:i A')}. Enjoy your time!",
+                        'data' => [
+                            'attendance_id' => $attendance->id,
+                            'time_in' => $attendance->time_in->format('M d, Y h:i A'),
+                        ],
                     ]);
 
                     return [
@@ -516,7 +531,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                 'id' => $attendance->id,
                 'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
                 'role_name' => $attendance->role?->name ?? 'N/A',
-                'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
+                'scanned_by_name' => $attendance->scanned_by_name,
                 'time_in' => $attendance->time_in,
                 'time_out' => $attendance->time_out,
                 'duration_minutes' => $attendance->duration_minutes,

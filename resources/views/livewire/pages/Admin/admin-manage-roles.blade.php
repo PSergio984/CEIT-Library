@@ -207,10 +207,14 @@
                                 <div class="space-y-2">
                                     @foreach ($roles as $role)
                                         @php
-                                            // Only super admins can assign admin and super_admin roles
+                                            // Skip super_admin role entirely - it's fixed and shouldn't be assignable
+                                            if ($role->name === 'super_admin') {
+                                                continue;
+                                            }
+                                            // Only super admins can assign admin role
                                             $canAssignRole =
                                                 Auth::user()->isSuperAdmin() ||
-                                                !in_array($role->name, ['admin', 'super_admin']);
+                                                $role->name !== 'admin';
                                         @endphp
 
                                         @if ($canAssignRole)
@@ -223,7 +227,7 @@
                                                     <div class="flex items-center gap-2">
                                                         <span
                                                             class="font-medium text-base-content">{{ $role->display_name }}</span>
-                                                        @if (in_array($role->name, ['admin', 'super_admin']))
+                                                        @if ($role->name === 'admin')
                                                             <span class="badge badge-warning badge-sm">
                                                                 Super Admin Only
                                                             </span>

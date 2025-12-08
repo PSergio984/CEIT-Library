@@ -46,6 +46,7 @@ class Attendance extends Model
         'time_out',
         'status',
         'scanned_by',
+        'scanned_by_admin_id',
         'duration_minutes',
     ];
 
@@ -65,6 +66,35 @@ class Attendance extends Model
             if (! $wasCompleted && $isNowCompleted) {
                 // Use the existing duration_minutes property instead of recalculating
                 if ($attendance->duration_minutes >= 30) {
+                    // Check daily limit (max 3 credit score rewards per day for attendance)
+                    $todayAttendanceRewards = ScoreIncrement::where('user_id', $attendance->user_id)
+                        ->where('name', 'Attendance 30+ Minutes')
+                        ->whereDate('created_at', today())
+                        ->count();
+
+                    if ($todayAttendanceRewards >= 3) {
+                        // Daily limit reached - no credit score, but can notify if needed
+                        $user = $attendance->user;
+                        if ($user) {
+                            $durationDisplay = (int) $attendance->duration_minutes;
+                            Notification::create([
+                                'user_id' => $attendance->user_id,
+                                'type' => 'attendance_checkout',
+                                'title' => 'Checked Out Successfully!',
+                                'message' => "You stayed in the library for {$durationDisplay} minutes. (Daily credit limit reached - max 3 rewards per day)",
+                                'data' => [
+                                    'attendance_id' => $attendance->id,
+                                    'duration_minutes' => $attendance->duration_minutes,
+                                    'score_awarded' => 0,
+                                    'reason' => 'daily_limit_reached',
+                                    'daily_count' => $todayAttendanceRewards,
+                                ],
+                            ]);
+                        }
+
+                        return;
+                    }
+
                     // Efficient idempotency check: use indexed related_attendance_id for exact lookup
                     $existingReward = ScoreIncrement::where('user_id', $attendance->user_id)
                         ->where('related_attendance_id', $attendance->id)
@@ -72,13 +102,34 @@ class Attendance extends Model
 
                     if (! $existingReward) {
                         // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
-                        ScoreIncrement::create([
+                        $scoreIncrement = ScoreIncrement::create([
                             'user_id' => $attendance->user_id,
                             'name' => 'Attendance 30+ Minutes',
                             'description' => "Stayed in library for {$attendance->duration_minutes} minutes",
                             'score_value' => 5,
                             'related_attendance_id' => $attendance->id,
                         ]);
+
+                        // Create a notification for the user about their credit score increase
+                        $user = $attendance->user;
+                        if ($user) {
+                            // Ensure duration is formatted as integer for display
+                            $durationDisplay = (int) $attendance->duration_minutes;
+                            Notification::create([
+                                'user_id' => $attendance->user_id,
+                                'type' => 'credit_score_increase',
+                                'title' => 'Credit Score Increased!',
+                                'message' => "Great job! You earned +5 credit points for staying in the library for {$durationDisplay} minutes. Your current credit score is {$user->credit_score}/100.",
+                                'data' => [
+                                    'score_increment_id' => $scoreIncrement->id,
+                                    'score_value' => 5,
+                                    'duration_minutes' => $attendance->duration_minutes,
+                                    'attendance_id' => $attendance->id,
+                                    'credit_score' => $user->credit_score,
+                                    'earned_at' => now()->toDateTimeString(),
+                                ],
+                            ]);
+                        }
                     }
                 }
             }
@@ -105,6 +156,40 @@ class Attendance extends Model
         return $this->belongsTo(Librarian::class, 'scanned_by');
     }
 
+    // Relationship with admin who scanned (when no librarian duty)
+    public function scannedByAdmin()
+    {
+        return $this->belongsTo(User::class, 'scanned_by_admin_id');
+    }
+
+    /**
+     * Get the name of who scanned this attendance.
+     * Priority: Librarian > Admin/Super Admin > 'N/A'
+     * For Super Admin, display "Super Admin" instead of the name.
+     */
+    public function getScannedByNameAttribute(): string
+    {
+        // First check librarian
+        if ($this->scannedByLibrarian && $this->scannedByLibrarian->user) {
+            $user = $this->scannedByLibrarian->user;
+
+            return trim($user->first_name.' '.$user->last_name) ?: 'N/A';
+        }
+
+        // Then check admin/super admin
+        if ($this->scannedByAdmin) {
+            // For Super Admin, display "Super Admin" instead of name
+            if ($this->scannedByAdmin->isSuperAdmin()) {
+                return 'Super Admin';
+            }
+
+            // For regular Admin, display their name
+            return trim($this->scannedByAdmin->first_name.' '.$this->scannedByAdmin->last_name) ?: 'N/A';
+        }
+
+        return 'N/A';
+    }
+
     // Relationship with role (snapshot at check-in time)
     public function role()
     {
@@ -115,7 +200,8 @@ class Attendance extends Model
     public function calculateDuration()
     {
         if ($this->time_in && $this->time_out) {
-            $this->duration_minutes = $this->time_in->diffInMinutes($this->time_out);
+            // Cast to int to avoid decimal precision issues in notifications
+            $this->duration_minutes = (int) $this->time_in->diffInMinutes($this->time_out);
 
             return $this->duration_minutes;
         }

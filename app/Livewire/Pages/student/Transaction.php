@@ -3,16 +3,24 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\BorrowTransaction;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
+use Mary\Traits\Toast;
+use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Title('Transaction History')]
 class Transaction extends Component
 {
-    use WithPagination;
+    use CreatesQrCanonicalMessage, Toast, WithPagination;
+
+    // QR code generation settings
+    private const QR_SVG_SIZE = 400;
+    private const QR_MARGIN = 8;
+    private const QR_ERROR_CORRECTION = 'M';
 
     public string $search = '';
 
@@ -23,6 +31,17 @@ class Transaction extends Component
     public string $selectedDate = '';
 
     public int $perPage = 10;
+
+    // Return QR modal properties
+    public bool $isReturnQrModalOpen = false;
+
+    public ?string $returnQrCodeDataUri = null;
+
+    public ?string $returnQrPaperTitle = null;
+
+    public ?int $returnQrTransactionId = null;
+
+    public ?int $returnQrInventoryId = null;
 
     /**
      * Get distinct paper types for filter dropdown
@@ -144,13 +163,13 @@ class Transaction extends Component
         $seconds = $diffInSeconds % 60;
         $parts = [];
         if ($hours > 0) {
-            $parts[] = $hours.'h';
+            $parts[] = $hours . 'h';
         }
         if ($minutes > 0 || $hours > 0) {
-            $parts[] = $minutes.'m';
+            $parts[] = $minutes . 'm';
         }
         if ($seconds > 0 && $hours == 0) {
-            $parts[] = $seconds.'s';
+            $parts[] = $seconds . 's';
         }
         if (empty($parts)) {
             $parts[] = '0s';
@@ -211,6 +230,150 @@ class Transaction extends Component
     public function updatedSelectedDate(): void
     {
         $this->resetPage();
+    }
+
+    /**
+     * Generate a QR code for returning a book the user has currently borrowed
+     * This allows users who didn't save their original QR to still return the book
+     */
+    public function generateReturnQr(int $transactionId): void
+    {
+        $user = Auth::user();
+        if (! $user) {
+            $this->error('You must be logged in.');
+
+            return;
+        }
+
+        // Find the transaction - must belong to this user and be active
+        $transaction = BorrowTransaction::with('inventory.academicPaper')
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['started', 'overdue'])
+            ->whereNull('time_out')
+            ->find($transactionId);
+
+        if (! $transaction) {
+            $this->error('Active transaction not found or you are not the borrower.');
+
+            return;
+        }
+
+        $inventory = $transaction->inventory;
+        if (! $inventory) {
+            $this->error('Inventory not found.');
+
+            return;
+        }
+
+        // Build the borrow data payload (same format as original borrow QR)
+        $borrowData = [
+            'inventory_id' => $inventory->id,
+            'paper_id' => $inventory->academic_paper_id,
+            'requested_by' => $user->id,
+        ];
+
+        // Create encrypted QR message using trait method
+        $qrContent = $this->createEncryptedQrMessage($borrowData);
+
+        // Generate QR code as SVG
+        $svg = QrCode::size(self::QR_SVG_SIZE)
+            ->margin(self::QR_MARGIN)
+            ->errorCorrection(self::QR_ERROR_CORRECTION)
+            ->generate($qrContent);
+
+        $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $this->returnQrPaperTitle = $inventory->academicPaper?->title ?? 'Unknown Paper';
+        $this->returnQrTransactionId = $transaction->id;
+        $this->returnQrInventoryId = $inventory->id;
+        $this->isReturnQrModalOpen = true;
+    }
+
+    /**
+     * Get the download URL for the return QR code
+     * NOTE: Deprecated - use downloadReturnQr() instead for direct download
+     */
+    #[Computed]
+    public function returnQrDownloadUrl(): ?string
+    {
+        // Return null to hide the old broken link approach
+        // The new approach uses downloadReturnQr() method directly
+        return null;
+    }
+
+    /**
+     * Download return QR code as SVG file
+     * This method generates and streams the QR code directly,
+     * bypassing the controller route that checks for availability.
+     * Uses SVG format which doesn't require imagick extension.
+     */
+    public function downloadReturnQr(): mixed
+    {
+        $user = Auth::user();
+        if (! $user) {
+            $this->error('You must be logged in.');
+
+            return null;
+        }
+
+        if (! $this->returnQrTransactionId || ! $this->returnQrInventoryId) {
+            $this->error('No return QR code available to download.');
+
+            return null;
+        }
+
+        // Find the transaction to verify it's still valid
+        $transaction = BorrowTransaction::with('inventory.academicPaper')
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['started', 'overdue'])
+            ->whereNull('time_out')
+            ->find($this->returnQrTransactionId);
+
+        if (! $transaction) {
+            $this->error('Transaction not found or already returned.');
+
+            return null;
+        }
+
+        $inventory = $transaction->inventory;
+        if (! $inventory) {
+            $this->error('Inventory not found.');
+
+            return null;
+        }
+
+        // Build the borrow data payload (same format as original borrow QR)
+        $borrowData = [
+            'inventory_id' => $inventory->id,
+            'paper_id' => $inventory->academic_paper_id,
+            'requested_by' => $user->id,
+        ];
+
+        // Create encrypted QR message using trait method
+        $qrContent = $this->createEncryptedQrMessage($borrowData);
+
+        // Generate QR code as SVG (doesn't require imagick extension)
+        $svgData = QrCode::size(self::QR_SVG_SIZE)
+            ->margin(self::QR_MARGIN)
+            ->errorCorrection(self::QR_ERROR_CORRECTION)
+            ->generate($qrContent);
+
+        $filename = 'return-qr-' . $this->returnQrTransactionId . '.svg';
+
+        return response()->streamDownload(function () use ($svgData) {
+            echo $svgData;
+        }, $filename, [
+            'Content-Type' => 'image/svg+xml',
+            'Content-Length' => strlen($svgData),
+        ]);
+    }
+
+    public function closeReturnQrModal(): void
+    {
+        $this->isReturnQrModalOpen = false;
+        $this->returnQrCodeDataUri = null;
+        $this->returnQrPaperTitle = null;
+        $this->returnQrTransactionId = null;
+        $this->returnQrInventoryId = null;
     }
 
     public function render()

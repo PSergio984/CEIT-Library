@@ -25,9 +25,15 @@
             <div>
                 <x-mary-select label="Notification Type" wire:model.live="filterType" :options="[
                     ['id' => '', 'name' => 'All Types'],
+                    ['id' => 'paper_borrowed', 'name' => 'Paper Borrowed'],
+                    ['id' => 'paper_returned', 'name' => 'Paper Returned'],
+                    ['id' => 'paper_returned_late', 'name' => 'Paper Returned Late'],
+                    ['id' => 'paper_overdue', 'name' => 'Paper Overdue'],
+                    ['id' => 'credit_score_increase', 'name' => 'Credit Score Increase'],
+                    ['id' => 'attendance_checkin', 'name' => 'Attendance Check-In'],
+                    ['id' => 'attendance_checkout', 'name' => 'Attendance Check-Out'],
                     ['id' => 'librarian_assigned', 'name' => 'Librarian Assigned'],
                     ['id' => 'librarian_activated', 'name' => 'Librarian Activated'],
-                    ['id' => 'paper_borrowed', 'name' => 'Paper Borrowed'],
                     ['id' => 'role_changed', 'name' => 'Role Changed'],
                 ]" option-value="id" option-label="name" />
             </div>
@@ -56,7 +62,11 @@
     <div class="space-y-3">
         @forelse ($this->notifications as $notification)
             <div wire:key="notification-{{ $notification->id }}"
-                class="card bg-base-100 border border-base-300 shadow-sm hover:shadow-md transition-shadow {{ !$notification->is_read ? 'border-l-4 border-l-primary' : '' }}">
+                wire:click="navigateToNotification({{ $notification->id }})"
+                class="card bg-base-100 border border-base-300 shadow-sm hover:shadow-md transition-shadow cursor-pointer {{ !$notification->is_read ? 'border-l-4 border-l-primary' : '' }}"
+                role="button"
+                tabindex="0"
+                title="Click to view details">
                 <div class="card-body p-4">
                     <div class="flex items-start justify-between gap-4">
                         <div class="flex-1">
@@ -66,11 +76,23 @@
                                 @elseif($notification->type === 'librarian_activated')
                                     <x-mary-icon name="o-shield-check" class="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
                                 @elseif($notification->type === 'paper_borrowed')
-                                    <x-mary-icon name="o-document-text" class="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                                    <x-mary-icon name="o-document-text" class="w-5 h-5 text-info flex-shrink-0 mt-0.5" />
+                                @elseif($notification->type === 'paper_returned')
+                                    <x-mary-icon name="o-check-circle" class="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                                @elseif($notification->type === 'paper_returned_late')
+                                    <x-mary-icon name="o-exclamation-triangle" class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                                @elseif($notification->type === 'paper_overdue' || $notification->type === 'overdue_transaction')
+                                    <x-mary-icon name="o-exclamation-circle" class="w-5 h-5 text-error flex-shrink-0 mt-0.5" />
+                                @elseif($notification->type === 'credit_score_increase')
+                                    <x-mary-icon name="o-arrow-trending-up" class="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
+                                @elseif($notification->type === 'attendance_checkin')
+                                    <x-mary-icon name="o-arrow-right-on-rectangle" class="w-5 h-5 text-info flex-shrink-0 mt-0.5" />
+                                @elseif($notification->type === 'attendance_checkout')
+                                    <x-mary-icon name="o-arrow-left-on-rectangle" class="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
                                 @elseif($notification->type === 'role_changed')
                                     <x-mary-icon name="o-user-circle" class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
                                 @else
-                                    <x-mary-icon name="o-bell" class="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
+                                    <x-mary-icon name="o-bell" class="w-5 h-5 text-base-content/50 flex-shrink-0 mt-0.5" />
                                 @endif
 
                                 <div class="flex-1">
@@ -103,21 +125,21 @@
                         </div>
 
                         {{-- Actions --}}
-                        <div class="dropdown dropdown-end">
+                        <div class="dropdown dropdown-end" @click.stop>
                             <div tabindex="0" role="button" class="btn btn-ghost btn-sm btn-square">
                                 <x-mary-icon name="o-ellipsis-vertical" class="w-5 h-5" />
                             </div>
                             <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow-lg border border-base-300">
                                 @if(!$notification->is_read)
                                     <li>
-                                        <a wire:click="markAsRead({{ $notification->id }})">
+                                        <a wire:click.stop="markAsRead({{ $notification->id }})">
                                             <x-mary-icon name="o-check" class="w-4 h-4" />
                                             Mark as Read
                                         </a>
                                     </li>
                                 @endif
                                 <li>
-                                    <a wire:click="deleteNotification({{ $notification->id }})" class="text-error">
+                                    <a wire:click.stop="deleteNotification({{ $notification->id }})" class="text-error">
                                         <x-mary-icon name="o-trash" class="w-4 h-4" />
                                         Delete
                                     </a>

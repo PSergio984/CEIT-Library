@@ -409,6 +409,29 @@
                         <p class="text-success font-semibold text-center">Camera ready! Point at QR code</p>
                     </div>
 
+                    {{-- Camera Selection Dropdown - shows when camera is ready and cameras are available --}}
+                    <div x-show="availableCameras.length >= 1 && cameraStatus === 'ready'" class="mb-3">
+                        <label class="label">
+                            <span class="label-text text-sm font-medium">
+                                <span x-show="availableCameras.length > 1">Select Camera</span>
+                                <span x-show="availableCameras.length === 1">Active Camera</span>
+                            </span>
+                        </label>
+                        <select 
+                            x-model="selectedCameraId" 
+                            @change="switchCamera()" 
+                            class="select select-bordered select-sm w-full"
+                            :disabled="availableCameras.length === 1"
+                        >
+                            <template x-for="camera in availableCameras" :key="camera.id">
+                                <option :value="camera.id" x-text="camera.label || ('Camera ' + (availableCameras.indexOf(camera) + 1))"></option>
+                            </template>
+                        </select>
+                        <p x-show="availableCameras.length === 1" class="text-xs text-base-content/60 mt-1">
+                            Only one camera detected
+                        </p>
+                    </div>
+
                     <div id="qr-reader" wire:ignore class="w-full rounded-lg overflow-hidden bg-black mb-4"></div>
 
                     {{-- Back to Upload Button --}}
@@ -447,9 +470,24 @@
                     cameraMode: false,
                     cameraStatus: 'stopped',
                     html5QrCode: null,
+                    availableCameras: [],
+                    selectedCameraId: null,
 
                     init() {
                         console.log('QR Scanner Alpine component initialized');
+                        
+                        // Stop camera when modal closes via Livewire event
+                        Livewire.on('qr-modal-closed', () => {
+                            this.stopCamera();
+                        });
+
+                        // Also watch for modal being closed by clicking backdrop/X button
+                        this.$watch('$wire.showQrModal', (value) => {
+                            if (!value) {
+                                console.log('Modal closed, stopping camera...');
+                                this.stopCamera();
+                            }
+                        });
                     },
 
                     async handleFileUpload(event) {
@@ -610,6 +648,7 @@
                         console.log('Starting camera...');
 
                         try {
+                            // Enumerate available cameras
                             const devices = await navigator.mediaDevices.enumerateDevices();
                             const cameras = devices.filter(d => d.kind === 'videoinput');
                             console.log('Cameras found:', cameras.length);
@@ -619,64 +658,98 @@
                                 return;
                             }
 
+                            // Store available cameras for selection
+                            this.availableCameras = cameras.map((cam, idx) => ({
+                                id: cam.deviceId,
+                                label: cam.label || `Camera ${idx + 1}`
+                            }));
+
+                            // Prefer back camera (environment) if available
+                            const backCamera = cameras.find(c => 
+                                c.label.toLowerCase().includes('back') || 
+                                c.label.toLowerCase().includes('rear') ||
+                                c.label.toLowerCase().includes('environment')
+                            );
+                            
+                            this.selectedCameraId = backCamera ? backCamera.deviceId : cameras[0].deviceId;
+                            console.log('Selected camera:', this.selectedCameraId);
+
                             this.cameraMode = true;
                             this.cameraStatus = 'starting';
 
                             await this.$nextTick();
 
-                            console.log('Initializing Html5Qrcode...');
+                            await this.initCameraWithId(this.selectedCameraId);
+
+                        } catch (error) {
+                            console.error('Camera error:', error);
+                            alert('Failed to start camera: ' + error.message);
+                            this.stopCamera();
+                        }
+                    },
+
+                    async switchCamera() {
+                        console.log('Switching camera to:', this.selectedCameraId);
+                        
+                        if (this.html5QrCode) {
+                            try {
+                                await this.html5QrCode.stop();
+                                this.html5QrCode.clear();
+                            } catch (e) {
+                                console.warn('Error stopping previous camera:', e);
+                            }
+                        }
+
+                        this.cameraStatus = 'starting';
+                        await this.$nextTick();
+                        await this.initCameraWithId(this.selectedCameraId);
+                    },
+
+                    async initCameraWithId(cameraId) {
+                        try {
+                            console.log('Initializing Html5Qrcode with camera:', cameraId);
                             this.html5QrCode = new Html5Qrcode('qr-reader');
 
-                            await this.html5QrCode.start({
-                                    facingMode: 'environment'
-                                }, {
-                                    fps: 20, // Scan 20 times per second
+                            await this.html5QrCode.start(
+                                { deviceId: { exact: cameraId } },
+                                {
+                                    fps: 20,
                                     qrbox: function(viewfinderWidth, viewfinderHeight) {
-                                        // Make scan box 90% of the smaller dimension
                                         let minEdgePercentage = 0.9;
                                         let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
                                         let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                                        return {
-                                            width: qrboxSize,
-                                            height: qrboxSize
-                                        };
+                                        return { width: qrboxSize, height: qrboxSize };
                                     },
                                     aspectRatio: 1.0,
                                     disableFlip: false,
                                 },
                                 async (decodedText) => {
-                                        console.log('QR detected from camera:', decodedText);
+                                    console.log('QR detected from camera:', decodedText);
 
-                                        // Prevent multiple scans while processing
-                                        if ($wire.get('isProcessingQr')) {
-                                            console.log('Already processing a QR code, skipping...');
-                                            return;
-                                        }
-
-                                        $wire.set('isProcessingQr', true);
-                                        const result = await $wire.call('processScannedQr', decodedText);
-                                        console.log('Camera QR result:', result);
-
-                                        // Don't stop camera - allow continuous scanning for borrow/return workflow
-                                        // The camera will keep running so you can scan again to return the book
-                                        if (!result?.found) {
-                                            $wire.set('isProcessingQr', false);
-                                        }
-                                        // If result.action === 'returned', processing flag is cleared in backend
-                                        // If result.action === 'borrow_prepared', modal opens and processing continues
-                                    },
-                                    (errorMessage) => {
-                                        // Error callback for scanning errors (can be ignored for continuous scanning)
-                                        // console.log('Scan error:', errorMessage);
+                                    if ($wire.get('isProcessingQr')) {
+                                        console.log('Already processing a QR code, skipping...');
+                                        return;
                                     }
+
+                                    $wire.set('isProcessingQr', true);
+                                    const result = await $wire.call('processScannedQr', decodedText);
+                                    console.log('Camera QR result:', result);
+
+                                    if (!result?.found) {
+                                        $wire.set('isProcessingQr', false);
+                                    }
+                                },
+                                (errorMessage) => {
+                                    // Ignore scanning errors for continuous mode
+                                }
                             );
 
                             this.cameraStatus = 'ready';
                             console.log('Camera started successfully');
 
                         } catch (error) {
-                            console.error('Camera error:', error);
-                            alert('Failed to start camera: ' + error.message);
+                            console.error('Camera init error:', error);
+                            alert('Failed to initialize camera: ' + error.message);
                             this.stopCamera();
                         }
                     },
@@ -696,6 +769,8 @@
 
                         this.cameraMode = false;
                         this.cameraStatus = 'stopped';
+                        this.availableCameras = [];
+                        this.selectedCameraId = null;
                     }
                 }
             }

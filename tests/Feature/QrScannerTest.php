@@ -2,11 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\QrScanner;
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class QrScannerTest extends TestCase
@@ -37,14 +38,12 @@ class QrScannerTest extends TestCase
 
         $this->actingAs($librarianUser);
 
-        // Test invalid QR code scan
-        $component = Volt::test('pages.admin.attendance.qr-scanner')
-            ->set('qrCode', 'invalid-qr-code-data');
+        // Test invalid QR code scan via file upload (processScannedData handles the logic)
+        $component = Livewire::test(QrScanner::class)
+            ->call('handleFileUploadScan', 'invalid-qr-code-data');
 
-        $component->call('scanQrCode');
-
-        // Verify error is shown inline (not in modal)
-        $component->assertHasErrors();
+        // Verify error is shown inline via hasError property (not modal)
+        $component->assertSet('hasError', true);
         // The error should be displayed in a dismissible panel within the scanner
     }
 }

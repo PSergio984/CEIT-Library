@@ -23,9 +23,9 @@ class StudentNotifications extends Component
     public function getNotificationsProperty()
     {
         $query = Notification::where('user_id', Auth::id())
-            ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
-            ->when($this->filterRead === 'read', fn ($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
+            ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
+            ->when($this->filterRead === 'read', fn($q) => $q->read())
+            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);
@@ -63,6 +63,45 @@ class StudentNotifications extends Component
         if ($notification && $notification->user_id === Auth::id()) {
             $notification->delete();
             $this->success('Notification deleted');
+        }
+    }
+
+    /**
+     * Navigate to the appropriate page based on the notification type.
+     * Marks the notification as read before redirecting.
+     */
+    public function navigateToNotification(int $notificationId): void
+    {
+        $notification = Notification::find($notificationId);
+
+        if (! $notification || $notification->user_id !== Auth::id()) {
+            $this->error('Notification not found');
+
+            return;
+        }
+
+        // Mark as read before navigating
+        if (! $notification->is_read) {
+            $notification->markAsRead();
+        }
+
+        // Determine the route based on notification type
+        $route = match ($notification->type) {
+            // Paper-related notifications → Transactions page
+            'paper_borrowed', 'paper_returned', 'paper_returned_late', 'paper_overdue', 'overdue_transaction' => route('transactions'),
+
+            // Credit score notifications → Credit Score History page
+            'credit_score_increase' => route('CreditScoreHistory'),
+
+            // Attendance notifications → Student Dashboard
+            'attendance_checkout', 'attendance_checkin' => route('student.dashboard'),
+
+            // Default: stay on notifications page
+            default => null,
+        };
+
+        if ($route) {
+            $this->redirect($route, navigate: true);
         }
     }
 

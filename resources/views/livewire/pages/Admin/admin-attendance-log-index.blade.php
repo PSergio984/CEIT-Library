@@ -278,6 +278,29 @@
                         <p class="text-success font-semibold text-center">Camera ready! Point at QR code</p>
                     </div>
 
+                    {{-- Camera Selection Dropdown - shows when camera is ready and cameras are available --}}
+                    <div x-show="availableCameras.length >= 1 && cameraStatus === 'ready'" class="mb-3">
+                        <label class="label">
+                            <span class="label-text text-sm font-medium">
+                                <span x-show="availableCameras.length > 1">Select Camera</span>
+                                <span x-show="availableCameras.length === 1">Active Camera</span>
+                            </span>
+                        </label>
+                        <select 
+                            x-model="selectedCameraId" 
+                            @change="switchCamera()" 
+                            class="select select-bordered select-sm w-full"
+                            :disabled="availableCameras.length === 1"
+                        >
+                            <template x-for="camera in availableCameras" :key="camera.id">
+                                <option :value="camera.id" x-text="camera.label || ('Camera ' + (availableCameras.indexOf(camera) + 1))"></option>
+                            </template>
+                        </select>
+                        <p x-show="availableCameras.length === 1" class="text-xs text-base-content/60 mt-1">
+                            Only one camera detected
+                        </p>
+                    </div>
+
                     <div id="qr-reader" wire:ignore class="w-full rounded-lg overflow-hidden bg-black mb-4"></div>
 
                     {{-- Back to Upload Button --}}
@@ -316,13 +339,23 @@
                     cameraMode: false,
                     cameraStatus: 'stopped',
                     html5QrCode: null,
+                    availableCameras: [],
+                    selectedCameraId: null,
 
                     init() {
                         console.log('QR Scanner Alpine component initialized');
                         
-                        // Stop camera when modal closes
+                        // Stop camera when modal closes via Livewire event
                         Livewire.on('qr-modal-closed', () => {
                             this.stopCamera();
+                        });
+
+                        // Also watch for modal being closed by clicking backdrop/X button
+                        this.$watch('$wire.showQrModal', (value) => {
+                            if (!value) {
+                                console.log('Modal closed, stopping camera...');
+                                this.stopCamera();
+                            }
                         });
                     },
 
@@ -493,17 +526,61 @@
                                 return;
                             }
 
+                            // Store available cameras for selection
+                            this.availableCameras = cameras.map((cam, idx) => ({
+                                id: cam.deviceId,
+                                label: cam.label || `Camera ${idx + 1}`
+                            }));
+
+                            // Prefer back camera (environment) if available
+                            const backCamera = cameras.find(c => 
+                                c.label.toLowerCase().includes('back') || 
+                                c.label.toLowerCase().includes('rear') ||
+                                c.label.toLowerCase().includes('environment')
+                            );
+                            
+                            this.selectedCameraId = backCamera ? backCamera.deviceId : cameras[0].deviceId;
+                            console.log('Selected camera:', this.selectedCameraId);
+
                             this.cameraMode = true;
                             this.cameraStatus = 'starting';
 
                             await this.$nextTick();
 
-                            console.log('Initializing Html5Qrcode...');
+                            await this.initCameraWithId(this.selectedCameraId);
+
+                        } catch (error) {
+                            console.error('Camera error:', error);
+                            alert('Failed to start camera: ' + error.message);
+                            this.stopCamera();
+                        }
+                    },
+
+                    async switchCamera() {
+                        console.log('Switching camera to:', this.selectedCameraId);
+                        
+                        if (this.html5QrCode) {
+                            try {
+                                await this.html5QrCode.stop();
+                                this.html5QrCode.clear();
+                            } catch (e) {
+                                console.warn('Error stopping previous camera:', e);
+                            }
+                        }
+
+                        this.cameraStatus = 'starting';
+                        await this.$nextTick();
+                        await this.initCameraWithId(this.selectedCameraId);
+                    },
+
+                    async initCameraWithId(cameraId) {
+                        try {
+                            console.log('Initializing Html5Qrcode with camera:', cameraId);
                             this.html5QrCode = new Html5Qrcode('qr-reader');
 
-                            await this.html5QrCode.start({
-                                    facingMode: 'environment'
-                                }, {
+                            await this.html5QrCode.start(
+                                { deviceId: { exact: cameraId } },
+                                {
                                     fps: 20,
                                     qrbox: function(viewfinderWidth, viewfinderHeight) {
                                         let minEdgePercentage = 0.9;
@@ -570,6 +647,8 @@
 
                         this.cameraMode = false;
                         this.cameraStatus = 'stopped';
+                        this.availableCameras = [];
+                        this.selectedCameraId = null;
                     }
                 }
             }
