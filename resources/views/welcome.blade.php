@@ -16,7 +16,7 @@
 </head>
 
 <body class="min-h-screen font-sans relative"
-    style="background-image: url('{{ asset('images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    style="background-image: url('{{ Vite::asset('resources/images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
     <!-- Dark Blue Overlay for opacity effect -->
     <div class="fixed inset-0 w-full h-full bg-slate-800/70 z-0"></div>
 
@@ -26,7 +26,7 @@
         <a href="/"
             class="flex items-center text-white text-lg sm:text-xl md:text-2xl font-bold hover:opacity-80 transition">
             <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">
-                <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
+                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
             </div>
             <span class="ml-1 sm:ml-2 hidden sm:inline">CEIT Library</span>
             <span class="ml-1 sm:ml-2 sm:hidden">CEIT</span>
@@ -49,7 +49,7 @@
             </h1>
             <div
                 class="mx-auto mb-4 sm:mb-6 md:mb-8 w-32 h-32 sm:w-40 sm:h-40 md:w-48 md:h-48 lg:w-64 lg:h-64 xl:w-72 xl:h-72 flex items-center justify-center">
-                <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo"
+                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
                     class="w-full h-full object-contain drop-shadow-xl mx-auto">
             </div>
             <p

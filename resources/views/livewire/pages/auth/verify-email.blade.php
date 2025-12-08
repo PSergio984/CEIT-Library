@@ -69,7 +69,7 @@ class extends Component
     <div class="relative z-20">
         <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
             <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo"
+                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
                      class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
             </div>
         </div>

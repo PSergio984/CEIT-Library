@@ -8,7 +8,7 @@
         <title>{{ $title ?? config('app.name') }}</title>
 
         <!-- Favicon -->
-        <link rel="icon" type="image/png" href="{{ Vite::asset('public/images/ceit-logo.png') }}">
+        <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
 
         <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
@@ -17,7 +17,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen font-sans relative" style="background-image: url('{{ asset('images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <body class="min-h-screen font-sans relative" style="background-image: url('{{ Vite::asset('resources/images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
         <!-- Dark Blue Overlay for opacity effect -->
         <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
 
@@ -25,7 +25,7 @@
         <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative" style="background-color: #273F4F;">
             <a href="/" class="flex items-center text-white text-lg sm:text-xl md:text-2xl font-bold hover:opacity-80 transition">
                 <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">
-                    <img src="{{ asset('images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
+                    <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
                 </div>
                 <span class="ml-1 sm:ml-2 hidden sm:inline">CEIT Library</span>
                 <span class="ml-1 sm:ml-2 sm:hidden">CEIT</span>

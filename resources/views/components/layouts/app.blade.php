@@ -9,7 +9,7 @@
     <title>@yield('title', $title ?? config('app.name'))</title>
 
     <!-- Favicon -->
-    <link rel="icon" type="image/png" href="{{ asset('images/ceit-logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -46,7 +46,7 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <a href="/dashboard">
-                            <img src="{{ asset('images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
+                            <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
                         </a>
                     </div>
                     <div class="flex items-center gap-3">
