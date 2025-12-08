@@ -24,12 +24,12 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'first_name' => $this->fake()->firstName,
-            'last_name' => $this->fake()->lastName,
+            'first_name' => fake()->name(),
+            'last_name' => fake()->name(),
             // Email must end with @plv.edu.ph for validation compatibility
-            'email' => $this->fake()->unique()->userName.'@plv.edu.ph',
+            'email' => fake()->unique()->userName() . '@plv.edu.ph',
             'email_verified_at' => now(),
-            'password' => Hash::make($this->fake()->password(8, 12)), // Generate random password between 8-12 characters
+            'password' => Hash::make(fake()->password(8, 12)), // Generate random password between 8-12 characters
             'remember_token' => Str::random(10),
             'role_id' => 1, // Default to student role
             'credit_score' => 100, // Default credit score
@@ -42,7 +42,7 @@ class UserFactory extends Factory
      */
     public function unverified(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn(array $attributes) => [
             'email_verified_at' => null,
         ]);
     }
