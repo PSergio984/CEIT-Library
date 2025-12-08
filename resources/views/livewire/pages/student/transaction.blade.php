@@ -280,6 +280,22 @@
                             </div>
                         </div>
                     @endif
+
+                    {{-- Return QR Button for Active Transactions --}}
+                    @if (in_array($transaction['status'], ['started', 'overdue']))
+                        <div class="mt-6 flex justify-end">
+                            <button 
+                                wire:click="generateReturnQr({{ $transaction['id'] }})"
+                                class="btn btn-primary btn-sm gap-2"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+                                </svg>
+                                Get Return QR Code
+                            </button>
+                        </div>
+                    @endif
                 </div>
             </div>
         @empty
@@ -311,6 +327,53 @@
             </div>
         @endif
     </div>
+
+    {{-- Return QR Code Modal --}}
+    <x-mary-modal wire:model="isReturnQrModalOpen" title="Return QR Code" box-class="max-w-lg">
+        @if($returnQrCodeDataUri)
+            <div class="flex flex-col items-center space-y-4">
+                {{-- Paper Info --}}
+                <div class="text-center mb-2">
+                    <p class="text-sm text-base-content/70">Paper:</p>
+                    <p class="font-semibold">{{ $returnQrPaperTitle }}</p>
+                    <p class="text-xs text-base-content/60 mt-1">Transaction ID: {{ $returnQrTransactionId }}</p>
+                </div>
+
+                {{-- QR Code Display --}}
+                <div class="relative bg-gradient-to-br from-base-100 to-base-200 p-6 rounded-2xl shadow-lg border-2 border-success/20">
+                    {{-- Corner decorations --}}
+                    <div class="absolute top-2 left-2 w-6 h-6 border-t-4 border-l-4 border-success rounded-tl-lg"></div>
+                    <div class="absolute top-2 right-2 w-6 h-6 border-t-4 border-r-4 border-success rounded-tr-lg"></div>
+                    <div class="absolute bottom-2 left-2 w-6 h-6 border-b-4 border-l-4 border-success rounded-bl-lg"></div>
+                    <div class="absolute bottom-2 right-2 w-6 h-6 border-b-4 border-r-4 border-success rounded-br-lg"></div>
+
+                    {{-- QR Code with white background --}}
+                    <div class="bg-white p-4 rounded-xl shadow-inner">
+                        <img src="{{ $returnQrCodeDataUri }}"
+                             alt="Return QR Code"
+                             class="w-64 h-64 object-contain"
+                        />
+                    </div>
+                </div>
+
+                {{-- Instructions --}}
+                <div class="alert alert-success text-sm">
+                    <x-mary-icon name="o-check-circle" class="w-5 h-5"/>
+                    <span>Show this QR code to the librarian to return this book.</span>
+                </div>
+
+                {{-- Warning --}}
+                <div class="alert alert-warning text-xs">
+                    <x-mary-icon name="o-exclamation-triangle" class="w-4 h-4"/>
+                    <span>This QR code is linked to your account. Only you can use it to return this book.</span>
+                </div>
+            </div>
+
+            <x-slot:actions>
+                <x-mary-button label="Close" wire:click="closeReturnQrModal" class="btn-ghost"/>
+            </x-slot:actions>
+        @endif
+    </x-mary-modal>
 </div>
 
 {{-- Alpine.js countdownTimer component for transaction timers --}}

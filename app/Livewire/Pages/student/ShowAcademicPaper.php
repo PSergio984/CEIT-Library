@@ -3,6 +3,7 @@
 namespace App\Livewire\Pages\Student;
 
 use App\Models\AcademicPaper;
+use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Auth;
@@ -34,6 +35,17 @@ class ShowAcademicPaper extends Component
     public ?int $selectedInventoryId = null;
 
     public ?string $selectedPaperTitle = null;
+
+    // For return QR modal
+    public bool $isReturnQrModalOpen = false;
+
+    public ?string $returnQrCodeDataUri = null;
+
+    public ?string $returnQrPaperTitle = null;
+
+    public ?int $returnQrTransactionId = null;
+
+    public ?int $returnQrInventoryId = null;
 
     public array $headers = [
         ['key' => 'id', 'label' => 'Copy Id'],
@@ -141,6 +153,117 @@ class ShowAcademicPaper extends Component
         $this->qrCodeDataUri = null;
         $this->selectedInventoryId = null;
         $this->selectedPaperTitle = null;
+    }
+
+    /**
+     * Get the user's active borrow transactions for the current paper's copies
+     * Returns an array of inventory_id => transaction for quick lookup
+     */
+    #[Computed]
+    public function userActiveBorrows(): array
+    {
+        $user = Auth::user();
+        if (! $user || ! $this->academicPaper) {
+            return [];
+        }
+
+        $inventoryIds = $this->academicPaper->copies->pluck('id')->toArray();
+
+        return BorrowTransaction::where('user_id', $user->id)
+            ->whereIn('inventory_id', $inventoryIds)
+            ->whereIn('status', ['started', 'overdue'])
+            ->whereNull('time_out')
+            ->get()
+            ->keyBy('inventory_id')
+            ->toArray();
+    }
+
+    /**
+     * Generate return QR code for a copy the user has borrowed
+     */
+    public function showReturnQr(int $inventoryId): void
+    {
+        $user = Auth::user();
+        if (! $user) {
+            $this->dispatch('toast', type: 'error', message: 'You must be logged in.');
+
+            return;
+        }
+
+        // Find the user's active transaction for this inventory
+        $transaction = BorrowTransaction::where('user_id', $user->id)
+            ->where('inventory_id', $inventoryId)
+            ->whereIn('status', ['started', 'overdue'])
+            ->whereNull('time_out')
+            ->with('inventory.academicPaper')
+            ->first();
+
+        if (! $transaction) {
+            $this->dispatch('toast', type: 'error', message: 'No active borrow found for this copy.');
+
+            return;
+        }
+
+        // Build the return QR payload (same format as borrow, admin will detect it's for return)
+        $returnData = [
+            'inventory_id' => $transaction->inventory_id,
+            'paper_id' => $transaction->inventory->academic_paper_id ?? $transaction->academic_paper_id,
+            'requested_by' => $user->id,
+        ];
+
+        // Create encrypted QR message using trait method
+        $qrContent = $this->createEncryptedQrMessage($returnData);
+
+        // Generate QR code as SVG
+        $svg = QrCode::size(self::QR_SVG_SIZE)
+            ->margin(self::QR_MARGIN)
+            ->errorCorrection(self::QR_ERROR_CORRECTION)
+            ->generate($qrContent);
+
+        $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $this->returnQrPaperTitle = $transaction->inventory->academicPaper?->title ?? 'Unknown Paper';
+        $this->returnQrTransactionId = $transaction->id;
+        $this->returnQrInventoryId = $transaction->inventory_id;
+        $this->isReturnQrModalOpen = true;
+    }
+
+    public function closeReturnQrModal(): void
+    {
+        $this->isReturnQrModalOpen = false;
+        $this->returnQrCodeDataUri = null;
+        $this->returnQrPaperTitle = null;
+        $this->returnQrTransactionId = null;
+        $this->returnQrInventoryId = null;
+    }
+
+    /**
+     * Get download URL for the borrow QR code
+     */
+    #[Computed]
+    public function borrowQrDownloadUrl(): ?string
+    {
+        if (! $this->selectedInventoryId) {
+            return null;
+        }
+
+        return route('qr-code.download', [
+            'inventoryId' => $this->selectedInventoryId,
+        ]);
+    }
+
+    /**
+     * Get download URL for the return QR code
+     */
+    #[Computed]
+    public function returnQrDownloadUrl(): ?string
+    {
+        if (! $this->returnQrInventoryId) {
+            return null;
+        }
+
+        return route('qr-code.download', [
+            'inventoryId' => $this->returnQrInventoryId,
+        ]);
     }
 
     public function render()
