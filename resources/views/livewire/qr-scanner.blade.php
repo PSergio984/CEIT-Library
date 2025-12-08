@@ -114,19 +114,6 @@
                         Back to selection
                     </button>
 
-                    {{-- Camera Selector --}}
-                    <div id="camera-selector" class="mb-4 hidden">
-                        <label class="label">
-                            <span class="label-text font-semibold flex items-center gap-2">
-                                <x-mary-icon name="o-camera" class="w-4 h-4" />
-                                Select Camera:
-                            </span>
-                        </label>
-                        <select id="camera-select" class="select select-bordered w-full">
-                            <option value="">Loading cameras...</option>
-                        </select>
-                    </div>
-
                     {{-- Scanner Status --}}
                     <div class="mb-4">
                         <div class="flex items-center justify-between bg-base-200 rounded-lg p-3">
@@ -358,55 +345,10 @@
                                 throw new Error('No camera found');
                             }
                             
-                            // Populate camera selector if multiple cameras
-                            const cameraSelect = document.getElementById('camera-select');
-                            const cameraSelector = document.getElementById('camera-selector');
-                            
-                            if (cameras.length > 1 && cameraSelect && cameraSelector) {
-                                cameraSelector.classList.remove('hidden');
-                                cameraSelect.innerHTML = '';
-                                cameras.forEach((camera, index) => {
-                                    const option = document.createElement('option');
-                                    option.value = camera.deviceId;
-                                    option.text = camera.label || `Camera ${index + 1}`;
-                                    cameraSelect.appendChild(option);
-                                });
-                                
-                                // Setup camera switch listener
-                                if (window._cameraChangeListenerRef) {
-                                    cameraSelect.removeEventListener('change', window._cameraChangeListenerRef);
-                                }
-                                window._cameraChangeListenerRef = function() {
-                                    switchToCamera(this.value);
-                                };
-                                cameraSelect.addEventListener('change', window._cameraChangeListenerRef);
-                            }
-                            
-                            // Filter out virtual cameras and prefer back camera
-                            const realCameras = cameras.filter(device => {
-                                const label = (device.label || '').toLowerCase();
-                                return !label.includes('obs') && 
-                                       !label.includes('virtual') && 
-                                       !label.includes('snap');
-                            });
-                            
-                            let selectedCamera;
-                            if (realCameras.length > 0) {
-                                const backCamera = realCameras.find(c => {
-                                    const label = (c.label || '').toLowerCase();
-                                    return label.includes('back') || label.includes('rear');
-                                });
-                                selectedCamera = backCamera || realCameras[0];
-                            } else {
-                                selectedCamera = cameras[0];
-                            }
-                            
+                            // Use the first available camera for better compatibility
+                            const selectedCamera = cameras[0];
                             currentCameraId = selectedCamera.deviceId;
                             updateDebugInfo(`Using camera: ${selectedCamera.label || 'Default'}`, false);
-                            
-                            if (cameraSelect && cameras.length > 1) {
-                                cameraSelect.value = currentCameraId;
-                            }
                             
                             // Start the camera
                             await startJsQrCamera(currentCameraId);
@@ -479,23 +421,6 @@
                     } catch (error) {
                         console.error('Error starting camera:', error);
                         throw error;
-                    }
-                }
-                
-                /**
-                 * Switch to different camera
-                 */
-                async function switchToCamera(deviceId) {
-                    if (!isInitialized) return;
-                    
-                    try {
-                        stopJsQrScanLoop();
-                        currentCameraId = deviceId;
-                        await startJsQrCamera(deviceId);
-                        updateDebugInfo(`Switched to camera: ${deviceId}`, false);
-                    } catch (error) {
-                        console.error('Error switching camera:', error);
-                        updateDebugInfo(`Failed to switch camera: ${error.message}`, true);
                     }
                 }
                 
@@ -684,12 +609,6 @@
                         console.debug('File scanner clear error:', e);
                     }
                     fileQrCode = null;
-                    
-                    // Reset camera selector
-                    const cameraSelector = document.getElementById('camera-selector');
-                    if (cameraSelector) {
-                        cameraSelector.classList.add('hidden');
-                    }
 
                     // Clear qr-reader content
                     const qrReader = document.getElementById('qr-reader');

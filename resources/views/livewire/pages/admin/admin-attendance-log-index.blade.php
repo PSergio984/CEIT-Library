@@ -278,29 +278,6 @@
                         <p class="text-success font-semibold text-center">Camera ready! Point at QR code</p>
                     </div>
 
-                    {{-- Camera Selection Dropdown - shows when camera is ready and cameras are available --}}
-                    <div x-show="availableCameras.length >= 1 && cameraStatus === 'ready'" class="mb-3">
-                        <label class="label">
-                            <span class="label-text text-sm font-medium">
-                                <span x-show="availableCameras.length > 1">Select Camera</span>
-                                <span x-show="availableCameras.length === 1">Active Camera</span>
-                            </span>
-                        </label>
-                        <select 
-                            x-model="selectedCameraId" 
-                            @change="switchCamera()" 
-                            class="select select-bordered select-sm w-full"
-                            :disabled="availableCameras.length === 1"
-                        >
-                            <template x-for="camera in availableCameras" :key="camera.id">
-                                <option :value="camera.id" x-text="camera.label || ('Camera ' + (availableCameras.indexOf(camera) + 1))"></option>
-                            </template>
-                        </select>
-                        <p x-show="availableCameras.length === 1" class="text-xs text-base-content/60 mt-1">
-                            Only one camera detected
-                        </p>
-                    </div>
-
                     <div id="qr-reader" wire:ignore class="w-full rounded-lg overflow-hidden bg-black mb-4"></div>
 
                     {{-- Back to Upload Button --}}
@@ -339,8 +316,6 @@
                     cameraMode: false,
                     cameraStatus: 'stopped',
                     html5QrCode: null,
-                    availableCameras: [],
-                    selectedCameraId: null,
 
                     init() {
                         console.log('QR Scanner Alpine component initialized');
@@ -526,28 +501,16 @@
                                 return;
                             }
 
-                            // Store available cameras for selection
-                            this.availableCameras = cameras.map((cam, idx) => ({
-                                id: cam.deviceId,
-                                label: cam.label || `Camera ${idx + 1}`
-                            }));
-
-                            // Prefer back camera (environment) if available
-                            const backCamera = cameras.find(c => 
-                                c.label.toLowerCase().includes('back') || 
-                                c.label.toLowerCase().includes('rear') ||
-                                c.label.toLowerCase().includes('environment')
-                            );
-                            
-                            this.selectedCameraId = backCamera ? backCamera.deviceId : cameras[0].deviceId;
-                            console.log('Selected camera:', this.selectedCameraId);
+                            // Use the first available camera for better compatibility
+                            const firstCameraId = cameras[0].deviceId;
+                            console.log('Using first camera:', firstCameraId);
 
                             this.cameraMode = true;
                             this.cameraStatus = 'starting';
 
                             await this.$nextTick();
 
-                            await this.initCameraWithId(this.selectedCameraId);
+                            await this.initCameraWithId(firstCameraId);
 
                         } catch (error) {
                             console.error('Camera error:', error);
@@ -556,44 +519,32 @@
                         }
                     },
 
-                    async switchCamera() {
-                        console.log('Switching camera to:', this.selectedCameraId);
-                        
-                        if (this.html5QrCode) {
-                            try {
-                                await this.html5QrCode.stop();
-                                this.html5QrCode.clear();
-                            } catch (e) {
-                                console.warn('Error stopping previous camera:', e);
-                            }
-                        }
-
-                        this.cameraStatus = 'starting';
-                        await this.$nextTick();
-                        await this.initCameraWithId(this.selectedCameraId);
-                    },
-
                     async initCameraWithId(cameraId) {
                         try {
                             console.log('Initializing Html5Qrcode with camera:', cameraId);
                             this.html5QrCode = new Html5Qrcode('qr-reader');
 
-                            await this.html5QrCode.start(
-                                { deviceId: { exact: cameraId } },
-                                {
-                                    fps: 20,
-                                    qrbox: function(viewfinderWidth, viewfinderHeight) {
-                                        let minEdgePercentage = 0.9;
-                                        let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                                        let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                                        return {
-                                            width: qrboxSize,
-                                            height: qrboxSize
-                                        };
+                            // Pass deviceId as string directly (Html5Qrcode expects string or { exact: string })
+                            const cameraConfig = cameraId || { facingMode: 'environment' };
+
+                            // Try with preferred settings first
+                            try {
+                                await this.html5QrCode.start(
+                                    cameraConfig,
+                                    {
+                                        fps: 20,
+                                        qrbox: function(viewfinderWidth, viewfinderHeight) {
+                                            let minEdgePercentage = 0.9;
+                                            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                                            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                                            return {
+                                                width: qrboxSize,
+                                                height: qrboxSize
+                                            };
+                                        },
+                                        aspectRatio: 1.0,
+                                        disableFlip: false,
                                     },
-                                    aspectRatio: 1.0,
-                                    disableFlip: false,
-                                },
                                 async (decodedText) => {
                                         console.log('QR detected from camera:', decodedText);
 
@@ -620,7 +571,58 @@
                                     (errorMessage) => {
                                         // Error callback for scanning errors (can be ignored for continuous scanning)
                                     }
-                            );
+                                );
+                            } catch (constraintError) {
+                                // If OverconstrainedError, try with more lenient settings
+                                if (constraintError.name === 'OverconstrainedError' || constraintError.message?.includes('Overconstrained')) {
+                                    console.warn('Camera constraints too strict, trying with lenient settings...', constraintError);
+                                    
+                                    // Try with minimal constraints
+                                    await this.html5QrCode.start(
+                                        cameraId || { facingMode: 'environment' },
+                                        {
+                                            fps: 10,  // Lower FPS
+                                            qrbox: function(viewfinderWidth, viewfinderHeight) {
+                                                let minEdgePercentage = 0.7;  // Smaller box
+                                                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
+                                                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
+                                                return {
+                                                    width: qrboxSize,
+                                                    height: qrboxSize
+                                                };
+                                            },
+                                            // Remove aspectRatio constraint - let camera use native aspect ratio
+                                            disableFlip: false,
+                                        },
+                                        async (decodedText) => {
+                                            console.log('QR detected from camera:', decodedText);
+
+                                            if ($wire.get('isProcessingQr')) {
+                                                console.log('Already processing a QR code, skipping...');
+                                                return;
+                                            }
+
+                                            $wire.set('isProcessingQr', true);
+                                            const result = await $wire.call('processScannedQr', decodedText);
+                                            console.log('Camera QR result:', result);
+
+                                            if (result?.found) {
+                                                this.stopCamera();
+                                                setTimeout(() => {
+                                                    $wire.call('closeQrModal');
+                                                }, 1500);
+                                            } else {
+                                                $wire.set('isProcessingQr', false);
+                                            }
+                                        },
+                                        (errorMessage) => {
+                                            // Error callback for scanning errors
+                                        }
+                                    );
+                                } else {
+                                    throw constraintError; // Re-throw if not OverconstrainedError
+                                }
+                            }
 
                             this.cameraStatus = 'ready';
                             console.log('Camera started successfully');
@@ -647,8 +649,6 @@
 
                         this.cameraMode = false;
                         this.cameraStatus = 'stopped';
-                        this.availableCameras = [];
-                        this.selectedCameraId = null;
                     }
                 }
             }
