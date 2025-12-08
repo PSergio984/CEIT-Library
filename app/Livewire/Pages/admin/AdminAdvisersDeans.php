@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -33,11 +34,13 @@ class AdminAdvisersDeans extends AdminComponent
     // Form data (primitives only)
     public ?int $editingId = null;
 
+    #[Validate]
     public string $name = '';
 
     public ?int $deleteId = null;
 
-    private ?string $originalName = null;
+    // Store original name for dirty checking (must be public to survive hydration)
+    public ?string $originalName = null;
 
     // Table headers
     public array $headers = [
@@ -157,13 +160,21 @@ class AdminAdvisersDeans extends AdminComponent
 
     public function openCreateModal()
     {
-        $this->reset(['name', 'editingId']);
-        $this->originalName = null;
+        // Close any open modals first
+        $this->showEditModal = false;
+        $this->showDeleteModal = false;
+        $this->reset(['name', 'editingId', 'originalName']);
+        $this->resetValidation(); // Clear any lingering validation errors
         $this->showCreateModal = true;
     }
 
     public function openEditModal(int $id)
     {
+        // Close any open modals first
+        $this->showCreateModal = false;
+        $this->showDeleteModal = false;
+        $this->resetValidation(); // Clear any lingering validation errors
+        
         $entry = DB::table($this->getTableName())->find($id);
 
         if (! $entry) {
@@ -270,8 +281,8 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showCreateModal = false;
         $this->showEditModal = false;
         $this->showDeleteModal = false;
-        $this->reset(['name', 'editingId', 'deleteId']);
-        $this->originalName = null;
+        $this->reset(['name', 'editingId', 'deleteId', 'originalName']);
+        $this->resetValidation(); // Clear validation errors when closing modals
     }
 
     public function rules(): array
@@ -309,7 +320,8 @@ class AdminAdvisersDeans extends AdminComponent
         ];
     }
 
-    public function getIsFormValidProperty(): bool
+    #[Computed]
+    public function isFormValid(): bool
     {
         $name = trim($this->name ?? '');
 
@@ -336,7 +348,8 @@ class AdminAdvisersDeans extends AdminComponent
         return $fieldsValid;
     }
 
-    private function isFormDirty(): bool
+    #[Computed]
+    public function isFormDirty(): bool
     {
         if (!$this->editingId || $this->originalName === null) {
             return false;
