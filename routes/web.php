@@ -18,7 +18,7 @@ use App\Livewire\Pages\Student\AcademicPaperIndex;
 use App\Livewire\Pages\Student\CreditScoreHistory;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
 use App\Livewire\Pages\Student\ShowAcademicPaper;
-use App\Livewire\Pages\Student\StudentDashboard;
+// use App\Livewire\Pages\Student\StudentDashboard;
 use App\Livewire\Pages\Student\StudentNotifications;
 use App\Livewire\Pages\Student\Transaction;
 use App\Livewire\TestQrScanner;
@@ -36,7 +36,7 @@ if (config('app.env') !== 'production') {
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', StudentDashboard::class)->name('student.dashboard');
+    // Route::get('/dashboard', StudentDashboard::class)->name('student.dashboard');
     Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)
         ->whereNumber('academicPaper')
         ->name('academic-paper.show');
