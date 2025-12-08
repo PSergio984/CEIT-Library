@@ -57,7 +57,7 @@ class AdminAttendanceLogIndex extends AdminComponent
     {
         $search = trim($this->search);
 
-        return Attendance::with(['user', 'scannedByLibrarian.user', 'role'])
+        return Attendance::with(['user', 'scannedByLibrarian.user', 'scannedByAdmin', 'role'])
             ->when($search, function ($query) use ($search) {
                 $query->where(function ($q) use ($search) {
                     // Search student name (match full name or individual parts)
@@ -69,6 +69,12 @@ class AdminAttendanceLogIndex extends AdminComponent
                         // Search librarian name (match full name or individual parts)
                         ->orWhereHas('scannedByLibrarian.user', function ($librarianQuery) use ($search) {
                             $librarianQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                                ->orWhere('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        })
+                        // Search admin name (match full name or individual parts)
+                        ->orWhereHas('scannedByAdmin', function ($adminQuery) use ($search) {
+                            $adminQuery->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                                 ->orWhere('first_name', 'like', "%{$search}%")
                                 ->orWhere('last_name', 'like', "%{$search}%");
                         });
@@ -127,7 +133,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                         'admin', 'super_admin', 'super admin' => 'badge-error',
                         default => 'badge-outline'
                     },
-                    'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
+                    'scanned_by_name' => $attendance->scanned_by_name,
                     'user' => $attendance->user,
                     'time_in' => $attendance->time_in,
                     'time_out' => $attendance->time_out,
@@ -370,9 +376,18 @@ class AdminAttendanceLogIndex extends AdminComponent
         $userId = $data['user_id'];
         $user = $data['user'];
 
-        // Get the librarian ID of the current user
+        // Get the current user who is scanning
         $currentUser = \Illuminate\Support\Facades\Auth::user();
-        $scannedBy = $currentUser?->librarianDuty?->id;
+
+        // Get the librarian ID if current user has an active librarian duty
+        // scanned_by must reference librarians.id, not users.id
+        $scannedBy = $currentUser?->getActiveLibrarianDuty()?->id;
+
+        // If no librarian duty but user has admin access, store admin user ID
+        $scannedByAdminId = null;
+        if (! $scannedBy && $currentUser?->hasAdminAccess()) {
+            $scannedByAdminId = $currentUser->id;
+        }
 
         // Check if user has an active session
         $activeSession = Attendance::getActiveSession($userId);
@@ -428,11 +443,12 @@ class AdminAttendanceLogIndex extends AdminComponent
         } else {
             // User is checking in (time in)
             try {
-                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $scannedBy, $user) {
+                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
                         'role_id' => $user->role_id,
                         'scanned_by' => $scannedBy,
+                        'scanned_by_admin_id' => $scannedByAdminId,
                         'time_in' => \Carbon\Carbon::now(),
                         'status' => 'active',
                     ]);
@@ -515,7 +531,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                 'id' => $attendance->id,
                 'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
                 'role_name' => $attendance->role?->name ?? 'N/A',
-                'scanned_by_name' => trim(($attendance->scannedByLibrarian?->user?->first_name ?? '') . ' ' . ($attendance->scannedByLibrarian?->user?->last_name ?? '')) ?: 'N/A',
+                'scanned_by_name' => $attendance->scanned_by_name,
                 'time_in' => $attendance->time_in,
                 'time_out' => $attendance->time_out,
                 'duration_minutes' => $attendance->duration_minutes,

@@ -225,10 +225,18 @@ class QrScanner extends Component
         $userId = $data['user_id'];
         $user = $data['user'];
 
-        // Get the librarian ID of the current user (not user ID)
-        // scanned_by must reference librarians.id, not users.id
+        // Get the current user who is scanning
         $currentUser = Auth::user();
-        $scannedBy = $currentUser?->librarianDuty?->id;
+
+        // Get the librarian ID if current user has an active librarian duty
+        // scanned_by must reference librarians.id, not users.id
+        $scannedBy = $currentUser?->getActiveLibrarianDuty()?->id;
+
+        // If no librarian duty but user has admin access, store admin user ID
+        $scannedByAdminId = null;
+        if (! $scannedBy && $currentUser?->hasAdminAccess()) {
+            $scannedByAdminId = $currentUser->id;
+        }
 
         // Check if user has an active session
         $activeSession = Attendance::getActiveSession($userId);
@@ -286,13 +294,14 @@ class QrScanner extends Component
         } else {
             // User is checking in (time in) - wrap in transaction
             try {
-                return DB::transaction(function () use ($userId, $scannedBy, $user) {
+                return DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
                         'role_id' => $user->role_id,
                         'time_in' => Carbon::now(),
                         'status' => 'active',
                         'scanned_by' => $scannedBy,
+                        'scanned_by_admin_id' => $scannedByAdminId,
                     ]);
 
                     // Create check-in notification for the user

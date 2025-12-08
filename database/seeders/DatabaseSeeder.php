@@ -120,9 +120,9 @@ class DatabaseSeeder extends Seeder
 
         // Create academic papers with adviser and dean relationships
         $academicPapers = AcademicPaper::factory(30)->create([
-            'research_adviser_id' => fn() => $researchAdvisers->random()->id,
-            'technical_adviser_id' => fn() => $technicalAdvisers->random()->id,
-            'dean_id' => fn() => $deans->random()->id,
+            'research_adviser_id' => fn () => $researchAdvisers->random()->id,
+            'technical_adviser_id' => fn () => $technicalAdvisers->random()->id,
+            'dean_id' => fn () => $deans->random()->id,
         ]);
 
         // Create authors
@@ -255,7 +255,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Creating active batch for today...');
         // Exclude special users from librarian batch selection
         $excludedIds = collect([$sampleAdmin->id]);
-        $filteredStudents = $students->filter(fn($s) => ! $excludedIds->contains($s->id));
+        $filteredStudents = $students->filter(fn ($s) => ! $excludedIds->contains($s->id));
         $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
 
@@ -263,7 +263,7 @@ class DatabaseSeeder extends Seeder
             $student->update(['role_id' => $librarianRoleId]);
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0001',
+                'batch_no' => $currentYear.'0001',
                 'start_date' => $today,
                 'end_date' => null,
                 'status' => 'active',
@@ -285,7 +285,7 @@ class DatabaseSeeder extends Seeder
         foreach ($expiredBatch1Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0002',
+                'batch_no' => $currentYear.'0002',
                 'start_date' => $today->copy()->subDays(10),
                 'end_date' => $today->copy()->subDays(3),
                 'status' => 'expired',
@@ -303,7 +303,7 @@ class DatabaseSeeder extends Seeder
         foreach ($expiredBatch2Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0003',
+                'batch_no' => $currentYear.'0003',
                 'start_date' => $today->copy()->subDays(20),
                 'end_date' => $today->copy()->subDays(7),
                 'status' => 'expired',
@@ -324,7 +324,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch1Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0004',
+                'batch_no' => $currentYear.'0004',
                 'start_date' => $today->copy()->addDays(2),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -342,7 +342,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch2Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0005',
+                'batch_no' => $currentYear.'0005',
                 'start_date' => $today->copy()->addDays(5),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -359,7 +359,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch3Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear . '0006',
+                'batch_no' => $currentYear.'0006',
                 'start_date' => $today->copy()->addDays(7),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -450,7 +450,8 @@ class DatabaseSeeder extends Seeder
             $today->copy()->subDays(9),
         ];
 
-        $attendanceStatuses = ['completed', 'active', 'completed', 'active', 'completed', 'completed', 'active', 'completed', 'active', 'completed'];
+        // Only one active attendance (the current one for today), rest are completed
+        $attendanceStatuses = ['completed', 'completed', 'completed', 'completed', 'active', 'completed', 'completed', 'completed', 'completed', 'completed'];
 
         for ($i = 0; $i < 10; $i++) {
             $date = $dates[$i];

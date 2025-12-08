@@ -46,6 +46,7 @@ class Attendance extends Model
         'time_out',
         'status',
         'scanned_by',
+        'scanned_by_admin_id',
         'duration_minutes',
     ];
 
@@ -153,6 +154,40 @@ class Attendance extends Model
     public function scannedByLibrarian()
     {
         return $this->belongsTo(Librarian::class, 'scanned_by');
+    }
+
+    // Relationship with admin who scanned (when no librarian duty)
+    public function scannedByAdmin()
+    {
+        return $this->belongsTo(User::class, 'scanned_by_admin_id');
+    }
+
+    /**
+     * Get the name of who scanned this attendance.
+     * Priority: Librarian > Admin/Super Admin > 'N/A'
+     * For Super Admin, display "Super Admin" instead of the name.
+     */
+    public function getScannedByNameAttribute(): string
+    {
+        // First check librarian
+        if ($this->scannedByLibrarian && $this->scannedByLibrarian->user) {
+            $user = $this->scannedByLibrarian->user;
+
+            return trim($user->first_name.' '.$user->last_name) ?: 'N/A';
+        }
+
+        // Then check admin/super admin
+        if ($this->scannedByAdmin) {
+            // For Super Admin, display "Super Admin" instead of name
+            if ($this->scannedByAdmin->isSuperAdmin()) {
+                return 'Super Admin';
+            }
+
+            // For regular Admin, display their name
+            return trim($this->scannedByAdmin->first_name.' '.$this->scannedByAdmin->last_name) ?: 'N/A';
+        }
+
+        return 'N/A';
     }
 
     // Relationship with role (snapshot at check-in time)

@@ -301,9 +301,10 @@ class Transaction extends Component
     }
 
     /**
-     * Download return QR code as PNG file
+     * Download return QR code as SVG file
      * This method generates and streams the QR code directly,
      * bypassing the controller route that checks for availability.
+     * Uses SVG format which doesn't require imagick extension.
      */
     public function downloadReturnQr(): mixed
     {
@@ -350,20 +351,19 @@ class Transaction extends Component
         // Create encrypted QR message using trait method
         $qrContent = $this->createEncryptedQrMessage($borrowData);
 
-        // Generate QR code as PNG
-        $pngData = QrCode::format('png')
-            ->size(500)
+        // Generate QR code as SVG (doesn't require imagick extension)
+        $svgData = QrCode::size(self::QR_SVG_SIZE)
             ->margin(self::QR_MARGIN)
-            ->errorCorrection('Q')
+            ->errorCorrection(self::QR_ERROR_CORRECTION)
             ->generate($qrContent);
 
-        $filename = 'return-qr-' . $this->returnQrTransactionId . '.png';
+        $filename = 'return-qr-' . $this->returnQrTransactionId . '.svg';
 
-        return response()->streamDownload(function () use ($pngData) {
-            echo $pngData;
+        return response()->streamDownload(function () use ($svgData) {
+            echo $svgData;
         }, $filename, [
-            'Content-Type' => 'image/png',
-            'Content-Length' => strlen($pngData),
+            'Content-Type' => 'image/svg+xml',
+            'Content-Length' => strlen($svgData),
         ]);
     }
 
