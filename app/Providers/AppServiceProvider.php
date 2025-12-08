@@ -132,5 +132,9 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('manage-advisers-deans', function ($user) {
             return $user->isSuperAdmin();
         });
+
+        if (env('APP_ENV') == 'production') {
+            $this->app['request']->server->set('HTTPS', true);
+        }
     }
 }

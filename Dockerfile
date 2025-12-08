@@ -1,24 +1,20 @@
-FROM node:20-alpine AS builder
-
-WORKDIR /tmp
-
-COPY package*.json ./
-RUN npm ci
+FROM richarvey/nginx-php-fpm:latest
 
 COPY . .
-RUN npm run build
 
-# ===== Second stage: PHP =====
-FROM richarvey/nginx-php-fpm:1.7.2
-
-COPY --from=builder /tmp/public/build /var/www/html/public/build
-COPY . .
-
+# Image config
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public
 ENV PHP_ERRORS_STDERR 1
 ENV RUN_SCRIPTS 1
+ENV REAL_IP_HEADER 1
 
-RUN chmod +x /start.sh
+# Laravel config
+ENV APP_ENV production
+ENV APP_DEBUG false
+ENV LOG_CHANNEL stderr
+
+# Allow composer to run as root
+ENV COMPOSER_ALLOW_SUPERUSER 1
 
 CMD ["/start.sh"]
