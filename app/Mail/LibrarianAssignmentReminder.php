@@ -28,7 +28,7 @@ class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Alert: Unassigned Librarian Duty Days - Week of '.$this->weekStart->format('M d, Y'),
+            subject: 'Alert: Unassigned Librarian Duty Days - Week of ' . $this->weekStart->format('M d, Y'),
         );
     }
 
