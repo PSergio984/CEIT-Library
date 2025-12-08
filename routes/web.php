@@ -1,51 +1,30 @@
 <?php
 
-use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
-use App\Livewire\Pages\Admin\AdminAdvisersDeans;
-use App\Livewire\Pages\Admin\AdminAssignLibrarians;
-use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
-use App\Livewire\Pages\Admin\AdminBorrowTransactions;
-use App\Livewire\Pages\Admin\AdminDashboard;
-use App\Livewire\Pages\Admin\AdminManageRoles;
-use App\Livewire\Pages\Admin\AdminNotifications;
-use App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex;
-use App\Livewire\Pages\Admin\AdminShowAcademicPaper;
-use App\Livewire\Pages\Admin\AdminUserList;
-use App\Livewire\Pages\Admin\AdminViolationLogIndex;
-use App\Livewire\Pages\Admin\CreateAcademicPaper;
-use App\Livewire\Pages\Admin\EditAcademicPaper;
-use App\Livewire\Pages\Student\AcademicPaperIndex;
-use App\Livewire\Pages\Student\CreditScoreHistory;
-use App\Livewire\Pages\Student\RuleAndRegulationIndex;
-use App\Livewire\Pages\Student\ShowAcademicPaper;
-// use App\Livewire\Pages\Student\StudentDashboard;
-use App\Livewire\Pages\Student\StudentNotifications;
-use App\Livewire\Pages\Student\Transaction;
-use App\Livewire\TestQrScanner;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 Route::view('/', 'welcome');
 
 // Test route for QR code system (only available in non-production environments)
 if (config('app.env') !== 'production') {
     Route::middleware(['auth', 'verified', 'librarian.or.admin'])->group(function () {
-        Route::get('/test-qr', TestQrScanner::class)->name('test-qr');
+        Route::get('/test-qr', \App\Livewire\TestQrScanner::class)->name('test-qr');
     });
 }
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    // Route::get('/dashboard', StudentDashboard::class)->name('student.dashboard');
-    Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)
+    Route::get('/dashboard', \App\Livewire\Pages\Student\StudentDashboard::class)->name('student.dashboard');
+    Route::get('/academic-papers/{academicPaper}', \App\Livewire\Pages\Student\ShowAcademicPaper::class)
         ->whereNumber('academicPaper')
         ->name('academic-paper.show');
-    Route::get('/academic-papers', AcademicPaperIndex::class)
+    Route::get('/academic-papers', \App\Livewire\Pages\Student\AcademicPaperIndex::class)
         ->name('academic-paper.index');
-    Route::get('/rule-and-regulation', RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
-    Route::get('/credit-score-history', CreditScoreHistory::class)->name('CreditScoreHistory');
-    Route::get('/transactions', Transaction::class)->name('transactions');
-    Route::get('/notifications', StudentNotifications::class)->name('notifications');
+    Route::get('/rule-and-regulation', \App\Livewire\Pages\Student\RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
+    Route::get('/credit-score-history', \App\Livewire\Pages\Student\CreditScoreHistory::class)->name('CreditScoreHistory');
+    Route::get('/transactions', \App\Livewire\Pages\Student\Transaction::class)->name('transactions');
+    Route::get('/notifications', \App\Livewire\Pages\Student\StudentNotifications::class)->name('notifications');
 
     // QR Code download route
     Route::get('/qr-code/download/{inventoryId}', [\App\Http\Controllers\QrCodeDownloadController::class, 'download'])
@@ -60,20 +39,20 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
     ->name('admin.')
     ->group(function () {
         // Pages accessible by both Admin and Librarian
-        Route::get('/dashboard', AdminDashboard::class)
+        Route::get('/dashboard', \App\Livewire\Pages\Admin\AdminDashboard::class)
             ->middleware('can:access-admin-dashboard')
             ->name('dashboard');
 
-        Route::get('/logs', AdminBorrowTransactions::class)
+        Route::get('/logs', \App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
             ->middleware('can:view-borrow-logs')
             ->name('borrow-logs');
 
         // Notifications - Accessible by both Admin and Librarian
-        Route::get('/notifications', AdminNotifications::class)
+        Route::get('/notifications', \App\Livewire\Pages\Admin\AdminNotifications::class)
             ->name('notifications');
 
         // Rules and Regulations - Librarians can VIEW but not EDIT
-        Route::get('/rule-and-regulation', AdminRuleAndRegulationIndex::class)
+        Route::get('/rule-and-regulation', \App\Livewire\Pages\Admin\AdminRuleAndRegulationIndex::class)
             ->middleware('can:view-rules')
             ->name('rules-and-regulations.index');
 
@@ -81,41 +60,41 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
 
         // Academic Papers - VIEW (Librarian and Admin can view)
         Route::middleware('can:view-academic-papers')->group(function () {
-            Route::get('/academic-papers', AdminAcademicPaperIndex::class)
+            Route::get('/academic-papers', \App\Livewire\Pages\Admin\AdminAcademicPaperIndex::class)
                 ->name('academic-paper.index');
-            Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
+            Route::get('/academic-papers/{academicPaper}', \App\Livewire\Pages\Admin\AdminShowAcademicPaper::class)
                 ->whereNumber('academicPaper')
                 ->name('academic-paper.show');
         });
 
         // Academic Papers - Create/Edit (Super Admin only)
         Route::middleware('can:manage-academic-papers')->group(function () {
-            Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
-            Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
+            Route::get('/academic-papers/create', \App\Livewire\Pages\Admin\CreateAcademicPaper::class)->name('academic-paper.create');
+            Route::get('/academic-papers/{academicPaper}/edit', \App\Livewire\Pages\Admin\EditAcademicPaper::class)->name('academic-paper.edit');
         });
 
         // Advisers & Deans management (Super Admin only)
-        Route::get('/advisers-deans', AdminAdvisersDeans::class)
+        Route::get('/advisers-deans', \App\Livewire\Pages\Admin\AdminAdvisersDeans::class)
             ->middleware('can:manage-academic-papers')
             ->name('advisers-deans');
 
         // Attendance logs (Super Admin only)
-        Route::get('/attendance', AdminAttendanceLogIndex::class)
+        Route::get('/attendance', \App\Livewire\Pages\Admin\AdminAttendanceLogIndex::class)
             ->middleware('can:view-attendance-logs')
             ->name('attendance-logs');
 
         // Violation logs (Librarian and Admin can view)
-        Route::get('/violations', AdminViolationLogIndex::class)
+        Route::get('/violations', \App\Livewire\Pages\Admin\AdminViolationLogIndex::class)
             ->middleware('can:view-violation-logs')
             ->name('violation-logs');
 
         // Librarian batch assignment (Super Admin only)
-        Route::get('/librarians', AdminAssignLibrarians::class)
+        Route::get('/librarians', \App\Livewire\Pages\Admin\AdminAssignLibrarians::class)
             ->middleware('can:manage-librarian-batches')
             ->name('librarians');
 
         // Role management (Super Admin only)
-        Route::get('/manage-roles', AdminManageRoles::class)
+        Route::get('/manage-roles', \App\Livewire\Pages\Admin\AdminManageRoles::class)
             ->middleware('can:manage-user-roles')
             ->name('manage-roles');
 
@@ -137,4 +116,4 @@ Route::post('/logout', function () {
     return redirect('/');
 })->name('logout');
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
