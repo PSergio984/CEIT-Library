@@ -15,7 +15,13 @@ FROM richarvey/nginx-php-fpm:latest
 # Copy built assets from builder stage
 COPY --from=builder /tmp/public/build /var/www/html/public/build
 
-# Copy application files
+# Copy composer files first for better caching
+COPY composer.json composer.lock /var/www/html/
+
+# Install Composer dependencies
+RUN composer install --no-dev --no-interaction --optimize-autoloader --working-dir=/var/www/html
+
+# Copy rest of application files
 COPY . .
 
 # Copy startup script to correct location
