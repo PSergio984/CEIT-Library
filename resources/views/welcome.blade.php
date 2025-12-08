@@ -15,11 +15,7 @@
     @livewireStyles
 </head>
 
-<body class="min-h-screen font-sans relative"
-    style="background-image: url('{{ Vite::asset('resources/images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
-    <!-- Dark Blue Overlay for opacity effect -->
-    <div class="fixed inset-0 w-full h-full bg-slate-800/70 z-0"></div>
-
+<body class="min-h-screen font-sans bg-white">
     <!-- Header -->
     <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative"
         style="background-color: #273F4F;">
