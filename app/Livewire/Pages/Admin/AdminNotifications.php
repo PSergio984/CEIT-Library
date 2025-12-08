@@ -97,6 +97,6 @@ class AdminNotifications extends AdminComponent
 
     public function render()
     {
-        return view('livewire.pages.Admin.admin-notifications');
+        return view('livewire.pages.admin.admin-notifications');
     }
 }

@@ -6,6 +6,6 @@ class AdminShowAcademicPaper extends AdminComponent
 {
     public function render()
     {
-        return view('livewire.pages.Admin.admin-show-academic-paper');
+        return view('livewire.pages.admin.admin-show-academic-paper');
     }
 }

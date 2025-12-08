@@ -25,6 +25,6 @@ class EditAcademicPaper extends AdminComponent
 
     public function render()
     {
-        return view('livewire.pages.Admin.edit-academic-paper');
+        return view('livewire.pages.admin.edit-academic-paper');
     }
 }

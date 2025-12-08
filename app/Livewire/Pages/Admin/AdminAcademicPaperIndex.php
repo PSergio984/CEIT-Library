@@ -1261,6 +1261,6 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public function render()
     {
-        return view('livewire.pages.Admin.admin-academic-paper-index');
+        return view('livewire.pages.admin.admin-academic-paper-index');
     }
 }

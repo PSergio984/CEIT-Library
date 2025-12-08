@@ -31,6 +31,6 @@ class CreateAcademicPaper extends AdminComponent
 
     public function render()
     {
-        return view('livewire.pages.Admin.create-academic-paper');
+        return view('livewire.pages.admin.create-academic-paper');
     }
 }

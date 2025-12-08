@@ -586,6 +586,6 @@ class AdminAttendanceLogIndex extends AdminComponent
 
     public function render()
     {
-        return view('livewire.pages.Admin.admin-attendance-log-index');
+        return view('livewire.pages.admin.admin-attendance-log-index');
     }
 }
