@@ -65,6 +65,35 @@ class Attendance extends Model
             if (! $wasCompleted && $isNowCompleted) {
                 // Use the existing duration_minutes property instead of recalculating
                 if ($attendance->duration_minutes >= 30) {
+                    // Check daily limit (max 3 credit score rewards per day for attendance)
+                    $todayAttendanceRewards = ScoreIncrement::where('user_id', $attendance->user_id)
+                        ->where('name', 'Attendance 30+ Minutes')
+                        ->whereDate('created_at', today())
+                        ->count();
+
+                    if ($todayAttendanceRewards >= 3) {
+                        // Daily limit reached - no credit score, but can notify if needed
+                        $user = $attendance->user;
+                        if ($user) {
+                            $durationDisplay = (int) $attendance->duration_minutes;
+                            Notification::create([
+                                'user_id' => $attendance->user_id,
+                                'type' => 'attendance_checkout',
+                                'title' => 'Checked Out Successfully!',
+                                'message' => "You stayed in the library for {$durationDisplay} minutes. (Daily credit limit reached - max 3 rewards per day)",
+                                'data' => [
+                                    'attendance_id' => $attendance->id,
+                                    'duration_minutes' => $attendance->duration_minutes,
+                                    'score_awarded' => 0,
+                                    'reason' => 'daily_limit_reached',
+                                    'daily_count' => $todayAttendanceRewards,
+                                ],
+                            ]);
+                        }
+
+                        return;
+                    }
+
                     // Efficient idempotency check: use indexed related_attendance_id for exact lookup
                     $existingReward = ScoreIncrement::where('user_id', $attendance->user_id)
                         ->where('related_attendance_id', $attendance->id)

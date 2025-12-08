@@ -120,9 +120,9 @@ class DatabaseSeeder extends Seeder
 
         // Create academic papers with adviser and dean relationships
         $academicPapers = AcademicPaper::factory(30)->create([
-            'research_adviser_id' => fn () => $researchAdvisers->random()->id,
-            'technical_adviser_id' => fn () => $technicalAdvisers->random()->id,
-            'dean_id' => fn () => $deans->random()->id,
+            'research_adviser_id' => fn() => $researchAdvisers->random()->id,
+            'technical_adviser_id' => fn() => $technicalAdvisers->random()->id,
+            'dean_id' => fn() => $deans->random()->id,
         ]);
 
         // Create authors
@@ -186,13 +186,9 @@ class DatabaseSeeder extends Seeder
             // Note: Credit scores are now automatically updated via model events
         }
 
-        // Create at least 5 borrow transactions for each status for the specific student
-        // Use only allowed enum values for status: ['started', 'completed', 'overdue']
-        $statuses = [
-            'completed',    // completed transaction
-            'started',      // active/ongoing transaction
-            'overdue',      // overdue transaction
-        ];
+        // Create borrow transactions for the specific student using proper factory states
+        // This ensures data consistency (time_out, status, expires_at are all aligned)
+        $this->command->info('Creating borrow transactions for student@plv.edu.ph...');
 
         // Eager load copies to avoid N+1 queries
         $academicPapers->load('copies');
@@ -200,18 +196,53 @@ class DatabaseSeeder extends Seeder
             return $paper->copies->isNotEmpty();
         });
 
-        foreach ($statuses as $status) {
-            for ($i = 0; $i < 5; $i++) {
-                $paper = $academicPapersWithCopies->random();
-                $copy = $paper->copies->random();
-                if ($copy) {
-                    BorrowTransaction::factory()->state([
-                        'user_id' => $specificStudent->id,
-                        'academic_paper_id' => $paper->id,
-                        'inventory_id' => $copy->id,
-                        'status' => $status,
-                    ])->create();
-                }
+        // Track which copies are used for active transactions to avoid conflicts
+        $usedCopyIds = collect();
+
+        // Create 5 COMPLETED transactions (returned books)
+        for ($i = 0; $i < 5; $i++) {
+            $paper = $academicPapersWithCopies->random();
+            $copy = $paper->copies->whereNotIn('id', $usedCopyIds)->first() ?? $paper->copies->random();
+            if ($copy) {
+                BorrowTransaction::factory()->completed()->create([
+                    'user_id' => $specificStudent->id,
+                    'academic_paper_id' => $paper->id,
+                    'inventory_id' => $copy->id,
+                ]);
+                // Completed transactions - copy is available
+                $copy->update(['status' => 'Available']);
+            }
+        }
+
+        // Create 3 STARTED transactions (currently borrowing - active)
+        for ($i = 0; $i < 3; $i++) {
+            $paper = $academicPapersWithCopies->random();
+            $copy = $paper->copies->whereNotIn('id', $usedCopyIds)->where('status', 'Available')->first();
+            if ($copy) {
+                BorrowTransaction::factory()->started()->create([
+                    'user_id' => $specificStudent->id,
+                    'academic_paper_id' => $paper->id,
+                    'inventory_id' => $copy->id,
+                ]);
+                // Active transaction - copy is unavailable
+                $copy->update(['status' => 'Unavailable']);
+                $usedCopyIds->push($copy->id);
+            }
+        }
+
+        // Create 2 OVERDUE transactions (past due, not returned)
+        for ($i = 0; $i < 2; $i++) {
+            $paper = $academicPapersWithCopies->random();
+            $copy = $paper->copies->whereNotIn('id', $usedCopyIds)->where('status', 'Available')->first();
+            if ($copy) {
+                BorrowTransaction::factory()->overdue()->create([
+                    'user_id' => $specificStudent->id,
+                    'academic_paper_id' => $paper->id,
+                    'inventory_id' => $copy->id,
+                ]);
+                // Overdue transaction - copy is unavailable
+                $copy->update(['status' => 'Unavailable']);
+                $usedCopyIds->push($copy->id);
             }
         }
 
@@ -224,7 +255,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('Creating active batch for today...');
         // Exclude special users from librarian batch selection
         $excludedIds = collect([$sampleAdmin->id]);
-        $filteredStudents = $students->filter(fn ($s) => ! $excludedIds->contains($s->id));
+        $filteredStudents = $students->filter(fn($s) => ! $excludedIds->contains($s->id));
         $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
 
@@ -232,7 +263,7 @@ class DatabaseSeeder extends Seeder
             $student->update(['role_id' => $librarianRoleId]);
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear.'0001',
+                'batch_no' => $currentYear . '0001',
                 'start_date' => $today,
                 'end_date' => null,
                 'status' => 'active',
@@ -254,7 +285,7 @@ class DatabaseSeeder extends Seeder
         foreach ($expiredBatch1Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear.'0002',
+                'batch_no' => $currentYear . '0002',
                 'start_date' => $today->copy()->subDays(10),
                 'end_date' => $today->copy()->subDays(3),
                 'status' => 'expired',
@@ -272,7 +303,7 @@ class DatabaseSeeder extends Seeder
         foreach ($expiredBatch2Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear.'0003',
+                'batch_no' => $currentYear . '0003',
                 'start_date' => $today->copy()->subDays(20),
                 'end_date' => $today->copy()->subDays(7),
                 'status' => 'expired',
@@ -293,7 +324,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch1Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear.'0004',
+                'batch_no' => $currentYear . '0004',
                 'start_date' => $today->copy()->addDays(2),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -311,7 +342,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch2Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear.'0005',
+                'batch_no' => $currentYear . '0005',
                 'start_date' => $today->copy()->addDays(5),
                 'end_date' => null,
                 'status' => 'inactive',
@@ -328,7 +359,7 @@ class DatabaseSeeder extends Seeder
         foreach ($inactiveBatch3Students as $student) {
             Librarian::create([
                 'user_id' => $student->id,
-                'batch_no' => $currentYear.'0006',
+                'batch_no' => $currentYear . '0006',
                 'start_date' => $today->copy()->addDays(7),
                 'end_date' => null,
                 'status' => 'inactive',

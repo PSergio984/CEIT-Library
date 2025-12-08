@@ -41,6 +41,8 @@ class Transaction extends Component
 
     public ?int $returnQrTransactionId = null;
 
+    public ?int $returnQrInventoryId = null;
+
     /**
      * Get distinct paper types for filter dropdown
      * Cached per-request to avoid multiple queries
@@ -282,7 +284,87 @@ class Transaction extends Component
         $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
         $this->returnQrPaperTitle = $inventory->academicPaper?->title ?? 'Unknown Paper';
         $this->returnQrTransactionId = $transaction->id;
+        $this->returnQrInventoryId = $inventory->id;
         $this->isReturnQrModalOpen = true;
+    }
+
+    /**
+     * Get the download URL for the return QR code
+     * NOTE: Deprecated - use downloadReturnQr() instead for direct download
+     */
+    #[Computed]
+    public function returnQrDownloadUrl(): ?string
+    {
+        // Return null to hide the old broken link approach
+        // The new approach uses downloadReturnQr() method directly
+        return null;
+    }
+
+    /**
+     * Download return QR code as PNG file
+     * This method generates and streams the QR code directly,
+     * bypassing the controller route that checks for availability.
+     */
+    public function downloadReturnQr(): mixed
+    {
+        $user = Auth::user();
+        if (! $user) {
+            $this->error('You must be logged in.');
+
+            return null;
+        }
+
+        if (! $this->returnQrTransactionId || ! $this->returnQrInventoryId) {
+            $this->error('No return QR code available to download.');
+
+            return null;
+        }
+
+        // Find the transaction to verify it's still valid
+        $transaction = BorrowTransaction::with('inventory.academicPaper')
+            ->where('user_id', $user->id)
+            ->whereIn('status', ['started', 'overdue'])
+            ->whereNull('time_out')
+            ->find($this->returnQrTransactionId);
+
+        if (! $transaction) {
+            $this->error('Transaction not found or already returned.');
+
+            return null;
+        }
+
+        $inventory = $transaction->inventory;
+        if (! $inventory) {
+            $this->error('Inventory not found.');
+
+            return null;
+        }
+
+        // Build the borrow data payload (same format as original borrow QR)
+        $borrowData = [
+            'inventory_id' => $inventory->id,
+            'paper_id' => $inventory->academic_paper_id,
+            'requested_by' => $user->id,
+        ];
+
+        // Create encrypted QR message using trait method
+        $qrContent = $this->createEncryptedQrMessage($borrowData);
+
+        // Generate QR code as PNG
+        $pngData = QrCode::format('png')
+            ->size(500)
+            ->margin(self::QR_MARGIN)
+            ->errorCorrection('Q')
+            ->generate($qrContent);
+
+        $filename = 'return-qr-' . $this->returnQrTransactionId . '.png';
+
+        return response()->streamDownload(function () use ($pngData) {
+            echo $pngData;
+        }, $filename, [
+            'Content-Type' => 'image/png',
+            'Content-Length' => strlen($pngData),
+        ]);
     }
 
     public function closeReturnQrModal(): void
@@ -291,6 +373,7 @@ class Transaction extends Component
         $this->returnQrCodeDataUri = null;
         $this->returnQrPaperTitle = null;
         $this->returnQrTransactionId = null;
+        $this->returnQrInventoryId = null;
     }
 
     public function render()
