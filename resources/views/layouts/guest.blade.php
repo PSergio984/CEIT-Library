@@ -17,7 +17,7 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen font-sans relative" style="background-image: url('{{ Vite::asset('resources/images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
+    <body class="min-h-screen font-sans relative" style="background-image: url('{{ asset('images/plvbg.jpg') }}'); background-size: cover; background-position: center; background-repeat: no-repeat;">
         <!-- Dark Blue Overlay for opacity effect -->
         <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
 
