@@ -72,13 +72,34 @@ class Attendance extends Model
 
                     if (! $existingReward) {
                         // Create a ScoreIncrement record (which will auto-update user's credit_score via its model event)
-                        ScoreIncrement::create([
+                        $scoreIncrement = ScoreIncrement::create([
                             'user_id' => $attendance->user_id,
                             'name' => 'Attendance 30+ Minutes',
                             'description' => "Stayed in library for {$attendance->duration_minutes} minutes",
                             'score_value' => 5,
                             'related_attendance_id' => $attendance->id,
                         ]);
+
+                        // Create a notification for the user about their credit score increase
+                        $user = $attendance->user;
+                        if ($user) {
+                            // Ensure duration is formatted as integer for display
+                            $durationDisplay = (int) $attendance->duration_minutes;
+                            Notification::create([
+                                'user_id' => $attendance->user_id,
+                                'type' => 'credit_score_increase',
+                                'title' => 'Credit Score Increased!',
+                                'message' => "Great job! You earned +5 credit points for staying in the library for {$durationDisplay} minutes. Your current credit score is {$user->credit_score}/100.",
+                                'data' => [
+                                    'score_increment_id' => $scoreIncrement->id,
+                                    'score_value' => 5,
+                                    'duration_minutes' => $attendance->duration_minutes,
+                                    'attendance_id' => $attendance->id,
+                                    'credit_score' => $user->credit_score,
+                                    'earned_at' => now()->toDateTimeString(),
+                                ],
+                            ]);
+                        }
                     }
                 }
             }
@@ -115,7 +136,8 @@ class Attendance extends Model
     public function calculateDuration()
     {
         if ($this->time_in && $this->time_out) {
-            $this->duration_minutes = $this->time_in->diffInMinutes($this->time_out);
+            // Cast to int to avoid decimal precision issues in notifications
+            $this->duration_minutes = (int) $this->time_in->diffInMinutes($this->time_out);
 
             return $this->duration_minutes;
         }

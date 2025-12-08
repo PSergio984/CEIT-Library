@@ -17,15 +17,19 @@ class AttendanceQr extends Component
 {
     use CreatesQrCanonicalMessage;
 
-    private const QR_CACHE_TTL = 86400; // 24 hours in seconds
-
     // QR code generation version - increment when generation parameters change to invalidate cache
-    private const QR_CODE_VERSION = 'v2'; // v2: size 400/800, margin 4
+    // v5: Simplified QR - removed timestamp/expiration, QR codes are now permanent per user
+    private const QR_CODE_VERSION = 'v5';
+
+    // QR code generation settings for optimal scannability
+    private const QR_SVG_SIZE = 400;      // Size for on-screen SVG display
+    private const QR_PNG_SIZE = 800;      // Larger size for downloadable PNG
+    private const QR_MARGIN = 8;          // Quiet zone margin (increased from 4 for better scanning)
+    private const QR_ERROR_CORRECTION_SVG = 'M';  // Medium (15% recovery) - better for dense encrypted data
+    private const QR_ERROR_CORRECTION_PNG = 'Q';  // Quartile (25%) for robust downloaded images
 
     // Use in-memory cache for the QR code SVG data
-    private ?string $cachedQrCodePng = null; // TODO: Rename to cachedQrCodeSvg in future refactor
-
-    public ?string $qrValidUntil = null;
+    private ?string $cachedQrCodeSvg = null;
 
     public ?int $activeSessionId = null;
 
@@ -43,8 +47,8 @@ class AttendanceQr extends Component
 
     /**
      * Generate encrypted attendance data for QR code
-     * Format: encrypted JSON with user_id, timestamp, and hash for tamper protection
-     * Persists QR data based on active session to prevent unnecessary regeneration
+     * Format: encrypted JSON with user_id, nonce, user info, and hash for tamper protection
+     * QR code is permanent per user - no expiration, uses nonce for replay protection
      */
     private function generateAttendanceData(): string
     {
@@ -53,37 +57,14 @@ class AttendanceQr extends Component
             abort(401, 'Unauthenticated');
         }
 
-        // Check for active attendance session
-        $activeSession = Attendance::getActiveSession($user->id);
-        $this->activeSessionId = $activeSession?->id;
-
-        // Use session-specific cache key if available, otherwise fallback to user-only key
-        // This ensures QR codes are cached even when there's no active session
-        // Include version in cache key to invalidate when generation parameters change
-        $cacheKey = $activeSession
-            ? 'qr_data:'.self::QR_CODE_VERSION.":user:{$user->id}:session:{$activeSession->id}"
-            : 'qr_data:'.self::QR_CODE_VERSION.":user:{$user->id}";
+        // Use user-specific cache key (permanent QR per user)
+        $cacheKey = 'qr_data:' . self::QR_CODE_VERSION . ":user:{$user->id}";
 
         // Try to reuse the cached QR data
         $cachedData = Cache::get($cacheKey);
 
-        if (
-            is_array($cachedData)
-            && array_key_exists('valid_until', $cachedData)
-            && array_key_exists('encrypted_data', $cachedData)
-            && array_key_exists('created_at', $cachedData)
-            && is_string($cachedData['valid_until'])
-            && is_string($cachedData['encrypted_data'])
-            && is_string($cachedData['created_at'])
-        ) {
-            $validUntilCarbon = Carbon::parse($cachedData['valid_until']);
-            if ($validUntilCarbon->isFuture()) {
-                // Update validity timestamp for display
-                $this->qrValidUntil = $validUntilCarbon->toIso8601String();
-
-                return $cachedData['encrypted_data'];
-            }
-            // If expired, fall through to regenerate
+        if (is_array($cachedData) && isset($cachedData['encrypted_data'])) {
+            return $cachedData['encrypted_data'];
         }
 
         $secret = config('app.qr_hmac_secret');
@@ -91,11 +72,8 @@ class AttendanceQr extends Component
             throw new \RuntimeException('QR HMAC secret is missing or insecure.');
         }
 
-        $timestamp = Carbon::now()->timestamp;
-        $validUntil = Carbon::now()->addHours(24); // QR valid for 24 hours
-        $createdAt = Carbon::now()->format('Y-m-d-His'); // Fixed creation timestamp for filename
-
         // Generate unique nonce for replay attack protection
+        // This nonce allows the QR to be used twice (check-in and check-out)
         $nonce = Str::random(32);
 
         // Build serializable user representation for QR payload
@@ -107,88 +85,37 @@ class AttendanceQr extends Component
 
         $data = [
             'user_id' => $user->id,
-            'timestamp' => $timestamp,
             'nonce' => $nonce,
             'user' => $userPayload,
         ];
 
-        // Add hash for additional tamper protection covering entire payload
+        // Add hash for tamper protection covering entire payload
         $canonicalMessage = $this->createCanonicalMessage($data);
         $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
         // Encrypt the data to prevent tampering
         $encryptedData = Crypt::encryptString(json_encode($data));
 
-        // Always cache the QR data (use session-specific or user-only key)
-        Cache::put($cacheKey, [
+        // Cache permanently (no TTL - user can regenerate if needed by clearing cache)
+        Cache::forever($cacheKey, [
             'encrypted_data' => $encryptedData,
-            'valid_until' => $validUntil->toIso8601String(),
-            'created_at' => $createdAt,
-        ], self::QR_CACHE_TTL); // Cache for 24 hours
-
-        $this->qrValidUntil = $validUntil->toIso8601String();
+            'created_at' => Carbon::now()->format('Y-m-d-His'),
+        ]);
 
         return $encryptedData;
     }
 
     /**
-     * Manually refresh the QR code (invalidate cache and generate new one)
-     */
-    public function refreshQrCode()
-    {
-        $user = Auth::user();
-        if (! $user) {
-            return;
-        }
-
-        // Clear all cached QR data (data, PNG, and SVG) using versioned cache keys
-        $activeSession = Attendance::getActiveSession($user->id);
-        $version = self::QR_CODE_VERSION;
-
-        // Clear session-specific caches if session exists (both old and new format for transition)
-        if ($activeSession) {
-            // Clear versioned keys (current format)
-            Cache::forget("qr_data:{$version}:user:{$user->id}:session:{$activeSession->id}");
-            Cache::forget("qr_png:{$version}:user:{$user->id}:session:{$activeSession->id}");
-            Cache::forget("qr_svg:{$version}:user:{$user->id}:session:{$activeSession->id}");
-            // Clear old format keys (for backward compatibility during transition)
-            Cache::forget("qr_data:user:{$user->id}:session:{$activeSession->id}");
-            Cache::forget("qr_png:user:{$user->id}:session:{$activeSession->id}");
-            Cache::forget("qr_svg:user:{$user->id}:session:{$activeSession->id}");
-        }
-
-        // Always clear user-only caches (both old and new format for transition)
-        Cache::forget("qr_data:{$version}:user:{$user->id}");
-        Cache::forget("qr_png:{$version}:user:{$user->id}");
-        Cache::forget("qr_svg:{$version}:user:{$user->id}");
-        Cache::forget("qr_data:user:{$user->id}");
-        Cache::forget("qr_png:user:{$user->id}");
-        Cache::forget("qr_svg:user:{$user->id}");
-
-        // Clear in-memory cache
-        $this->cachedQrCodePng = null;
-
-        // Reset activeSessionId to force re-check
-        $this->activeSessionId = null;
-
-        // Clear Livewire computed property cache
-        unset($this->qrCodeDataUri);
-
-        // Force re-render
-        $this->dispatch('qr-refreshed');
-    }
-
-    /**
      * Generate QR code as SVG (centralized generator)
-     * SVG format is more reliable for scanning and works better with Html5QrcodeScanner
+     * SVG format is more reliable for scanning and works better with jsQR scanner
      *
      * @return string SVG data
      */
     private function generateQrCodeSvg(): string
     {
         // Return cached value if already generated in this request
-        if ($this->cachedQrCodePng !== null) {
-            return $this->cachedQrCodePng;
+        if ($this->cachedQrCodeSvg !== null) {
+            return $this->cachedQrCodeSvg;
         }
 
         $user = Auth::user();
@@ -196,23 +123,19 @@ class AttendanceQr extends Component
             return '';
         }
 
-        // Use activeSessionId if already set to avoid duplicate query
+        // Check for active session
         if ($this->activeSessionId === null) {
             $activeSession = Attendance::getActiveSession($user->id);
             $this->activeSessionId = $activeSession?->id;
         }
 
-        // Use session-specific cache key if available, otherwise fallback to user-only key
-        // Include version in cache key to invalidate when generation parameters change
-        $svgCacheKey = $this->activeSessionId
-            ? 'qr_svg:'.self::QR_CODE_VERSION.":user:{$user->id}:session:{$this->activeSessionId}"
-            : 'qr_svg:'.self::QR_CODE_VERSION.":user:{$user->id}";
+        // Use user-specific cache key for SVG
+        $svgCacheKey = 'qr_svg:' . self::QR_CODE_VERSION . ":user:{$user->id}";
 
         $cachedSvg = Cache::get($svgCacheKey);
 
         if ($cachedSvg && is_string($cachedSvg)) {
-            // Use cached SVG - no regeneration!
-            $this->cachedQrCodePng = $cachedSvg;
+            $this->cachedQrCodeSvg = $cachedSvg;
 
             return $cachedSvg;
         }
@@ -220,18 +143,16 @@ class AttendanceQr extends Component
         // Generate SVG only if not cached
         $attendanceData = $this->generateAttendanceData();
 
-        // Generate QR code as SVG with LOW error correction for simpler, more scannable codes
-        // Low error correction = simpler patterns = easier to scan
-        // Larger size and margin improve scanning reliability
-        $svg = QrCode::size(400)
-            ->margin(4)  // Add quiet zone margin for better scanning
-            ->errorCorrection('L')  // Low error correction for simplicity
+        // Generate QR code as SVG with optimized settings for on-screen scanning
+        $svg = QrCode::size(self::QR_SVG_SIZE)
+            ->margin(self::QR_MARGIN)
+            ->errorCorrection(self::QR_ERROR_CORRECTION_SVG)
             ->generate($attendanceData);
 
-        // Always cache the SVG for future renders (24 hours)
-        Cache::put($svgCacheKey, $svg, self::QR_CACHE_TTL);
+        // Cache permanently
+        Cache::forever($svgCacheKey, $svg);
 
-        $this->cachedQrCodePng = $svg;
+        $this->cachedQrCodeSvg = $svg;
 
         return $svg;
     }
@@ -239,52 +160,46 @@ class AttendanceQr extends Component
     #[Computed(cache: true)]
     public function qrCodeDataUri(): string
     {
-        // Delegate to centralized generator
         $svgData = $this->generateQrCodeSvg();
 
         if (empty($svgData)) {
             return '';
         }
 
-        // Use base64 encoding for reliable SVG data URI
-        // This avoids UTF-8 encoding issues with rawurlencode
-        return 'data:image/svg+xml;base64,'.base64_encode($svgData);
+        return 'data:image/svg+xml;base64,' . base64_encode($svgData);
     }
 
     /**
-     * Check if refresh button should be disabled
-     * This is a regular computed property (not cached) so it updates dynamically
+     * Regenerate QR code (clears cache and generates new nonce)
+     * This should only be used if the user needs a fresh QR code
+     * (e.g., after both check-in and check-out have been used)
      */
-    #[Computed]
-    public function canRefreshQr(): bool
+    public function regenerateQrCode()
     {
         $user = Auth::user();
         if (! $user) {
-            return false;
+            return;
         }
 
-        // Re-check active session dynamically (don't rely on cached property)
-        $activeSession = Attendance::getActiveSession($user->id);
+        $version = self::QR_CODE_VERSION;
 
-        // Disable refresh if there's an active session
-        if ($activeSession) {
-            return false; // Active session - don't allow refresh
-        }
+        // Clear all cached QR data for this user
+        Cache::forget("qr_data:{$version}:user:{$user->id}");
+        Cache::forget("qr_svg:{$version}:user:{$user->id}");
+        Cache::forget("qr_png:{$version}:user:{$user->id}");
 
-        // Check if QR is still valid (hasn't timed out)
-        if ($this->qrValidUntil) {
-            $validUntil = Carbon::parse($this->qrValidUntil);
-            if ($validUntil->isFuture()) {
-                return false; // QR still valid - don't allow refresh
-            }
-        }
+        // Clear in-memory cache
+        $this->cachedQrCodeSvg = null;
 
-        return true; // Allow refresh
+        // Clear Livewire computed property cache
+        unset($this->qrCodeDataUri);
+
+        // Force re-render
+        $this->dispatch('qr-regenerated');
     }
 
     /**
      * Download QR code as PNG file (better for printing and sharing)
-     * Uses the SAME cached QR data to prevent regeneration
      */
     public function downloadQrCode()
     {
@@ -293,54 +208,34 @@ class AttendanceQr extends Component
             abort(401, 'Unauthenticated');
         }
 
-        // Check for active session to get cache key (fallback to user-only key)
-        $activeSession = Attendance::getActiveSession($user->id);
-        // Include version in cache key to invalidate when generation parameters change
-        $cacheKey = $activeSession
-            ? 'qr_data:'.self::QR_CODE_VERSION.":user:{$user->id}:session:{$activeSession->id}"
-            : 'qr_data:'.self::QR_CODE_VERSION.":user:{$user->id}";
-
-        $cachedData = Cache::get($cacheKey);
-
-        // Get creation timestamp from cache, or use current time as fallback
-        $createdAt = Carbon::now()->format('Y-m-d-His');
-        if (is_array($cachedData) && isset($cachedData['created_at'])) {
-            $createdAt = $cachedData['created_at'];
-        }
-
-        // Use session-specific or user-only cache key for PNG
-        // Include version in cache key to invalidate when generation parameters change
-        $pngCacheKey = $activeSession
-            ? 'qr_png:'.self::QR_CODE_VERSION.":user:{$user->id}:session:{$activeSession->id}"
-            : 'qr_png:'.self::QR_CODE_VERSION.":user:{$user->id}";
-
+        // Check cache for existing PNG
+        $pngCacheKey = 'qr_png:' . self::QR_CODE_VERSION . ":user:{$user->id}";
         $cachedPng = Cache::get($pngCacheKey);
 
-        if (is_array($cachedPng) && isset($cachedPng['data']) && isset($cachedPng['encoded'])) {
-            // Use cached PNG data with explicit encoding flag
-            $pngData = $cachedPng['encoded'] ? base64_decode($cachedPng['data']) : $cachedPng['data'];
+        if (is_array($cachedPng) && isset($cachedPng['data'], $cachedPng['created_at'])) {
+            $pngData = base64_decode($cachedPng['data']);
+            $createdAt = $cachedPng['created_at'];
         } else {
             // Generate PNG only if not cached
             $attendanceData = $this->generateAttendanceData();
 
-            // Use LOW error correction like SVG for consistency and simplicity
             $pngData = QrCode::format('png')
-                ->size(800)  // Larger size for better scanning reliability
-                ->margin(4)  // Add quiet zone margin for better scanning
-                ->errorCorrection('L')  // Low error correction for simpler patterns
+                ->size(self::QR_PNG_SIZE)
+                ->margin(self::QR_MARGIN)
+                ->errorCorrection(self::QR_ERROR_CORRECTION_PNG)
                 ->generate($attendanceData);
 
-            // Cache the PNG data with explicit encoding flag to prevent ambiguity
-            Cache::put($pngCacheKey, [
+            $createdAt = Carbon::now()->format('Y-m-d-His');
+
+            // Cache permanently
+            Cache::forever($pngCacheKey, [
                 'data' => base64_encode($pngData),
-                'encoded' => true,
-            ], self::QR_CACHE_TTL);
+                'created_at' => $createdAt,
+            ]);
         }
 
-        // Use the original creation timestamp for consistent filename
-        $fileName = 'attendance-qrcode-'.$createdAt.'.png';
+        $fileName = 'attendance-qrcode-' . $user->id . '.png';
 
-        // Return PNG data directly as download response without saving to disk
         return response()->streamDownload(function () use ($pngData) {
             echo $pngData;
         }, $fileName, [

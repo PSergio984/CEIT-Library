@@ -30,19 +30,19 @@
                  style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;"/>
             </div>
             
-            {{-- Valid badge --}}
+            {{-- Status badge --}}
             <div class="absolute -bottom-3 left-1/2 transform -translate-x-1/2">
-                <div class="badge badge-success gap-1 shadow-lg px-4 py-3">
-                    <x-mary-icon name="o-check-circle" class="w-4 h-4"/>
-                    @if($qrValidUntil)
-                        @php
-                            $tz = Auth::user()->timezone ?? config('app.timezone');
-                        @endphp
-                        Valid until {{ \Carbon\Carbon::parse($qrValidUntil)->setTimezone($tz)->format('M d, Y g:i A') }} ({{ $tz }})
-                    @else
-                        Valid for 24 hours
-                    @endif
-                </div>
+                @if($activeSessionId)
+                    <div class="badge badge-info gap-1 shadow-lg px-4 py-3">
+                        <x-mary-icon name="o-clock" class="w-4 h-4"/>
+                        Active Session - Scan to Check Out
+                    </div>
+                @else
+                    <div class="badge badge-success gap-1 shadow-lg px-4 py-3">
+                        <x-mary-icon name="o-check-circle" class="w-4 h-4"/>
+                        Ready for Check-In
+                    </div>
+                @endif
             </div>
         </div>
         
@@ -52,7 +52,7 @@
                 <x-mary-icon name="o-clock" class="w-5 h-5"/>
                 <div class="text-sm">
                     <p class="font-semibold">Active Session</p>
-                    <p>You have an ongoing library session. This QR code is linked to your current visit.</p>
+                    <p>You have an ongoing library session. Scan this QR code again to check out.</p>
                 </div>
             </div>
         @endif
@@ -73,7 +73,6 @@
 
                 </div>
             </div>
-        {{-- @else unreachable: user should always be present if authenticated --}}
         @endif
 
         {{-- Instructions with Step Cards --}}
@@ -119,7 +118,7 @@
         </div>
 
         {{-- Action Buttons --}}
-        <div class="flex flex-col sm:flex-row gap-3 w-full mb-4">
+        <div class="flex flex-col sm:flex-row gap-3 w-full mb-6">
             <button wire:click="downloadQrCode"
                     wire:loading.attr="disabled"
                     wire:target="downloadQrCode"
@@ -136,36 +135,6 @@
             </button>
         </div>
         
-        {{-- Refresh QR Button --}}
-        <div class="w-full mb-6">
-            <button wire:click="refreshQrCode"
-                    wire:loading.attr="disabled"
-                    wire:target="refreshQrCode"
-                    wire:loading.attr="aria-busy"
-                    @if(!$this->canRefreshQr) disabled @endif
-                    class="btn btn-outline btn-warning w-full gap-2 @if(!$this->canRefreshQr) opacity-50 cursor-not-allowed @endif">
-                <span wire:loading.remove wire:target="refreshQrCode" class="flex items-center gap-2">
-                    <x-mary-icon name="o-arrow-path" class="w-5 h-5"/>
-                    Refresh QR Code
-                </span>
-                <span wire:loading wire:target="refreshQrCode" class="flex items-center gap-2">
-                    <span class="loading loading-spinner loading-sm text-warning"></span>
-                    Refreshing...
-                </span>
-            </button>
-            <p class="text-xs text-center text-base-content/60 mt-2">
-                @if(!$this->canRefreshQr)
-                    @if($activeSessionId)
-                        Refresh disabled while you have an active library session
-                    @else
-                        Refresh disabled - QR code is still valid
-                    @endif
-                @else
-                    Click to generate a new QR code if needed
-                @endif
-            </p>
-        </div>
-        
         {{-- Helpful Tips --}}
         <div class="w-full">
             <div class="bg-base-200 rounded-lg p-4">
@@ -173,7 +142,7 @@
                     <x-mary-icon name="o-light-bulb" class="w-5 h-5 text-warning flex-shrink-0 mt-0.5"/>
                     <div class="text-xs text-base-content/70 space-y-1">
                         <p><strong>Tip:</strong> Download or screenshot this QR code for offline use</p>
-                        <p><strong>Note:</strong> Valid for 24 hours. Regenerates each visit for security.</p>
+                        <p><strong>Note:</strong> Each QR code can be used once for check-in and once for check-out</p>
                         <p><strong>Reminder:</strong> Keep your QR code private and secure</p>
                     </div>
                 </div>

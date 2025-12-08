@@ -236,6 +236,8 @@
 
         @script
             <script>
+                // jsQR is available globally via window.jsQR (imported in app.js)
+                
                 let html5QrCode = null;
                 let fileQrCode = null;
                 let isInitialized = false;
@@ -247,9 +249,17 @@
                 let errorCallback = null;
                 let scanCount = 0;
                 let hasLoggedInitialMessage = false;
+                
+                // jsQR camera scanning variables
+                let videoElement = null;
+                let canvasElement = null;
+                let canvasContext = null;
+                let animationFrameId = null;
+                let jsQrScanInterval = null;
+                let isJsQrScanning = false;
 
 
-                console.log('QR Scanner script loaded');
+                console.log('QR Scanner script loaded (jsQR primary for both camera and file upload)');
 
                 // Debug logging helper
                 function updateDebugInfo(message, isError = false) {
@@ -266,22 +276,25 @@
                     console.log(`[QR Scanner] ${message}`);
                 }
 
-                // Initialize CAMERA scanner (only when camera mode is selected)
+                /**
+                 * Initialize camera scanner using jsQR (primary method)
+                 * Falls back to html5-qrcode only if jsQR camera fails
+                 */
                 window.initCameraScanner = async function() {
-                    console.log('initCameraScanner called');
+                    console.log('initCameraScanner called (jsQR primary)');
 
                     if (isInitializing) {
                         console.log('Already initializing, skipping...');
                         return;
                     }
 
-                    if (isInitialized || html5QrCode) {
+                    if (isInitialized) {
                         console.log('Forcing cleanup before reinitializing');
                         isInitializing = true;
                         try {
                             await stopScanner();
                             await new Promise(resolve => setTimeout(resolve, 200));
-                            await initCameraScannerImpl();
+                            await initJsQrCameraScanner();
                         } catch (error) {
                             console.error('Error during reinitialization:', error);
                             isInitializing = false;
@@ -291,275 +304,332 @@
 
                     isInitializing = true;
                     try {
-                        await initCameraScannerImpl();
+                        await initJsQrCameraScanner();
                     } catch (error) {
                         console.error('Error during initialization:', error);
                         isInitializing = false;
                     }
                 }
 
-                function initCameraScannerImpl() {
-                    return new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            const readerElement = document.getElementById('qr-reader');
-                            console.log('QR reader element:', readerElement);
+                /**
+                 * Initialize jsQR-based camera scanner
+                 */
+                async function initJsQrCameraScanner() {
+                    return new Promise(async (resolve, reject) => {
+                        const readerElement = document.getElementById('qr-reader');
+                        console.log('QR reader element:', readerElement);
 
-                            if (!readerElement) {
-                                console.error('QR reader element not found');
-                                isInitializing = false;
-                                reject(new Error('QR reader element not found'));
-                                return;
+                        if (!readerElement) {
+                            console.error('QR reader element not found');
+                            isInitializing = false;
+                            reject(new Error('QR reader element not found'));
+                            return;
+                        }
+
+                        try {
+                            updateDebugInfo('Initializing jsQR camera scanner...', false);
+                            
+                            // Create video element for camera feed
+                            videoElement = document.createElement('video');
+                            videoElement.setAttribute('playsinline', 'true');
+                            videoElement.setAttribute('autoplay', 'true');
+                            videoElement.style.width = '100%';
+                            videoElement.style.height = '100%';
+                            videoElement.style.objectFit = 'cover';
+                            videoElement.style.borderRadius = '0.75rem';
+                            
+                            // Create hidden canvas for frame capture
+                            canvasElement = document.createElement('canvas');
+                            canvasContext = canvasElement.getContext('2d', { willReadFrequently: true });
+                            
+                            // Clear the reader element and add video
+                            readerElement.innerHTML = '';
+                            readerElement.appendChild(videoElement);
+                            
+                            // Get available cameras
+                            const devices = await navigator.mediaDevices.enumerateDevices();
+                            const cameras = devices.filter(device => device.kind === 'videoinput');
+                            
+                            console.log('Available cameras:', cameras);
+                            updateDebugInfo(`Found ${cameras.length} camera(s)`, false);
+                            availableCameras = cameras;
+                            
+                            if (cameras.length === 0) {
+                                throw new Error('No camera found');
                             }
-
-                            try {
-                                console.log('Creating Html5Qrcode instance for camera');
-                                html5QrCode = new Html5Qrcode("qr-reader");
-
-                                // Responsive QR box sizing - ensure square on mobile for better scanning
-                                const isMobile = window.innerWidth < 640;
-                                // Calculate optimal qrbox size - use 80% of viewport width on mobile for square
-                                const viewportWidth = window.innerWidth;
-                                const viewportHeight = window.innerHeight;
-                                const qrBoxSize = isMobile ?
-                                    Math.min(Math.min(viewportWidth, viewportHeight) * 0.75, 350) :
-                                    Math.min(400, viewportWidth - 200);
-
-                                scannerConfig = {
-                                    fps: 10,
-                                    qrbox: {
-                                        width: qrBoxSize,
-                                        height: qrBoxSize
-                                    },
-                                    aspectRatio: isMobile ? 1.0 : 1.777778, // 1:1 square for mobile, 16:9 for desktop
-                                    disableFlip: false, // Allow rotation for better scanning
-                                    videoConstraints: {
-                                        facingMode: "environment" // Prefer back camera
-                                    }
-                                };
-
-                                successCallback = (decodedText) => {
-                                    scanCount++;
-                                    updateDebugInfo(`✓ QR Code scanned successfully! (Scan #${scanCount})`,
-                                        false);
-                                    updateDebugInfo(`Data length: ${decodedText.length} characters`, false);
-                                    console.log('QR Code scanned:', decodedText);
-
-                                    // Validation result logging
-                                    console.group('📋 QR Code Validation');
-                                    console.log('Source: Camera Scan');
-                                    console.log('Timestamp:', new Date().toISOString());
-                                    console.log('Data Length:', decodedText.length);
-                                    console.log('Scan Count:', scanCount);
-                                    console.groupEnd();
-
-                                    // Stop scanning immediately
-                                    stopScanner().then(() => {
-                                        updateDebugInfo('Sending data to server...', false);
-                                        $wire.call('handleScan', decodedText);
-                                    });
-                                };
-
-                                errorCallback = (errorMessage) => {
-                                    // Silently handle scanning errors (too verbose otherwise)
-                                    // Only log periodically to avoid spam
-                                    if (!hasLoggedInitialMessage && scanCount === 0) {
-                                        updateDebugInfo('Scanning... waiting for QR code', false);
-                                        hasLoggedInitialMessage = true;
-                                    }
-                                };
-
-                                console.log('Requesting camera access...');
-
-                                // Try to get camera devices first
-                                Html5Qrcode.getCameras().then(devices => {
-                                    console.log('Available cameras:', devices);
-                                    updateDebugInfo(`Found ${devices.length} camera(s)`, false);
-                                    availableCameras = devices;
-
-                                    if (devices && devices.length) {
-                                        // Populate camera selector
-                                        const cameraSelect = document.getElementById('camera-select');
-                                        const cameraSelector = document.getElementById('camera-selector');
-
-                                        if (devices.length > 1 && cameraSelect) {
-                                            cameraSelector.classList.remove('hidden');
-                                            cameraSelect.innerHTML = '';
-                                            devices.forEach((device, index) => {
-                                                const option = document.createElement('option');
-                                                option.value = device.id;
-                                                option.text = device.label || `Camera ${index + 1}`;
-                                                cameraSelect.appendChild(option);
-                                            });
-
-                                            // Store and cleanup event listener
-                                            if (window._cameraChangeListenerRef) {
-                                                cameraSelect.removeEventListener('change', window
-                                                    ._cameraChangeListenerRef);
-                                            }
-                                            window._cameraChangeListenerRef = function() {
-                                                switchCamera(this.value, scannerConfig, successCallback,
-                                                    errorCallback);
-                                            };
-                                            cameraSelect.addEventListener('change', window
-                                                ._cameraChangeListenerRef);
-                                        }
-
-                                        // Filter out virtual cameras and prefer real cameras
-                                        const realCameras = devices.filter(device => {
-                                            const label = device.label.toLowerCase();
-                                            // Filter out OBS, virtual cameras, etc.
-                                            return !label.includes('obs') &&
-                                                !label.includes('virtual') &&
-                                                !label.includes('snap');
-                                        });
-
-                                        console.log('Real cameras found:', realCameras);
-
-                                        // Prefer back camera, then any real camera, then fallback to any camera
-                                        let selectedCamera;
-                                        if (realCameras.length > 0) {
-                                            // Try to find back/rear camera first
-                                            const backCamera = realCameras.find(c =>
-                                                c.label.toLowerCase().includes('back') ||
-                                                c.label.toLowerCase().includes('rear')
-                                            );
-                                            selectedCamera = backCamera || realCameras[0];
-                                        } else {
-                                            selectedCamera = devices[0]; // Fallback to first available
-                                        }
-
-                                        console.log('Selected camera:', selectedCamera);
-                                        updateDebugInfo(
-                                            `Using camera: ${selectedCamera.label || selectedCamera.id}`,
-                                            false);
-                                        currentCameraId = selectedCamera.id;
-
-                                        const finalSelect = document.getElementById('camera-select');
-                                        if (finalSelect && devices.length > 1) {
-                                            finalSelect.value = currentCameraId;
-                                        }
-
-                                        updateDebugInfo('Starting camera...', false);
-                                        startCamera(currentCameraId, scannerConfig, successCallback,
-                                            errorCallback);
-                                        isInitialized = true;
-                                        isInitializing = false;
-                                        resolve();
-                                    } else {
-                                        $wire.call('scannerError',
-                                            'No camera found on this device. Please connect a camera or use the file upload option.',
-                                            'No Camera Detected');
-                                        $wire.call('stopScanning');
-                                        isInitialized = false;
-                                        isInitializing = false;
-                                        reject(new Error('No camera found'));
-                                    }
-                                }).catch(err => {
-                                    console.error('Error getting cameras:', err);
-                                    updateDebugInfo(
-                                        'Camera access failed. Please check permissions or use "Upload QR Image" instead.',
-                                        true
-                                    );
-
-                                    // Surface a clear error back to Livewire
-                                    $wire.call(
-                                        'scannerError',
-                                        'Unable to access any camera on this device. Please ensure camera permissions are granted, then try again or use the "Upload QR Image" option instead.',
-                                        'Camera Access Failed'
-                                    );
-
-                                    // Reset state and clean up instance
-                                    isInitializing = false;
-                                    isInitialized = false;
-                                    try {
-                                        if (html5QrCode) {
-                                            html5QrCode.clear();
-                                        }
-                                    } catch (clearErr) {
-                                        console.debug(
-                                            'Error clearing scanner after getCameras failure:',
-                                            clearErr
-                                        );
-                                    }
-                                    html5QrCode = null;
-
-                                    reject(err);
+                            
+                            // Populate camera selector if multiple cameras
+                            const cameraSelect = document.getElementById('camera-select');
+                            const cameraSelector = document.getElementById('camera-selector');
+                            
+                            if (cameras.length > 1 && cameraSelect && cameraSelector) {
+                                cameraSelector.classList.remove('hidden');
+                                cameraSelect.innerHTML = '';
+                                cameras.forEach((camera, index) => {
+                                    const option = document.createElement('option');
+                                    option.value = camera.deviceId;
+                                    option.text = camera.label || `Camera ${index + 1}`;
+                                    cameraSelect.appendChild(option);
                                 });
-
-                            } catch (error) {
-                                console.error('Scanner initialization error:', error);
-                                $wire.call('scannerError', 'Failed to initialize scanner: ' + error.message,
-                                    'Initialization Failed');
-                                $wire.call('stopScanning');
-                                isInitialized = false;
-                                isInitializing = false;
-                                html5QrCode = null;
-                                reject(error);
+                                
+                                // Setup camera switch listener
+                                if (window._cameraChangeListenerRef) {
+                                    cameraSelect.removeEventListener('change', window._cameraChangeListenerRef);
+                                }
+                                window._cameraChangeListenerRef = function() {
+                                    switchToCamera(this.value);
+                                };
+                                cameraSelect.addEventListener('change', window._cameraChangeListenerRef);
                             }
-                        }, 100);
-                    });
-                }
-
-                // Start camera with specific ID
-                function startCamera(cameraId, config, successCb, errorCb) {
-                    if (!html5QrCode) {
-                        console.error('html5QrCode not initialized');
-                        return;
-                    }
-
-                    html5QrCode.start(
-                        cameraId,
-                        config,
-                        successCb,
-                        errorCb
-                    ).then(() => {
-                        console.log('Camera started successfully');
-                        updateDebugInfo('✓ Camera started - Ready to scan!', false);
-                    }).catch(err => {
-                        console.error('Error starting camera:', err);
-
-                        // Try with facingMode as fallback
-                        console.log('Trying facingMode fallback...');
-                        html5QrCode.start({
-                                facingMode: "user"
-                            }, // Try front camera
-                            config,
-                            successCb,
-                            errorCb
-                        ).catch(fallbackErr => {
-                            console.error('Fallback also failed:', fallbackErr);
-                            $wire.call('scannerError',
-                                'Unable to access camera. Please ensure camera permissions are granted and no other app is using the camera.',
+                            
+                            // Filter out virtual cameras and prefer back camera
+                            const realCameras = cameras.filter(device => {
+                                const label = (device.label || '').toLowerCase();
+                                return !label.includes('obs') && 
+                                       !label.includes('virtual') && 
+                                       !label.includes('snap');
+                            });
+                            
+                            let selectedCamera;
+                            if (realCameras.length > 0) {
+                                const backCamera = realCameras.find(c => {
+                                    const label = (c.label || '').toLowerCase();
+                                    return label.includes('back') || label.includes('rear');
+                                });
+                                selectedCamera = backCamera || realCameras[0];
+                            } else {
+                                selectedCamera = cameras[0];
+                            }
+                            
+                            currentCameraId = selectedCamera.deviceId;
+                            updateDebugInfo(`Using camera: ${selectedCamera.label || 'Default'}`, false);
+                            
+                            if (cameraSelect && cameras.length > 1) {
+                                cameraSelect.value = currentCameraId;
+                            }
+                            
+                            // Start the camera
+                            await startJsQrCamera(currentCameraId);
+                            
+                            isInitialized = true;
+                            isInitializing = false;
+                            resolve();
+                            
+                        } catch (error) {
+                            console.error('jsQR camera initialization error:', error);
+                            updateDebugInfo(`Camera error: ${error.message}`, true);
+                            
+                            $wire.call('scannerError', 
+                                'Unable to access camera. Please ensure camera permissions are granted and try again.',
                                 'Camera Access Failed');
-                            $wire.call('stopScanning');
+                            
                             isInitialized = false;
-                            html5QrCode = null;
-                        });
+                            isInitializing = false;
+                            cleanupJsQrCamera();
+                            reject(error);
+                        }
                     });
                 }
-
-                // Switch to different camera
-                function switchCamera(cameraId, config, successCb, errorCb) {
-                    if (html5QrCode && isInitialized) {
-                        html5QrCode.stop().then(() => {
-                            currentCameraId = cameraId;
-                            startCamera(cameraId, config, successCb, errorCb);
-                        }).catch(err => {
-                            console.error('Error switching camera:', err);
+                
+                /**
+                 * Start jsQR camera with specific device ID
+                 */
+                async function startJsQrCamera(deviceId) {
+                    try {
+                        // Stop any existing stream
+                        if (videoElement && videoElement.srcObject) {
+                            const tracks = videoElement.srcObject.getTracks();
+                            tracks.forEach(track => track.stop());
+                        }
+                        
+                        // Camera constraints
+                        const constraints = {
+                            video: {
+                                deviceId: deviceId ? { exact: deviceId } : undefined,
+                                facingMode: deviceId ? undefined : 'environment',
+                                width: { ideal: 1280 },
+                                height: { ideal: 720 }
+                            }
+                        };
+                        
+                        updateDebugInfo('Requesting camera access...', false);
+                        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                        
+                        videoElement.srcObject = stream;
+                        
+                        // Wait for video to be ready
+                        await new Promise((resolve, reject) => {
+                            videoElement.onloadedmetadata = () => {
+                                videoElement.play()
+                                    .then(() => resolve())
+                                    .catch(reject);
+                            };
+                            videoElement.onerror = reject;
                         });
+                        
+                        updateDebugInfo('✓ Camera started - Ready to scan with jsQR!', false);
+                        
+                        // Set canvas size to match video
+                        canvasElement.width = videoElement.videoWidth;
+                        canvasElement.height = videoElement.videoHeight;
+                        
+                        // Start scanning loop
+                        startJsQrScanLoop();
+                        
+                    } catch (error) {
+                        console.error('Error starting camera:', error);
+                        throw error;
                     }
+                }
+                
+                /**
+                 * Switch to different camera
+                 */
+                async function switchToCamera(deviceId) {
+                    if (!isInitialized) return;
+                    
+                    try {
+                        stopJsQrScanLoop();
+                        currentCameraId = deviceId;
+                        await startJsQrCamera(deviceId);
+                        updateDebugInfo(`Switched to camera: ${deviceId}`, false);
+                    } catch (error) {
+                        console.error('Error switching camera:', error);
+                        updateDebugInfo(`Failed to switch camera: ${error.message}`, true);
+                    }
+                }
+                
+                /**
+                 * Start jsQR scanning loop - captures frames and scans for QR codes
+                 */
+                function startJsQrScanLoop() {
+                    if (isJsQrScanning) return;
+                    isJsQrScanning = true;
+                    
+                    let frameCount = 0;
+                    let lastScanTime = 0;
+                    const scanInterval = 100; // Scan every 100ms (10 fps for scanning)
+                    
+                    function scanFrame() {
+                        if (!isJsQrScanning || !videoElement || !canvasContext) {
+                            return;
+                        }
+                        
+                        const now = Date.now();
+                        
+                        // Only scan at specified interval
+                        if (now - lastScanTime >= scanInterval) {
+                            lastScanTime = now;
+                            frameCount++;
+                            
+                            try {
+                                // Draw current video frame to canvas
+                                canvasContext.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+                                
+                                // Get image data for jsQR
+                                const imageData = canvasContext.getImageData(0, 0, canvasElement.width, canvasElement.height);
+                                
+                                // Scan with jsQR
+                                const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+                                    inversionAttempts: 'dontInvert' // Faster, most QR codes are dark on light
+                                });
+                                
+                                if (code && code.data) {
+                                    console.log('[jsQR Camera] ✓ QR code detected!');
+                                    scanCount++;
+                                    updateDebugInfo(`✓ QR Code scanned! (Scan #${scanCount})`, false);
+                                    
+                                    // Stop scanning and process
+                                    stopJsQrScanLoop();
+                                    
+                                    // Validation logging
+                                    console.group('📋 QR Code Validation');
+                                    console.log('Source: jsQR Camera Scan');
+                                    console.log('Timestamp:', new Date().toISOString());
+                                    console.log('Data Length:', code.data.length);
+                                    console.log('Scan Count:', scanCount);
+                                    console.log('Frame:', frameCount);
+                                    console.groupEnd();
+                                    
+                                    // Send to backend
+                                    updateDebugInfo('Sending data to server...', false);
+                                    stopScanner().then(() => {
+                                        $wire.call('handleScan', code.data);
+                                    });
+                                    return;
+                                }
+                                
+                                // Log periodic status
+                                if (frameCount === 1) {
+                                    updateDebugInfo('Scanning... waiting for QR code', false);
+                                }
+                                
+                            } catch (error) {
+                                console.error('Frame scan error:', error);
+                            }
+                        }
+                        
+                        // Continue scanning
+                        animationFrameId = requestAnimationFrame(scanFrame);
+                    }
+                    
+                    // Start the scanning loop
+                    animationFrameId = requestAnimationFrame(scanFrame);
+                    console.log('[jsQR] Camera scanning loop started');
+                }
+                
+                /**
+                 * Stop jsQR scanning loop
+                 */
+                function stopJsQrScanLoop() {
+                    isJsQrScanning = false;
+                    
+                    if (animationFrameId) {
+                        cancelAnimationFrame(animationFrameId);
+                        animationFrameId = null;
+                    }
+                    
+                    if (jsQrScanInterval) {
+                        clearInterval(jsQrScanInterval);
+                        jsQrScanInterval = null;
+                    }
+                    
+                    console.log('[jsQR] Camera scanning loop stopped');
+                }
+                
+                /**
+                 * Cleanup jsQR camera resources
+                 */
+                function cleanupJsQrCamera() {
+                    stopJsQrScanLoop();
+                    
+                    if (videoElement && videoElement.srcObject) {
+                        const tracks = videoElement.srcObject.getTracks();
+                        tracks.forEach(track => {
+                            track.stop();
+                            console.log('Camera track stopped:', track.label);
+                        });
+                        videoElement.srcObject = null;
+                    }
+                    
+                    videoElement = null;
+                    canvasElement = null;
+                    canvasContext = null;
                 }
 
                 // Cleanup function
                 function stopScanner() {
                     console.log('stopScanner called, isInitialized:', isInitialized);
                     return new Promise((resolve) => {
+                        // Stop jsQR camera first
+                        cleanupJsQrCamera();
+                        
+                        // Also cleanup html5QrCode if it was used
                         if (html5QrCode) {
                             try {
                                 const state = html5QrCode.getState();
                                 console.log('Scanner state:', state);
 
-                                // Only stop if scanner is running (state 2 = SCANNING)
                                 if (state === 2) {
                                     html5QrCode.stop()
                                         .then(() => {
@@ -583,8 +653,8 @@
                                 resolve();
                             }
                         } else {
-                            console.log('No scanner instance to stop');
-                            isInitialized = false;
+                            console.log('No html5QrCode instance to stop');
+                            cleanupScanner();
                             resolve();
                         }
                     });
@@ -614,6 +684,7 @@
                         console.debug('File scanner clear error:', e);
                     }
                     fileQrCode = null;
+                    
                     // Reset camera selector
                     const cameraSelector = document.getElementById('camera-selector');
                     if (cameraSelector) {
@@ -635,9 +706,182 @@
                     stopScanner();
                 };
 
+                /**
+                 * Scan QR code from image using jsQR (primary, more reliable)
+                 * Returns decoded text or null if not found
+                 */
+                async function scanWithJsQR(imageFile) {
+                    return new Promise((resolve, reject) => {
+                        const img = new Image();
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+                        
+                        img.onload = function() {
+                            // Use larger canvas for better detection
+                            const maxDimension = 1200;
+                            let width = img.width;
+                            let height = img.height;
+                            
+                            // Scale down if too large (but not too small)
+                            if (width > maxDimension || height > maxDimension) {
+                                const scale = maxDimension / Math.max(width, height);
+                                width = Math.floor(width * scale);
+                                height = Math.floor(height * scale);
+                            }
+                            
+                            canvas.width = width;
+                            canvas.height = height;
+                            
+                            // Draw image with white background (helps with transparent PNGs)
+                            ctx.fillStyle = 'white';
+                            ctx.fillRect(0, 0, width, height);
+                            ctx.drawImage(img, 0, 0, width, height);
+                            
+                            const imageData = ctx.getImageData(0, 0, width, height);
+                            
+                            console.log(`[jsQR] Scanning image ${width}x${height}`);
+                            
+                            // Try scanning with different options
+                            let code = window.jsQR(imageData.data, width, height, {
+                                inversionAttempts: 'attemptBoth' // Try both normal and inverted
+                            });
+                            
+                            if (code) {
+                                console.log('[jsQR] ✓ QR code found!');
+                                resolve(code.data);
+                                return;
+                            }
+                            
+                            // If not found, try with image enhancement
+                            console.log('[jsQR] First attempt failed, trying with enhanced contrast...');
+                            
+                            // Enhance contrast
+                            const enhanced = enhanceImageData(imageData);
+                            code = window.jsQR(enhanced.data, width, height, {
+                                inversionAttempts: 'attemptBoth'
+                            });
+                            
+                            if (code) {
+                                console.log('[jsQR] ✓ QR code found with enhanced contrast!');
+                                resolve(code.data);
+                                return;
+                            }
+                            
+                            // Try at different scales
+                            const scales = [0.5, 1.5, 2.0];
+                            for (const scale of scales) {
+                                const scaledWidth = Math.floor(img.width * scale);
+                                const scaledHeight = Math.floor(img.height * scale);
+                                
+                                if (scaledWidth < 100 || scaledHeight < 100 || scaledWidth > 2000 || scaledHeight > 2000) {
+                                    continue;
+                                }
+                                
+                                canvas.width = scaledWidth;
+                                canvas.height = scaledHeight;
+                                ctx.fillStyle = 'white';
+                                ctx.fillRect(0, 0, scaledWidth, scaledHeight);
+                                ctx.drawImage(img, 0, 0, scaledWidth, scaledHeight);
+                                
+                                const scaledData = ctx.getImageData(0, 0, scaledWidth, scaledHeight);
+                                code = window.jsQR(scaledData.data, scaledWidth, scaledHeight, {
+                                    inversionAttempts: 'attemptBoth'
+                                });
+                                
+                                if (code) {
+                                    console.log(`[jsQR] ✓ QR code found at scale ${scale}!`);
+                                    resolve(code.data);
+                                    return;
+                                }
+                            }
+                            
+                            console.log('[jsQR] ✗ No QR code found after all attempts');
+                            resolve(null);
+                        };
+                        
+                        img.onerror = function(err) {
+                            console.error('[jsQR] Failed to load image:', err);
+                            reject(new Error('Failed to load image'));
+                        };
+                        
+                        // Load image from file
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            img.src = e.target.result;
+                        };
+                        reader.onerror = function(err) {
+                            console.error('[jsQR] FileReader error:', err);
+                            reject(new Error('Failed to read file'));
+                        };
+                        reader.readAsDataURL(imageFile);
+                    });
+                }
+                
+                /**
+                 * Enhance image data for better QR detection
+                 */
+                function enhanceImageData(imageData) {
+                    const data = new Uint8ClampedArray(imageData.data);
+                    
+                    // Simple contrast enhancement
+                    for (let i = 0; i < data.length; i += 4) {
+                        // Convert to grayscale
+                        const gray = (data[i] * 0.299 + data[i + 1] * 0.587 + data[i + 2] * 0.114);
+                        
+                        // Apply threshold for better black/white separation
+                        const threshold = 128;
+                        const enhanced = gray < threshold ? 0 : 255;
+                        
+                        data[i] = enhanced;     // R
+                        data[i + 1] = enhanced; // G
+                        data[i + 2] = enhanced; // B
+                        // Keep alpha as is
+                    }
+                    
+                    return new ImageData(data, imageData.width, imageData.height);
+                }
+                
+                /**
+                 * Scan QR code using html5-qrcode as fallback
+                 */
+                async function scanWithHtml5QrCode(imageFile) {
+                    return new Promise((resolve, reject) => {
+                        try {
+                            // Create a temporary element for scanning
+                            let tempDiv = document.getElementById('temp-file-scanner');
+                            if (!tempDiv) {
+                                tempDiv = document.createElement('div');
+                                tempDiv.id = 'temp-file-scanner';
+                                tempDiv.style.display = 'none';
+                                document.body.appendChild(tempDiv);
+                            }
+                            
+                            const scanner = new Html5Qrcode("temp-file-scanner", {
+                                formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
+                                verbose: false
+                            });
+                            
+                            scanner.scanFile(imageFile, true)
+                                .then(decodedText => {
+                                    console.log('[html5-qrcode] ✓ QR code found');
+                                    scanner.clear().catch(() => {});
+                                    resolve(decodedText);
+                                })
+                                .catch(err => {
+                                    console.log('[html5-qrcode] ✗ No QR code found:', err.message || err);
+                                    scanner.clear().catch(() => {});
+                                    resolve(null);
+                                });
+                        } catch (err) {
+                            console.error('[html5-qrcode] Scanner error:', err);
+                            resolve(null);
+                        }
+                    });
+                }
+
                 // Initialize file upload scanner (called when file mode is selected)
                 window.initFileUploadScanner = function() {
-                    console.log('Initializing file upload scanner');
+                    console.log('Initializing file upload scanner (jsQR + html5-qrcode fallback)');
 
                     const fileInput = document.getElementById('qr-input-file');
                     const fileReaderElement = document.getElementById('file-qr-reader');
@@ -665,10 +909,8 @@
                         this.value = '';
                     });
 
-                    newFileInput.addEventListener('change', function(e) {
+                    newFileInput.addEventListener('change', async function(e) {
                         console.log('File input change event triggered');
-                        console.log('Event target:', e.target);
-                        console.log('Files:', e.target.files);
 
                         // Defensive checks
                         if (!e || !e.target) {
@@ -682,9 +924,8 @@
                         }
 
                         const imageFile = e.target.files[0];
-                        console.log('File upload selected:', imageFile.name);
-                        console.log('File size:', imageFile.size, 'bytes');
-                        console.log('File type:', imageFile.type);
+                        console.log('=== File Upload Scan Started ===');
+                        console.log('File:', imageFile.name, '|', imageFile.size, 'bytes |', imageFile.type);
 
                         // Check if file-qr-reader element exists
                         const fileReaderElement = document.getElementById('file-qr-reader');
@@ -696,100 +937,87 @@
                             return;
                         }
 
-                        // Show loading feedback
+                        // Show loading feedback with scanner info
                         fileReaderElement.innerHTML =
-                            '<div class="flex items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span></div>';
+                            '<div class="flex flex-col items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span><p class="text-sm mt-2 text-base-content/70">Scanning with jsQR...</p></div>';
 
-                        // Always create a fresh Html5Qrcode instance for file scanning to avoid state issues
+                        let decodedText = null;
+                        let scannerUsed = null;
+                        
                         try {
-                            // Clean up existing instance if any
-                            if (fileQrCode) {
-                                try {
-                                    fileQrCode.clear().catch((cleanupErr) => {
-                                        console.warn('File QR scanner cleanup failed:', cleanupErr);
-                                    });
-                                } catch (err) {
-                                    console.warn('File QR scanner cleanup threw:', err);
+                            // Try jsQR first (more reliable for image files)
+                            console.log('[Scanner] Attempting jsQR scan...');
+                            decodedText = await scanWithJsQR(imageFile);
+                            
+                            if (decodedText) {
+                                scannerUsed = 'jsQR';
+                                console.log('[Scanner] ✓ jsQR succeeded!');
+                            } else {
+                                // Fallback to html5-qrcode
+                                console.log('[Scanner] jsQR failed, trying html5-qrcode fallback...');
+                                fileReaderElement.innerHTML =
+                                    '<div class="flex flex-col items-center justify-center h-full"><span class="loading loading-spinner loading-lg text-primary"></span><p class="text-sm mt-2 text-base-content/70">Trying alternative scanner...</p></div>';
+                                
+                                decodedText = await scanWithHtml5QrCode(imageFile);
+                                
+                                if (decodedText) {
+                                    scannerUsed = 'html5-qrcode';
+                                    console.log('[Scanner] ✓ html5-qrcode fallback succeeded!');
                                 }
                             }
-
-                            // Create new instance
-                            fileQrCode = new Html5Qrcode("file-qr-reader");
-                            console.log('Created fresh file scanner instance');
-                        } catch (error) {
-                            console.error('Error creating file scanner:', error);
+                        } catch (err) {
+                            console.error('[Scanner] Scanning error:', err);
+                        }
+                        
+                        if (!decodedText) {
+                            console.error('❌ All scanners failed to detect QR code');
                             fileReaderElement.innerHTML =
-                                '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Scanner initialization failed</p></div>';
-                            $wire.call('scannerError', 'Could not initialize QR scanner.', 'Scanner Error');
+                                '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm font-semibold">Could not scan QR code</p><p class="text-xs mt-1 text-base-content/60">Ensure the image is clear and contains a valid QR code</p></div>';
+                            $wire.call('scannerError',
+                                'Could not detect QR code in the image. Please ensure the image contains a clear, valid QR code.',
+                                'Scan Failed');
                             e.target.value = '';
                             return;
                         }
+                        
+                        // Successfully decoded
+                        console.log('✓ QR Code decoded using:', scannerUsed);
+                        console.log('Decoded text length:', decodedText.length);
+                        
+                        // Show processing feedback
+                        fileReaderElement.innerHTML =
+                            '<div class="flex flex-col items-center justify-center h-full text-info"><span class="loading loading-spinner loading-lg mb-2"></span><p class="text-sm">Processing QR code...</p></div>';
 
-                        console.log('Scanning file...');
-                        fileQrCode.scanFile(imageFile, true)
-                            .then(decodedText => {
-                                console.log('✓ QR Code decoded from file');
-                                console.log('Decoded text length:', decodedText.length);
-                                // Unicode-safe truncate for logging
-                                let preview = decodedText;
-                                if ([...decodedText].length > 100) {
-                                    preview = [...decodedText].slice(0, 100).join('') + '...';
-                                }
-                                console.log('Decoded text preview:', preview);
+                        // Validation result logging
+                        console.group('📋 QR Code Validation');
+                        console.log('Source: File Upload');
+                        console.log('Scanner:', scannerUsed);
+                        console.log('Timestamp:', new Date().toISOString());
+                        console.log('Data Length:', decodedText.length);
+                        console.groupEnd();
 
-                                // Show processing feedback
-                                fileReaderElement.innerHTML =
-                                    '<div class="flex flex-col items-center justify-center h-full text-info"><span class="loading loading-spinner loading-lg mb-2"></span><p class="text-sm">Processing QR code...</p></div>';
-
-                                // Validation result logging
-                                console.group('📋 QR Code Validation');
-                                console.log('Source: File Upload');
-                                console.log('Timestamp:', new Date().toISOString());
-                                console.log('Data Length:', decodedText.length);
-                                console.groupEnd();
-
-                                // Send to backend for processing and wait for response
-                                $wire.call('handleFileUploadScan', decodedText)
-                                    .then(() => {
-                                        console.log('✓ Backend processing completed successfully');
-                                        // Show success feedback
-                                        fileReaderElement.innerHTML =
-                                            '<div class="flex flex-col items-center justify-center h-full text-success"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><p class="text-sm">QR code processed!</p></div>';
-                                        
-                                        // Reset file input after successful processing
-                                        setTimeout(() => {
-                                            e.target.value = '';
-                                        }, 500);
-                                    })
-                                    .catch(error => {
-                                        console.error('❌ Backend processing failed:', error);
-                                        // Show error feedback
-                                        fileReaderElement.innerHTML =
-                                            '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Processing failed</p></div>';
-                                        
-                                        // Reset file input to allow retry
-                                        e.target.value = '';
-                                    });
-                            })
-                            .catch(err => {
-                                console.error('❌ Error scanning file:', err);
-                                console.log('File name:', imageFile.name);
-                                console.log('Error details:', err.message || err);
-
-                                // Show error feedback
-                                fileReaderElement.innerHTML =
-                                    '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Could not scan QR code</p></div>';
-
-                                $wire.call('scannerError',
-                                    'Could not scan QR code from image. Please ensure the image contains a valid, clear QR code.',
-                                    'Scan Failed');
-
-                                // Reset file input
+                        // Send to backend for processing
+                        try {
+                            await $wire.call('handleFileUploadScan', decodedText);
+                            console.log('✓ Backend processing completed successfully');
+                            
+                            // Show success feedback
+                            fileReaderElement.innerHTML =
+                                '<div class="flex flex-col items-center justify-center h-full text-success"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg><p class="text-sm">QR code processed!</p></div>';
+                            
+                            // Reset file input after successful processing
+                            setTimeout(() => {
                                 e.target.value = '';
-                            });
+                            }, 500);
+                        } catch (error) {
+                            console.error('❌ Backend processing failed:', error);
+                            fileReaderElement.innerHTML =
+                                '<div class="flex flex-col items-center justify-center h-full text-error"><svg class="w-16 h-16 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg><p class="text-sm">Processing failed</p></div>';
+                            e.target.value = '';
+                        }
                     });
 
-                    console.log('File upload scanner initialized successfully');
+                    console.log('File upload scanner initialized (jsQR primary + html5-qrcode fallback)');
                 };
 
                 // Listen for when isScanning becomes false (modal closes)

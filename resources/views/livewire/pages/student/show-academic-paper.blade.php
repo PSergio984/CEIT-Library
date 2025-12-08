@@ -1,3 +1,4 @@
+<div>
 <!-- Modal for Academic Paper Details -->
 <x-mary-modal wire:model="isModalOpen" title="" box-class="max-w-6xl w-full">
     @if($academicPaper)
@@ -89,3 +90,45 @@
     @endif
 
 </x-mary-modal>
+
+{{-- Borrow QR Code Modal --}}
+<x-mary-modal wire:model="isQrModalOpen" title="Borrow QR Code" box-class="max-w-lg">
+    @if($qrCodeDataUri)
+        <div class="flex flex-col items-center space-y-4">
+            {{-- Paper Info --}}
+            <div class="text-center mb-2">
+                <p class="text-sm text-base-content/70">Paper:</p>
+                <p class="font-semibold">{{ $selectedPaperTitle }}</p>
+                <p class="text-xs text-base-content/60 mt-1">Copy ID: {{ $selectedInventoryId }}</p>
+            </div>
+
+            {{-- QR Code Display --}}
+            <div class="relative bg-gradient-to-br from-base-100 to-base-200 p-6 rounded-2xl shadow-lg border-2 border-primary/20">
+                {{-- Corner decorations --}}
+                <div class="absolute top-2 left-2 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+                <div class="absolute top-2 right-2 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+                <div class="absolute bottom-2 left-2 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+                <div class="absolute bottom-2 right-2 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+
+                {{-- QR Code with white background --}}
+                <div class="bg-white p-4 rounded-xl shadow-inner">
+                    <img src="{{ $qrCodeDataUri }}"
+                         alt="Borrow QR code for {{ $selectedPaperTitle }}"
+                         class="w-64 h-64"
+                         style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;"/>
+                </div>
+            </div>
+
+            {{-- Instructions --}}
+            <div class="alert alert-info text-sm">
+                <x-mary-icon name="o-information-circle" class="w-5 h-5"/>
+                <span>Show this QR code to the librarian to borrow this paper.</span>
+            </div>
+        </div>
+
+        <x-slot:actions>
+            <x-mary-button label="Close" wire:click="closeQrModal" class="btn-ghost"/>
+        </x-slot:actions>
+    @endif
+</x-mary-modal>
+</div>
