@@ -9,9 +9,11 @@ use Auth;
 use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Lazy;
 use Mary\Traits\Toast;
 
 #[Title('Librarian Batch Management')]
+#[Lazy]
 class AdminAssignLibrarians extends AdminComponent
 {
     use AuthorizesRequests, Toast;
@@ -53,6 +55,17 @@ class AdminAssignLibrarians extends AdminComponent
 
         // Automatically update batch statuses based on current date
         $this->updateBatchStatuses();
+    }
+
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading Librarian Batches...',
+            'subtext' => 'Please wait while we fetch the data',
+        ]);
     }
 
     public function getGroupedLibrariansProperty()
@@ -113,7 +126,7 @@ class AdminAssignLibrarians extends AdminComponent
                 return [
                     'batch_no' => $batchNo,
                     'members' => $librarians->map(function ($lib) {
-                        return $lib->user->first_name.' '.$lib->user->last_name;
+                        return $lib->user->first_name . ' ' . $lib->user->last_name;
                     })->toArray(),
                     'librarians' => $librarians,
                 ];
@@ -132,7 +145,7 @@ class AdminAssignLibrarians extends AdminComponent
                 return [
                     'batch_no' => $batchNo,
                     'members' => $librarians->map(function ($lib) {
-                        return $lib->user->first_name.' '.$lib->user->last_name;
+                        return $lib->user->first_name . ' ' . $lib->user->last_name;
                     })->toArray(),
                     'date_assigned' => $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : 'N/A',
                     'librarians' => $librarians,
@@ -171,11 +184,11 @@ class AdminAssignLibrarians extends AdminComponent
             $grouped = $grouped->filter(function ($librarians, $batchNo) use ($search) {
                 $first = $librarians->first();
 
-                $createdBy = strtolower(($first->createdBy->first_name ?? '').' '.($first->createdBy->last_name ?? ''));
+                $createdBy = strtolower(($first->createdBy->first_name ?? '') . ' ' . ($first->createdBy->last_name ?? ''));
                 $shiftNotes = strtolower($first->shift_notes ?? '');
 
                 $studentMatch = $librarians->contains(function ($lib) use ($search) {
-                    $fullName = strtolower($lib->user->first_name.' '.$lib->user->last_name);
+                    $fullName = strtolower($lib->user->first_name . ' ' . $lib->user->last_name);
 
                     return stripos($fullName, $search) !== false;
                 });
@@ -194,7 +207,7 @@ class AdminAssignLibrarians extends AdminComponent
                 'batch_no' => $batchNo,
                 'date_range' => ($first->start_date ? date('Y-m-d', strtotime($first->start_date)) : 'N/A'),
                 'shift_notes' => $first->shift_notes ?? 'N/A',
-                'created_by' => ($first->createdBy->first_name ?? '').' '.($first->createdBy->last_name ?? ''),
+                'created_by' => ($first->createdBy->first_name ?? '') . ' ' . ($first->createdBy->last_name ?? ''),
                 'status' => $first->status,
                 'librarians' => $librarians,
                 'first' => $first,
@@ -274,7 +287,7 @@ class AdminAssignLibrarians extends AdminComponent
         $yearPrefix = $currentYear;
 
         // Get the highest batch number for the current year
-        $latestBatch = Librarian::where('batch_no', 'like', $yearPrefix.'%')
+        $latestBatch = Librarian::where('batch_no', 'like', $yearPrefix . '%')
             ->orderBy('batch_no', 'desc')
             ->first();
 
@@ -287,7 +300,7 @@ class AdminAssignLibrarians extends AdminComponent
         }
 
         // Format: YYYY0001, YYYY0002, etc.
-        return $yearPrefix.str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
+        return $yearPrefix . str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function openCreateModal()
@@ -322,7 +335,7 @@ class AdminAssignLibrarians extends AdminComponent
 
             if ($alreadyAssigned->isNotEmpty()) {
                 $studentNames = $alreadyAssigned->map(function ($lib) {
-                    return $lib->user->first_name.' '.$lib->user->last_name.' (Batch: '.$lib->batch_no.')';
+                    return $lib->user->first_name . ' ' . $lib->user->last_name . ' (Batch: ' . $lib->batch_no . ')';
                 })->join(', ');
 
                 throw new \Exception("The following students are already assigned to batches: {$studentNames}");
@@ -372,7 +385,7 @@ class AdminAssignLibrarians extends AdminComponent
         $this->editingBatchNo = $batchNo;
         $this->editingDateStart = $first->start_date ? date('Y-m-d', strtotime($first->start_date)) : '';
         $this->editingShiftNotes = $first->shift_notes ?? '';
-        $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn ($id) => (string) $id)->toArray();
+        $this->editingSelectedStudents = $librarians->pluck('user_id')->map(fn($id) => (string) $id)->toArray();
         $this->editModalSearch = ''; // Reset search when opening modal
 
         $this->resetErrorBag();
@@ -417,12 +430,12 @@ class AdminAssignLibrarians extends AdminComponent
                         ->first();
 
                     if ($conflictingBatch) {
-                        throw new \Exception("Cannot assign to this date. Batch No. {$conflictingBatch->batch_no} is already assigned to ".date('F j, Y', strtotime($this->editingDateStart)));
+                        throw new \Exception("Cannot assign to this date. Batch No. {$conflictingBatch->batch_no} is already assigned to " . date('F j, Y', strtotime($this->editingDateStart)));
                     }
                 }
 
                 $currentStudents = Librarian::where('batch_no', $this->editingBatchNo)->pluck('user_id');
-                $newStudents = collect($this->editingSelectedStudents)->map(fn ($id) => (int) $id);
+                $newStudents = collect($this->editingSelectedStudents)->map(fn($id) => (int) $id);
 
                 $studentsToRemove = $currentStudents->diff($newStudents);
                 $studentsToAdd = $newStudents->diff($currentStudents);
@@ -435,7 +448,7 @@ class AdminAssignLibrarians extends AdminComponent
 
                     if ($alreadyAssigned->isNotEmpty()) {
                         $studentNames = $alreadyAssigned->map(function ($lib) {
-                            return $lib->user->first_name.' '.$lib->user->last_name.' (Batch: '.$lib->batch_no.')';
+                            return $lib->user->first_name . ' ' . $lib->user->last_name . ' (Batch: ' . $lib->batch_no . ')';
                         })->join(', ');
 
                         throw new \Exception("The following students are already assigned to other batches: {$studentNames}");

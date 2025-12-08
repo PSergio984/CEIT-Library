@@ -32,6 +32,17 @@ class AdminNotifications extends AdminComponent
         return $query->paginate($this->perPage);
     }
 
+    /**
+     * Placeholder shown while lazy loading the component
+     */
+    public function placeholder()
+    {
+        return view('components.loading-placeholder', [
+            'message' => 'Loading Admin Notifications...',
+            'subtext' => 'Please wait while we fetch the admin notifications',
+        ]);
+    }
+
     public function getUnreadCountProperty()
     {
         return Auth::user()->unreadNotifications()->count();
