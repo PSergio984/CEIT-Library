@@ -59,3 +59,4 @@ class ProperName implements ValidationRule
     }
 }
 
+
