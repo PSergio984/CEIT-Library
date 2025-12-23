@@ -28,9 +28,9 @@ CEIT-Library is a modern, role-based library management system for academic inst
 ![Student Dashboard](public/screenshots/student-dashboard.png)
 ![Role Management](public/screenshots/role-management.png)
 ![Librarian Batch Assignment](public/screenshots/librarian-batch-assignment.png)
-![Notifications](public/screenshots/notifications.png)
-![Academic Paper Borrowing](public/screenshots/academic-paper-borrowing.png)
-![QR Code Borrowing](public/screenshots/qr-code-borrowing.png)
+![Notifications](public/screenshots/notif.png)
+![Academic Paper Logs](public/screenshots/academic-papers.png)
+![QR Code Borrowing](public/screenshots/qr-code.png)
 ![Attendance Logs](public/screenshots/attendance-logs.png)
 ![Violation Logs](public/screenshots/violation-logs.png)
 
