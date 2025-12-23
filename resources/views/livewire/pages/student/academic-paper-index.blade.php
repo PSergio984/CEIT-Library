@@ -310,10 +310,20 @@
                 
         @if ($this->selectedCopy && $qrCode)
             <div class="space-y-6">
-                <!-- QR Code Display -->
-                <div class="flex flex-col items-center justify-center p-6 bg-base-200 rounded-lg">
-                    <div class="bg-white p-4 rounded-lg shadow-lg">
-                        <img src="data:image/svg+xml;base64,{{ $qrCode }}" alt="QR Code" class="w-64 h-64">
+                <!-- QR Code Display with Enhanced Styling (matching attendance QR) -->
+                <div class="relative bg-gradient-to-br from-base-100 to-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border-2 border-primary/20 w-full flex justify-center">
+                    {{-- Corner decorations --}}
+                    <div class="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+                    <div class="absolute top-2 right-2 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+                    <div class="absolute bottom-2 left-2 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+                    <div class="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+                    
+                    {{-- QR Code with white background and padding --}}
+                    <div class="bg-white p-6 rounded-xl shadow-inner">
+                        <img src="data:image/svg+xml;base64,{{ $qrCode }}" 
+                            alt="QR Code for borrowing academic paper"
+                            class="w-64 h-64 sm:w-80 sm:h-80"
+                            style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;">
                     </div>
                 </div>
 

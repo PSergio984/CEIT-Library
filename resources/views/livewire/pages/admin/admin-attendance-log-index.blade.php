@@ -278,7 +278,23 @@
                         <p class="text-success font-semibold text-center">Camera ready! Point at QR code</p>
                     </div>
 
-                    <div id="qr-reader" wire:ignore class="w-full rounded-lg overflow-hidden bg-black mb-4"></div>
+                    {{-- Camera Selection Dropdown --}}
+                    <div x-show="availableCameras.length > 1 && cameraStatus === 'ready'" class="mb-3">
+                        <label class="label">
+                            <span class="label-text text-sm font-medium">Switch Camera</span>
+                        </label>
+                        <select 
+                            x-model="selectedCameraId" 
+                            @change="switchCamera()" 
+                            class="select select-bordered select-sm w-full"
+                        >
+                            <template x-for="camera in availableCameras" :key="camera.id">
+                                <option :value="camera.id" x-text="camera.label || ('Camera ' + (availableCameras.indexOf(camera) + 1))"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div id="qr-reader" wire:ignore class="w-full rounded-lg overflow-hidden bg-black mb-4" style="min-height: 300px;"></div>
 
                     {{-- Back to Upload Button --}}
                     <button type="button" @click="stopCamera()" class="btn btn-outline btn-sm w-full">
@@ -315,7 +331,14 @@
                 return {
                     cameraMode: false,
                     cameraStatus: 'stopped',
-                    html5QrCode: null,
+                    availableCameras: [],
+                    selectedCameraId: null,
+                    // jsQR camera variables
+                    videoElement: null,
+                    canvasElement: null,
+                    canvasContext: null,
+                    animationFrameId: null,
+                    isJsQrScanning: false,
 
                     init() {
                         console.log('QR Scanner Alpine component initialized');
@@ -501,16 +524,22 @@
                                 return;
                             }
 
-                            // Use the first available camera for better compatibility
-                            const firstCameraId = cameras[0].deviceId;
-                            console.log('Using first camera:', firstCameraId);
+                            // Store available cameras for selection
+                            this.availableCameras = cameras.map((cam, idx) => ({
+                                id: cam.deviceId,
+                                label: cam.label || `Camera ${idx + 1}`
+                            }));
+
+                            // Use the first camera by default
+                            this.selectedCameraId = cameras[0].deviceId;
+                            console.log('Using first camera:', this.selectedCameraId);
 
                             this.cameraMode = true;
                             this.cameraStatus = 'starting';
 
                             await this.$nextTick();
 
-                            await this.initCameraWithId(firstCameraId);
+                            await this.initJsQrCamera(this.selectedCameraId);
 
                         } catch (error) {
                             console.error('Camera error:', error);
@@ -519,93 +548,156 @@
                         }
                     },
 
-                    async initCameraWithId(cameraId) {
+                    async switchCamera() {
+                        console.log('Switching camera to:', this.selectedCameraId);
+                        
+                        if (!this.selectedCameraId) return;
+                        
+                        // Stop current camera
+                        this.stopJsQrScanLoop();
+                        if (this.videoElement && this.videoElement.srcObject) {
+                            const tracks = this.videoElement.srcObject.getTracks();
+                            tracks.forEach(track => track.stop());
+                        }
+                        
+                        this.cameraStatus = 'starting';
+                        await this.$nextTick();
+                        
                         try {
-                            console.log('Initializing Html5Qrcode with camera:', cameraId);
-                            this.html5QrCode = new Html5Qrcode('qr-reader');
+                            await this.initJsQrCamera(this.selectedCameraId);
+                        } catch (error) {
+                            console.error('Error switching camera:', error);
+                            alert('Failed to switch camera: ' + error.message);
+                            this.cameraStatus = 'error';
+                        }
+                    },
 
-                            // Pass deviceId as string directly (Html5Qrcode expects string or { exact: string })
-                            const cameraConfig = cameraId || { facingMode: 'environment' };
+                    async initJsQrCamera(cameraId) {
+                        try {
+                            console.log('Initializing jsQR camera with device:', cameraId);
+                            
+                            const readerElement = document.getElementById('qr-reader');
+                            if (!readerElement) {
+                                throw new Error('QR reader element not found');
+                            }
 
-                            // Try with preferred settings first
-                            try {
-                                await this.html5QrCode.start(
-                                    cameraConfig,
-                                    {
-                                        fps: 20,
-                                        qrbox: function(viewfinderWidth, viewfinderHeight) {
-                                            let minEdgePercentage = 0.9;
-                                            let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                                            let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                                            return {
-                                                width: qrboxSize,
-                                                height: qrboxSize
-                                            };
-                                        },
-                                        aspectRatio: 1.0,
-                                        disableFlip: false,
-                                    },
-                                async (decodedText) => {
-                                        console.log('QR detected from camera:', decodedText);
+                            // Create video element for camera feed
+                            this.videoElement = document.createElement('video');
+                            this.videoElement.setAttribute('playsinline', 'true');
+                            this.videoElement.setAttribute('autoplay', 'true');
+                            this.videoElement.style.width = '100%';
+                            this.videoElement.style.height = '100%';
+                            this.videoElement.style.objectFit = 'contain'; // Use contain for better QR visibility
+                            
+                            // Create hidden canvas for frame capture
+                            this.canvasElement = document.createElement('canvas');
+                            this.canvasContext = this.canvasElement.getContext('2d', { willReadFrequently: true });
+                            
+                            // Clear the reader element and add video
+                            readerElement.innerHTML = '';
+                            readerElement.appendChild(this.videoElement);
+                            
+                            // Stop any existing stream
+                            if (this.videoElement.srcObject) {
+                                const tracks = this.videoElement.srcObject.getTracks();
+                                tracks.forEach(track => track.stop());
+                            }
+                            
+                            // Camera constraints - higher resolution for better QR detection
+                            const constraints = {
+                                video: {
+                                    deviceId: cameraId ? { exact: cameraId } : undefined,
+                                    facingMode: cameraId ? undefined : 'environment',
+                                    width: { ideal: 1920, min: 640 },
+                                    height: { ideal: 1080, min: 480 }
+                                }
+                            };
+                            
+                            console.log('Requesting camera access...');
+                            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+                            
+                            this.videoElement.srcObject = stream;
+                            
+                            // Wait for video to be ready
+                            await new Promise((resolve, reject) => {
+                                this.videoElement.onloadedmetadata = () => {
+                                    this.videoElement.play()
+                                        .then(() => resolve())
+                                        .catch(reject);
+                                };
+                                this.videoElement.onerror = reject;
+                            });
+                            
+                            console.log('✓ Camera started - Ready to scan with jsQR!');
+                            
+                            // Set canvas size to match video
+                            this.canvasElement.width = this.videoElement.videoWidth;
+                            this.canvasElement.height = this.videoElement.videoHeight;
+                            
+                            // Start scanning loop
+                            this.startJsQrScanLoop();
+                            
+                            this.cameraStatus = 'ready';
+                            console.log('Camera started successfully');
+                        } catch (error) {
+                            console.error('Camera initialization error:', error);
+                            this.cameraStatus = 'error';
+                            alert('Failed to initialize camera: ' + error.message);
+                            this.stopCamera();
+                        }
+                    },
 
+                    startJsQrScanLoop() {
+                        if (this.isJsQrScanning) return;
+                        this.isJsQrScanning = true;
+                        
+                        let frameCount = 0;
+                        let lastScanTime = 0;
+                        const scanInterval = 150; // Scan every 150ms for better quality
+                        
+                        const scanFrame = () => {
+                            if (!this.isJsQrScanning || !this.videoElement || !this.canvasContext) {
+                                return;
+                            }
+                            
+                            const now = Date.now();
+                            
+                            // Only scan at specified interval
+                            if (now - lastScanTime >= scanInterval) {
+                                lastScanTime = now;
+                                frameCount++;
+                                
+                                try {
+                                    // Draw current video frame to canvas with better quality
+                                    this.canvasContext.imageSmoothingEnabled = true;
+                                    this.canvasContext.imageSmoothingQuality = 'high';
+                                    this.canvasContext.drawImage(this.videoElement, 0, 0, this.canvasElement.width, this.canvasElement.height);
+                                    
+                                    // Get image data for jsQR
+                                    const imageData = this.canvasContext.getImageData(0, 0, this.canvasElement.width, this.canvasElement.height);
+                                    
+                                    // Scan with jsQR - use attemptBoth for better detection
+                                    const code = window.jsQR(imageData.data, imageData.width, imageData.height, {
+                                        inversionAttempts: 'attemptBoth' // Try both normal and inverted QR codes
+                                    });
+                                    
+                                    if (code && code.data) {
+                                        console.log('[jsQR Camera] ✓ QR code detected!', code.data);
+                                        
                                         // Prevent multiple scans while processing
                                         if ($wire.get('isProcessingQr')) {
                                             console.log('Already processing a QR code, skipping...');
                                             return;
                                         }
-
+                                        
+                                        // Stop scanning and process
+                                        this.stopJsQrScanLoop();
+                                        
                                         $wire.set('isProcessingQr', true);
-                                        const result = await $wire.call('processScannedQr', decodedText);
-                                        console.log('Camera QR result:', result);
-
-                                        // Stop camera after successful scan
-                                        if (result?.found) {
-                                            this.stopCamera();
-                                            setTimeout(() => {
-                                                $wire.call('closeQrModal');
-                                            }, 1500);
-                                        } else {
-                                            $wire.set('isProcessingQr', false);
-                                        }
-                                    },
-                                    (errorMessage) => {
-                                        // Error callback for scanning errors (can be ignored for continuous scanning)
-                                    }
-                                );
-                            } catch (constraintError) {
-                                // If OverconstrainedError, try with more lenient settings
-                                if (constraintError.name === 'OverconstrainedError' || constraintError.message?.includes('Overconstrained')) {
-                                    console.warn('Camera constraints too strict, trying with lenient settings...', constraintError);
-                                    
-                                    // Try with minimal constraints
-                                    await this.html5QrCode.start(
-                                        cameraId || { facingMode: 'environment' },
-                                        {
-                                            fps: 10,  // Lower FPS
-                                            qrbox: function(viewfinderWidth, viewfinderHeight) {
-                                                let minEdgePercentage = 0.7;  // Smaller box
-                                                let minEdgeSize = Math.min(viewfinderWidth, viewfinderHeight);
-                                                let qrboxSize = Math.floor(minEdgeSize * minEdgePercentage);
-                                                return {
-                                                    width: qrboxSize,
-                                                    height: qrboxSize
-                                                };
-                                            },
-                                            // Remove aspectRatio constraint - let camera use native aspect ratio
-                                            disableFlip: false,
-                                        },
-                                        async (decodedText) => {
-                                            console.log('QR detected from camera:', decodedText);
-
-                                            if ($wire.get('isProcessingQr')) {
-                                                console.log('Already processing a QR code, skipping...');
-                                                return;
-                                            }
-
-                                            $wire.set('isProcessingQr', true);
-                                            const result = await $wire.call('processScannedQr', decodedText);
+                                        $wire.call('processScannedQr', code.data).then((result) => {
                                             console.log('Camera QR result:', result);
-
+                                            
+                                            // Stop camera after successful scan
                                             if (result?.found) {
                                                 this.stopCamera();
                                                 setTimeout(() => {
@@ -613,42 +705,71 @@
                                                 }, 1500);
                                             } else {
                                                 $wire.set('isProcessingQr', false);
+                                                // Resume scanning if not found
+                                                this.startJsQrScanLoop();
                                             }
-                                        },
-                                        (errorMessage) => {
-                                            // Error callback for scanning errors
-                                        }
-                                    );
-                                } else {
-                                    throw constraintError; // Re-throw if not OverconstrainedError
+                                        });
+                                        return;
+                                    }
+                                    
+                                } catch (error) {
+                                    console.error('Frame scan error:', error);
                                 }
                             }
+                            
+                            // Continue scanning
+                            this.animationFrameId = requestAnimationFrame(scanFrame);
+                        };
+                        
+                        // Start the scanning loop
+                        this.animationFrameId = requestAnimationFrame(scanFrame);
+                        console.log('[jsQR] Camera scanning loop started');
+                    },
 
-                            this.cameraStatus = 'ready';
-                            console.log('Camera started successfully');
-
-                        } catch (error) {
-                            console.error('Camera error:', error);
-                            alert('Failed to start camera: ' + error.message);
-                            this.stopCamera();
+                    stopJsQrScanLoop() {
+                        this.isJsQrScanning = false;
+                        
+                        if (this.animationFrameId) {
+                            cancelAnimationFrame(this.animationFrameId);
+                            this.animationFrameId = null;
                         }
+                        
+                        console.log('[jsQR] Camera scanning loop stopped');
                     },
 
                     stopCamera() {
                         console.log('Stopping camera...');
+                        this.cameraStatus = 'stopping';
 
-                        if (this.html5QrCode) {
-                            this.html5QrCode.stop()
-                                .then(() => {
-                                    console.log('Camera stopped');
-                                    this.html5QrCode.clear();
-                                    this.html5QrCode = null;
-                                })
-                                .catch(err => console.warn('Stop error:', err));
+                        // Stop jsQR scanning loop
+                        this.stopJsQrScanLoop();
+                        
+                        // Stop video stream
+                        if (this.videoElement && this.videoElement.srcObject) {
+                            const tracks = this.videoElement.srcObject.getTracks();
+                            tracks.forEach(track => {
+                                track.stop();
+                                console.log('Camera track stopped:', track.label);
+                            });
+                            this.videoElement.srcObject = null;
                         }
-
-                        this.cameraMode = false;
+                        
+                        // Clear video element
+                        const readerElement = document.getElementById('qr-reader');
+                        if (readerElement) {
+                            readerElement.innerHTML = '';
+                        }
+                        
+                        // Cleanup
+                        this.videoElement = null;
+                        this.canvasElement = null;
+                        this.canvasContext = null;
+                        this.availableCameras = [];
+                        this.selectedCameraId = null;
+                        
                         this.cameraStatus = 'stopped';
+                        this.cameraMode = false;
+                        console.log('Camera stopped');
                     }
                 }
             }

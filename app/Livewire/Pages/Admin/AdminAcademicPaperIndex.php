@@ -65,7 +65,12 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         $qrPayload = $this->createEncryptedQrMessage($payload);
 
-        $svg = app(\SimpleSoftwareIO\QrCode\Generator::class)->size(300)->generate($qrPayload);
+        // Generate QR code with same settings as attendance QR for better scannability
+        $svg = app(\SimpleSoftwareIO\QrCode\Generator::class)
+            ->size(400)  // Larger size like attendance QR
+            ->margin(8)  // Quiet zone margin for better scanning
+            ->errorCorrection('M')  // Medium error correction for better reliability
+            ->generate($qrPayload);
         $this->qrCode = base64_encode($svg);
 
         $this->dispatch('open-qr-modal');
@@ -233,8 +238,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
 
-        // Set default year filter to current year
-        $this->yearFromFilter = (string) date('Y');
+        // Leave yearFromFilter empty to show "Year From" placeholder by default
 
         // Initialize empty arrays to avoid null references
         $this->form->research_adviser_options = [];

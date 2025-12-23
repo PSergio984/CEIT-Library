@@ -66,6 +66,8 @@ class AcademicPaperIndex extends Component
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
         ];
+
+        // Leave yearFromFilter empty to show "Year From" placeholder by default
     }
 
     /**
@@ -89,7 +91,7 @@ class AcademicPaperIndex extends Component
                 }
             })
             ->when($this->search, function ($q) {
-                $search = '%'.$this->search.'%';
+                $search = '%' . $this->search . '%';
                 $q->where(function ($query) use ($search) {
                     $query->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
@@ -255,11 +257,11 @@ class AcademicPaperIndex extends Component
         }
 
         return AcademicPaper::with([
-            'authors' => fn ($q) => $q->select('authors.id', 'authors.name'),
+            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn ($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
+            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 
@@ -300,8 +302,11 @@ class AcademicPaperIndex extends Component
         // Encrypt the QR payload
         $qrPayload = $this->createEncryptedQrMessage($payload);
 
-        // 4) Create SVG and base64 for modal
-        $svg = QrCode::size(300)->generate($qrPayload);
+        // 4) Create SVG and base64 for modal - use same settings as attendance QR for better scannability
+        $svg = QrCode::size(400)  // Larger size like attendance QR
+            ->margin(8)  // Quiet zone margin for better scanning
+            ->errorCorrection('M')  // Medium error correction for better reliability
+            ->generate($qrPayload);
         $this->qrCode = base64_encode($svg);
 
         $this->dispatch('open-qr-modal');

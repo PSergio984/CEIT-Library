@@ -53,11 +53,15 @@ class QrCodeDownloadController extends Controller
 
         // Encrypt the QR payload
         $qrPayload = $this->createEncryptedQrMessage($payload);
-        $filename = 'qr-code-inv-'.$copy->id.'.png';
+        $filename = 'qr-code-inv-' . $copy->id . '.png';
 
-        // Generate and stream the QR code
+        // Generate and stream the QR code with same settings as attendance QR for better scannability
         return response()->streamDownload(
-            fn () => print QrCode::size(500)->format('png')->generate($qrPayload),
+            fn() => print QrCode::size(800)  // Larger size like attendance PNG
+                ->margin(8)  // Quiet zone margin for better scanning
+                ->errorCorrection('Q')  // Quartile (25%) for robust downloaded images
+                ->format('png')
+                ->generate($qrPayload),
             $filename,
             ['Content-Type' => 'image/png']
         );
