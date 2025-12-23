@@ -4,6 +4,10 @@ CEIT-Library is a modern, role-based library management system for academic inst
 
 ---
 
+**🌐 Live Demo:** [CEIT-Library](https://ceit-library-main-vobnyx.laravel.cloud)
+
+---
+
 ## 🚀 Features
 
 - **Role-Based Access Control**: Super Admin, Admin, Librarian, and Student roles with granular permissions
