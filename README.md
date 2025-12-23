@@ -131,14 +131,14 @@ CEIT-Library is a modern, role-based library management system for academic inst
 
 ## 🧑‍💻 Usage
 
-- **Login** with provided test credentials (see [TEST_CASES.md](TEST_CASES.md))
+- **Login** with provided test credentials (see [TEST CASES](/documentations/TEST_CASES.md))
 - **Manage Roles**: `/admin/manage-roles` (Super Admin only)
 - **Assign Librarian Batches**: `/admin/librarians` (Super Admin & Admin)
 - **View Notifications**: `/notifications` (Student), `/admin/notifications` (Admin/Librarian)
 - **Borrow Academic Papers**: Use dashboard links
 - **Attendance & Violations**: Admin dashboard
 
-See [ROLE_MANAGEMENT_GUIDE.md](ROLE_MANAGEMENT_GUIDE.md), [LIBRARIAN_BATCH_SYSTEM.md](LIBRARIAN_BATCH_SYSTEM.md), and [NOTIFICATION_SYSTEM.md](NOTIFICATION_SYSTEM.md) for detailed workflows.
+See [Role Management](/documentations/ROLE_MANAGEMENT_GUIDE.md), [Librarian Batch](/documentations/LIBRARIAN_BATCH_SYSTEM.md), and [Notification System](/documentations/NOTIFICATION_SYSTEM.md) for detailed workflows.
 
 ---
 
@@ -156,8 +156,8 @@ See [ROLE_MANAGEMENT_GUIDE.md](ROLE_MANAGEMENT_GUIDE.md), [LIBRARIAN_BATCH_SYSTE
     ```sh
     php artisan test
     ```
-- **Test cases and credentials:** See [TEST_CASES.md](TEST_CASES.md)
-- **Test progress:** See [TEST_PROGRESS.md](TEST_PROGRESS.md)
+- **Test cases and credentials:** See [TEST_CASES](/documentations/TEST_CASES.md)
+- **Test progress:** See [TEST_PROGRESS](/documentations/TEST_PROGRESS.md)
 
 ---
 
@@ -186,11 +186,12 @@ This project is open-sourced under the [MIT license](LICENSE) (see `composer.jso
 
 ## 📚 Documentation & Guides
 
-- [ROLE_MANAGEMENT_GUIDE.md](ROLE_MANAGEMENT_GUIDE.md): Role system, permissions, and workflows
-- [LIBRARIAN_BATCH_SYSTEM.md](LIBRARIAN_BATCH_SYSTEM.md): Batch assignment rules and UI
-- [NOTIFICATION_SYSTEM.md](NOTIFICATION_SYSTEM.md): Notification types and routing
-- [DAISYUI-MIGRATION-SUMMARY.md](DAISYUI-MIGRATION-SUMMARY.md): UI migration and best practices
-- [TEST_CASES.md](TEST_CASES.md): All test cases and credentials
+- [Role Management System Guide](/documentations/ROLE_MANAGEMENT_GUIDE.md): Role system, permissions, and workflows
+- [Librarian Batch System Guide](/documentations/LIBRARIAN_BATCH_SYSTEM.md): Batch assignment rules and UI
+- [Notification System](/documentations/NOTIFICATION_SYSTEM.md): Notification types and routing
+- [Daisyui Migration Summary](/documentations/DAISYUI-MIGRATION-SUMMARY.md): UI migration and best practices
+- [Test Cases](/documentations/TEST_CASES.md): All test cases and credentials
+- **Test progress:** See [TEST_PROGRESS](/documentations/TEST_PROGRESS.md)
 
 ---
 
