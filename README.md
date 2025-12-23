@@ -12,7 +12,7 @@ CEIT-Library is a modern, role-based library management system for academic inst
 - **Academic Paper Borrowing**: Track, manage, and log paper borrowing with status updates
 - **Attendance & Violation Tracking**: Monitor attendance and log rule violations
 - **Modern UI**: DaisyUI + Alpine.js for fast, responsive, and accessible interfaces
-- **Comprehensive Testing**: 200+ automated tests, detailed test case documentation
+- **Comprehensive Testing**: 200+ automated tests and detailed test case documentation
 
 ---
 
