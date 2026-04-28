@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use Database\Seeders\accountSeeder;
+use Database\Seeders\AccountSeeder;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -18,8 +18,8 @@ class SuperAdminSeedConfigTest extends TestCase
         config()->set('seeding.super_admin.email', 'configured-superadmin@plv.edu.ph');
         config()->set('seeding.super_admin.password', 'ConfiguredPwd@12345');
 
-        $this->seed(accountSeeder::class);
-        $this->seed(accountSeeder::class);
+        $this->seed(AccountSeeder::class);
+        $this->seed(AccountSeeder::class);
 
         $user = User::query()->where('email', 'configured-superadmin@plv.edu.ph')->first();
 

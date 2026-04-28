@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -40,6 +41,21 @@ class DatabaseSeeder extends Seeder
         $superAdminEmail = (string) config('seeding.super_admin.email');
         $superAdminPassword = (string) config('seeding.super_admin.password');
 
+        // Fail fast if email is missing
+        if (empty($superAdminEmail)) {
+            throw new \RuntimeException('SEED_SUPER_ADMIN_EMAIL must be set in your .env file.');
+        }
+
+        // Fail fast if password is missing in production
+        if (app()->isProduction() && empty($superAdminPassword)) {
+            throw new \RuntimeException('SEED_SUPER_ADMIN_PASSWORD must be set for production seeding.');
+        }
+
+        // Use the configured password, or fall back to 'password' only in local/testing
+        $finalSuperAdminPassword = !empty($superAdminPassword) 
+            ? Hash::make($superAdminPassword) 
+            : Hash::make('password');
+
         // Create the ONLY super_admin user
         $superAdmin = $this->upsertSeedUser(['email' => $superAdminEmail], [
             'first_name' => 'Janrel',
@@ -47,7 +63,7 @@ class DatabaseSeeder extends Seeder
             'email' => $superAdminEmail,
             'email_verified_at' => now(),
             'role_id' => $superAdminRoleId,
-            'password' => $superAdminPassword,
+            'password' => $finalSuperAdminPassword,
             'remember_token' => null,
             'credit_score' => 100,
             'account_status' => 'active',
@@ -69,7 +85,7 @@ class DatabaseSeeder extends Seeder
                 'email' => $adminData['email'],
                 'email_verified_at' => now(),
                 'role_id' => $adminRoleId,
-                'password' => 'Pwd@12345',
+                'password' => Hash::make('Pwd@12345'),
                 'remember_token' => null,
                 'credit_score' => 100,
                 'account_status' => 'active',
@@ -86,7 +102,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'librarian@plv.edu.ph',
             'email_verified_at' => now(),
             'role_id' => $librarianRoleId,
-            'password' => 'Pwd@12345',
+            'password' => Hash::make('Pwd@12345'),
             'remember_token' => null,
             'credit_score' => 100,
             'account_status' => 'active',
@@ -101,7 +117,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@plv.edu.ph',
             'email_verified_at' => now(),
             'role_id' => $adminRoleId,
-            'password' => 'Pwd@12345',
+            'password' => Hash::make('Pwd@12345'),
             'remember_token' => null,
             'credit_score' => 100,
             'account_status' => 'active',
@@ -114,7 +130,7 @@ class DatabaseSeeder extends Seeder
             'email' => 'student@plv.edu.ph',
             'email_verified_at' => now(),
             'role_id' => $studentRoleId,
-            'password' => 'Pwd@12345',
+            'password' => Hash::make('Pwd@12345'),
             'remember_token' => null,
             'credit_score' => 100,
             'account_status' => 'active',
@@ -138,7 +154,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($violationData as $violation) {
-            Violation::create($violation);
+            \App\Models\Violation::updateOrCreate(['name' => $violation['name']], $violation);
         }
 
         // Create research advisers, technical advisers, and deans first
@@ -289,16 +305,16 @@ class DatabaseSeeder extends Seeder
 
         foreach ($activeBatchStudents as $student) {
             $student->update(['role_id' => $librarianRoleId]);
-            Librarian::create([
-                'user_id' => $student->id,
-                'batch_no' => $currentYear.'0001',
-                'start_date' => $today,
-                'end_date' => null,
-                'status' => 'active',
-                'created_by' => $superAdmin->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            Librarian::updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'batch_no' => $currentYear.'0001',
+                    'start_date' => $today,
+                    'end_date' => null,
+                    'status' => 'active',
+                    'created_by' => $superAdmin->id,
+                ]
+            );
         }
 
         // 2. Create 2 EXPIRED batches (dates in the past) - 5 students each
@@ -311,16 +327,16 @@ class DatabaseSeeder extends Seeder
         $remainingStudents = $remainingStudents->diff($expiredBatch1Students);
 
         foreach ($expiredBatch1Students as $student) {
-            Librarian::create([
-                'user_id' => $student->id,
-                'batch_no' => $currentYear.'0002',
-                'start_date' => $today->copy()->subDays(10),
-                'end_date' => $today->copy()->subDays(3),
-                'status' => 'expired',
-                'created_by' => $superAdmin->id,
-                'created_at' => $today->copy()->subDays(10),
-                'updated_at' => $today->copy()->subDays(3),
-            ]);
+            Librarian::updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'batch_no' => $currentYear.'0002',
+                    'start_date' => $today->copy()->subDays(10),
+                    'end_date' => $today->copy()->subDays(3),
+                    'status' => 'expired',
+                    'created_by' => $superAdmin->id,
+                ]
+            );
         }
 
         // Expired Batch 2 (ended 1 week ago)
@@ -329,16 +345,16 @@ class DatabaseSeeder extends Seeder
         $remainingStudents = $remainingStudents->diff($expiredBatch2Students);
 
         foreach ($expiredBatch2Students as $student) {
-            Librarian::create([
-                'user_id' => $student->id,
-                'batch_no' => $currentYear.'0003',
-                'start_date' => $today->copy()->subDays(20),
-                'end_date' => $today->copy()->subDays(7),
-                'status' => 'expired',
-                'created_by' => $superAdmin->id,
-                'created_at' => $today->copy()->subDays(20),
-                'updated_at' => $today->copy()->subDays(7),
-            ]);
+            Librarian::updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'batch_no' => $currentYear.'0003',
+                    'start_date' => $today->copy()->subDays(20),
+                    'end_date' => $today->copy()->subDays(7),
+                    'status' => 'expired',
+                    'created_by' => $superAdmin->id,
+                ]
+            );
         }
 
         // 3. Create 3 INACTIVE batches (future dates) - 5 students each
@@ -350,16 +366,16 @@ class DatabaseSeeder extends Seeder
         $remainingStudents = $remainingStudents->diff($inactiveBatch1Students);
 
         foreach ($inactiveBatch1Students as $student) {
-            Librarian::create([
-                'user_id' => $student->id,
-                'batch_no' => $currentYear.'0004',
-                'start_date' => $today->copy()->addDays(2),
-                'end_date' => null,
-                'status' => 'inactive',
-                'created_by' => $superAdmin->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            Librarian::updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'batch_no' => $currentYear.'0004',
+                    'start_date' => $today->copy()->addDays(2),
+                    'end_date' => null,
+                    'status' => 'inactive',
+                    'created_by' => $superAdmin->id,
+                ]
+            );
         }
 
         // Inactive Batch 2 (starts in 5 days)
@@ -368,16 +384,16 @@ class DatabaseSeeder extends Seeder
         $remainingStudents = $remainingStudents->diff($inactiveBatch2Students);
 
         foreach ($inactiveBatch2Students as $student) {
-            Librarian::create([
-                'user_id' => $student->id,
-                'batch_no' => $currentYear.'0005',
-                'start_date' => $today->copy()->addDays(5),
-                'end_date' => null,
-                'status' => 'inactive',
-                'created_by' => $superAdmin->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            Librarian::updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'batch_no' => $currentYear.'0005',
+                    'start_date' => $today->copy()->addDays(5),
+                    'end_date' => null,
+                    'status' => 'inactive',
+                    'created_by' => $superAdmin->id,
+                ]
+            );
         }
 
         // Inactive Batch 3 (starts in 1 week)
@@ -385,16 +401,16 @@ class DatabaseSeeder extends Seeder
         $allLibrarianStudents = $allLibrarianStudents->merge($inactiveBatch3Students);
 
         foreach ($inactiveBatch3Students as $student) {
-            Librarian::create([
-                'user_id' => $student->id,
-                'batch_no' => $currentYear.'0006',
-                'start_date' => $today->copy()->addDays(7),
-                'end_date' => null,
-                'status' => 'inactive',
-                'created_by' => $superAdmin->id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+            Librarian::updateOrCreate(
+                ['user_id' => $student->id],
+                [
+                    'batch_no' => $currentYear.'0006',
+                    'start_date' => $today->copy()->addDays(7),
+                    'end_date' => null,
+                    'status' => 'inactive',
+                    'created_by' => $superAdmin->id,
+                ]
+            );
         }
 
         // Store active batch students for use in attendance records
@@ -654,7 +670,7 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($rulesHeaders as $headerData) {
-            $header = RuleHeader::create($headerData);
+            $header = RuleHeader::updateOrCreate(['title' => $headerData['title']], $headerData);
             // Create 3-5 rules for each header
             for ($i = 1; $i <= rand(3, 5); $i++) {
                 RuleRegulation::factory()->create([
