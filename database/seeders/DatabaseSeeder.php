@@ -93,7 +93,11 @@ class DatabaseSeeder extends Seeder
         }
 
         // Create regular student users (including former librarian as student)
-        $students = User::factory(50)->create();
+        $currentStudentCount = User::where('role_id', $studentRoleId)->count();
+        if ($currentStudentCount < 50) {
+            User::factory(50 - $currentStudentCount)->create(['role_id' => $studentRoleId]);
+        }
+        $students = User::where('role_id', $studentRoleId)->get();
 
         // Create a test librarian account (ensure role is librarian)
         $testLibrarian = $this->upsertSeedUser(['email' => 'librarian@plv.edu.ph'], [

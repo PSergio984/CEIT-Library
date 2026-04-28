@@ -26,7 +26,7 @@ php artisan migrate --force
 
 if [ "${RUN_DB_SEED:-false}" = "true" ]; then
   echo "Running seeders..."
-  php artisan db:seed --class="${DB_SEEDER_CLASS:-AccountSeeder}" --force
+  php artisan db:seed --force
 else
   echo "Skipping seeders. Set RUN_DB_SEED=true to enable deploy-time seeding."
 fi
