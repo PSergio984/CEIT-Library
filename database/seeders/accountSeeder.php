@@ -2,34 +2,44 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
-class accountSeeder extends Seeder
+class AccountSeeder extends Seeder
 {
+    protected function upsertSeedUser(array $attributes, array $values): User
+    {
+        $user = User::query()->firstOrNew($attributes);
+        $user->forceFill($values);
+        $user->save();
+
+        return $user;
+    }
+
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
         // Get role IDs
-        $superAdminRoleId = \App\Models\Role::where('name', 'super_admin')->value('id') ?? 4;
-        $adminRoleId = \App\Models\Role::where('name', 'admin')->value('id') ?? 3;
-        $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
-        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+        $superAdminRoleId = \App\Models\Role::query()->where('name', 'super_admin')->value('id');
 
-        // Ensure test users are unique by deleting any existing ones
-        User::where('email', 'sampleadmin@plv.edu.ph')->delete();
-        User::where('email', 'librarian@plv.edu.ph')->delete();
+        if ($superAdminRoleId === null) {
+            throw new \RuntimeException('super_admin role must exist before seeding accounts.');
+        }
+        $superAdminEmail = (string) config('seeding.super_admin.email');
+        $superAdminPassword = (string) config('seeding.super_admin.password');
 
         // Create the ONLY super_admin user
-        $superAdmin = User::factory()->create([
+        $this->upsertSeedUser(['email' => $superAdminEmail], [
             'first_name' => 'Janrel',
             'last_name' => 'Motovlogs',
-            'email' => 'superadmin@plv.edu.ph',
+            'password' => $superAdminPassword ? Hash::make($superAdminPassword) : Hash::make('password'),
+            'email_verified_at' => now(),
             'role_id' => $superAdminRoleId,
-            'password' => bcrypt('Pwd@12345'),
+            'credit_score' => 100,
+            'account_status' => 'active',
         ]);
     }
 }

@@ -17,6 +17,15 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
+    protected function upsertSeedUser(array $attributes, array $values): User
+    {
+        $user = User::query()->firstOrNew($attributes);
+        $user->forceFill($values);
+        $user->save();
+
+        return $user;
+    }
+
     /**
      * Seed the application's database.
      */
@@ -28,17 +37,20 @@ class DatabaseSeeder extends Seeder
         $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
         $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
 
-        // Ensure test users are unique by deleting any existing ones
-        User::where('email', 'sampleadmin@plv.edu.ph')->delete();
-        User::where('email', 'librarian@plv.edu.ph')->delete();
+        $superAdminEmail = (string) config('seeding.super_admin.email');
+        $superAdminPassword = (string) config('seeding.super_admin.password');
 
         // Create the ONLY super_admin user
-        $superAdmin = User::factory()->create([
+        $superAdmin = $this->upsertSeedUser(['email' => $superAdminEmail], [
             'first_name' => 'Janrel',
             'last_name' => 'Motovlogs',
-            'email' => 'superadmin@plv.edu.ph',
+            'email' => $superAdminEmail,
+            'email_verified_at' => now(),
             'role_id' => $superAdminRoleId,
-            'password' => bcrypt('Pwd@12345'),
+            'password' => $superAdminPassword,
+            'remember_token' => null,
+            'credit_score' => 100,
+            'account_status' => 'active',
         ]);
 
         // Create 5 admin users
@@ -51,12 +63,16 @@ class DatabaseSeeder extends Seeder
         ];
 
         foreach ($adminUsers as $adminData) {
-            User::factory()->create([
+            $this->upsertSeedUser(['email' => $adminData['email']], [
                 'first_name' => $adminData['first_name'],
                 'last_name' => $adminData['last_name'],
                 'email' => $adminData['email'],
+                'email_verified_at' => now(),
                 'role_id' => $adminRoleId,
-                'password' => bcrypt('Pwd@12345'),
+                'password' => 'Pwd@12345',
+                'remember_token' => null,
+                'credit_score' => 100,
+                'account_status' => 'active',
             ]);
         }
 
@@ -64,32 +80,44 @@ class DatabaseSeeder extends Seeder
         $students = User::factory(50)->create();
 
         // Create a test librarian account (ensure role is librarian)
-        $testLibrarian = User::factory()->create([
+        $testLibrarian = $this->upsertSeedUser(['email' => 'librarian@plv.edu.ph'], [
             'first_name' => 'Test',
             'last_name' => 'Librarian',
             'email' => 'librarian@plv.edu.ph',
+            'email_verified_at' => now(),
             'role_id' => $librarianRoleId,
-            'password' => bcrypt('Pwd@12345'),
+            'password' => 'Pwd@12345',
+            'remember_token' => null,
+            'credit_score' => 100,
+            'account_status' => 'active',
         ]);
 
         $students->push($testLibrarian);
 
         // Create a specific admin user for testing (ensure role is admin)
-        $sampleAdmin = User::factory()->create([
+        $sampleAdmin = $this->upsertSeedUser(['email' => 'admin@plv.edu.ph'], [
             'first_name' => 'Sample',
             'last_name' => 'Admin',
             'email' => 'admin@plv.edu.ph',
+            'email_verified_at' => now(),
             'role_id' => $adminRoleId,
-            'password' => bcrypt('Pwd@12345'),
+            'password' => 'Pwd@12345',
+            'remember_token' => null,
+            'credit_score' => 100,
+            'account_status' => 'active',
         ]);
 
         // Create a specific student user
-        $specificStudent = User::factory()->create([
+        $specificStudent = $this->upsertSeedUser(['email' => 'student@plv.edu.ph'], [
             'first_name' => 'Sample',
             'last_name' => 'Student',
             'email' => 'student@plv.edu.ph',
+            'email_verified_at' => now(),
             'role_id' => $studentRoleId,
-            'password' => bcrypt('Pwd@12345'),
+            'password' => 'Pwd@12345',
+            'remember_token' => null,
+            'credit_score' => 100,
+            'account_status' => 'active',
         ]);
 
         // Add the specific student to the students collection for randomization
@@ -638,7 +666,7 @@ class DatabaseSeeder extends Seeder
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
         $this->command->info('- 52 users (1 Super Admin, 51 students)');
-        $this->command->info('- ONLY super_admin: Janrel Motovlogs (admin@plv.edu.ph)');
+        $this->command->info(sprintf('- ONLY super_admin: Janrel Motovlogs (%s)', $superAdminEmail));
         $this->command->info('- 10 violation types');
         $this->command->info('- Librarian Batches:');
         $this->command->info('  * 1 ACTIVE batch (5 students on duty today)');
