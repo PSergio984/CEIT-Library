@@ -17,8 +17,9 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 COPY --from=builder /tmp/public/build /var/www/html/public/build
 
-RUN composer install --no-dev --no-interaction --optimize-autoloader --working-dir=/var/www/html
+COPY Docker/nginx.conf /etc/nginx/sites-available/default.conf
 
+RUN composer install --no-dev --no-interaction --optimize-autoloader --working-dir=/var/www/html
 
 ENV SKIP_COMPOSER 1
 ENV WEBROOT /var/www/html/public
