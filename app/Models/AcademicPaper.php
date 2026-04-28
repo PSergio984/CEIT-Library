@@ -232,7 +232,7 @@ class AcademicPaper extends Model
     {
         $sequenceKey = "{$departmentCode}-{$year}";
 
-        // Check if we're using SQLite (for testing) or MySQL (for production)
+        // Check which database driver is active so we can use compatible SQL.
         $connection = config('database.default');
         $driver = config("database.connections.{$connection}.driver");
 
@@ -260,11 +260,30 @@ class AcademicPaper extends Model
                 // Examples: 01, 02, ..., 99, 100, 101, etc.
                 return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
             });
+        } elseif ($driver === 'pgsql') {
+            $sequence = \DB::selectOne(
+                'INSERT INTO catalog_sequences (sequence_key, last_sequence, created_at, updated_at)
+                 VALUES (?, 1, ?, ?)
+                 ON CONFLICT (sequence_key)
+                 DO UPDATE SET
+                    last_sequence = catalog_sequences.last_sequence + 1,
+                    updated_at = EXCLUDED.updated_at
+                 RETURNING last_sequence',
+                [$sequenceKey, now(), now()]
+            );
+
+            if (! is_object($sequence) || ! isset($sequence->last_sequence)) {
+                throw new \RuntimeException('Failed to retrieve the next catalog sequence value from PostgreSQL.');
+            }
+
+            $sequence = (int) $sequence->last_sequence;
+
+            // Use flexible padding: minimum 2 digits, but can grow beyond 99
+            // Examples: 01, 02, ..., 99, 100, 101, etc.
+            return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
         } else {
             // MySQL: Use INSERT ... ON DUPLICATE KEY UPDATE with LAST_INSERT_ID() for atomic sequence generation
             // LAST_INSERT_ID() is connection-specific, so each concurrent request gets its own unique value
-
-            // First, try to insert. If row exists, update and capture the new value atomically
             \DB::statement(
                 'INSERT INTO catalog_sequences (sequence_key, last_sequence, created_at, updated_at) 
                  VALUES (?, 1, ?, ?) 
@@ -275,9 +294,6 @@ class AcademicPaper extends Model
             // Fetch the atomically incremented value for this connection
             // For INSERT: LAST_INSERT_ID() returns the auto_increment ID (not useful), so we read last_sequence
             // For UPDATE: LAST_INSERT_ID(last_sequence + 1) returns the new sequence value
-            $lastId = (int) \DB::select('SELECT LAST_INSERT_ID() as id')[0]->id;
-
-            // Check the actual last_sequence value to determine if this was INSERT or UPDATE
             $sequence = \DB::table('catalog_sequences')
                 ->where('sequence_key', $sequenceKey)
                 ->value('last_sequence');
@@ -303,7 +319,7 @@ class AcademicPaper extends Model
         // Use database-side query to extract and find max sequence number
         $pattern = "CEIT-{$departmentCode}-{$year}-%";
 
-        // Check if we're using SQLite (for testing) or MySQL (for production)
+        // Check which database driver is active so we can use compatible SQL.
         $connection = config('database.default');
         $driver = config("database.connections.{$connection}.driver");
 
@@ -324,6 +340,19 @@ class AcademicPaper extends Model
                         0
                     ) as max_sequence
                 ')
+                ->value('max_sequence');
+        } elseif ($driver === 'pgsql') {
+            $highestSequence = self::where('catalog_code', 'like', $pattern)
+                ->selectRaw("
+                    COALESCE(
+                        MAX(
+                            CAST(
+                                NULLIF(SPLIT_PART(catalog_code, '-', 4), '') AS INTEGER
+                            )
+                        ),
+                        0
+                    ) as max_sequence
+                ")
                 ->value('max_sequence');
         } else {
             // MySQL-compatible query using SUBSTRING_INDEX

@@ -17,8 +17,13 @@
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
-    <body class="min-h-screen font-sans bg-white">
-   <!-- Header -->
+    <body
+        class="relative min-h-screen bg-white bg-cover bg-center bg-no-repeat font-sans"
+        style="background-image: url('{{ asset('images/plvbg.jpg') }}');"
+    >
+        <div class="absolute inset-0 bg-slate-800/70 z-0"></div>
+
+        <!-- Header -->
         <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative" style="background-color: #273F4F;">
             <a href="/" class="flex items-center text-white text-lg sm:text-xl md:text-2xl font-bold hover:opacity-80 transition">
                 <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">

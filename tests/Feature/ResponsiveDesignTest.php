@@ -3,20 +3,18 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ResponsiveDesignTest extends TestCase
 {
     use RefreshDatabase;
 
-    /** @test - TC048: Welcome Page - Responsive Design */
+    #[Test]
     public function welcome_page_is_responsive_on_laptop_screens()
     {
-        // This is primarily a frontend/browser test
-        // We can verify the page loads correctly
         $response = $this->get('/');
-        $response->assertStatus(200);
-
-        // Responsive design is tested with browser tools or visual regression testing
+        $response->assertOk();
+        $response->assertSee(asset('images/plvbg.jpg'));
     }
 }

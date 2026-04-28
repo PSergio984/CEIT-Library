@@ -149,9 +149,9 @@ class ViolationTransaction extends Model
                 [$delta, $delta, $delta, $userId]
             );
         } else {
-            // MySQL/PostgreSQL syntax: LEAST for upper bound, GREATEST for lower bound
+            // MySQL and PostgreSQL both support LEAST/GREATEST for clamping.
             \DB::statement(
-                'UPDATE users SET credit_score = CAST(LEAST(100, GREATEST(0, CAST(credit_score AS SIGNED) + ?)) AS UNSIGNED) WHERE id = ?',
+                'UPDATE users SET credit_score = LEAST(100, GREATEST(0, credit_score + ?)) WHERE id = ?',
                 [$delta, $userId]
             );
         }

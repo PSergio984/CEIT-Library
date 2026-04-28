@@ -15,7 +15,12 @@
     @livewireStyles
 </head>
 
-<body class="min-h-screen font-sans bg-white">
+<body
+    class="relative min-h-screen bg-white bg-cover bg-center bg-no-repeat font-sans"
+    style="background-image: url('{{ asset('images/plvbg.jpg') }}');"
+>
+    <div class="fixed inset-0 w-full h-full bg-slate-800/70 z-0"></div>
+
     <!-- Header -->
     <header class="flex justify-between items-center px-4 sm:px-6 md:px-8 lg:px-10 py-3 sm:py-4 z-20 relative"
         style="background-color: #273F4F;">
