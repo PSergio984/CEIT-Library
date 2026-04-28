@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run builds
+RUN npm run build
 
 # Production stage
 FROM richarvey/nginx-php-fpm:latest
