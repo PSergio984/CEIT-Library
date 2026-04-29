@@ -24,5 +24,9 @@ php artisan storage:link --force
 echo "Running migrations..."
 php artisan migrate --force
 
-echo "Running seeders..."
-php artisan db:seed --force
+if [ "${RUN_DB_SEED:-false}" = "true" ]; then
+  echo "Running seeders..."
+  php artisan db:seed --force
+else
+  echo "Skipping seeders. Set RUN_DB_SEED=true to enable deploy-time seeding."
+fi

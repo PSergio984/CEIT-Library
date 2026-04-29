@@ -18,6 +18,7 @@ COPY . /var/www/html
 COPY --from=builder /tmp/public/build /var/www/html/public/build
 
 COPY Docker/nginx.conf /etc/nginx/sites-available/default.conf
+COPY Docker/www.conf /usr/local/etc/php-fpm.d/www.conf
 
 RUN composer install --no-dev --no-interaction --optimize-autoloader --working-dir=/var/www/html
 
