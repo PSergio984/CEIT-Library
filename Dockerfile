@@ -17,7 +17,7 @@ WORKDIR /var/www/html
 COPY . /var/www/html
 COPY --from=builder /tmp/public/build /var/www/html/public/build
 
-RUN printf '[www]\nuser = nginx\ngroup = nginx\npm = dynamic\npm.max_children = 10\npm.start_servers = 2\npm.min_spare_servers = 1\npm.max_spare_servers = 3\npm.process_idle_timeout = 10s\nlisten = /var/run/php-fpm.sock\nlisten.owner = nginx\nlisten.group = nginx\nlisten.mode = 0660\n' > /usr/local/etc/php-fpm.d/www.conf
+COPY Docker/nginx.conf /etc/nginx/sites-available/default.conf
 
 RUN composer install --no-dev --no-interaction --optimize-autoloader --working-dir=/var/www/html
 
