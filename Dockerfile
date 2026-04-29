@@ -18,7 +18,7 @@ COPY . /var/www/html
 COPY --from=builder /tmp/public/build /var/www/html/public/build
 
 COPY Docker/nginx.conf /etc/nginx/sites-available/default.conf
-COPY Docker/www.conf /usr/local/etc/php-fpm.d/www.conf
+RUN printf '[www]\npm = dynamic\npm.max_children = 10\npm.start_servers = 2\npm.min_spare_servers = 1\npm.max_spare_servers = 3\npm.process_idle_timeout = 10s\n' > /usr/local/etc/php-fpm.d/www.conf
 
 RUN composer install --no-dev --no-interaction --optimize-autoloader --working-dir=/var/www/html
 
