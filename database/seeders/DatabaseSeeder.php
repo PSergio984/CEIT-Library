@@ -46,15 +46,18 @@ class DatabaseSeeder extends Seeder
             throw new \RuntimeException('SEED_SUPER_ADMIN_EMAIL must be set in your .env file.');
         }
 
-        // Fail fast if password is missing in production
-        if (app()->isProduction() && empty($superAdminPassword)) {
-            throw new \RuntimeException('SEED_SUPER_ADMIN_PASSWORD must be set for production seeding.');
+        // Require password unless in local or testing environment
+        if (!app()->environment('local', 'testing') && empty($superAdminPassword)) {
+            throw new \RuntimeException('SEED_SUPER_ADMIN_PASSWORD must be set for this environment.');
         }
 
-        // Use the configured password, or fall back to 'password' only in local/testing
-        $finalSuperAdminPassword = !empty($superAdminPassword) 
-            ? Hash::make($superAdminPassword) 
-            : Hash::make('password');
+        // Only set finalSuperAdminPassword after validating $superAdminPassword is present
+        if (!empty($superAdminPassword)) {
+            $finalSuperAdminPassword = Hash::make($superAdminPassword);
+        } else {
+            // Only reaches here if in local/testing environment (validated above)
+            $finalSuperAdminPassword = Hash::make('password');
+        }
 
         // Create the ONLY super_admin user
         $superAdmin = $this->upsertSeedUser(['email' => $superAdminEmail], [
@@ -168,9 +171,9 @@ class DatabaseSeeder extends Seeder
 
         // Create academic papers with adviser and dean relationships
         $academicPapers = AcademicPaper::factory(30)->create([
-            'research_adviser_id' => fn () => $researchAdvisers->random()->id,
-            'technical_adviser_id' => fn () => $technicalAdvisers->random()->id,
-            'dean_id' => fn () => $deans->random()->id,
+            'research_adviser_id' => fn() => $researchAdvisers->random()->id,
+            'technical_adviser_id' => fn() => $technicalAdvisers->random()->id,
+            'dean_id' => fn() => $deans->random()->id,
         ]);
 
         // Create authors
@@ -299,11 +302,16 @@ class DatabaseSeeder extends Seeder
         $currentYear = date('Y');
         $allLibrarianStudents = collect();
 
+        // Delete seeded librarian records for this year to ensure idempotent seeding
+        Librarian::where('batch_no', 'like', $currentYear . '%')
+            ->where('created_by', $superAdmin->id)
+            ->delete();
+
         // 1. Create 1 ACTIVE batch (on duty today) - exactly 5 students
         $this->command->info('Creating active batch for today...');
         // Exclude special users from librarian batch selection
         $excludedIds = collect([$sampleAdmin->id]);
-        $filteredStudents = $students->filter(fn ($s) => ! $excludedIds->contains($s->id));
+        $filteredStudents = $students->filter(fn($s) => ! $excludedIds->contains($s->id));
         $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
 
@@ -312,7 +320,7 @@ class DatabaseSeeder extends Seeder
             Librarian::updateOrCreate(
                 ['user_id' => $student->id],
                 [
-                    'batch_no' => $currentYear.'0001',
+                    'batch_no' => $currentYear . '0001',
                     'start_date' => $today,
                     'end_date' => null,
                     'status' => 'active',
@@ -334,7 +342,7 @@ class DatabaseSeeder extends Seeder
             Librarian::updateOrCreate(
                 ['user_id' => $student->id],
                 [
-                    'batch_no' => $currentYear.'0002',
+                    'batch_no' => $currentYear . '0002',
                     'start_date' => $today->copy()->subDays(10),
                     'end_date' => $today->copy()->subDays(3),
                     'status' => 'expired',
@@ -352,7 +360,7 @@ class DatabaseSeeder extends Seeder
             Librarian::updateOrCreate(
                 ['user_id' => $student->id],
                 [
-                    'batch_no' => $currentYear.'0003',
+                    'batch_no' => $currentYear . '0003',
                     'start_date' => $today->copy()->subDays(20),
                     'end_date' => $today->copy()->subDays(7),
                     'status' => 'expired',
@@ -373,7 +381,7 @@ class DatabaseSeeder extends Seeder
             Librarian::updateOrCreate(
                 ['user_id' => $student->id],
                 [
-                    'batch_no' => $currentYear.'0004',
+                    'batch_no' => $currentYear . '0004',
                     'start_date' => $today->copy()->addDays(2),
                     'end_date' => null,
                     'status' => 'inactive',
@@ -391,7 +399,7 @@ class DatabaseSeeder extends Seeder
             Librarian::updateOrCreate(
                 ['user_id' => $student->id],
                 [
-                    'batch_no' => $currentYear.'0005',
+                    'batch_no' => $currentYear . '0005',
                     'start_date' => $today->copy()->addDays(5),
                     'end_date' => null,
                     'status' => 'inactive',
@@ -408,7 +416,7 @@ class DatabaseSeeder extends Seeder
             Librarian::updateOrCreate(
                 ['user_id' => $student->id],
                 [
-                    'batch_no' => $currentYear.'0006',
+                    'batch_no' => $currentYear . '0006',
                     'start_date' => $today->copy()->addDays(7),
                     'end_date' => null,
                     'status' => 'inactive',
