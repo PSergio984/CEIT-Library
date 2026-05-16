@@ -1,23 +1,25 @@
-@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap");
-@import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+@import 'tailwindcss';
+
 @plugin "daisyui";
 
 @plugin "daisyui" {
-    themes:
-        light --default,
-        dark --prefersdark;
+  themes:
+    light --default,
+    dark --prefersdark;
 }
 
 @source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
-
-/* Dark theme variant support */
-@custom-variant dark (&:where(.dark, .dark *));
 
 @source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
 @source "../../storage/framework/views/*.php";
 @source "../**/*.blade.php";
 @source "../**/*.js";
 @source "../**/*.vue";
+
+/* Dark theme variant support */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /** daisyUI */
 /* daisyUI plugin with themes */
 
@@ -50,7 +52,7 @@
 }
 
 .table thead {
-    @apply bg-gradient-to-r from-base-200 to-base-300;
+    @apply bg-linear-to-r from-base-200 to-base-300;
 }
 
 .table thead th {
@@ -111,7 +113,7 @@
 }
 
 .table-enhanced thead {
-    @apply bg-gradient-to-r from-primary/10 to-secondary/10;
+    @apply bg-linear-to-r from-primary/10 to-secondary/10;
 }
 
 .table-enhanced thead th {

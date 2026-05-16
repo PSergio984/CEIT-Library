@@ -12,21 +12,13 @@
             x-data="{
                 showDebug: false,
                 scanMode: null,
-                cameras: [],
-                currentCameraId: null,
-                async selectMode(mode) {
+                selectMode(mode) {
                     this.scanMode = mode;
                     console.log('Scan mode selected:', mode);
                     if (mode === 'camera') {
-                        // Enumerate cameras
-                        if (window.getAvailableCameras) {
-                            this.cameras = await window.getAvailableCameras();
-                            console.log('Available cameras:', this.cameras);
-                        }
-                        
-                        setTimeout(async () => {
+                        setTimeout(() => {
                             if (window.initCameraScanner) {
-                                this.currentCameraId = await window.initCameraScanner();
+                                window.initCameraScanner();
                             }
                         }, 100);
                     } else if (mode === 'file') {
@@ -37,25 +29,8 @@
                         }, 100);
                     }
                 },
-                async switchCamera(cameraId) {
-                    this.currentCameraId = cameraId;
-                    if (window.initCameraScanner) {
-                        await window.initCameraScanner(cameraId);
-                    }
-                },
-                async flipCamera() {
-                    if (this.cameras.length < 2) return;
-                    // Find current camera index or default to 0
-                    let currentIndex = this.cameras.findIndex(c => c.id === this.currentCameraId);
-                    if (currentIndex === -1) currentIndex = 0;
-                    
-                    let nextIndex = (currentIndex + 1) % this.cameras.length;
-                    await this.switchCamera(this.cameras[nextIndex].id);
-                },
                 reset() {
                     this.scanMode = null;
-                    this.cameras = [];
-                    this.currentCameraId = null;
                     if (window.forceStopScanner) {
                         window.forceStopScanner();
                     }
@@ -92,7 +67,7 @@
                 <div x-show="scanMode === null" class="space-y-4">
                     {{-- Info Banner --}}
                     <div class="alert alert-info mb-4">
-                        <x-mary-icon name="o-information-circle" class="w-5 h-5 flex-shrink-0" />
+                        <x-mary-icon name="o-information-circle" class="w-5 h-5 shrink-0" />
                         <div class="text-sm">
                             Upload an image containing the QR code or use your camera to scan directly.
                         </div>
@@ -101,14 +76,14 @@
                     {{-- Camera Option --}}
                     <button @click="selectMode('camera')"
                         class="w-full btn btn-lg btn-primary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform">
-                        <div class="bg-primary-content/20 p-3 rounded-lg flex-shrink-0">
+                        <div class="bg-primary-content/20 p-3 rounded-lg shrink-0">
                             <x-mary-icon name="o-camera" class="w-6 h-6" />
                         </div>
                         <div class="flex-1 text-left">
                             <div class="font-bold text-base">Use Camera</div>
                             <div class="text-xs opacity-80 font-normal mt-1">Scan QR code with your device camera</div>
                         </div>
-                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 opacity-60 flex-shrink-0" />
+                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 opacity-60 shrink-0" />
                     </button>
 
                     {{-- Divider --}}
@@ -121,14 +96,14 @@
                     {{-- File Upload Option --}}
                     <button @click="selectMode('file')"
                         class="w-full btn btn-lg btn-outline btn-secondary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform">
-                        <div class="bg-secondary-content/20 p-3 rounded-lg flex-shrink-0">
+                        <div class="bg-secondary-content/20 p-3 rounded-lg shrink-0">
                             <x-mary-icon name="o-photo" class="w-6 h-6" />
                         </div>
                         <div class="flex-1 text-left">
                             <div class="font-bold text-base">Upload Image</div>
                             <div class="text-xs opacity-80 font-normal mt-1">Select a QR code image from your device</div>
                         </div>
-                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 opacity-60 flex-shrink-0" />
+                        <x-mary-icon name="o-chevron-right" class="w-5 h-5 opacity-60 shrink-0" />
                     </button>
                 </div>
 
@@ -139,44 +114,17 @@
                         Back to selection
                     </button>
 
-                    {{-- Scanner Status & Camera Selection --}}
-                    <div class="mb-4 space-y-2">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between bg-base-200 rounded-lg p-3 gap-3">
-                            <div class="flex items-center justify-between flex-1">
-                                <div class="flex items-center gap-2">
-                                    <span class="loading loading-ring loading-sm text-success"></span>
-                                    <span class="text-sm font-medium">Camera Active</span>
-                                </div>
-                                
-                                {{-- Camera Switching UI --}}
-                                <div class="flex items-center gap-2">
-                                    {{-- Flip button for exactly 2 cameras (common on mobile) --}}
-                                    <template x-if="cameras.length === 2">
-                                        <button @click="flipCamera()" class="btn btn-sm btn-circle btn-ghost tooltip" data-tip="Flip Camera">
-                                            <x-mary-icon name="o-arrow-path" class="w-5 h-5" />
-                                        </button>
-                                    </template>
-
-                                    {{-- Dropdown for more than 2 cameras --}}
-                                    <template x-if="cameras.length > 2">
-                                        <select 
-                                            class="select select-xs select-bordered w-32"
-                                            x-model="currentCameraId"
-                                            @change="switchCamera($event.target.value)">
-                                            <template x-for="camera in cameras" :key="camera.id">
-                                                <option :value="camera.id" x-text="camera.label || 'Camera ' + camera.id"></option>
-                                            </template>
-                                        </select>
-                                    </template>
-                                </div>
+                    {{-- Scanner Status --}}
+                    <div class="mb-4">
+                        <div class="flex items-center justify-between bg-base-200 rounded-lg p-3">
+                            <div class="flex items-center gap-2">
+                                <span class="loading loading-ring loading-sm text-success"></span>
+                                <span class="text-sm font-medium">Camera Active</span>
                             </div>
-
-                            <div class="flex items-center gap-2 justify-end">
-                                <button @click="showDebug = !showDebug" class="btn btn-xs btn-ghost">
-                                    <x-mary-icon name="o-information-circle" class="w-4 h-4" />
-                                    Debug
-                                </button>
-                            </div>
+                            <button @click="showDebug = !showDebug" class="btn btn-xs btn-ghost">
+                                <x-mary-icon name="o-information-circle" class="w-4 h-4" />
+                                Debug
+                            </button>
                         </div>
 
                         {{-- Debug Panel --}}
@@ -215,7 +163,7 @@
                     {{-- Instructions --}}
                     <div class="bg-info/10 border border-info/20 rounded-lg p-4">
                         <div class="flex gap-3">
-                            <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0" />
+                            <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info shrink-0" />
                             <div class="text-sm space-y-2">
                                 <p class="font-semibold text-info">Scanning Tips:</p>
                                 <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
@@ -257,7 +205,7 @@
                     {{-- Instructions --}}
                     <div class="bg-info/10 border border-info/20 rounded-lg p-4">
                         <div class="flex gap-3">
-                            <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info flex-shrink-0" />
+                            <x-mary-icon name="o-information-circle" class="w-5 h-5 text-info shrink-0" />
                             <div class="text-sm space-y-2">
                                 <p class="font-semibold text-info">Upload Tips:</p>
                                 <ul class="list-disc list-inside space-y-1 text-xs text-base-content/70">
@@ -299,22 +247,10 @@
                 }
 
                 /**
-                 * Get available cameras
-                 */
-                window.getAvailableCameras = async function() {
-                    try {
-                        return await Html5Qrcode.getCameras();
-                    } catch (err) {
-                        console.error("Error getting cameras", err);
-                        return [];
-                    }
-                }
-
-                /**
                  * Initialize camera scanner using Html5Qrcode
                  */
-                window.initCameraScanner = async function(preferredCameraId = null) {
-                    console.log('initCameraScanner called', { preferredCameraId });
+                window.initCameraScanner = async function() {
+                    console.log('initCameraScanner called');
 
                     if (isInitializing) return;
                     if (isInitialized) {
@@ -339,25 +275,18 @@
                             aspectRatio: 1.0
                         };
 
-                        const cameraParam = preferredCameraId ? preferredCameraId : { facingMode: "environment" };
-
                         await html5QrCode.start(
-                            cameraParam, 
+                            { facingMode: "environment" }, 
                             config,
                             onScanSuccess
                         );
 
                         updateDebugInfo('✓ Camera active - Ready to scan', false);
                         isInitialized = true;
-                        
-                        // Return the actual camera ID being used (Html5Qrcode doesn't return it directly from start, 
-                        // but we can try to find it if we passed it, or just return true)
-                        return preferredCameraId || true;
                     } catch (error) {
                         console.error('Camera initialization error:', error);
                         updateDebugInfo(`Error: ${error.message}`, true);
                         $wire.call('scannerError', 'Unable to access camera. Please check permissions.', 'Camera Error');
-                        return null;
                     } finally {
                         isInitializing = false;
                     }

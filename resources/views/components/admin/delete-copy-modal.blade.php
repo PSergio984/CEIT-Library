@@ -2,14 +2,23 @@
 
 <dialog 
     x-ref="copyDeleteModal" 
-    x-show="showCopyDeleteModal"
     @click.self="showCopyDeleteModal = false"
-    @close="showCopyDeleteModal = false"
+    @close="if(showCopyDeleteModal) { showCopyDeleteModal = false }"
     @close-copy-delete-modal.window="showCopyDeleteModal = false"
     class="modal"
-    x-init="$watch('showCopyDeleteModal', value => { if (value) { $refs.copyDeleteModal.showModal() } else { $refs.copyDeleteModal.close() } })"
+    x-init="$watch('showCopyDeleteModal', value => { 
+        if (value && !$refs.copyDeleteModal.open) { $refs.copyDeleteModal.showModal() } 
+        else if (!value && $refs.copyDeleteModal.open) { $refs.copyDeleteModal.close() } 
+    })"
 >
-    <div class="modal-box">
+    <div class="modal-box"
+        x-show="showCopyDeleteModal"
+        x-transition:enter="transition ease-out duration-300"
+        x-transition:enter-start="opacity-0 transform scale-95"
+        x-transition:enter-end="opacity-100 transform scale-100"
+        x-transition:leave="transition ease-in duration-200"
+        x-transition:leave-start="opacity-100 transform scale-100"
+        x-transition:leave-end="opacity-0 transform scale-95">
         <h3 class="font-bold text-lg mb-2">Delete Copy</h3>
         <p class="text-sm text-base-content/70 mb-4">Are you sure?</p>
         @if($copyToDelete)

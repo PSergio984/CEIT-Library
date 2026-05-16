@@ -4,8 +4,13 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\AcademicPaperForm;
 use App\Models\AcademicPaper;
+use App\Models\Author;
+use App\Models\Dean;
 use App\Models\Inventory;
+use App\Models\ResearchAdviser;
+use App\Models\TechnicalAdviser;
 use App\Traits\CreatesQrCanonicalMessage;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
@@ -15,6 +20,7 @@ use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
+use SimpleSoftwareIO\QrCode\Generator;
 
 #[Title('Academic Paper List')]
 #[Lazy]
@@ -34,6 +40,8 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     public function requestQr(int $inventoryId): void
     {
+        Gate::authorize('manage-academic-papers');
+
         $copy = Inventory::with('academicPaper')->find($inventoryId);
 
         if (! $copy) {
@@ -66,7 +74,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         $qrPayload = $this->createEncryptedQrMessage($payload);
 
         // Generate QR code with same settings as attendance QR for better scannability
-        $svg = app(\SimpleSoftwareIO\QrCode\Generator::class)
+        $svg = app(Generator::class)
             ->size(400)  // Larger size like attendance QR
             ->margin(8)  // Quiet zone margin for better scanning
             ->errorCorrection('M')  // Medium error correction for better reliability
@@ -166,15 +174,15 @@ class AdminAcademicPaperIndex extends AdminComponent
     public function isFormValid(): bool
     {
         // Check if all required fields are filled
-        $hasTitle = !empty(trim($this->form->title ?? ''));
-        $hasDepartment = !empty($this->form->department ?? '');
-        $hasPublicationYear = !empty($this->form->publication_year);
-        $hasPaperType = !empty($this->form->paper_type ?? '');
-        $hasResearchAdviser = !empty($this->form->research_adviser_id);
-        $hasTechnicalAdviser = !empty($this->form->technical_adviser_id);
-        $hasDean = !empty($this->form->dean_id);
-        $hasAuthors = !empty($this->form->author_ids) && count($this->form->author_ids) > 0;
-        $hasCopies = !empty($this->form->number_of_copies) && $this->form->number_of_copies >= 1;
+        $hasTitle = ! empty(trim($this->form->title ?? ''));
+        $hasDepartment = ! empty($this->form->department ?? '');
+        $hasPublicationYear = ! empty($this->form->publication_year);
+        $hasPaperType = ! empty($this->form->paper_type ?? '');
+        $hasResearchAdviser = ! empty($this->form->research_adviser_id);
+        $hasTechnicalAdviser = ! empty($this->form->technical_adviser_id);
+        $hasDean = ! empty($this->form->dean_id);
+        $hasAuthors = ! empty($this->form->author_ids) && count($this->form->author_ids) > 0;
+        $hasCopies = ! empty($this->form->number_of_copies) && $this->form->number_of_copies >= 1;
 
         // Check for validation errors
         $hasErrors = $this->getErrorBag()->hasAny([
@@ -198,7 +206,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             && $hasDean
             && $hasAuthors
             && $hasCopies
-            && !$hasErrors;
+            && ! $hasErrors;
     }
 
     #[Locked]
@@ -261,6 +269,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     #[Computed]
     public function academicPapers()
     {
+        Gate::authorize('view-academic-papers');
+
         // Get current version token for cache busting
         $version = $this->getAcademicPapersVersion();
 
@@ -372,7 +382,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 }
             })
             ->when($this->search, function ($query) {
-                $search = '%' . $this->search . '%';
+                $search = '%'.$this->search.'%';
                 $query->where(function ($q) use ($search) {
                     $q->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
@@ -483,14 +493,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Perform deletion (called from modal)
     public function performDelete(?int $paperId = null): void
     {
-        // Only admin and super_admin can delete academic papers
-        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
-            $this->error('Only administrators can delete academic papers.');
-            $this->deleteId = null;
-            $this->dispatch('close-delete-modal');
-
-            return;
-        }
+        Gate::authorize('manage-academic-papers');
 
         // Use parameter if provided, otherwise fall back to property
         $deleteId = $paperId ?? $this->deleteId;
@@ -507,8 +510,8 @@ class AdminAcademicPaperIndex extends AdminComponent
 
             if ($borrowedCopies > 0) {
                 $this->error(
-                    "Cannot delete this academic paper. {$borrowedCopies} " .
-                        ($borrowedCopies === 1 ? 'copy is' : 'copies are') .
+                    "Cannot delete this academic paper. {$borrowedCopies} ".
+                        ($borrowedCopies === 1 ? 'copy is' : 'copies are').
                         ' currently borrowed.',
                     'Deletion Not Allowed'
                 );
@@ -543,7 +546,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->dispatch('close-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
-            $this->error('Failed to delete academic paper: ' . $e->getMessage());
+            $this->error('Failed to delete academic paper: '.$e->getMessage());
             $this->deleteId = null;
         }
     }
@@ -562,19 +565,14 @@ class AdminAcademicPaperIndex extends AdminComponent
         return Cache::remember(
             "academic_paper_{$this->form->academicPaperId}_copy_count",
             60, // 1 minute cache
-            fn() => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
+            fn () => AcademicPaper::find($this->form->academicPaperId)?->copies()->count()
         );
     }
 
     // Open drawer for creating new academic paper
     public function create(): void
     {
-        // Only admin and super_admin can create academic papers
-        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
-            $this->error('Only administrators can create academic papers.');
-
-            return;
-        }
+        Gate::authorize('manage-academic-papers');
 
         $this->isEditing = false;
         $this->form->reset(); // This already calls populateYearChoices() and loadStaticChoices()
@@ -600,12 +598,7 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Open drawer for editing existing academic paper
     public function edit(int $id): void
     {
-        // Only admin and super_admin can edit academic papers
-        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
-            $this->error('Only administrators can edit academic papers.');
-
-            return;
-        }
+        Gate::authorize('manage-academic-papers');
 
         $this->resetErrorBag(); // Clear any previous validation errors
 
@@ -642,6 +635,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Save academic paper (create or update)
     public function saveAcademicPaper(): void
     {
+        Gate::authorize('manage-academic-papers');
+
         if ($this->isEditing) {
             $paper = $this->form->update();
             $this->success("{$paper->catalog_code} updated", 'Updated Successfully!');
@@ -669,6 +664,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Search method for research advisers with caching
     public function searchResearchAdvisers(string $value = '')
     {
+        Gate::authorize('manage-academic-papers');
+
         // Check if we have cached results for the same search
         if ($this->lastResearchAdviserSearch === $value && $this->cachedResearchAdvisers !== null) {
             $this->form->research_adviser_options = $this->cachedResearchAdvisers;
@@ -691,7 +688,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $advisers = collect($cachedData);
             } else {
                 // Get search results from database
-                $advisers = \App\Models\ResearchAdviser::query()
+                $advisers = ResearchAdviser::query()
                     ->when($value !== '', function ($query) use ($value) {
                         $query->where('name', 'like', "%{$value}%");
                     })
@@ -710,7 +707,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $advisers = \App\Models\ResearchAdviser::query()
+            $advisers = ResearchAdviser::query()
                 ->when($value !== '', function ($query) use ($value) {
                     $query->where('name', 'like', "%{$value}%");
                 })
@@ -725,7 +722,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Include selected option if it exists and is not in search results
         if (! empty($this->form->research_adviser_id)) {
-            $selectedAdviser = \App\Models\ResearchAdviser::find($this->form->research_adviser_id);
+            $selectedAdviser = ResearchAdviser::find($this->form->research_adviser_id);
             if ($selectedAdviser) {
                 $selectedOption = ['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name];
                 // Check if already exists, if not add it
@@ -754,6 +751,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Search method for technical advisers with caching
     public function searchTechnicalAdvisers(string $value = '')
     {
+        Gate::authorize('manage-academic-papers');
+
         // Check if we have cached results for the same search
         if ($this->lastTechnicalAdviserSearch === $value && $this->cachedTechnicalAdvisers !== null) {
             $this->form->technical_adviser_options = $this->cachedTechnicalAdvisers;
@@ -776,7 +775,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $advisers = collect($cachedData);
             } else {
                 // Get search results from database
-                $advisers = \App\Models\TechnicalAdviser::query()
+                $advisers = TechnicalAdviser::query()
                     ->when($value !== '', function ($query) use ($value) {
                         $query->where('name', 'like', "%{$value}%");
                     })
@@ -795,7 +794,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $advisers = \App\Models\TechnicalAdviser::query()
+            $advisers = TechnicalAdviser::query()
                 ->when($value !== '', function ($query) use ($value) {
                     $query->where('name', 'like', "%{$value}%");
                 })
@@ -809,13 +808,13 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         // Ensure $advisers is always a collection
-        if (! $advisers instanceof \Illuminate\Support\Collection) {
+        if (! $advisers instanceof Collection) {
             $advisers = collect($advisers ?? []);
         }
 
         // Include selected option if it exists and is not in search results
         if (! empty($this->form->technical_adviser_id)) {
-            $selectedAdviser = \App\Models\TechnicalAdviser::find($this->form->technical_adviser_id);
+            $selectedAdviser = TechnicalAdviser::find($this->form->technical_adviser_id);
             if ($selectedAdviser) {
                 $selectedOption = ['id' => $selectedAdviser->id, 'name' => $selectedAdviser->name];
                 // Check if already exists, if not add it
@@ -844,6 +843,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Search method for authors with caching
     public function searchAuthors(string $value = '')
     {
+        Gate::authorize('manage-academic-papers');
+
         // Request-level caching for repeated searches within the same request
         if ($this->lastAuthorSearch === $value && $this->cachedAuthors !== null && $this->authorsLoaded) {
             return $this->cachedAuthors;
@@ -852,15 +853,15 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->lastAuthorSearch = $value;
 
         // Use persistent cache with short TTL for search results
-        $cacheKey = 'author_search_' . md5(strtolower(trim($value)));
+        $cacheKey = 'author_search_'.md5(strtolower(trim($value)));
 
         $results = Cache::remember($cacheKey, 300, function () use ($value) {
-            $query = \App\Models\Author::query()
+            $query = Author::query()
                 ->select('id', 'name')
                 ->orderBy('name');
 
             if (! empty($value)) {
-                $query->where('name', 'like', '%' . $value . '%');
+                $query->where('name', 'like', '%'.$value.'%');
             }
 
             return $query->limit(50)->get();
@@ -869,9 +870,9 @@ class AdminAcademicPaperIndex extends AdminComponent
         // Always include selected authors in options for correct tag rendering
         $selectedIds = $this->form->author_ids ?? [];
         $selectedAuthors = ! empty($selectedIds)
-            ? \App\Models\Author::whereIn('id', $selectedIds)
-            ->select('id', 'name')
-            ->get()
+            ? Author::whereIn('id', $selectedIds)
+                ->select('id', 'name')
+                ->get()
             : collect();
 
         // Merge search results and selected authors, remove duplicates
@@ -898,6 +899,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     // Search method for deans with caching
     public function searchDeans(string $value = '')
     {
+        Gate::authorize('manage-academic-papers');
+
         // Check if we have cached results for the same search
         if ($this->lastDeanSearch === $value && $this->cachedDeans !== null) {
             $this->form->dean_options = $this->cachedDeans;
@@ -920,7 +923,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                 $deans = collect($cachedData);
             } else {
                 // Get search results from database - now from Dean model
-                $deans = \App\Models\Dean::query()
+                $deans = Dean::query()
                     ->when($value !== '', function ($query) use ($value) {
                         $query->where('name', 'like', "%{$value}%");
                     })
@@ -939,7 +942,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             }
         } else {
             // Get search results from database for non-empty searches
-            $deans = \App\Models\Dean::query()
+            $deans = Dean::query()
                 ->when($value !== '', function ($query) use ($value) {
                     $query->where('name', 'like', "%{$value}%");
                 })
@@ -954,7 +957,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Include selected option if it exists and is not in search results
         if (! empty($this->form->dean_id)) {
-            $selectedDean = \App\Models\Dean::find($this->form->dean_id);
+            $selectedDean = Dean::find($this->form->dean_id);
             if ($selectedDean) {
                 $selectedOption = ['id' => $selectedDean->id, 'name' => $selectedDean->name];
                 // Check if already exists, if not add it
@@ -1043,11 +1046,11 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         return AcademicPaper::with([
-            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'authors' => fn ($q) => $q->select('authors.id', 'authors.name'),
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
+            'copies' => fn ($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 
@@ -1077,6 +1080,8 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public function showPaperDetails(int $paperId): void
     {
+        Gate::authorize('view-academic-papers');
+
         $this->selectedPaperId = $paperId;
         $this->dispatch('paper-modal');
     }
@@ -1086,12 +1091,7 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     public function confirmDelete(int $paperId): void
     {
-        // Only admin and super_admin can delete academic papers
-        if (! Auth::check() || ! Auth::user()->hasAdminAccess()) {
-            $this->error('Only administrators can delete academic papers.');
-
-            return;
-        }
+        Gate::authorize('manage-academic-papers');
 
         $this->deleteId = $paperId;
         $this->dispatch('delete-modal');
@@ -1102,12 +1102,16 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     public function confirmCopyDelete(int $copyId): void
     {
+        Gate::authorize('manage-academic-papers');
+
         $this->copyToDelete = $copyId;
         $this->dispatch('copy-delete-modal');
     }
 
     public function performCopyDelete(?int $copyId = null): void
     {
+        Gate::authorize('manage-academic-papers');
+
         // Use parameter if provided, otherwise fall back to property
         $copyToDelete = $copyId ?? $this->copyToDelete;
 
@@ -1116,9 +1120,8 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         try {
-            $copy = \App\Models\Inventory::findOrFail($copyToDelete);
+            $copy = Inventory::findOrFail($copyToDelete);
 
-            // Admin pages are already protected by middleware
             if ($copy->status !== 'Available') {
                 // On validation error, show message but don't close modal
                 $this->error("Cannot delete copy #{$copyToDelete}. It may be borrowed or not found.", 'Delete Failed!');
@@ -1176,7 +1179,7 @@ class AdminAcademicPaperIndex extends AdminComponent
             $this->dispatch('close-copy-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
-            $this->error('Failed to delete copy: ' . $e->getMessage());
+            $this->error('Failed to delete copy: '.$e->getMessage());
             $this->copyToDelete = null;
         }
     }

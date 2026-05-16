@@ -213,6 +213,6 @@ class TestQrScanner extends Component
 
     public function render()
     {
-        return view('livewire.test-qr-scanner');
+        return view('livewire.test-qr-scanner')->layout('components.layouts.app');
     }
 }

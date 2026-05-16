@@ -2,18 +2,16 @@
 
 <dialog 
     x-ref="deleteModal" 
-    x-show="showDeleteModal" 
     @click.self="showDeleteModal = false" 
+    @close="if(showDeleteModal) { showDeleteModal = false }"
     @close-delete-modal.window="showDeleteModal = false"
     class="modal"
-    x-transition:enter="transition ease-out duration-300"
-    x-transition:enter-start="opacity-0"
-    x-transition:enter-end="opacity-100"
-    x-transition:leave="transition ease-in duration-200"
-    x-transition:leave-start="opacity-100"
-    x-transition:leave-end="opacity-0"
-    x-init="$watch('showDeleteModal', value => { if (value) { $refs.deleteModal.showModal() } else { $refs.deleteModal.close() } })">
+    x-init="$watch('showDeleteModal', value => { 
+        if (value && !$refs.deleteModal.open) { $refs.deleteModal.showModal() } 
+        else if (!value && $refs.deleteModal.open) { $refs.deleteModal.close() } 
+    })">
     <div class="modal-box"
+        x-show="showDeleteModal"
         x-transition:enter="transition ease-out duration-300"
         x-transition:enter-start="opacity-0 transform scale-95"
         x-transition:enter-end="opacity-100 transform scale-100"

@@ -54,6 +54,8 @@ class ActiveUsersTab extends AdminComponent
 
     public function getActiveUsersProperty()
     {
+        Gate::authorize('view-attendance-logs');
+
         $search = trim($this->searchActiveUsers);
 
         $query = Attendance::with('user')
@@ -84,6 +86,8 @@ class ActiveUsersTab extends AdminComponent
 
     public function getViolationOptionsProperty()
     {
+        Gate::authorize('view-violation-logs');
+
         return Violation::orderBy('name')->get()->map(function ($violation) {
             return [
                 'id' => $violation->id,
@@ -105,6 +109,8 @@ class ActiveUsersTab extends AdminComponent
 
     public function openViolationDrawer($userId)
     {
+        Gate::authorize('manage-violation-logs');
+
         $this->selectedUserForViolation = $userId;
         $this->selectedUser = User::findOrFail($userId);
         $this->selectedViolationId = null;
@@ -114,6 +120,8 @@ class ActiveUsersTab extends AdminComponent
 
     public function recordViolation()
     {
+        Gate::authorize('manage-violation-logs');
+
         $this->validate([
             'selectedUserForViolation' => 'required|exists:users,id',
             'selectedViolationId' => 'required|exists:violations,id',
@@ -165,6 +173,8 @@ class ActiveUsersTab extends AdminComponent
 
     public function declareForgotTimeout($attendanceId)
     {
+        Gate::authorize('manage-violation-logs');
+
         try {
             DB::transaction(function () use ($attendanceId) {
                 $attendance = Attendance::lockForUpdate()->find($attendanceId);
@@ -224,12 +234,16 @@ class ActiveUsersTab extends AdminComponent
 
     public function openDeclareForgotTimeoutModal($attendanceId)
     {
+        Gate::authorize('manage-violation-logs');
+
         $this->attendanceToDeclare = $attendanceId;
         $this->confirmForgotTimeoutModal = true;
     }
 
     public function confirmDeclareForgotTimeout()
     {
+        Gate::authorize('manage-violation-logs');
+
         if (! $this->attendanceToDeclare) {
             $this->error('No attendance selected.');
 
