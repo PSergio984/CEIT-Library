@@ -1,83 +1,41 @@
-# Phase 1: Frontend Bug Fixes & Scanning Optimization - Context
+# Phase 1 Context: Frontend Bug Fixes & Scanning Optimization
 
-**Gathered:** 2026-05-16
-**Status:** Ready for planning
+## Status
+- **Phase**: 1
+- **Focus**: UI Stability, QR Optimization, Security Audit
+- **Decisions Locked**: 2026-05-16
 
-<domain>
-## Phase Boundary
-
-Resolve critical frontend interaction bottlenecks in the Admin dashboard and optimize the QR scanning hardware integration for mobile devices.
-
-</domain>
-
-<decisions>
 ## Implementation Decisions
 
-### Performance & Navigation
-- **D-01:** **Performance-First Approach.** Prioritize sub-100ms navigation. Focus on Lazy Loading for heavy components (like Admin tables) and auditing Tailwind v4/Vite output to strip unnecessary assets.
-- **D-02:** **Isolate "Invisible" Blocking.** Investigate the "invisible" layer preventing mouse interaction after modal closure. This is likely a global `wire:loading` overlay or a Mary UI modal backdrop that fails to clear.
-- **D-03:** **Local over Global Loading.** Refactor full-screen loading overlays to local, button-level spinners to prevent UI locking during AJAX requests.
+### 1. Modernization (Upgrade)
+- **Livewire**: Upgrade from v3 to **v4**. 
+- **Ecosystem**: Modernize to **Mary UI v2**, **Tailwind CSS v4**, and **daisyUI v5**.
+- **Approach**: Perform dependency updates first, followed by a compatibility audit of existing components. Ensure all components extend `Livewire\Component`.
 
-### Hardware & UX
-- **D-04:** **Force Back-Facing Camera.** Configure the QR scanner to strictly prefer the 'environment' (back-facing) camera on mobile devices by default, resolving the front-camera fallback issue.
+### 2. Modals & UI Stability
+- **Approach**: Stick with **Alpine.js** for modal state management (priority: performance). 
+- **Note**: Re-evaluate if Livewire v4 native features or Mary UI v2's native `<dialog>` handling removes the need for custom Alpine logic.
+- **Goal**: Fix the UI "locking" bug by ensuring native `<dialog>` cleanup and proper state synchronization.
+- **Action**: Audit `AdminAcademicPaperIndex.php` and its modal components to ensure backdrop/scroll-lock is released on close.
 
-### Security Hardening
-- **D-05:** **Authorization Audit.** Initial security focus will be a comprehensive audit of all Livewire actions to ensure strict `authorize()` checks are implemented, preventing unauthorized state mutations.
+### 3. QR Scanner Optimization
+- **Approach**: Implement a **Smart Camera Selection UI**.
+- **Logic**:
+    - If 2 cameras detected: Use a **Flip** icon to toggle between them.
+    - If > 2 cameras detected: Use a **Dropdown** list for explicit selection.
+- **Goal**: Resolve "front-facing camera" issues on mobile devices by giving users manual control if defaults fail.
 
-### Claude's Discretion
-- **D-06:** **Implementation Patterns.** Claude has discretion over the specific Livewire/Alpine patterns used to resolve the modal hang, provided they favor performance and prevent UI locking.
+### 4. Security Audit (A & B)
+- **Scope**: Comprehensive audit of all roles (Super Admin, Admin, Librarian, Student).
+- **Priority A (Action Authorization)**: Ensure all `wire:click` and public methods in Livewire components have explicit `Gate` or `authorize()` checks.
+- **Priority B (XSS/Input Validation)**: Audit all search inputs, filter parameters, and form submissions for proper sanitization and validation rules.
 
-</decisions>
+## Research Questions for Next Step
+- Identify breaking changes in Livewire v4 affecting existing components.
+- Audit Tailwind v4 migration requirements (removal of `tailwind.config.js`).
+- Identify the exact line in `admin-academic-paper-index.blade.php` causing the native `<dialog>` state desync.
+- Test `html5-qrcode` device enumeration reliability on various browser agents.
+- Map all public Livewire methods in the `Admin` and `Librarian` pages for the authorization audit.
 
-<canonical_refs>
-## Canonical References
-
-**Downstream agents MUST read these before planning or implementing.**
-
-### Project Infrastructure
-- `.planning/ROADMAP.md` — Milestone v1.1 scope and goals.
-- `.planning/PROJECT.md` — High-level project objectives and tech stack.
-- `.planning/ARCHITECTURE_OVERVIEW.md` — System philosophy and core domain models.
-
-### Scanning & UI
-- `app/Livewire/QrScanner.php` — Current scanning logic.
-- `resources/views/livewire/qr-scanner.blade.php` — Scanner UI and camera initialization script.
-- `resources/views/livewire/pages/admin/admin-academic-paper-index.blade.php` — Example of Admin table with modal/loading logic.
-
-</canonical_refs>
-
-<code_context>
-## Existing Code Insights
-
-### Reusable Assets
-- **Mary UI Modals:** Currently used for admin actions. Need verification on backdrop clean-up.
-- **jsQR:** Currently used for scanning. Initialization script in `qr-scanner.blade.php` needs adjustment for `facingMode`.
-
-### Established Patterns
-- **Global Loading Overlays:** Used in `admin-academic-paper-index.blade.php`. This pattern is a prime suspect for the UI "locking" issue.
-
-### Integration Points
-- **Admin Dashboard Tabs:** Where scanning and table interactions are most frequent.
-- **Livewire Event Listeners:** `scanner-stopped` and `close-qr-modal` events are already dispatched but may need tighter integration with Alpine.js state.
-
-</code_context>
-
-<specifics>
-## Specific Ideas
-- **Mouse Interaction Recovery:** Ensure the `Fixed inset-0` div (likely the loading overlay) is properly removed from the DOM on request completion.
-- **Livewire v4 Investigation:** While v3.6 is current, any planning should keep performance-centric features (like simpler hydration) in mind if an upgrade path to a newer major version is pursued.
-
-</specifics>
-
-<deferred>
-## Deferred Ideas
-
-- **Full Livewire Major Upgrade:** Deferred until performance audit confirms if current v3.x optimizations are insufficient.
-- **Mobile UI Redesign:** Staying focused on functional bug fixes (camera/locking) for now.
-
-</deferred>
-
----
-
-*Phase: 01-Frontend Bug Fixes & Scanning Optimization*
-*Context gathered: 2026-05-16*
+## Next Step
+Initiate **01-RESEARCH.md** to verify reproduction of the modal bug and scan for authorization gaps.

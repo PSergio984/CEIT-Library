@@ -18,15 +18,20 @@ class AttendanceQr extends Component
     use CreatesQrCanonicalMessage;
 
     // QR code generation version - increment when generation parameters change to invalidate cache
-    // v5: Simplified QR - removed timestamp/expiration, QR codes are now permanent per user
-    private const QR_CODE_VERSION = 'v5';
+    // v5: Simplified QR - removed timestamp/expiration
+    // v6: Optimized Payload - removed user object, shortened nonce for better scannability
+    private const QR_CODE_VERSION = 'v6';
 
     // QR code generation settings for optimal scannability
-    private const QR_SVG_SIZE = 400;      // Size for on-screen SVG display
+    private const QR_SVG_SIZE = 350;      // Reduced size for faster rendering
+
     private const QR_PNG_SIZE = 800;      // Larger size for downloadable PNG
-    private const QR_MARGIN = 8;          // Quiet zone margin (increased from 4 for better scanning)
-    private const QR_ERROR_CORRECTION_SVG = 'M';  // Medium (15% recovery) - better for dense encrypted data
-    private const QR_ERROR_CORRECTION_PNG = 'Q';  // Quartile (25%) for robust downloaded images
+
+    private const QR_MARGIN = 4;          // Standard margin
+
+    private const QR_ERROR_CORRECTION_SVG = 'L';  // Low (7%) - best for compact encrypted data to keep blocks large
+
+    private const QR_ERROR_CORRECTION_PNG = 'M';  // Medium (15%) for robust downloaded images
 
     // Use in-memory cache for the QR code SVG data
     private ?string $cachedQrCodeSvg = null;
@@ -47,8 +52,8 @@ class AttendanceQr extends Component
 
     /**
      * Generate encrypted attendance data for QR code
-     * Format: encrypted JSON with user_id, nonce, user info, and hash for tamper protection
-     * QR code is permanent per user - no expiration, uses nonce for replay protection
+     * Format: encrypted JSON with user_id, nonce, and hash for tamper protection
+     * v6: Removed user object and shortened nonce to reduce QR complexity
      */
     private function generateAttendanceData(): string
     {
@@ -58,7 +63,7 @@ class AttendanceQr extends Component
         }
 
         // Use user-specific cache key (permanent QR per user)
-        $cacheKey = 'qr_data:' . self::QR_CODE_VERSION . ":user:{$user->id}";
+        $cacheKey = 'qr_data:'.self::QR_CODE_VERSION.":user:{$user->id}";
 
         // Try to reuse the cached QR data
         $cachedData = Cache::get($cacheKey);
@@ -72,21 +77,13 @@ class AttendanceQr extends Component
             throw new \RuntimeException('QR HMAC secret is missing or insecure.');
         }
 
-        // Generate unique nonce for replay attack protection
-        // This nonce allows the QR to be used twice (check-in and check-out)
-        $nonce = Str::random(32);
-
-        // Build serializable user representation for QR payload
-        // Keep it minimal for better QR scanning reliability
-        $userPayload = [
-            'id' => $user->id,
-            'email' => $user->email,
-        ];
+        // Generate unique nonce for replay attack protection (shortened to 16 for v6)
+        $nonce = Str::random(16);
 
         $data = [
+            'v' => 6, // Add version marker to payload
             'user_id' => $user->id,
             'nonce' => $nonce,
-            'user' => $userPayload,
         ];
 
         // Add hash for tamper protection covering entire payload
@@ -130,7 +127,7 @@ class AttendanceQr extends Component
         }
 
         // Use user-specific cache key for SVG
-        $svgCacheKey = 'qr_svg:' . self::QR_CODE_VERSION . ":user:{$user->id}";
+        $svgCacheKey = 'qr_svg:'.self::QR_CODE_VERSION.":user:{$user->id}";
 
         $cachedSvg = Cache::get($svgCacheKey);
 
@@ -166,7 +163,7 @@ class AttendanceQr extends Component
             return '';
         }
 
-        return 'data:image/svg+xml;base64,' . base64_encode($svgData);
+        return 'data:image/svg+xml;base64,'.base64_encode($svgData);
     }
 
     /**
@@ -209,7 +206,7 @@ class AttendanceQr extends Component
         }
 
         // Check cache for existing PNG
-        $pngCacheKey = 'qr_png:' . self::QR_CODE_VERSION . ":user:{$user->id}";
+        $pngCacheKey = 'qr_png:'.self::QR_CODE_VERSION.":user:{$user->id}";
         $cachedPng = Cache::get($pngCacheKey);
 
         if (is_array($cachedPng) && isset($cachedPng['data'], $cachedPng['created_at'])) {
@@ -234,7 +231,7 @@ class AttendanceQr extends Component
             ]);
         }
 
-        $fileName = 'attendance-qrcode-' . $user->id . '.png';
+        $fileName = 'attendance-qrcode-'.$user->id.'.png';
 
         return response()->streamDownload(function () use ($pngData) {
             echo $pngData;

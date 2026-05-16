@@ -1,0 +1,644 @@
+
+=== DIRECTORY TREE (max depth 3, source files only) ===
+.cursor
+.cursor\mcp.json
+.cursor\rules
+.cursor\rules\daisyui.mdc
+.cursor\rules\laravel-boost.mdc
+.editorconfig
+.env
+.env.example
+.gemini
+.gemini\settings.json
+.gitattributes
+.github
+.github\agents
+.github\agents\diataxis-documentation-expert.agent.md
+.github\agents\prompt-engineer.agent.md
+.github\agents\Thinking-Beast-Mode.agent.md
+.github\chatmodes
+.github\chatmodes\laravel-expert-agent.chatmode.md
+.github\copilot-instructions.md
+.github\instructions
+.github\instructions\instructions.md
+.github\prompts
+.github\prompts\boost-prompt.prompt.md
+.github\prompts\breakdown-test.prompt.md
+.github\workflows
+.github\workflows\codeql.yml
+.github\workflows\laravel.yml
+.github\workflows\qodana_code_quality.yml
+.gitignore
+.idea
+.idea\.gitignore
+.idea\CEIT-Library.iml
+.idea\commandlinetools
+.idea\commandlinetools\Laravel_9_9_25__1_47PM.xml
+.idea\commandlinetools\schemas
+.idea\commandlinetools\schemas\frameworkDescriptionVersion1.1.4.xsd
+.idea\copilot.data.migration.agent.xml
+.idea\copilot.data.migration.ask.xml
+.idea\copilot.data.migration.ask2agent.xml
+.idea\copilot.data.migration.edit.xml
+.idea\copilotDiffState.xml
+.idea\dictionaries
+.idea\dictionaries\project.xml
+.idea\inspectionProfiles
+.idea\inspectionProfiles\Project_Default.xml
+.idea\material_theme_project_new.xml
+.idea\modules.xml
+.idea\php-test-framework.xml
+.idea\php.xml
+.idea\phpunit.xml
+.idea\vcs.xml
+.idea\workspace.xml
+.nvmrc
+.phpunit.result.cache
+.planning
+.planning\ARCHITECTURE_OVERVIEW.md
+.planning\codebase
+.planning\codebase\.codebase-scan.txt
+.planning\codebase\ARCHITECTURE.md
+.planning\codebase\CONCERNS.md
+.planning\codebase\CONVENTIONS.md
+.planning\codebase\INTEGRATIONS.md
+.planning\codebase\STACK.md
+.planning\codebase\STRUCTURE.md
+.planning\codebase\TESTING.md
+.planning\config.json
+.planning\phases
+.planning\phases\01-frontend-bug-fixes-scanning-optimization
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-CONTEXT.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-DISCUSSION-LOG.md
+.planning\PROJECT.md
+.planning\ROADMAP.md
+.planning\STATE.md
+.vscode
+.vscode\mcp.json
+_ide_helper.php
+_ide_helper_models.php
+app
+app\Console
+app\Console\Commands
+app\Console\Commands\CheckLibrarianAssignments.php
+app\Console\Commands\CheckOverdueTransactions.php
+app\Console\Commands\MarkOverdueTransactions.php
+app\Console\Commands\SendTestLibrarianAlert.php
+app\Console\Commands\SendTestLibrarianAlertFullWeek.php
+app\Console\Commands\SendTestLibrarianAlertPartial.php
+app\Console\Commands\SendTestLibrarianAlertUrgent.php
+app\Console\Commands\UpdateLibrarianBatchStatuses.php
+app\Console\Commands\UpdateLibrarianRoles.php
+app\Http
+app\Http\Controllers
+app\Http\Controllers\Auth
+app\Http\Controllers\Controller.php
+app\Http\Controllers\QrCodeDownloadController.php
+app\Http\Middleware
+app\Http\Middleware\AdminOnly.php
+app\Http\Middleware\CheckCreditScore.php
+app\Http\Middleware\LibrarianOrAdmin.php
+app\Livewire
+app\Livewire\Actions
+app\Livewire\Actions\Logout.php
+app\Livewire\Admin
+app\Livewire\Forms
+app\Livewire\Forms\AcademicPaperForm.php
+app\Livewire\Forms\LoginForm.php
+app\Livewire\Forms\RuleAndRegulationForm.php
+app\Livewire\Forms\ViolationForm.php
+app\Livewire\Pages
+app\Livewire\Pages\Admin
+app\Livewire\Pages\Student
+app\Livewire\QrScanner.php
+app\Livewire\Student
+app\Livewire\TestQrScanner.php
+app\Mail
+app\Mail\LibrarianAssignmentReminder.php
+app\Mail\Welcome.php
+app\Models
+app\Models\AcademicPaper.php
+app\Models\Attendance.php
+app\Models\Author.php
+app\Models\BorrowTransaction.php
+app\Models\Dean.php
+app\Models\Inventory.php
+app\Models\Librarian.php
+app\Models\Notification.php
+app\Models\ResearchAdviser.php
+app\Models\Role.php
+app\Models\RuleHeader.php
+app\Models\RuleRegulation.php
+app\Models\ScoreIncrement.php
+app\Models\TechnicalAdviser.php
+app\Models\User.php
+app\Models\Violation.php
+app\Models\ViolationTransaction.php
+app\Notifications
+app\Notifications\BorrowTransactionOverdue.php
+app\Notifications\CustomResetPassword.php
+app\Notifications\CustomVerifyEmail.php
+app\Providers
+app\Providers\AppServiceProvider.php
+app\Providers\VoltServiceProvider.php
+app\Rules
+app\Rules\NoHtmlTags.php
+app\Rules\PlvEmailDomain.php
+app\Rules\ProperName.php
+app\Rules\SafeText.php
+app\Traits
+app\Traits\CreatesQrCanonicalMessage.php
+app\View
+app\View\Components
+app\View\Components\AcademicPaperDetailModal.php
+app\View\Components\AppLayout.php
+app\View\Components\GuestLayout.php
+artisan
+assets
+boost.json
+bootstrap
+bootstrap\app.php
+bootstrap\cache
+bootstrap\cache\.gitignore
+bootstrap\cache\packages.php
+bootstrap\cache\services.php
+bootstrap\providers.php
+cl
+composer.json
+composer.lock
+config
+config\app.php
+config\auth.php
+config\cache.php
+config\database.php
+config\departments.php
+config\dompdf.php
+config\filesystems.php
+config\logging.php
+config\mail.php
+config\mary.php
+config\queue.php
+config\seeding.php
+config\services.php
+config\session.php
+config\throttle.php
+curl
+database
+database\.gitignore
+database\database.sqlite
+database\factories
+database\factories\AcademicPaperFactory.php
+database\factories\AttendanceFactory.php
+database\factories\AuthorFactory.php
+database\factories\BorrowTransactionFactory.php
+database\factories\DeanFactory.php
+database\factories\InventoryFactory.php
+database\factories\LibrarianFactory.php
+database\factories\ResearchAdviserFactory.php
+database\factories\RuleHeaderFactory.php
+database\factories\RuleRegulationFactory.php
+database\factories\ScoreIncrementFactory.php
+database\factories\TechnicalAdviserFactory.php
+database\factories\UserFactory.php
+
+=== STACK DETECTION (manifest files) ===
+
+--- composer.json ---
+{
+    "$schema": "https://getcomposer.org/schema.json",
+    "name": "laravel/laravel",
+    "type": "project",
+    "description": "The skeleton application for the Laravel framework.",
+    "keywords": ["laravel", "framework"],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "laravel/framework": "^12.0",
+        "laravel/tinker": "^2.10.1",
+        "livewire/livewire": "^3.6",
+        "livewire/volt": "^1.7",
+        "owenvoke/blade-fontawesome": "^2.9",
+        "robsontenorio/mary": "^2.4",
+        "simplesoftwareio/simple-qrcode": "^4.2",
+        "fakerphp/faker": "^1.23"
+    },
+    "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.16",
+        "barryvdh/laravel-ide-helper": "^3.6",
+        "laravel/boost": "^1.8",
+        "laravel/breeze": "^2.3",
+        "laravel/pail": "^1.2.2",
+        "laravel/pint": "^1.24",
+        "laravel/sail": "^1.41",
+        "mockery/mockery": "^1.6",
+        "nunomaduro/collision": "^8.6",
+        "phpunit/phpunit": "^11.5.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "app/",
+            "Database\\Factories\\": "database/factories/",
+            "Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
+            "@php artisan package:discover --ansi"
+        ],
+        "post-update-cmd": [
+            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
+        ],
+        "post-root-package-install": [
+            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
+        ],
+        "post-create-project-cmd": [
+            "@php artisan key:generate --ansi",
+            "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
+            "@php artisan migrate --graceful --ansi"
+        ],
+        "dev": [
+            "Composer\\Config::disableProcessTimeout",
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
+        ],
+        "test": [
+            "@php artisan config:clear --ansi",
+            "@php artisan test"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "dont-discover": []
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "php-http/discovery": true
+
+[TRUNCATED] Showing first 80 of 88 lines.
+--- composer.lock ---
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "a2579a0ae03b4544da6c3a0b144bb31b",
+    "packages": [
+        {
+            "name": "bacon/bacon-qr-code",
+            "version": "2.0.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Bacon/BaconQrCode.git",
+                "reference": "8674e51bb65af933a5ffaf1c308a660387c35c22"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Bacon/BaconQrCode/zipball/8674e51bb65af933a5ffaf1c308a660387c35c22",
+                "reference": "8674e51bb65af933a5ffaf1c308a660387c35c22",
+                "shasum": ""
+            },
+            "require": {
+                "dasprid/enum": "^1.0.3",
+                "ext-iconv": "*",
+                "php": "^7.1 || ^8.0"
+            },
+            "require-dev": {
+                "phly/keep-a-changelog": "^2.1",
+                "phpunit/phpunit": "^7 | ^8 | ^9",
+                "spatie/phpunit-snapshot-assertions": "^4.2.9",
+                "squizlabs/php_codesniffer": "^3.4"
+            },
+            "suggest": {
+                "ext-imagick": "to generate QR code images"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "BaconQrCode\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-2-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Ben Scholzen 'DASPRiD'",
+                    "email": "mail@dasprids.de",
+                    "homepage": "https://dasprids.de/",
+                    "role": "Developer"
+                }
+            ],
+            "description": "BaconQrCode is a QR code generator for PHP.",
+            "homepage": "https://github.com/Bacon/BaconQrCode",
+            "support": {
+                "issues": "https://github.com/Bacon/BaconQrCode/issues",
+                "source": "https://github.com/Bacon/BaconQrCode/tree/2.0.8"
+            },
+            "time": "2022-12-07T17:46:57+00:00"
+        },
+        {
+            "name": "barryvdh/laravel-dompdf",
+            "version": "v3.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/barryvdh/laravel-dompdf.git",
+                "reference": "8e71b99fc53bb8eb77f316c3c452dd74ab7cb25d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/barryvdh/laravel-dompdf/zipball/8e71b99fc53bb8eb77f316c3c452dd74ab7cb25d",
+                "reference": "8e71b99fc53bb8eb77f316c3c452dd74ab7cb25d",
+                "shasum": ""
+            },
+            "require": {
+                "dompdf/dompdf": "^3.0",
+                "illuminate/support": "^9|^10|^11|^12",
+                "php": "^8.1"
+
+[TRUNCATED] Showing first 80 of 10310 lines.
+--- package-lock.json ---
+{
+    "name": "CEIT-Library",
+    "lockfileVersion": 3,
+    "requires": true,
+    "packages": {
+        "": {
+            "dependencies": {
+                "html5-qrcode": "^2.3.8",
+                "jsqr": "^1.4.0"
+            },
+            "devDependencies": {
+                "@tailwindcss/vite": "^4.1.14",
+                "autoprefixer": "^10.4.2",
+                "axios": "^1.11.0",
+                "concurrently": "^9.0.1",
+                "daisyui": "^5.1.9",
+                "laravel-vite-plugin": "^2.0.0",
+                "postcss": "^8.4.31",
+                "vite": "^7.0.4"
+            }
+        },
+        "node_modules/@esbuild/aix-ppc64": {
+            "version": "0.25.10",
+            "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.10.tgz",
+            "integrity": "sha512-0NFWnA+7l41irNuaSVlLfgNT12caWJVLzp5eAVhZ0z1qpxbockccEt3s+149rE64VUI3Ml2zt8Nv5JVc4QXTsw==",
+            "cpu": [
+                "ppc64"
+            ],
+            "dev": true,
+            "license": "MIT",
+            "optional": true,
+            "os": [
+                "aix"
+            ],
+            "engines": {
+                "node": ">=18"
+            }
+        },
+        "node_modules/@esbuild/android-arm": {
+            "version": "0.25.10",
+            "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.10.tgz",
+            "integrity": "sha512-dQAxF1dW1C3zpeCDc5KqIYuZ1tgAdRXNoZP7vkBIRtKZPYe2xVr/d3SkirklCHudW1B45tGiUlz2pUWDfbDD4w==",
+            "cpu": [
+                "arm"
+            ],
+            "dev": true,
+            "license": "MIT",
+            "optional": true,
+            "os": [
+                "android"
+            ],
+            "engines": {
+                "node": ">=18"
+            }
+        },
+        "node_modules/@esbuild/android-arm64": {
+            "version": "0.25.10",
+            "resolved": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.25.10.tgz",
+            "integrity": "sha512-LSQa7eDahypv/VO6WKohZGPSJDq5OVOo3UoFR1E4t4Gj1W7zEQMUhI+lo81H+DtB+kP+tDgBp+M4oNCwp6kffg==",
+            "cpu": [
+                "arm64"
+            ],
+            "dev": true,
+            "license": "MIT",
+            "optional": true,
+            "os": [
+                "android"
+            ],
+            "engines": {
+                "node": ">=18"
+            }
+        },
+        "node_modules/@esbuild/android-x64": {
+            "version": "0.25.10",
+            "resolved": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.25.10.tgz",
+            "integrity": "sha512-MiC9CWdPrfhibcXwr39p9ha1x0lZJ9KaVfvzA0Wxwz9ETX4v5CHfF09bx935nHlhi+MxhA63dKRRQLiVgSUtEg==",
+            "cpu": [
+                "x64"
+            ],
+            "dev": true,
+
+[TRUNCATED] Showing first 80 of 2699 lines.
+--- package.json ---
+{
+    "$schema": "https://json.schemastore.org/package.json",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite"
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.1.14",
+        "autoprefixer": "^10.4.2",
+        "axios": "^1.11.0",
+        "concurrently": "^9.0.1",
+        "daisyui": "^5.1.9",
+        "laravel-vite-plugin": "^2.0.0",
+        "postcss": "^8.4.31",
+        "vite": "^7.0.4"
+    },
+    "dependencies": {
+        "html5-qrcode": "^2.3.8",
+        "jsqr": "^1.4.0"
+    }
+}
+
+
+=== ENTRY POINTS ===
+Found: public/index.php
+
+=== LINTING AND FORMATTING CONFIG ===
+Found: .editorconfig
+
+=== ENVIRONMENT VARIABLE TEMPLATES ===
+--- .env.example ---
+APP_NAME=Laravel
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+APP_LOCALE=en
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=en_US
+
+APP_MAINTENANCE_DRIVER=file
+# APP_MAINTENANCE_STORE=database
+
+PHP_CLI_SERVER_WORKERS=4
+
+BCRYPT_ROUNDS=12
+
+# When RUN_DB_SEED=true, set SEED_SUPER_ADMIN_PASSWORD to a non-empty value.
+RUN_DB_SEED=false
+SEED_SUPER_ADMIN_EMAIL=superadmin@plv.edu.ph
+SEED_SUPER_ADMIN_PASSWORD=
+
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=debug
+
+DB_CONNECTION=sqlite
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=laravel
+# DB_USERNAME=root
+# DB_PASSWORD=
+
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
+
+BROADCAST_CONNECTION=log
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=database
+
+CACHE_STORE=database
+# CACHE_PREFIX=
+
+MEMCACHED_HOST=127.0.0.1
+
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+MAIL_MAILER=log
+MAIL_SCHEME=null
+MAIL_HOST=127.0.0.1
+MAIL_PORT=2525
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+VITE_APP_NAME="${APP_NAME}"
+
+
+=== TODO / FIXME / HACK (production code only, test dirs excluded) ===
+None found.
+
+=== GIT RECENT COMMITS (last 20) ===
+6566065 docs(01): capture phase context and project roadmap
+2ca3be7 chore: add project config
+0b622fe docs(planning): add comprehensive architectural overview
+fcc872f docs(codebase): add structured codebase map
+4de0d41 fix: update nginx configuration and PHP-FPM settings in Dockerfile
+69f21e1 fix: remove nginx configuration file copy from Dockerfile
+ef0ad24 fix: correct nginx configuration file path in Dockerfile
+1ee0529 fix: update PHP-FPM configuration to include user and group settings
+ba5aab2 fix: replace COPY with RUN command for PHP-FPM configuration in Dockerfile
+0cd48ce Merge pull request #1 from PSergio984/fix/account-seeder
+85bd14d fix: update environment variable handling for database seeding and improve password validation logic
+5d4968d refactor: streamline super admin seeding logic and improve error handling
+95a1f92 feat: implement database seeder, deployment script, and custom PHP-FPM configuration
+89b9227 feat: implement database seeder with configurable super admin credentials and mock library data
+07daede feat: implement deployment automation and configurable database seeding with idempotent account management
+ca5bfab refactor: enhance database compatibility and improve UI responsiveness with background updates
+9bc23b7 feat: add seeder execution to deployment script for improved database setup
+7a70e31 refactor: reorganize nginx configuration and update Dockerfile for improved clarity
+0c56717 refactor: update deployment script to publish Livewire assets and improve clarity
+dcbc0eb refactor: update supervisord configuration and optimize Dockerfile for clarity and efficiency
+
+=== HIGH-CHURN FILES (last 90 days, top 20) ===
+  11 Dockerfile
+   6 scripts/00-laravel-deploy.sh
+   4 .env.example
+   4 database/seeders/DatabaseSeeder.php
+   3 Docker/nginx.conf
+   3 database/seeders/accountSeeder.php
+   2 Docker/www.conf
+   2 config/seeding.php
+   2 tests/Feature/SuperAdminSeedConfigTest.php
+   1 .planning/PROJECT.md
+   1 .planning/ROADMAP.md
+   1 .planning/phases/01-frontend-bug-fixes-scanning-optimization/01-CONTEXT.md
+   1 .planning/phases/01-frontend-bug-fixes-scanning-optimization/01-DISCUSSION-LOG.md
+   1 .planning/config.json
+   1 .planning/ARCHITECTURE_OVERVIEW.md
+   1 .planning/codebase/ARCHITECTURE.md
+   1 .planning/codebase/CONCERNS.md
+   1 .planning/codebase/CONVENTIONS.md
+   1 .planning/codebase/INTEGRATIONS.md
+   1 .planning/codebase/STACK.md
+
+=== MONOREPO SIGNALS ===
+No monorepo signals detected.
+
+=== CODE METRICS ===
+Total files scanned: 1143
+Total lines of code: 109493
+
+Files by language:
+  PHP: 708
+  Other: 431
+  JavaScript: 4
+
+Top 10 largest files:
+storage\logs\browser.log: 42874.1KB
+storage\logs\laravel.log: 22025.4KB
+graphify-out\.graphify_incremental.json: 3022.1KB
+graphify-out\graph.json: 2858.1KB
+graphify-out\manifest.json: 2694.0KB
+graphify-out\cache\ast\e1b2704881c54431b11ef8a5efb3cb0aa6a477d9bdb49dc10c9ddbc6be87c53e.json: 1155.7KB
+storage\app\private\livewire-tmp\DexmHbQxq7MOJCtgqI10RbAUkodkPj-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
+storage\app\private\livewire-tmp\g4EOGrVyHlkRb05LkCBLv75GEYDlIF-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
+storage\app\private\livewire-tmp\NbSpjMdjRUCc6KLQ2dLEuzf2X7OhtO-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
+storage\app\private\livewire-tmp\vzm3LWcDFre0zXUX011iDiWMX2sNAl-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
+
+=== CI/CD PIPELINES ===
+CI/CD: GitHub Actions
+
+=== CONTAINERS & ORCHESTRATION ===
+Container: Docker found
+
+=== SECURITY & COMPLIANCE ===
+No security configs detected.
+
+=== PERFORMANCE & TESTING ===
+No performance testing configs detected.
+
+=== SCAN COMPLETE ===

@@ -62,7 +62,7 @@ class TestQrScanner extends Component
             'user' => $userPayload,
         ];
 
-        // Add HMAC hash covering the entire payload
+        // Use the trait's createCanonicalMessage logic to ensure consistency
         $canonicalMessage = $this->createCanonicalMessage($data);
         $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
@@ -70,16 +70,16 @@ class TestQrScanner extends Component
         $encryptedData = Crypt::encryptString(json_encode($data));
 
         // Store for display
-        $this->testQrData = substr($encryptedData, 0, 100) . '... (' . strlen($encryptedData) . ' chars total)';
+        $this->testQrData = substr($encryptedData, 0, 100).'... ('.strlen($encryptedData).' chars total)';
 
         // Generate QR code
         try {
             $qrCodeSvg = QrCode::size(300)
                 ->generate($encryptedData);
-            $this->testQrCode = 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg);
+            $this->testQrCode = 'data:image/svg+xml;base64,'.base64_encode($qrCodeSvg);
         } catch (\Exception $e) {
             $this->testQrCode = null;
-            $this->error('Failed to generate QR code: ' . $e->getMessage());
+            $this->error('Failed to generate QR code: '.$e->getMessage());
 
             return;
         }
@@ -113,7 +113,7 @@ class TestQrScanner extends Component
 
     public function handleScanTest($data)
     {
-        $this->lastScanResult = substr($data, 0, 100) . '... (' . strlen($data) . ' chars total)';
+        $this->lastScanResult = substr($data, 0, 100).'... ('.strlen($data).' chars total)';
 
         try {
             // Decrypt and validate
@@ -125,10 +125,11 @@ class TestQrScanner extends Component
             // Validate structure
 
             $ageSeconds = isset($decoded['timestamp']) ? (Carbon::now()->timestamp - $decoded['timestamp']) : null;
-            $timestampValid = isset($decoded['timestamp']) && $ageSeconds !== null && $ageSeconds >= 0 && $ageSeconds <= 600;
+            $timestampValid = isset($decoded['timestamp']) && $ageSeconds !== null && $ageSeconds >= -60 && $ageSeconds <= 900;
 
             $validation = [
                 'decryption' => 'SUCCESS',
+                'v' => $decoded['v'] ?? 'pre-v6',
                 'structure' => [
                     'has_user_id' => isset($decoded['user_id']),
                     'has_timestamp' => isset($decoded['timestamp']),
@@ -137,51 +138,54 @@ class TestQrScanner extends Component
                     'has_nonce' => isset($decoded['nonce']),
                 ],
                 'timestamp' => [
+                    'present' => isset($decoded['timestamp']),
                     'value' => $decoded['timestamp'] ?? null,
-                    'readable' => isset($decoded['timestamp']) ? Carbon::createFromTimestamp($decoded['timestamp'])->toDateTimeString() : null,
+                    'readable' => isset($decoded['timestamp']) ? Carbon::createFromTimestamp($decoded['timestamp'])->toDateTimeString() : 'N/A (v6+)',
                     'age_seconds' => $ageSeconds,
-                    'valid' => $timestampValid,
+                    'valid' => $timestampValid || ! isset($decoded['timestamp']),
                 ],
                 'nonce' => [
                     'present' => isset($decoded['nonce']),
                     'length' => isset($decoded['nonce']) ? strlen($decoded['nonce']) : 0,
-                    'hash' => isset($decoded['nonce']) ? hash('sha256', $decoded['nonce']) : null,
+                    'value_prefix' => isset($decoded['nonce']) ? substr($decoded['nonce'], 0, 8).'...' : null,
                 ],
                 'hmac' => 'CHECKING...',
                 'data' => $decoded,
             ];
 
-            // Timestamp validation: reject if missing, future, or expired
-            if (! isset($decoded['timestamp']) || $ageSeconds === null) {
-                $this->validationResult = [
-                    'error' => 'QR code timestamp missing or unreadable.',
-                    'details' => $validation,
-                ];
-                $this->error('Validation failed: QR code timestamp missing or unreadable.');
+            // Timestamp validation: reject only if present and invalid
+            if (isset($decoded['timestamp'])) {
+                if ($ageSeconds === null) {
+                    $this->validationResult = [
+                        'error' => 'QR code timestamp unreadable.',
+                        'details' => $validation,
+                    ];
+                    $this->error('Validation failed: QR code timestamp unreadable.');
 
-                return;
-            }
-            if ($ageSeconds < 0) {
-                $this->validationResult = [
-                    'error' => 'QR code timestamp is in the future (invalid).',
-                    'details' => $validation,
-                ];
-                $this->error('Validation failed: QR code timestamp is in the future (invalid).');
+                    return;
+                }
+                if ($ageSeconds < -60) {
+                    $this->validationResult = [
+                        'error' => 'QR code timestamp is in the future (invalid skew).',
+                        'details' => $validation,
+                    ];
+                    $this->error('Validation failed: QR code timestamp is in the future (invalid).');
 
-                return;
-            }
-            if ($ageSeconds > 600) {
-                $this->validationResult = [
-                    'error' => 'QR code expired (timestamp too old).',
-                    'details' => $validation,
-                ];
-                $this->error('Validation failed: QR code expired (timestamp too old).');
+                    return;
+                }
+                if ($ageSeconds > 900) {
+                    $this->validationResult = [
+                        'error' => 'QR code expired (timestamp too old).',
+                        'details' => $validation,
+                    ];
+                    $this->error('Validation failed: QR code expired (timestamp too old).');
 
-                return;
+                    return;
+                }
             }
 
             // Verify HMAC covering entire payload
-            if (isset($decoded['user_id'], $decoded['timestamp'], $decoded['hash'], $decoded['nonce'])) {
+            if (isset($decoded['user_id'], $decoded['hash'], $decoded['nonce'])) {
                 // Remove hash from data before creating canonical message to avoid circular dependency
                 $dataForCanonical = $decoded;
                 unset($dataForCanonical['hash']);
@@ -189,10 +193,12 @@ class TestQrScanner extends Component
                 $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
                 $validation['hmac'] = hash_equals($expectedHash, $decoded['hash']) ? 'VALID' : 'INVALID';
                 $validation['hmac_details'] = [
-                    'expected' => substr($expectedHash, 0, 16) . '...',
-                    'received' => substr($decoded['hash'], 0, 16) . '...',
-                    'canonical_message' => substr($canonicalMessage, 0, 100) . '...',
+                    'expected' => substr($expectedHash, 0, 16).'...',
+                    'received' => substr($decoded['hash'], 0, 16).'...',
+                    'canonical_message' => substr($canonicalMessage, 0, 100).'...',
                 ];
+            } else {
+                $validation['hmac'] = 'MISSING FIELDS';
             }
 
             $this->validationResult = $validation;
@@ -201,7 +207,7 @@ class TestQrScanner extends Component
             $this->validationResult = [
                 'error' => $e->getMessage(),
             ];
-            $this->error('Validation failed: ' . $e->getMessage());
+            $this->error('Validation failed: '.$e->getMessage());
         }
     }
 

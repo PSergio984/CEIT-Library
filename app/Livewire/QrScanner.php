@@ -3,9 +3,11 @@
 namespace App\Livewire;
 
 use App\Models\Attendance;
+use App\Models\Notification;
 use App\Models\User;
 use App\Traits\CreatesQrCanonicalMessage;
 use Carbon\Carbon;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
@@ -126,16 +128,17 @@ class QrScanner extends Component
                 return self::VALIDATION_INVALID;
             }
 
-            // Validate JSON structure (only require user_id, user, hash, nonce - no timestamp)
-            if (! is_array($data) || ! isset($data['user_id'], $data['user'], $data['hash'], $data['nonce'])) {
-                Log::warning('Invalid QR code structure', ['data_keys' => array_keys($data ?? [])]);
+            // Validate JSON structure
+            // v5 required: user_id, user, hash, nonce
+            // v6 required: user_id, hash, nonce (user removed for optimization)
+            if (! is_array($data) || ! isset($data['user_id'], $data['hash'], $data['nonce'])) {
+                Log::warning('Invalid QR code structure: Missing required fields', [
+                    'data_keys' => array_keys($data ?? []),
+                    'v' => $data['v'] ?? 'pre-v6',
+                ]);
 
                 return self::VALIDATION_INVALID;
             }
-
-            // Note: Nonce is used for HMAC integrity verification only
-            // QR codes are now permanent (unlimited use) - no replay attack check needed
-            // The attendance logic itself prevents duplicate active sessions
 
             // Verify hash for tamper protection covering entire payload
             // Remove hash from data before creating canonical message to avoid circular dependency
@@ -143,18 +146,33 @@ class QrScanner extends Component
             unset($dataForCanonical['hash']);
             $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
             $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+
             if (! hash_equals($expectedHash, $data['hash'])) {
                 Log::warning('QR code hash mismatch - possible tampering detected', [
-                    'expected' => substr($expectedHash, 0, 16),
-                    'received' => substr($data['hash'], 0, 16),
+                    'expected_prefix' => substr($expectedHash, 0, 8),
+                    'received_prefix' => substr($data['hash'], 0, 8),
+                    'v' => $data['v'] ?? 'pre-v6',
+                    'user_id' => $data['user_id'] ?? 'unknown',
                 ]);
 
                 return self::VALIDATION_INVALID;
             }
 
+            // Optional: Validate timestamp if present (allow for 10 min window for legacy codes)
+            // This adds a layer of freshness check even if the code itself is reusable
+            if (isset($data['timestamp'])) {
+                $ageSeconds = now()->timestamp - $data['timestamp'];
+                if ($ageSeconds < -60 || $ageSeconds > 900) { // Increased window for legacy
+                    Log::debug('Legacy QR code timestamp skew', [
+                        'age_seconds' => $ageSeconds,
+                        'user_id' => $data['user_id'],
+                    ]);
+                }
+            }
+
             $user = User::find($data['user_id']);
             if (! $user) {
-                Log::warning('User not found in QR code', ['user_id' => $data['user_id']]);
+                Log::warning('User not found during QR scan', ['user_id' => $data['user_id']]);
 
                 return self::VALIDATION_INVALID;
             }
@@ -184,7 +202,7 @@ class QrScanner extends Component
                 'user_id' => $data['user_id'],
                 'user' => $user,
             ];
-        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+        } catch (DecryptException $e) {
             Log::warning('QR code decryption failed - possible tampering', ['error' => $e->getMessage()]);
 
             return self::VALIDATION_INVALID;
@@ -255,7 +273,7 @@ class QrScanner extends Component
                     $durationText = $this->formatDuration($minutes);
 
                     // Create check-out notification for the user
-                    \App\Models\Notification::create([
+                    Notification::create([
                         'user_id' => $user->id,
                         'type' => 'attendance_checkout',
                         'title' => 'Library Check-out Successful',
@@ -305,7 +323,7 @@ class QrScanner extends Component
                     ]);
 
                     // Create check-in notification for the user
-                    \App\Models\Notification::create([
+                    Notification::create([
                         'user_id' => $user->id,
                         'type' => 'attendance_checkin',
                         'title' => 'Library Check-in Successful',

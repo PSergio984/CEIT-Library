@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Pages\admin;
+namespace App\Livewire\Pages\Admin;
 
 use App\Models\Attendance;
 use App\Models\Role;

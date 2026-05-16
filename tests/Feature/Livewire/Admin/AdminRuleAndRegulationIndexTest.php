@@ -18,7 +18,7 @@ class AdminRuleAndRegulationIndexTest extends TestCase
     #[Test]
     public function it_reads_rules_list(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role_id' => 4]);
         $header = RuleHeader::factory()->create(['title' => 'Main Library Rules']);
         $regulation = RuleRegulation::factory()->create([
             'rule_header_id' => $header->id,
@@ -34,7 +34,7 @@ class AdminRuleAndRegulationIndexTest extends TestCase
     #[Test]
     public function it_creates_a_rule_via_admin_index_component(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role_id' => 4]);
         $header = RuleHeader::factory()->create(['title' => 'General']);
 
         Livewire::actingAs($user)
@@ -55,7 +55,7 @@ class AdminRuleAndRegulationIndexTest extends TestCase
     #[Test]
     public function it_updates_a_rule_via_admin_index_component(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role_id' => 4]);
         $header = RuleHeader::factory()->create(['title' => 'General']);
         $rule = RuleRegulation::factory()->create([
             'rule_header_id' => $header->id,
@@ -79,7 +79,7 @@ class AdminRuleAndRegulationIndexTest extends TestCase
     #[Test]
     public function it_deletes_a_rule_via_admin_index_component(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create(['role_id' => 4]);
         $header = RuleHeader::factory()->create(['title' => 'General']);
         $rule = RuleRegulation::factory()->create([
             'rule_header_id' => $header->id,

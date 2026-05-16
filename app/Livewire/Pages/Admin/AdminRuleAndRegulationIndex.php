@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Livewire\Pages\admin;
+namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\RuleAndRegulationForm;
 use App\Models\RuleHeader;
@@ -16,7 +16,6 @@ use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Title('Rules and Regulations')]
-#[Lazy]
 class AdminRuleAndRegulationIndex extends AdminComponent
 {
     use AuthorizesRequests, Toast, WithPagination;

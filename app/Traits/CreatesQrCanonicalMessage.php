@@ -8,25 +8,37 @@ trait CreatesQrCanonicalMessage
 {
     /**
      * Create a canonical message for HMAC that covers all sensitive fields
-     * Note: Excludes email and name as they are PII and not needed for validation
-     * Uses user_id, nonce, and user object for tamper detection
-     * Timestamp removed in v5 - QR codes no longer expire based on time
+     * Uses a deterministic approach for different payload versions
      */
     private function createCanonicalMessage(array $data): string
     {
-        // Sort keys to ensure consistent ordering
-        $fields = [
-            'user_id' => $data['user_id'] ?? '',
-            'nonce' => $data['nonce'] ?? '',
-            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
-        ];
+        // Define the fixed order for canonical fields to ensure deterministic hashing
+        // We only use essential fields for the signature
+        $parts = [];
 
-        // Create deterministic string representation
-        return implode('|', [
-            $fields['user_id'],
-            $fields['nonce'],
-            $fields['user'],
-        ]);
+        // Essential core fields
+        $parts[] = $data['user_id'] ?? ($data['id'] ?? '');
+        $parts[] = $data['nonce'] ?? '';
+
+        // Optional/Legacy fields (only include if present to support v5 and v6)
+        if (isset($data['timestamp'])) {
+            $parts[] = $data['timestamp'];
+        }
+
+        if (isset($data['user'])) {
+            $userValue = is_array($data['user'])
+                ? json_encode($data['user'], JSON_UNESCAPED_SLASHES)
+                : (string) $data['user'];
+            $parts[] = $userValue;
+        }
+
+        // Additional data fields (used for paper scans, etc.)
+        if (isset($data['inventory_id'])) {
+            $parts[] = $data['inventory_id'];
+        }
+
+        // Join with pipes to create the canonical string
+        return implode('|', $parts);
     }
 
     /**
