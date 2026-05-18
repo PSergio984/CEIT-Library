@@ -17,6 +17,12 @@
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    
+    <!-- PWA -->
+    <link rel="manifest" href="/build/manifest.webmanifest">
+    <meta name="theme-color" content="#0046ad">
+    <link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
+
     @livewireStyles
 </head>
 
