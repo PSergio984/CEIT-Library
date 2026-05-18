@@ -2,14 +2,12 @@
 
 <dialog 
     x-ref="copyDeleteModal" 
+    wire:ignore.self
     @click.self="showCopyDeleteModal = false"
     @close="if(showCopyDeleteModal) { showCopyDeleteModal = false }"
     @close-copy-delete-modal.window="showCopyDeleteModal = false"
     class="modal"
-    x-init="$watch('showCopyDeleteModal', value => { 
-        if (value && !$refs.copyDeleteModal.open) { $refs.copyDeleteModal.showModal() } 
-        else if (!value && $refs.copyDeleteModal.open) { $refs.copyDeleteModal.close() } 
-    })"
+    x-effect="showCopyDeleteModal ? (!$refs.copyDeleteModal.open && $refs.copyDeleteModal.showModal()) : ($refs.copyDeleteModal.open && $refs.copyDeleteModal.close())"
 >
     <div class="modal-box"
         x-show="showCopyDeleteModal"

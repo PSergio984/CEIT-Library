@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\ScoreIncrement;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\ScoreIncrement>
+ * @extends Factory<ScoreIncrement>
  */
 class ScoreIncrementFactory extends Factory
 {

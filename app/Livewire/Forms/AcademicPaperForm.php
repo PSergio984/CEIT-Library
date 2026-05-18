@@ -3,10 +3,12 @@
 namespace App\Livewire\Forms;
 
 use App\Models\AcademicPaper;
+use App\Models\Inventory;
 use App\Rules\NoHtmlTags;
 use App\Rules\SafeText;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Validate;
 use Livewire\Form;
@@ -170,7 +172,7 @@ class AcademicPaperForm extends Form
         }
     }
 
-    private function syncAuthors(\App\Models\AcademicPaper $academicPaper)
+    private function syncAuthors(AcademicPaper $academicPaper)
     {
         if (empty($this->author_ids)) {
             $academicPaper->authors()->detach();
@@ -179,46 +181,56 @@ class AcademicPaperForm extends Form
         }
 
         // Filter out any invalid IDs and sync
-        $validAuthorIds = array_filter($this->author_ids, fn($id) => is_int($id) && $id > 0);
+        $validAuthorIds = array_filter($this->author_ids, fn ($id) => is_int($id) && $id > 0);
         $academicPaper->authors()->sync($validAuthorIds);
     }
 
     private function createInventoryCopies($academicPaper)
     {
-        $currentCount = $academicPaper->copies()->count();
+        // Get the current logical count based on the highest copy number
+        $maxCopyNumber = $academicPaper->copies()->max('copy_number') ?? 0;
+        $currentCount = $maxCopyNumber;
         $desiredCount = $this->number_of_copies;
 
         if ($desiredCount > $currentCount) {
-            // Create additional copies
-            for ($i = $currentCount + 1; $i <= $desiredCount; $i++) {
-                \App\Models\Inventory::create([
+            // Calculate how many more copies we need to reach the desired logical count
+            $neededCount = $desiredCount - $currentCount;
+
+            // Create additional copies sequentially starting from max + 1
+            for ($i = 1; $i <= $neededCount; $i++) {
+                Inventory::create([
                     'academic_paper_id' => $academicPaper->id,
-                    'copy_number' => $i,
+                    'copy_number' => $maxCopyNumber + $i,
                     'status' => 'Available',
                 ]);
             }
         } elseif ($desiredCount < $currentCount) {
-            // Calculate how many copies need to be removed
+            // Logical reduction: remove copies starting from the highest copy_number
             $neededToRemove = $currentCount - $desiredCount;
-            $availableCount = $academicPaper->copies()->where('status', 'Available')->count();
 
-            // If not enough 'Available' copies exist to remove, surface a clear validation error and do nothing
-            if ($availableCount < $neededToRemove) {
-                $message = "Only {$availableCount} available copies can be removed; {$neededToRemove} required to reach the desired total.";
+            // We can only remove 'Available' copies.
+            // When removing logically, we check the highest N copies to see if they are ALL available.
+            // If any of the copies in the range we want to remove are NOT available, we must block.
 
-                throw \Illuminate\Validation\ValidationException::withMessages([
+            $copiesInRange = $academicPaper->copies()
+                ->where('copy_number', '>', $desiredCount)
+                ->get();
+
+            $unavailableCopies = $copiesInRange->filter(fn ($copy) => $copy->status !== 'Available');
+
+            if ($unavailableCopies->isNotEmpty()) {
+                $count = $unavailableCopies->count();
+                $message = "Cannot reduce to {$desiredCount} copies because {$count} of the copies to be removed (#".
+                          $unavailableCopies->pluck('copy_number')->implode(', #').
+                          ') are currently '.strtolower($unavailableCopies->first()->status).'.';
+
+                throw ValidationException::withMessages([
                     'number_of_copies' => $message,
                 ]);
             }
 
-            // Remove exactly the number of needed 'Available' copies (highest copy_numbers first)
-            $excessCopies = $academicPaper->copies()
-                ->where('status', 'Available')
-                ->orderBy('copy_number', 'desc')
-                ->limit($neededToRemove)
-                ->get();
-
-            foreach ($excessCopies as $copy) {
+            // Remove the copies in the range
+            foreach ($copiesInRange as $copy) {
                 $copy->delete();
             }
         }
@@ -241,12 +253,13 @@ class AcademicPaperForm extends Form
             ? $academicPaper->authors->pluck('id')->filter()->toArray()
             : $academicPaper->authors()->pluck('id')->filter()->toArray();
 
-        $copyCount = $academicPaper->relationLoaded('copies')
-            ? ($academicPaper->copies->count() ?: 1)
-            : ($academicPaper->copies()->count() ?: 1);
+        // Use MAX copy_number as the logical count instead of count() to handle gaps
+        $logicalCopyCount = $academicPaper->relationLoaded('copies')
+            ? ($academicPaper->copies->max('copy_number') ?: 1)
+            : ($academicPaper->copies()->max('copy_number') ?: 1);
 
-        $this->number_of_copies = $copyCount;
-        $this->initialCopyCount = $copyCount; // Store initial count for validation
+        $this->number_of_copies = $logicalCopyCount;
+        $this->initialCopyCount = $logicalCopyCount; // Store initial max for validation
 
         // Store only the ID to avoid serialization overhead
         $this->academicPaperId = $academicPaper->id;
@@ -278,7 +291,7 @@ class AcademicPaperForm extends Form
         ];
         $validPaperTypes = array_column($this->type_choices, 'id');
         if (! empty($validPaperTypes)) {
-            $paperTypeRules[] = 'in:' . implode(',', $validPaperTypes);
+            $paperTypeRules[] = 'in:'.implode(',', $validPaperTypes);
         }
 
         // Build department rules - include 'in:' validation only if config exists
@@ -289,7 +302,7 @@ class AcademicPaperForm extends Form
         ];
         $validDepartments = config('departments.valid_names', []);
         if (! empty($validDepartments)) {
-            $departmentRules[] = 'in:' . implode(',', $validDepartments);
+            $departmentRules[] = 'in:'.implode(',', $validDepartments);
         }
 
         $rules = [

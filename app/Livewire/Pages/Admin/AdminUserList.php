@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Pages\Admin;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Rules\PlvEmailDomain;
 use App\Rules\ProperName;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -21,12 +23,16 @@ class AdminUserList extends AdminComponent
 
     public $perPage = 20;
 
+    #[Validate('string|max:100|nullable')]
     public $search = '';
 
+    #[Validate('string|max:20|nullable')]
     public $statusFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public $creditScoreFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public $roleFilter = '';
 
     // Modal visibility
@@ -91,7 +97,7 @@ class AdminUserList extends AdminComponent
     protected function getStudentsQuery()
     {
         // Get student role ID
-        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+        $studentRoleId = Role::where('name', 'student')->value('id') ?? 1;
 
         return User::query()
             ->with('role')
@@ -184,7 +190,7 @@ class AdminUserList extends AdminComponent
     public function totalBorrowers()
     {
         return Cache::remember('admin_user_list_total_borrowers', 300, function () {
-            $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+            $studentRoleId = Role::where('name', 'student')->value('id') ?? 1;
 
             return User::where('role_id', $studentRoleId)
                 ->whereHas('borrowTransactions', function ($query) {
@@ -239,6 +245,8 @@ class AdminUserList extends AdminComponent
 
     public function saveChanges()
     {
+        $this->authorize('manage-students');
+
         $this->validate([
             'firstName' => [
                 'required',
@@ -329,6 +337,8 @@ class AdminUserList extends AdminComponent
 
     public function deleteUser()
     {
+        $this->authorize('manage-students');
+
         if ($this->selectedStudentId) {
             $student = User::findOrFail($this->selectedStudentId);
 

@@ -44,7 +44,7 @@
             {{-- BRAND --}}
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
-                    <div class="shrink-0">
+                    <div class="flex-shrink-0">
                         <a href="/dashboard">
                             <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
                         </a>
@@ -63,7 +63,7 @@
 
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:pl-0! [&_.mary-menu-item]:pl-0!">
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" />
                 <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/academic-papers" />
                 <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"

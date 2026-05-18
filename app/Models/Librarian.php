@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $shift_notes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\User|null $createdBy
- * @property-read \App\Models\User $user
+ * @property-read User|null $createdBy
+ * @property-read User $user
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Librarian active()
  * @method static \Database\Factories\LibrarianFactory factory($count = null, $state = [])

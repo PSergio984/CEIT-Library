@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 use Tests\Traits\TestHelper;
@@ -114,7 +116,7 @@ class UserTest extends TestCase
         $user = User::factory()->create();
 
         $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasOne::class,
+            HasOne::class,
             $user->librarianDuty()
         );
     }
@@ -129,7 +131,7 @@ class UserTest extends TestCase
         $user = User::factory()->create();
 
         $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasMany::class,
+            HasMany::class,
             $user->librarySessions()
         );
     }
@@ -187,7 +189,7 @@ class UserTest extends TestCase
         $user = User::factory()->create();
 
         $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasMany::class,
+            HasMany::class,
             $user->violations()
         );
     }
@@ -606,7 +608,7 @@ class UserTest extends TestCase
         $originalUpdatedAt = $user->updated_at;
 
         // Simulate time difference using Carbon
-        \Carbon\Carbon::setTestNow(\Carbon\Carbon::now()->addSecond());
+        Carbon::setTestNow(Carbon::now()->addSecond());
 
         $user->first_name = 'Jane';
         $user->save();
@@ -614,7 +616,7 @@ class UserTest extends TestCase
         $this->assertNotEquals($originalUpdatedAt, $user->fresh()->updated_at);
 
         // Reset Carbon test time
-        \Carbon\Carbon::setTestNow();
+        Carbon::setTestNow();
     }
 
     /**

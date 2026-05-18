@@ -9,6 +9,8 @@ use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -21,6 +23,7 @@ class ActiveUsersTab extends AdminComponent
         'refreshActiveUsers' => '$refresh',
     ];
 
+    #[Validate('string|max:100|nullable')]
     public $search = '';
 
     public $perPage = 10;
@@ -35,6 +38,7 @@ class ActiveUsersTab extends AdminComponent
 
     public $violationRemarks = '';
 
+    #[Validate('string|max:100|nullable')]
     public $searchActiveUsers = '';
 
     public $perPageActiveUsers = 10;

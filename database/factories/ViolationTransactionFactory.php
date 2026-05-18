@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Models\User;
 use App\Models\Violation;
+use App\Models\ViolationTransaction;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\ViolationTransaction>
+ * @extends Factory<ViolationTransaction>
  */
 class ViolationTransactionFactory extends Factory
 {

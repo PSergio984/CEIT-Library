@@ -7,6 +7,7 @@ use App\Models\Attendance;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\Librarian;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
@@ -21,7 +22,7 @@ class AdminDashboard extends AdminComponent
     public function stats()
     {
         // Get student role ID for counting
-        $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
+        $studentRoleId = Role::where('name', 'student')->value('id') ?? 1;
 
         return [
             'total_users' => User::where('role_id', $studentRoleId)->count(),

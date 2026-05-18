@@ -2,10 +2,15 @@
 
 namespace Database\Factories;
 
+use App\Models\AcademicPaper;
+use App\Models\Author;
+use App\Models\Dean;
+use App\Models\ResearchAdviser;
+use App\Models\TechnicalAdviser;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\AcademicPaper>
+ * @extends Factory<AcademicPaper>
  */
 class AcademicPaperFactory extends Factory
 {
@@ -25,14 +30,14 @@ class AcademicPaperFactory extends Factory
         $department = $this->faker->randomElement($departments);
 
         // Get random dean (expects to be seeded first)
-        $dean = \App\Models\Dean::inRandomOrder()->first();
+        $dean = Dean::inRandomOrder()->first();
 
         return [
             'title' => $this->faker->unique()->sentence(6, true),
             'publication_year' => $this->faker->numberBetween(2002, 2025),
             'paper_type' => $this->faker->randomElement(['Thesis', 'Feasib', 'Capstone', 'Research', 'Practicum', 'Report']),
-            'research_adviser_id' => \App\Models\ResearchAdviser::inRandomOrder()->first()?->id,
-            'technical_adviser_id' => \App\Models\TechnicalAdviser::inRandomOrder()->first()?->id,
+            'research_adviser_id' => ResearchAdviser::inRandomOrder()->first()?->id,
+            'technical_adviser_id' => TechnicalAdviser::inRandomOrder()->first()?->id,
             'department' => $department,
             'dean_id' => $dean?->id,
         ];
@@ -42,7 +47,7 @@ class AcademicPaperFactory extends Factory
     {
         return $this->afterCreating(function ($academicPaper) {
             // Attach 1-4 random authors if any exist
-            $authorIds = \App\Models\Author::inRandomOrder()->limit(rand(1, 4))->pluck('id');
+            $authorIds = Author::inRandomOrder()->limit(rand(1, 4))->pluck('id');
             if ($authorIds->count()) {
                 $academicPaper->authors()->attach($authorIds);
             }

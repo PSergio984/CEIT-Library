@@ -4,6 +4,7 @@ namespace Tests\Feature\Livewire;
 
 use App\Livewire\QrScanner;
 use App\Models\Attendance;
+use App\Models\Librarian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
@@ -31,7 +32,7 @@ class QrScannerFileUploadTest extends TestCase
         ]);
 
         // Create librarian duty record manually (avoid factory column issues)
-        \App\Models\Librarian::create([
+        Librarian::create([
             'user_id' => $librarian->id,
             'batch_no' => 2025001,
             'start_date' => now()->subDays(1),
@@ -173,7 +174,7 @@ class QrScannerFileUploadTest extends TestCase
         ]);
 
         // Create librarian duty record manually (avoid factory column issues)
-        \App\Models\Librarian::create([
+        Librarian::create([
             'user_id' => $librarian->id,
             'batch_no' => 2025002,
             'start_date' => now()->subDays(1),

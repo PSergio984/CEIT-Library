@@ -4,10 +4,15 @@ namespace Tests\Feature;
 
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
+use App\Models\Dean;
+use App\Models\Inventory;
 use App\Models\Librarian;
+use App\Models\ResearchAdviser;
 use App\Models\Role;
+use App\Models\TechnicalAdviser;
 use App\Models\User;
 use App\Models\Violation;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -39,7 +44,7 @@ class AdditionalFeaturesTest extends TestCase
         ]);
 
         // Try to set a Sunday date - should be rejected
-        $sunday = now()->next(\Carbon\Carbon::SUNDAY);
+        $sunday = now()->next(Carbon::SUNDAY);
 
         // This would be tested in the actual component/form validation
         // For now, we verify the system prevents Sunday selection
@@ -112,11 +117,11 @@ class AdditionalFeaturesTest extends TestCase
         ]);
 
         // Create required related records
-        \App\Models\Dean::factory()->create();
-        \App\Models\ResearchAdviser::factory()->create();
-        \App\Models\TechnicalAdviser::factory()->create();
+        Dean::factory()->create();
+        ResearchAdviser::factory()->create();
+        TechnicalAdviser::factory()->create();
         $paper = AcademicPaper::factory()->create();
-        $inventory = \App\Models\Inventory::factory()->create([
+        $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
         ]);
 
@@ -140,11 +145,11 @@ class AdditionalFeaturesTest extends TestCase
         ]);
 
         // Create required related records
-        \App\Models\Dean::factory()->create();
-        \App\Models\ResearchAdviser::factory()->create();
-        \App\Models\TechnicalAdviser::factory()->create();
+        Dean::factory()->create();
+        ResearchAdviser::factory()->create();
+        TechnicalAdviser::factory()->create();
         $paper = AcademicPaper::factory()->create();
-        $inventory = \App\Models\Inventory::factory()->create([
+        $inventory = Inventory::factory()->create([
             'academic_paper_id' => $paper->id,
         ]);
 
@@ -192,9 +197,9 @@ class AdditionalFeaturesTest extends TestCase
         ]);
 
         // Create required related records
-        $dean = \App\Models\Dean::factory()->create();
-        $researchAdviser = \App\Models\ResearchAdviser::factory()->create();
-        $technicalAdviser = \App\Models\TechnicalAdviser::factory()->create();
+        $dean = Dean::factory()->create();
+        $researchAdviser = ResearchAdviser::factory()->create();
+        $technicalAdviser = TechnicalAdviser::factory()->create();
 
         $paper = AcademicPaper::factory()->create([
             'dean_id' => $dean->id,
@@ -203,7 +208,7 @@ class AdditionalFeaturesTest extends TestCase
         ]);
 
         // Create multiple inventory copies
-        \App\Models\Inventory::factory()->count(3)->create([
+        Inventory::factory()->count(3)->create([
             'academic_paper_id' => $paper->id,
         ]);
 

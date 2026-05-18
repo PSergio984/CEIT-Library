@@ -9,6 +9,7 @@ use Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -18,8 +19,10 @@ class AdminManageRoles extends AdminComponent
 {
     use AuthorizesRequests, Toast, WithPagination;
 
+    #[Validate('string|max:100|nullable')]
     public $search = '';
 
+    #[Validate('string|max:20|nullable')]
     public $filterRole = '';
 
     public $showAssignRoleModal = false;

@@ -4,15 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $academic_paper_id
  * @property int $copy_number
  * @property string $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\AcademicPaper $academicPaper
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read AcademicPaper $academicPaper
  *
  * @method static \Database\Factories\InventoryFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Inventory newModelQuery()

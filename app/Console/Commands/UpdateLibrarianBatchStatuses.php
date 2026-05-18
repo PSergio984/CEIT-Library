@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Librarian;
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -34,8 +35,8 @@ class UpdateLibrarianBatchStatuses extends Command
 
         DB::transaction(function () use ($today) {
             // Get student and librarian role IDs
-            $studentRoleId = \App\Models\Role::where('name', 'student')->value('id') ?? 1;
-            $librarianRoleId = \App\Models\Role::where('name', 'librarian')->value('id') ?? 2;
+            $studentRoleId = Role::where('name', 'student')->value('id') ?? 1;
+            $librarianRoleId = Role::where('name', 'librarian')->value('id') ?? 2;
 
             // Update INACTIVE batches to ACTIVE if their start date is today
             $inactiveBatches = Librarian::where('status', 'inactive')

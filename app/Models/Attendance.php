@@ -16,8 +16,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property int|null $duration_minutes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Librarian|null $scannedByLibrarian
- * @property-read \App\Models\User $user
+ * @property-read Librarian|null $scannedByLibrarian
+ * @property-read User $user
  *
  * @method static \Database\Factories\AttendanceFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Attendance newModelQuery()

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\QrCodeDownloadController;
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
@@ -48,7 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', StudentNotifications::class)->name('notifications');
 
     // QR Code download route
-    Route::get('/qr-code/download/{inventoryId}', [\App\Http\Controllers\QrCodeDownloadController::class, 'download'])
+    Route::get('/qr-code/download/{inventoryId}', [QrCodeDownloadController::class, 'download'])
         ->whereNumber('inventoryId')
         ->name('qr-code.download');
 });

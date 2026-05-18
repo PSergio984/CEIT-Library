@@ -2,14 +2,12 @@
 
 <dialog 
     x-ref="deleteModal" 
+    wire:ignore.self
     @click.self="showDeleteModal = false" 
     @close="if(showDeleteModal) { showDeleteModal = false }"
     @close-delete-modal.window="showDeleteModal = false"
     class="modal"
-    x-init="$watch('showDeleteModal', value => { 
-        if (value && !$refs.deleteModal.open) { $refs.deleteModal.showModal() } 
-        else if (!value && $refs.deleteModal.open) { $refs.deleteModal.close() } 
-    })">
+    x-effect="showDeleteModal ? (!$refs.deleteModal.open && $refs.deleteModal.showModal()) : ($refs.deleteModal.open && $refs.deleteModal.close())">
     <div class="modal-box"
         x-show="showDeleteModal"
         x-transition:enter="transition ease-out duration-300"

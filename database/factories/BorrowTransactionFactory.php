@@ -2,11 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\BorrowTransaction;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\BorrowTransaction>
+ * @extends Factory<BorrowTransaction>
  */
 class BorrowTransactionFactory extends Factory
 {
@@ -31,7 +33,7 @@ class BorrowTransactionFactory extends Factory
             'time_out' => $timeOut,
             'status' => 'completed',
             'expires_at' => $expiresAt,
-            'session_token' => \Illuminate\Support\Str::random(64),
+            'session_token' => Str::random(64),
             'notes' => $this->faker->optional(0.3)->sentence(),
             'duration_minutes' => Carbon::parse($timeIn)->diffInMinutes($timeOut),
         ];

@@ -12,6 +12,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 
 #[Title('Credit Score History')]
+#[Layout('components.layouts.app')]
 class CreditScoreHistory extends Component
 {
     use WithPagination;

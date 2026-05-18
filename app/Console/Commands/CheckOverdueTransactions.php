@@ -3,9 +3,11 @@
 namespace App\Console\Commands;
 
 use App\Models\BorrowTransaction;
+use App\Notifications\BorrowTransactionOverdue;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 /**
  * Check for overdue borrow transactions and send notifications
@@ -87,7 +89,7 @@ class CheckOverdueTransactions extends Command
         }
 
         $count = $overdueTransactions->count();
-        $this->warn("⚠️  Found {$count} overdue ".\Illuminate\Support\Str::plural('transaction', $count));
+        $this->warn("⚠️  Found {$count} overdue ".Str::plural('transaction', $count));
         $this->newLine();
 
         // Display overdue transactions in a table
@@ -97,7 +99,7 @@ class CheckOverdueTransactions extends Command
                 return [
                     $transaction->id,
                     $transaction->user->full_name ?? 'N/A',
-                    \Illuminate\Support\Str::limit($transaction->inventory->academicPaper->title ?? 'N/A', 40),
+                    Str::limit($transaction->inventory->academicPaper->title ?? 'N/A', 40),
                     $transaction->expires_at->format('Y-m-d H:i'),
                     $transaction->expires_at->diffForHumans(),
                 ];
@@ -165,7 +167,7 @@ class CheckOverdueTransactions extends Command
             if ($updateSucceeded) {
                 if ($transaction->user) {
                     try {
-                        $transaction->user->notify(new \App\Notifications\BorrowTransactionOverdue($transaction));
+                        $transaction->user->notify(new BorrowTransactionOverdue($transaction));
                         // Only mark as notified if notification succeeds - this allows retry on failure
                         $transaction->update(['overdue_notified_at' => now()]);
                         $notificationSucceeded = true;

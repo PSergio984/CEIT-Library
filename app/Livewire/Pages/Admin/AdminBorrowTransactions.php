@@ -5,8 +5,10 @@ namespace App\Livewire\Pages\Admin;
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
+use App\Models\Notification;
 use App\Models\User;
 use App\Traits\CreatesQrCanonicalMessage;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
@@ -145,7 +147,7 @@ class AdminBorrowTransactions extends AdminComponent
             ->through(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'user_name' => trim(($transaction->user?->first_name ?? '') . ' ' . ($transaction->user?->last_name ?? '')) ?: 'N/A',
+                    'user_name' => trim(($transaction->user?->first_name ?? '').' '.($transaction->user?->last_name ?? '')) ?: 'N/A',
                     'user' => $transaction->user,
                     'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
                     'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
@@ -213,7 +215,7 @@ class AdminBorrowTransactions extends AdminComponent
             $transaction->update([
                 'status' => $this->editStatus,
                 'time_out' => $this->editStatus === 'completed'
-                    ? \Carbon\Carbon::parse($this->editTimeOut)
+                    ? Carbon::parse($this->editTimeOut)
                     : null,
             ]);
 
@@ -395,7 +397,7 @@ class AdminBorrowTransactions extends AdminComponent
                     } catch (\Exception $e) {
                         \DB::rollBack();
                         \Log::error('Return error:', ['error' => $e->getMessage()]);
-                        $this->error('Failed to return book: ' . $e->getMessage());
+                        $this->error('Failed to return book: '.$e->getMessage());
                         $this->isProcessingQr = false;
 
                         return ['found' => false];
@@ -434,7 +436,7 @@ class AdminBorrowTransactions extends AdminComponent
 
                 $this->pendingBorrowData = [
                     'user_id' => $user->id,
-                    'user_name' => $user->first_name . ' ' . $user->last_name,
+                    'user_name' => $user->first_name.' '.$user->last_name,
                     'inventory_id' => $inventory->id,
                     'paper_id' => $paper->id,
                     'copy_number' => $inventory->copy_number,
@@ -473,7 +475,7 @@ class AdminBorrowTransactions extends AdminComponent
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            $this->error('Error processing QR code: ' . $e->getMessage());
+            $this->error('Error processing QR code: '.$e->getMessage());
             $this->isProcessingQr = false;
 
             return ['found' => false];
@@ -530,14 +532,14 @@ class AdminBorrowTransactions extends AdminComponent
             $inventory->update(['status' => 'Unavailable']);
 
             // Create notification for the borrower
-            $paper = \App\Models\AcademicPaper::find($this->pendingBorrowData['paper_id']);
+            $paper = AcademicPaper::find($this->pendingBorrowData['paper_id']);
             $expiresAt = $transaction->expires_at;
 
-            \App\Models\Notification::create([
+            Notification::create([
                 'user_id' => $this->pendingBorrowData['user_id'],
                 'type' => 'paper_borrowed',
                 'title' => 'Academic Paper Borrowed Successfully',
-                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by " . $expiresAt->format('M d, Y h:i A') . '.',
+                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by ".$expiresAt->format('M d, Y h:i A').'.',
                 'data' => [
                     'transaction_id' => $transaction->id,
                     'paper_id' => $paper->id,
@@ -555,8 +557,8 @@ class AdminBorrowTransactions extends AdminComponent
             $this->reset(['borrowNotes', 'pendingBorrowData']);
         } catch (\Exception $e) {
             \DB::rollBack();
-            \Log::error('Borrow Confirmation Error: ' . $e->getMessage());
-            $this->error('Failed to create borrow transaction: ' . $e->getMessage());
+            \Log::error('Borrow Confirmation Error: '.$e->getMessage());
+            $this->error('Failed to create borrow transaction: '.$e->getMessage());
         }
     }
 

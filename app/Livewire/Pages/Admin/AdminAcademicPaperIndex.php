@@ -13,11 +13,13 @@ use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use SimpleSoftwareIO\QrCode\Generator;
@@ -135,19 +137,26 @@ class AdminAcademicPaperIndex extends AdminComponent
     public int $perPage = 10;
 
     #[Url]
+    #[Validate('string|max:100|nullable')]
     public string $search = '';
 
     // Filters
+    #[Validate('string|max:20|nullable')]
     public string $statusFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $yearFilter = '';
 
+    #[Validate('string|max:100|nullable')]
     public string $departmentFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $paperTypeFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $yearFromFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $yearToFilter = '';
 
     public function updatingPerPage(): void
@@ -304,6 +313,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 
         // Transform items to include status and borrowability as direct properties
         $paginated->getCollection()->transform(function ($paper) {
+            $paper->copies_count = $paper->logical_copies_count;
             $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
             // Check if any copies are borrowed - if so, the paper cannot be deleted
             $paper->has_borrowed_copies = $paper->copies->contains('status', 'Unavailable');

@@ -12,6 +12,7 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
+#[Layout('components.layouts.app')]
 class ShowAcademicPaper extends Component
 {
     use CreatesQrCanonicalMessage;
@@ -19,7 +20,9 @@ class ShowAcademicPaper extends Component
 
     // QR code generation settings
     private const QR_SVG_SIZE = 400;
+
     private const QR_MARGIN = 8;
+
     private const QR_ERROR_CORRECTION = 'M';
 
     public array $sortBy = ['column' => 'id', 'direction' => 'asc'];
@@ -141,7 +144,7 @@ class ShowAcademicPaper extends Component
             ->errorCorrection(self::QR_ERROR_CORRECTION)
             ->generate($qrContent);
 
-        $this->qrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $this->qrCodeDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
         $this->selectedInventoryId = $inventory->id;
         $this->selectedPaperTitle = $inventory->academicPaper?->title ?? 'Unknown Paper';
         $this->isQrModalOpen = true;
@@ -220,7 +223,7 @@ class ShowAcademicPaper extends Component
             ->errorCorrection(self::QR_ERROR_CORRECTION)
             ->generate($qrContent);
 
-        $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
         $this->returnQrPaperTitle = $transaction->inventory->academicPaper?->title ?? 'Unknown Paper';
         $this->returnQrTransactionId = $transaction->id;
         $this->returnQrInventoryId = $transaction->inventory_id;

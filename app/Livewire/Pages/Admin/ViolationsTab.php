@@ -38,7 +38,7 @@ class ViolationsTab extends AdminComponent
     public function getViolationsProperty()
     {
         $query = Violation::query()
-            ->when($this->search, fn($q) => $q
+            ->when($this->search, fn ($q) => $q
                 ->where('name', 'like', "%{$this->search}%")
                 ->orWhere('description', 'like', "%{$this->search}%"));
 
@@ -119,12 +119,12 @@ class ViolationsTab extends AdminComponent
         // Check if fields are filled and valid
         // Name: must be 3-255 chars AND match the regex pattern (letters, spaces, hyphens, apostrophes, periods, &, commas, parentheses)
         $nameRegex = '/^[\p{L}\s\-\'\.&,()]+$/u';
-        $nameValid = !empty($name)
+        $nameValid = ! empty($name)
             && strlen($name) >= 3
             && strlen($name) <= 255
             && preg_match($nameRegex, $name);
 
-        $descValid = !empty($description) && strlen($description) >= 10 && strlen($description) <= 1000;
+        $descValid = ! empty($description) && strlen($description) >= 10 && strlen($description) <= 1000;
 
         // Strictly enforce 1-100 range (null means not set, which is invalid)
         $penaltyValid = $penaltyScore !== null && is_numeric($penaltyScore) && $penaltyScore >= 1 && $penaltyScore <= 100;
@@ -132,7 +132,7 @@ class ViolationsTab extends AdminComponent
         // Check for validation errors from Livewire
         $hasErrors = $this->getErrorBag()->hasAny(['form.name', 'form.description', 'form.penalty_score']);
 
-        $fieldsValid = $nameValid && $descValid && $penaltyValid && !$hasErrors;
+        $fieldsValid = $nameValid && $descValid && $penaltyValid && ! $hasErrors;
 
         // For edit mode, also require form to be dirty
         if ($this->isEdit) {
@@ -144,12 +144,12 @@ class ViolationsTab extends AdminComponent
 
     private function isFormDirty(): bool
     {
-        if (!$this->isEdit || !$this->editingId) {
+        if (! $this->isEdit || ! $this->editingId) {
             return false;
         }
 
         $violation = Violation::find($this->editingId);
-        if (!$violation) {
+        if (! $violation) {
             return false;
         }
 

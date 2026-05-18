@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use Database\Factories\RuleHeaderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class RuleHeader extends Model
 {
-    /** @use HasFactory<\Database\Factories\RuleHeaderFactory> */
+    /** @use HasFactory<RuleHeaderFactory> */
     use HasFactory;
 
     protected $fillable = ['title', 'order'];

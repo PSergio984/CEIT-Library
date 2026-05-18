@@ -80,7 +80,7 @@ Artisan::command('attendance:check-missing-timeouts', function () {
                 $count++;
                 $this->line("Created violation for user {$session->user->email} (Session ID: {$session->id})");
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             DB::rollBack();
             $this->error("Failed to process session {$session->id}: {$e->getMessage()}");
         }

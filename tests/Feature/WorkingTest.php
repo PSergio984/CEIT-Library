@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Tests\TestCase;
 use Tests\Traits\TestHelper;
 
@@ -132,18 +133,18 @@ class WorkingTest extends TestCase
 
         // Test user relationships
         $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasMany::class,
+            HasMany::class,
             $user->borrowTransactions()
         );
 
         $this->assertInstanceOf(
-            \Illuminate\Database\Eloquent\Relations\HasMany::class,
+            HasMany::class,
             $user->librarySessions()
         );
 
         if (method_exists($paper, 'copies')) {
             $this->assertInstanceOf(
-                \Illuminate\Database\Eloquent\Relations\HasMany::class,
+                HasMany::class,
                 $paper->copies()
             );
         }

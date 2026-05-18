@@ -46,7 +46,7 @@ class StudentDashboardTest extends TestCase
         ]);
         Attendance::factory()->count(3)->create(['user_id' => $student->id]);
 
-        $response = $this->get(route('dashboard'));
+        $response = $this->get(route('student.dashboard'));
         $response->assertStatus(200);
 
         // Verify personal stats are displayed

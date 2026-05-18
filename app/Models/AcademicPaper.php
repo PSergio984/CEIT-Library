@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
@@ -14,11 +16,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $research_project_adviser
  * @property string $department
  * @property string $dean
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Author> $authors
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, Author> $authors
  * @property-read int|null $authors_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Inventory> $copies
+ * @property-read Collection<int, Inventory> $copies
  * @property-read int|null $copies_count
  * @property-read mixed $available_copies_count
  * @property-read mixed $total_copies_count
@@ -77,6 +79,12 @@ class AcademicPaper extends Model
     public function getTotalCopiesCountAttribute()
     {
         return $this->copies()->count();
+    }
+
+    // Get logical copies count (highest copy number)
+    public function getLogicalCopiesCountAttribute()
+    {
+        return $this->copies()->max('copy_number') ?: 0;
     }
 
     // Check if academic paper has available copies

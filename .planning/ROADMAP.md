@@ -2,16 +2,16 @@
 
 ## Milestone: Bug Fixes & Security Improvements (v1.1)
 
-### Phase 1: Modernization & Frontend Bug Fixes
+### Phase 1: Modernization & Frontend Bug Fixes [COMPLETE]
 **Goal:** Upgrade to Livewire v4, modernize dependencies, and resolve critical frontend interaction issues.
 
 **Scope:**
-- [R1.1] Upgrade Livewire from v3 to v4.
-- [R1.2] Modernize dependencies (Mary UI v2, Tailwind CSS v4, daisyUI v5).
-- [R1.3] Fix Admin Table modal interaction bug (UI becomes unresponsive after modal close).
-- [R1.4] Fix QR Scanner mobile camera issue (force back-facing camera instead of front-facing).
-- [R1.5] Initial security audit of frontend components.
-
+- [x] [R1.1] Upgrade Livewire from v3 to v4. (Completed: 2026-05-18)
+- [x] [R1.2] Modernize dependencies (Mary UI v2, Tailwind CSS v4, daisyUI v5). (Completed: 2026-05-18)
+- [x] [R1.3] Fix Admin Table modal interaction bug. (Completed: 2026-05-18)
+- [x] [R1.4] Fix QR Scanner mobile camera issue. (Completed: 2026-05-18)
+- [x] [R1.5] Initial security audit of frontend components. (Completed: 2026-05-18)
+- [x] [R1.6] Mobile PWA expansion & Hybrid Navigation. (Completed: 2026-05-18)
 **Success Criteria:**
 - Application successfully runs on Livewire v4.
 - Modals on Admin tables can be opened and closed repeatedly without locking the UI.

@@ -10,6 +10,7 @@ use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
 #[Title('Notifications')]
+#[Layout('components.layouts.app')]
 class StudentNotifications extends Component
 {
     use Toast, WithPagination;
@@ -23,9 +24,9 @@ class StudentNotifications extends Component
     public function getNotificationsProperty()
     {
         $query = Notification::where('user_id', Auth::id())
-            ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
-            ->when($this->filterRead === 'read', fn($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
+            ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
+            ->when($this->filterRead === 'read', fn ($q) => $q->read())
+            ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);

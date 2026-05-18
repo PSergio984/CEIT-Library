@@ -313,11 +313,9 @@
     showPaperModal: false,
     showCopyDeleteModal: false,
     showQrModal: false,
+
     openModal(modal) {
-        this.showDeleteModal = false;
-        this.showPaperModal = false;
-        this.showCopyDeleteModal = false;
-        this.showQrModal = false;
+        this.closeAllModals();
         if (modal === 'delete') this.showDeleteModal = true;
         if (modal === 'paper') this.showPaperModal = true;
         if (modal === 'copyDelete') this.showCopyDeleteModal = true;
@@ -343,100 +341,100 @@
     <x-admin.delete-copy-modal :copyToDelete="$copyToDelete" />
     
     {{-- QR Code Modal --}}
-    <dialog 
-        x-ref="qrModal"
-        @click.self="showQrModal = false; $wire.closeQrModal()"
-        @close="if(showQrModal) { showQrModal = false; $wire.closeQrModal() }"
-        class="modal backdrop-blur"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="qrModalLabel"
-        x-init="$watch('showQrModal', value => { 
-            if (value && !$refs.qrModal.open) { $refs.qrModal.showModal() } 
-            else if (!value && $refs.qrModal.open) { $refs.qrModal.close() } 
-        })">
-        <div class="modal-box max-w-md w-full"
-            x-show="showQrModal"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 transform scale-95"
-            x-transition:enter-end="opacity-100 transform scale-100"
-            x-transition:leave="transition ease-in duration-200"
-            x-transition:leave-start="opacity-100 transform scale-100"
-            x-transition:leave-end="opacity-0 transform scale-95"
-            @click.stop>
-            <form method="dialog">
-                <button @click="showQrModal = false; $wire.closeQrModal()" 
-                    class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-            </form>
+    <template x-teleport="body">
+        <dialog 
+            x-ref="qrModal"
+            wire:ignore.self
+            @click.self="showQrModal = false; $wire.closeQrModal()"
+            @close="if(showQrModal) { showQrModal = false; $wire.closeQrModal() }"
+            class="modal backdrop-blur"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="qrModalLabel"
+            x-effect="showQrModal ? (!$refs.qrModal.open && $refs.qrModal.showModal()) : ($refs.qrModal.open && $refs.qrModal.close())">
+            <div class="modal-box max-w-md w-full"
+                x-show="showQrModal"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 transform scale-95"
+                x-transition:enter-end="opacity-100 transform scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 transform scale-100"
+                x-transition:leave-end="opacity-0 transform scale-95"
+                @click.stop>
+                <form method="dialog">
+                    <button @click="showQrModal = false; $wire.closeQrModal()" 
+                        class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                </form>
 
-            @if ($this->selectedCopy && $qrCode)
-                <div class="space-y-6">
-                    <h3 id="qrModalLabel" class="font-bold text-lg">QR Code for Copy #{{ $this->selectedCopy->id }}</h3>
-                    <!-- QR Code Display with Enhanced Styling (matching attendance QR) -->
-                    <div class="relative bg-gradient-to-br from-base-100 to-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border-2 border-primary/20 w-full flex justify-center">
-                        {{-- Corner decorations --}}
-                        <div class="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
-                        <div class="absolute top-2 right-2 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
-                        <div class="absolute bottom-2 left-2 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
-                        <div class="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
-                        
-                        {{-- QR Code with white background and padding --}}
-                        <div class="bg-white p-6 rounded-xl shadow-inner">
-                            <img src="data:image/svg+xml;base64,{{ $qrCode }}" 
-                                alt="QR code for Copy #{{ $this->selectedCopy->id }} to present to librarian for borrowing"
-                                class="w-64 h-64 sm:w-80 sm:h-80"
-                                style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;">
+                @if ($this->selectedCopy && $qrCode)
+                    <div class="space-y-6">
+                        <h3 id="qrModalLabel" class="font-bold text-lg">QR Code for Copy #{{ $this->selectedCopy->id }}</h3>
+                        <!-- QR Code Display with Enhanced Styling (matching attendance QR) -->
+                        <div class="relative bg-gradient-to-br from-base-100 to-base-200 p-6 sm:p-8 rounded-2xl shadow-2xl border-2 border-primary/20 w-full flex justify-center">
+                            {{-- Corner decorations --}}
+                            <div class="absolute top-2 left-2 w-8 h-8 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+                            <div class="absolute top-2 right-2 w-8 h-8 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+                            <div class="absolute bottom-2 left-2 w-8 h-8 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+                            <div class="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+                            
+                            {{-- QR Code with white background and padding --}}
+                            <div class="bg-white p-6 rounded-xl shadow-inner">
+                                <img src="data:image/svg+xml;base64,{{ $qrCode }}" 
+                                    alt="QR code for Copy #{{ $this->selectedCopy->id }} to present to librarian for borrowing"
+                                    class="w-64 h-64 sm:w-80 sm:h-80"
+                                    style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;">
+                            </div>
+                        </div>
+                        <!-- Copy Information -->
+                        <div class="space-y-2 text-center">
+                            <h4 class="font-semibold text-lg">{{ $this->selectedCopy->academicPaper->title }}</h4>
+                            <p class="text-sm text-base-content/70">
+                                Catalog Code: <span class="font-mono font-semibold">{{ $this->selectedCopy->academicPaper->catalog_code }}</span>
+                            </p>
+                            <p class="text-sm text-base-content/70">
+                                Copy ID: <span class="font-mono font-semibold">#{{ $this->selectedCopy->id }}</span> • 
+                                Valid for 5 minutes
+                            </p>
+                        </div>
+                        <!-- Instructions -->
+                        <div class="alert alert-info">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            <span class="text-sm">Present this QR code to the librarian to borrow this academic paper.</span>
+                        </div>
+                        <!-- Action Buttons -->
+                        <div class="flex gap-2 justify-center">
+                            <button 
+                                wire:click="downloadQr"
+                                class="btn btn-primary gap-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                                </svg>
+                                Download QR
+                            </button>
+                            <button 
+                                @click="showQrModal = false; $wire.closeQrModal()"
+                                class="btn btn-ghost">
+                                Close
+                            </button>
                         </div>
                     </div>
-                    <!-- Copy Information -->
-                    <div class="space-y-2 text-center">
-                        <h4 class="font-semibold text-lg">{{ $this->selectedCopy->academicPaper->title }}</h4>
-                        <p class="text-sm text-base-content/70">
-                            Catalog Code: <span class="font-mono font-semibold">{{ $this->selectedCopy->academicPaper->catalog_code }}</span>
-                        </p>
-                        <p class="text-sm text-base-content/70">
-                            Copy ID: <span class="font-mono font-semibold">#{{ $this->selectedCopy->id }}</span> • 
-                            Valid for 5 minutes
-                        </p>
-                    </div>
-                    <!-- Instructions -->
-                    <div class="alert alert-info">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span class="text-sm">Present this QR code to the librarian to borrow this academic paper.</span>
-                    </div>
-                    <!-- Action Buttons -->
-                    <div class="flex gap-2 justify-center">
-                        <button 
-                            wire:click="downloadQr"
-                            class="btn btn-primary gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
-                            </svg>
-                            Download QR
-                        </button>
+                @else
+                    <div class="flex flex-col items-center justify-center p-8 gap-4">
+                        <x-mary-icon name="o-x-circle" class="w-12 h-12 text-error" />
+                        <div class="text-lg font-semibold text-error">Unable to generate QR at this time</div>
+                        <div class="text-base-content/70 text-center">No QR code is available for this copy. Please try again or contact support if the problem persists.</div>
                         <button 
                             @click="showQrModal = false; $wire.closeQrModal()"
-                            class="btn btn-ghost">
+                            class="btn btn-primary mt-4">
                             Close
                         </button>
                     </div>
-                </div>
-            @else
-                <div class="flex flex-col items-center justify-center p-8 gap-4">
-                    <x-mary-icon name="o-x-circle" class="w-12 h-12 text-error" />
-                    <div class="text-lg font-semibold text-error">Unable to generate QR at this time</div>
-                    <div class="text-base-content/70 text-center">No QR code is available for this copy. Please try again or contact support if the problem persists.</div>
-                    <button 
-                        @click="showQrModal = false; $wire.closeQrModal()"
-                        class="btn btn-primary mt-4">
-                        Close
-                    </button>
-                </div>
-            @endif
-        </div>
-    </dialog>
+                @endif
+            </div>
+        </dialog>
+    </template>
 </div>
 {{-- Create/Edit Academic Paper Drawer --}}
 <x-admin.academic-paper-form-drawer :formDrawer="$formDrawer" :isEditing="$isEditing" :form="$form" />

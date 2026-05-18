@@ -9,11 +9,13 @@ use App\Models\ScoreIncrement;
 use App\Models\ViolationTransaction;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Title('Student Dashboard')]
+#[Layout('components.layouts.app')]
 #[Lazy]
 class StudentDashboard extends Component
 {

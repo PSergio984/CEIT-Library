@@ -31,11 +31,7 @@
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            {{-- Hamburger menu button --}}
-            <label for="main-drawer" class="btn btn-square btn-ghost lg:hidden mr-2">
-                <x-mary-icon name="o-bars-3" class="w-5 h-5" />
-            </label>
-            <div>CEIT Library</div>
+            <div class="font-bold text-primary ml-2">CEIT Library</div>
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}
@@ -52,7 +48,7 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <a href="/dashboard">
-                            <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
+                            <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo" loading="lazy">
                         </a>
                     </div>
                     <div class="flex items-center gap-3">
@@ -69,7 +65,7 @@
 
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" wire:transition>
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" />
                 <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/academic-papers" />
                 <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
@@ -97,7 +93,7 @@
 
         {{-- CONTENT --}}
         <x-slot:content>
-            <div class="flex flex-col min-h-screen">
+            <div class="flex flex-col min-h-screen pb-16 lg:pb-0">
                 {{-- Desktop Navigation --}}
                 <div class="hidden lg:block">
                     <livewire:layout.navigation />
@@ -121,6 +117,42 @@
 
         </div>
     </x-mary-main>
+
+    {{-- BOTTOM NAVIGATION (Mobile only) --}}
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-base-100 border-t border-base-300 pb-safe">
+        <div class="flex justify-around items-center h-16">
+            <a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('dashboard*') || request()->is('student/dashboard*') ? 'text-primary' : 'text-base-content/70' }}">
+                <x-mary-icon name="o-home" class="w-6 h-6" />
+                <span class="text-[10px] mt-1 font-medium">Home</span>
+            </a>
+            <a href="/academic-papers" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('academic-papers*') ? 'text-primary' : 'text-base-content/70' }}">
+                <x-mary-icon name="o-book-open" class="w-6 h-6" />
+                <span class="text-[10px] mt-1 font-medium">Papers</span>
+            </a>
+            
+            {{-- Scanner link - Hidden for regular students if not in dev, but plan asks for it --}}
+            <a href="/test-qr" class="flex flex-col items-center justify-center w-full h-full">
+                <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
+                    <x-mary-icon name="o-qr-code" class="w-7 h-7" />
+                </div>
+                <span class="text-[10px] mt-1 font-bold text-primary">Scan</span>
+            </a>
+
+            <a href="/notifications" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('notifications*') ? 'text-primary' : 'text-base-content/70' }}">
+                <div class="relative">
+                    <x-mary-icon name="o-bell" class="w-6 h-6" />
+                    @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
+                        <span class="badge badge-primary badge-xs absolute -top-1 -right-1"></span>
+                    @endif
+                </div>
+                <span class="text-[10px] mt-1 font-medium">Alerts</span>
+            </a>
+            <label for="main-drawer" class="flex flex-col items-center justify-center w-full h-full text-base-content/70 cursor-pointer">
+                <x-mary-icon name="o-ellipsis-horizontal" class="w-6 h-6" />
+                <span class="text-[10px] mt-1 font-medium">More</span>
+            </label>
+        </div>
+    </div>
 
     {{-- Toast --}}
     <x-mary-toast />

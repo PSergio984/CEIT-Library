@@ -2,13 +2,11 @@
 
 <dialog 
     x-ref="paperModal" 
+    wire:ignore.self
     @click.self="showPaperModal = false" 
     @close="if(showPaperModal) { showPaperModal = false }"
     class="modal backdrop-blur"
-    x-init="$watch('showPaperModal', value => { 
-        if (value && !$refs.paperModal.open) { $refs.paperModal.showModal() } 
-        else if (!value && $refs.paperModal.open) { $refs.paperModal.close() } 
-    })">
+    x-effect="showPaperModal ? (!$refs.paperModal.open && $refs.paperModal.showModal()) : ($refs.paperModal.open && $refs.paperModal.close())">
     <div class="modal-box w-11/12 max-w-5xl" 
         x-show="showPaperModal"
         x-transition:enter="transition ease-out duration-300"

@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -23,7 +24,7 @@ class AccountSeeder extends Seeder
     public function run(): void
     {
         // Get role IDs
-        $superAdminRoleId = \App\Models\Role::query()->where('name', 'super_admin')->value('id');
+        $superAdminRoleId = Role::query()->where('name', 'super_admin')->value('id');
 
         if ($superAdminRoleId === null) {
             throw new \RuntimeException('super_admin role must exist before seeding accounts.');

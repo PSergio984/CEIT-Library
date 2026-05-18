@@ -22,9 +22,9 @@ use Illuminate\Support\Str;
  * @property \Illuminate\Support\Carbon|null $overdue_notified_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\AcademicPaper $academicPaper
- * @property-read \App\Models\Inventory $inventory
- * @property-read \App\Models\User $user
+ * @property-read AcademicPaper $academicPaper
+ * @property-read Inventory $inventory
+ * @property-read User $user
  *
  * @method static \Database\Factories\BorrowTransactionFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|BorrowTransaction newModelQuery()
@@ -89,7 +89,7 @@ class BorrowTransaction extends Model
 
                     if ($borrowDurationMinutes < 30) {
                         // Borrow duration too short - no credit score, but still notify about return
-                        \App\Models\Notification::create([
+                        Notification::create([
                             'user_id' => $transaction->user_id,
                             'type' => 'paper_returned',
                             'title' => 'Book Returned Successfully!',
@@ -115,7 +115,7 @@ class BorrowTransaction extends Model
 
                     if ($todayBorrowRewards >= 3) {
                         // Daily limit reached - no credit score, but still notify about return
-                        \App\Models\Notification::create([
+                        Notification::create([
                             'user_id' => $transaction->user_id,
                             'type' => 'paper_returned',
                             'title' => 'Book Returned Successfully!',
@@ -150,7 +150,7 @@ class BorrowTransaction extends Model
                         ]);
 
                         // Create notification for on-time return with credit score increase
-                        \App\Models\Notification::create([
+                        Notification::create([
                             'user_id' => $transaction->user_id,
                             'type' => 'paper_returned',
                             'title' => 'Book Returned Successfully!',
@@ -166,7 +166,7 @@ class BorrowTransaction extends Model
                     }
                 } else {
                     // Late return notification (no credit score)
-                    \App\Models\Notification::create([
+                    Notification::create([
                         'user_id' => $transaction->user_id,
                         'type' => 'paper_returned_late',
                         'title' => 'Book Returned (Late)',
@@ -187,7 +187,7 @@ class BorrowTransaction extends Model
 
             if ($wasStarted && $isNowOverdue && ! $transaction->overdue_notified_at) {
                 // Create overdue notification
-                \App\Models\Notification::create([
+                Notification::create([
                     'user_id' => $transaction->user_id,
                     'type' => 'paper_overdue',
                     'title' => 'Overdue Book Alert!',
@@ -284,7 +284,7 @@ class BorrowTransaction extends Model
     public function isExpired(): bool
     {
         // Guard against null or invalid expires_at
-        if (! $this->expires_at || ! ($this->expires_at instanceof \Carbon\Carbon)) {
+        if (! $this->expires_at || ! ($this->expires_at instanceof Carbon)) {
             return false;
         }
 
@@ -329,7 +329,7 @@ class BorrowTransaction extends Model
         }
 
         // Guard against null or invalid expires_at (legacy rows)
-        if (! $this->expires_at || ! ($this->expires_at instanceof \Carbon\Carbon)) {
+        if (! $this->expires_at || ! ($this->expires_at instanceof Carbon)) {
             return null;
         }
 
@@ -337,13 +337,13 @@ class BorrowTransaction extends Model
 
         $parts = [];
         if ($diff->d > 0) {
-            $parts[] = $diff->d.' '.\Illuminate\Support\Str::plural('day', $diff->d);
+            $parts[] = $diff->d.' '.Str::plural('day', $diff->d);
         }
         if ($diff->h > 0) {
-            $parts[] = $diff->h.' '.\Illuminate\Support\Str::plural('hour', $diff->h);
+            $parts[] = $diff->h.' '.Str::plural('hour', $diff->h);
         }
         if ($diff->i > 0 && $diff->d === 0) {
-            $parts[] = $diff->i.' '.\Illuminate\Support\Str::plural('minute', $diff->i);
+            $parts[] = $diff->i.' '.Str::plural('minute', $diff->i);
         }
 
         if (empty($parts)) {

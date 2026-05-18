@@ -237,7 +237,7 @@ class AcademicPaperTest extends TestCase
     public function test_academic_paper_factory_attaches_authors()
     {
         // Create some authors first so the factory can attach them
-        $authors = \App\Models\Author::factory()->count(5)->create();
+        $authors = Author::factory()->count(5)->create();
 
         $paper = AcademicPaper::factory()->create([
             'title' => 'Test Paper with Authors',

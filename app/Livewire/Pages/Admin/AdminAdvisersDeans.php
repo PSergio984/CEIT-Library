@@ -80,7 +80,7 @@ class AdminAdvisersDeans extends AdminComponent
         $direction = in_array($requestedDirection, $allowedDirections, true) ? $requestedDirection : 'asc';
 
         // Use parameter binding for search pattern
-        $searchPattern = $this->search ? '%' . $this->search . '%' : null;
+        $searchPattern = $this->search ? '%'.$this->search.'%' : null;
 
         // Authors use a pivot table, so join differently
         if ($this->activeTab === 'authors') {
@@ -174,7 +174,7 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showCreateModal = false;
         $this->showDeleteModal = false;
         $this->resetValidation(); // Clear any lingering validation errors
-        
+
         $entry = DB::table($this->getTableName())->find($id);
 
         if (! $entry) {
@@ -290,9 +290,9 @@ class AdminAdvisersDeans extends AdminComponent
         $entityType = $this->getEntityType();
 
         // Build unique rule conditionally: exclude ID only when editing
-        $uniqueRule = 'unique:' . $this->getTableName() . ',name';
+        $uniqueRule = 'unique:'.$this->getTableName().',name';
         if ($this->editingId) {
-            $uniqueRule .= ',' . $this->editingId . ',id';
+            $uniqueRule .= ','.$this->editingId.',id';
         }
 
         return [
@@ -330,7 +330,7 @@ class AdminAdvisersDeans extends AdminComponent
         $lettersOnly = preg_replace('/[^\p{L}]/u', '', $name);
         $letterCount = mb_strlen($lettersOnly);
 
-        $nameValid = !empty($name)
+        $nameValid = ! empty($name)
             && strlen($name) >= 2
             && strlen($name) <= 255
             && $letterCount >= 2; // ProperName requires at least 2 letters, not just 2 characters
@@ -338,7 +338,7 @@ class AdminAdvisersDeans extends AdminComponent
         // Check for validation errors
         $hasErrors = $this->getErrorBag()->has('name');
 
-        $fieldsValid = $nameValid && !$hasErrors;
+        $fieldsValid = $nameValid && ! $hasErrors;
 
         // For edit mode, also require form to be dirty
         if ($this->editingId) {
@@ -351,7 +351,7 @@ class AdminAdvisersDeans extends AdminComponent
     #[Computed]
     public function isFormDirty(): bool
     {
-        if (!$this->editingId || $this->originalName === null) {
+        if (! $this->editingId || $this->originalName === null) {
             return false;
         }
 

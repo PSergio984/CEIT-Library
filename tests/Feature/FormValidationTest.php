@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
 use App\Models\ResearchAdviser;
@@ -49,7 +50,7 @@ class FormValidationTest extends TestCase
         $this->actingAs($admin);
 
         // Attempt to create academic paper without required fields
-        $component = Livewire::test(\App\Livewire\Pages\Admin\CreateAcademicPaper::class)
+        $component = Livewire::test(CreateAcademicPaper::class)
             ->set('form.title', '') // Empty title
             ->set('form.paper_type', '');
 
@@ -57,7 +58,7 @@ class FormValidationTest extends TestCase
         $component->assertHasErrors(['form.title', 'form.paper_type']);
 
         // Fill all required fields
-        $component = Livewire::test(\App\Livewire\Pages\Admin\CreateAcademicPaper::class)
+        $component = Livewire::test(CreateAcademicPaper::class)
             ->set('form.title', 'Test Paper')
             ->set('form.publication_year', 2024)
             ->set('form.paper_type', 'Thesis')

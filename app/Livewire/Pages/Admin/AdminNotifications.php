@@ -24,9 +24,9 @@ class AdminNotifications extends AdminComponent
     public function getNotificationsProperty()
     {
         $query = Auth::user()->userNotifications()
-            ->when($this->filterType, fn($q) => $q->where('type', $this->filterType))
-            ->when($this->filterRead === 'read', fn($q) => $q->read())
-            ->when($this->filterRead === 'unread', fn($q) => $q->unread())
+            ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
+            ->when($this->filterRead === 'read', fn ($q) => $q->read())
+            ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
             ->orderBy('created_at', 'desc');
 
         return $query->paginate($this->perPage);

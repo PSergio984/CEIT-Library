@@ -22,7 +22,7 @@ return new class extends Migration
                 DB::statement('ALTER TABLE users DROP CONSTRAINT IF EXISTS users_credit_score_check');
             }
             // SQLite: No action needed as the duplicate migration would have failed
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Constraint might not exist, which is fine
         }
     }

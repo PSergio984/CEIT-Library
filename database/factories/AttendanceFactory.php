@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Attendance>
+ * @extends Factory<Attendance>
  */
 class AttendanceFactory extends Factory
 {
@@ -27,7 +27,7 @@ class AttendanceFactory extends Factory
 
         $durationMinutes = null;
         if ($timeOut) {
-            $durationMinutes = Carbon::parse($timeIn)->diffInMinutes(Carbon::parse($timeOut));
+            $durationMinutes = (int) Carbon::parse($timeIn)->diffInMinutes(Carbon::parse($timeOut));
         }
 
         $status = $timeOut ? 'completed' : 'active';
@@ -73,7 +73,7 @@ class AttendanceFactory extends Factory
         return $this->state(function (array $attributes) {
             $timeIn = $this->faker->dateTimeBetween('-1 month', '-1 day');
             $timeOut = Carbon::parse($timeIn)->addMinutes($this->faker->numberBetween(60, 480));
-            $durationMinutes = Carbon::parse($timeIn)->diffInMinutes($timeOut);
+            $durationMinutes = (int) Carbon::parse($timeIn)->diffInMinutes($timeOut);
 
             return [
                 'time_in' => $timeIn,

@@ -2,6 +2,8 @@
 
 namespace Tests\Unit;
 
+use Illuminate\Container\Container;
+use Illuminate\Foundation\Application;
 use PHPUnit\Framework\TestCase;
 
 class DatabaseConfigTest extends TestCase
@@ -61,14 +63,14 @@ class DatabaseConfigTest extends TestCase
     private function loadDatabaseConfig(): array
     {
         $basePath = dirname(__DIR__, 2);
-        $previousContainer = \Illuminate\Container\Container::getInstance();
-        $app = new \Illuminate\Foundation\Application($basePath);
-        \Illuminate\Container\Container::setInstance($app);
+        $previousContainer = Container::getInstance();
+        $app = new Application($basePath);
+        Container::setInstance($app);
 
-        $config = require $basePath . '/config/database.php';
+        $config = require $basePath.'/config/database.php';
 
         if ($previousContainer !== null) {
-            \Illuminate\Container\Container::setInstance($previousContainer);
+            Container::setInstance($previousContainer);
         }
 
         return $config;
@@ -108,7 +110,7 @@ class DatabaseConfigTest extends TestCase
             return;
         }
 
-        putenv($key . '=' . $value);
+        putenv($key.'='.$value);
         $_ENV[$key] = $value;
         $_SERVER[$key] = $value;
     }

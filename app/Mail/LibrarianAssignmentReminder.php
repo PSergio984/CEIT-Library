@@ -2,12 +2,15 @@
 
 namespace App\Mail;
 
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 
 class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
 {
@@ -17,9 +20,9 @@ class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
      * Create a new message instance.
      */
     public function __construct(
-        public \Illuminate\Support\Collection $unassignedDates,
-        public \Carbon\Carbon $weekStart,
-        public \Carbon\Carbon $weekEnd
+        public Collection $unassignedDates,
+        public Carbon $weekStart,
+        public Carbon $weekEnd
     ) {}
 
     /**
@@ -28,7 +31,7 @@ class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Alert: Unassigned Librarian Duty Days - Week of ' . $this->weekStart->format('M d, Y'),
+            subject: 'Alert: Unassigned Librarian Duty Days - Week of '.$this->weekStart->format('M d, Y'),
         );
     }
 
@@ -45,7 +48,7 @@ class LibrarianAssignmentReminder extends Mailable implements ShouldQueue
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

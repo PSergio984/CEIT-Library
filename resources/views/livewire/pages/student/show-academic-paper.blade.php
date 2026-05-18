@@ -38,17 +38,17 @@
                         <span class="font-semibold">Year:</span> {{ $academicPaper->publication_year }}
                     </div>
                     <div>
-                        <span class="font-semibold">Total Copies:</span> {{ $academicPaper->copies->count() }}
+                        <span class="font-semibold">Total Copies:</span> {{ $academicPaper->logical_copies_count }}
                     </div>
                     <div>
                         <span
-                            class="font-semibold">Available Copies:</span> {{ $academicPaper->copies->where('status', 'Available')->count() }}
+                            class="font-semibold">Available Copies:</span> {{ $academicPaper->available_copies_count }}
                     </div>
                 </div>
             </div>
 
             <!-- Copies Table -->
-            @if($academicPaper->copies->count() > 0)
+            @if($academicPaper->logical_copies_count > 0)
                 <div class="overflow-x-auto">
                     <table class="table table-sm w-full border-collapse border border-base-300 rounded-lg overflow-hidden shadow-sm">
                         <thead>

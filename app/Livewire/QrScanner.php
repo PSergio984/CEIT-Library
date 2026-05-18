@@ -47,6 +47,8 @@ class QrScanner extends Component
 
     public function handleScan(string $data)
     {
+        $this->authorize('librarian-or-admin-access');
+
         try {
             // Basic validation
             $data = trim($data);

@@ -5,7 +5,10 @@ namespace Tests\Feature;
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Models\AcademicPaper;
 use App\Models\Author;
+use App\Models\Dean;
 use App\Models\Inventory;
+use App\Models\ResearchAdviser;
+use App\Models\TechnicalAdviser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -32,15 +35,21 @@ class AcademicPaperFormTest extends TestCase
     {
         $this->actingAs($this->admin);
 
+        $researchAdviser = ResearchAdviser::factory()->create();
+        $technicalAdviser = TechnicalAdviser::factory()->create();
+        $dean = Dean::factory()->create();
+        $authors = Author::factory()->count(2)->create();
+
         Livewire::test(AdminAcademicPaperIndex::class)
             ->call('create')
             ->set('form.title', 'Test Academic Paper')
             ->set('form.publication_year', 2024)
             ->set('form.paper_type', 'Thesis')
             ->set('form.department', 'Information Technology')
-            ->set('form.research_project_adviser', 'Dr. John Doe')
-            ->set('form.dean', 'Dean Jane Smith')
-            ->set('form.author_names', ['Author One', 'Author Two'])
+            ->set('form.research_adviser_id', $researchAdviser->id)
+            ->set('form.technical_adviser_id', $technicalAdviser->id)
+            ->set('form.dean_id', $dean->id)
+            ->set('form.author_ids', $authors->pluck('id')->toArray())
             ->set('form.number_of_copies', 3)
             ->call('saveAcademicPaper')
             ->assertHasNoErrors();
@@ -50,6 +59,9 @@ class AcademicPaperFormTest extends TestCase
             'publication_year' => 2024,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
+            'research_adviser_id' => $researchAdviser->id,
+            'technical_adviser_id' => $technicalAdviser->id,
+            'dean_id' => $dean->id,
         ]);
 
         $paper = AcademicPaper::where('title', 'Test Academic Paper')->first();
@@ -74,10 +86,15 @@ class AcademicPaperFormTest extends TestCase
     {
         $this->actingAs($this->admin);
 
+        $researchAdviser = ResearchAdviser::factory()->create();
+        $technicalAdviser = TechnicalAdviser::factory()->create();
+        $dean = Dean::factory()->create();
+
         $paper = AcademicPaper::factory()->create([
             'title' => 'Original Title',
-            'research_project_adviser' => 'Dr. Original',
-            'dean' => 'Original Dean',
+            'research_adviser_id' => $researchAdviser->id,
+            'technical_adviser_id' => $technicalAdviser->id,
+            'dean_id' => $dean->id,
         ]);
 
         $author1 = Author::factory()->create(['name' => 'Original Author']);
@@ -86,10 +103,12 @@ class AcademicPaperFormTest extends TestCase
         Inventory::factory()->create(['academic_paper_id' => $paper->id, 'copy_number' => 1]);
         Inventory::factory()->create(['academic_paper_id' => $paper->id, 'copy_number' => 2]);
 
+        $newAuthor = Author::factory()->create(['name' => 'New Author']);
+
         Livewire::test(AdminAcademicPaperIndex::class)
             ->call('edit', $paper->id)
             ->set('form.title', 'Updated Title')
-            ->set('form.author_names', ['New Author'])
+            ->set('form.author_ids', [$newAuthor->id])
             ->set('form.number_of_copies', 3)
             ->call('saveAcademicPaper')
             ->assertHasNoErrors();
@@ -103,10 +122,13 @@ class AcademicPaperFormTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $paper = AcademicPaper::factory()->create([
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
-        ]);
+        // Pre-create required related models for the factory to pick up
+        ResearchAdviser::factory()->create();
+        TechnicalAdviser::factory()->create();
+        Dean::factory()->create();
+        Author::factory()->create();
+
+        $paper = AcademicPaper::factory()->create();
 
         Inventory::factory()->create(['academic_paper_id' => $paper->id, 'copy_number' => 1]);
         Inventory::factory()->create(['academic_paper_id' => $paper->id, 'copy_number' => 2]);
@@ -125,20 +147,23 @@ class AcademicPaperFormTest extends TestCase
     {
         $this->actingAs($this->admin);
 
-        $paper = AcademicPaper::factory()->create([
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
-        ]);
+        // Pre-create required related models for the factory to pick up
+        ResearchAdviser::factory()->create();
+        TechnicalAdviser::factory()->create();
+        Dean::factory()->create();
+        Author::factory()->create();
+
+        $paper = AcademicPaper::factory()->create();
 
         Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Available', 'copy_number' => 1]);
         Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Available', 'copy_number' => 2]);
-        Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Borrowed', 'copy_number' => 3]);
-        Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Borrowed', 'copy_number' => 4]);
+        Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Unavailable', 'copy_number' => 3]);
+        Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Unavailable', 'copy_number' => 4]);
 
         Livewire::test(AdminAcademicPaperIndex::class)
             ->call('edit', $paper->id)
-            ->set('form.number_of_copies', 2)
+            ->set('form.number_of_copies', 1)
             ->call('saveAcademicPaper')
-            ->assertHasErrors(['form.number_of_copies']);
+            ->assertHasErrors(['number_of_copies']);
     }
 }

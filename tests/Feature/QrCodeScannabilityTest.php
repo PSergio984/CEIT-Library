@@ -277,7 +277,7 @@ class QrCodeScannabilityTest extends TestCase
         $this->assertDatabaseCount('attendances', 2);
 
         // The latest one should be active (new check-in)
-        $latestAttendance = \App\Models\Attendance::where('user_id', $this->student->id)
+        $latestAttendance = Attendance::where('user_id', $this->student->id)
             ->latest('id')
             ->first();
         $this->assertEquals('active', $latestAttendance->status);

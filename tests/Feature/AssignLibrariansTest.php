@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -92,7 +93,7 @@ class AssignLibrariansTest extends TestCase
         $this->actingAs($admin);
 
         // Try to set a Sunday date (assuming next Sunday)
-        $nextSunday = now()->next(\Carbon\Carbon::SUNDAY);
+        $nextSunday = now()->next(Carbon::SUNDAY);
 
         // This would be validated in the actual form submission
         // For now, we test that the validation would reject it

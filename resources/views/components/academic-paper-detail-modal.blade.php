@@ -93,12 +93,12 @@
         </div>
 
         {{-- Copies Section with Enhanced Table --}}
-        @if($selectedPaper->copies->count() > 0)
+        @if($selectedPaper->logical_copies_count > 0)
             <div class="space-y-4">
                 <div class="flex items-center gap-3">
                     <h4 class="text-xl font-bold text-base-content">Available Copies</h4>
-                    <div class="badge badge-neutral">{{ $selectedPaper->copies->count() }}
-                        {{ Str::plural('copy', $selectedPaper->copies->count()) }}</div>
+                    <div class="badge badge-neutral">{{ $selectedPaper->logical_copies_count }}
+                        {{ Str::plural('copy', $selectedPaper->logical_copies_count) }}</div>
                 </div>
 
                 <div class="overflow-x-auto rounded-xl border border-base-300 shadow-md">

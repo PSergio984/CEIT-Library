@@ -12,6 +12,7 @@ use App\Models\ScoreIncrement;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 /**
@@ -689,7 +690,7 @@ class CreditScoreIncentiveLimitTest extends TestCase
             'time_out' => null,
             'status' => $status,
             'expires_at' => $expiresAt,
-            'session_token' => \Illuminate\Support\Str::random(64),
+            'session_token' => Str::random(64),
         ]);
     }
 

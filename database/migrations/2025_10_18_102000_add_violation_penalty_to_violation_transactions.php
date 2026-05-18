@@ -41,7 +41,7 @@ return new class extends Migration
                 WHERE violation_id IN (SELECT id FROM violations)
             ');
         } else {
-            throw new \RuntimeException("Unsupported database driver: $driver");
+            throw new RuntimeException("Unsupported database driver: $driver");
         }
     }
 

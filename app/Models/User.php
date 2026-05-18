@@ -2,33 +2,39 @@
 
 namespace App\Models;
 
+use App\Notifications\CustomResetPassword;
 use App\Notifications\CustomVerifyEmail;
+use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property string $first_name
  * @property string $last_name
  * @property string $email
- * @property \Illuminate\Support\Carbon|null $email_verified_at
+ * @property Carbon|null $email_verified_at
  * @property int $credit_score
  * @property string $account_status
  * @property string $password
  * @property string|null $remember_token
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\BorrowTransaction> $borrowTransactions
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, BorrowTransaction> $borrowTransactions
  * @property-read int|null $borrow_transactions_count
- * @property-read \App\Models\ScoreIncrement|null $creditScore
- * @property-read \App\Models\Librarian|null $librarianDuty
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Attendance> $librarySessions
+ * @property-read ScoreIncrement|null $creditScore
+ * @property-read Librarian|null $librarianDuty
+ * @property-read Collection<int, Attendance> $librarySessions
  * @property-read int|null $library_sessions_count
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection<int, \Illuminate\Notifications\DatabaseNotification> $notifications
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
  * @property-read int|null $notifications_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ViolationTransaction> $violations
+ * @property-read Collection<int, ViolationTransaction> $violations
  * @property-read int|null $violations_count
  *
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -51,7 +57,7 @@ use Illuminate\Notifications\Notifiable;
  */
 class User extends Authenticatable implements MustVerifyEmail
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
+    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
     /**
@@ -112,7 +118,7 @@ class User extends Authenticatable implements MustVerifyEmail
      */
     public function sendPasswordResetNotification($token)
     {
-        $this->notify(new \App\Notifications\CustomResetPassword($token));
+        $this->notify(new CustomResetPassword($token));
     }
 
     // Relationship with role
@@ -215,7 +221,7 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function userNotifications()
     {
-        return $this->hasMany(\App\Models\Notification::class)->orderBy('created_at', 'desc');
+        return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
     }
 
     public function unreadNotifications()

@@ -13,13 +13,16 @@ use Mary\Traits\Toast;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Title('Transaction History')]
+#[Layout('components.layouts.app')]
 class Transaction extends Component
 {
     use CreatesQrCanonicalMessage, Toast, WithPagination;
 
     // QR code generation settings
     private const QR_SVG_SIZE = 400;
+
     private const QR_MARGIN = 8;
+
     private const QR_ERROR_CORRECTION = 'M';
 
     public string $search = '';
@@ -163,13 +166,13 @@ class Transaction extends Component
         $seconds = $diffInSeconds % 60;
         $parts = [];
         if ($hours > 0) {
-            $parts[] = $hours . 'h';
+            $parts[] = $hours.'h';
         }
         if ($minutes > 0 || $hours > 0) {
-            $parts[] = $minutes . 'm';
+            $parts[] = $minutes.'m';
         }
         if ($seconds > 0 && $hours == 0) {
-            $parts[] = $seconds . 's';
+            $parts[] = $seconds.'s';
         }
         if (empty($parts)) {
             $parts[] = '0s';
@@ -281,7 +284,7 @@ class Transaction extends Component
             ->errorCorrection(self::QR_ERROR_CORRECTION)
             ->generate($qrContent);
 
-        $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,' . base64_encode($svg);
+        $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
         $this->returnQrPaperTitle = $inventory->academicPaper?->title ?? 'Unknown Paper';
         $this->returnQrTransactionId = $transaction->id;
         $this->returnQrInventoryId = $inventory->id;
@@ -357,7 +360,7 @@ class Transaction extends Component
             ->errorCorrection(self::QR_ERROR_CORRECTION)
             ->generate($qrContent);
 
-        $filename = 'return-qr-' . $this->returnQrTransactionId . '.svg';
+        $filename = 'return-qr-'.$this->returnQrTransactionId.'.svg';
 
         return response()->streamDownload(function () use ($svgData) {
             echo $svgData;

@@ -25,7 +25,7 @@ class RulesAndRegulationsTest extends TestCase
     }
 
     /** @test - TC068: Rules and Regulations - View List */
-    public function rules_and_regulations_can_be_viewed()
+    public function rules_and_regulations_can_be_viewed_by_admin()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
         $this->actingAs($admin);
@@ -37,10 +37,26 @@ class RulesAndRegulationsTest extends TestCase
         $header2 = RuleHeader::factory()->create(['title' => 'Borrowing Policy']);
         RuleRegulation::factory()->count(2)->create(['rule_header_id' => $header2->id]);
 
-        $response = $this->get(route('admin.rule-and-regulation'));
+        $response = $this->get(route('admin.rules-and-regulations.index'));
         $response->assertStatus(200);
 
         $response->assertSee('General Conduct', false);
         $response->assertSee('Borrowing Policy', false);
+    }
+
+    /** @test - TC069: Rules and Regulations - Student View List */
+    public function rules_and_regulations_can_be_viewed_by_student()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $this->actingAs($student);
+
+        // Create rule headers and regulations
+        $header1 = RuleHeader::factory()->create(['title' => 'General Conduct']);
+        RuleRegulation::factory()->count(3)->create(['rule_header_id' => $header1->id]);
+
+        $response = $this->get(route('rules-and-regulations.index'));
+        $response->assertStatus(200);
+
+        $response->assertSee('General Conduct', false);
     }
 }

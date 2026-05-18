@@ -9,11 +9,13 @@ use Auth;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 #[Title('Academic Paper List')]
+#[Layout('components.layouts.app')]
 #[Lazy]
 class AcademicPaperIndex extends Component
 {
@@ -27,19 +29,26 @@ class AcademicPaperIndex extends Component
 
     public ?string $dept = null;
 
+    #[Validate('string|max:100|nullable')]
     public string $search = '';
 
     // Filters
+    #[Validate('string|max:20|nullable')]
     public string $statusFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $yearFilter = '';
 
+    #[Validate('string|max:100|nullable')]
     public string $departmentFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $paperTypeFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $yearFromFilter = '';
 
+    #[Validate('string|max:20|nullable')]
     public string $yearToFilter = '';
 
     // Store IDs only (modals controlled by Alpine.js)
@@ -91,7 +100,7 @@ class AcademicPaperIndex extends Component
                 }
             })
             ->when($this->search, function ($q) {
-                $search = '%' . $this->search . '%';
+                $search = '%'.$this->search.'%';
                 $q->where(function ($query) use ($search) {
                     $query->where('title', 'like', $search)
                         ->orWhere('catalog_code', 'like', $search)
@@ -257,11 +266,11 @@ class AcademicPaperIndex extends Component
         }
 
         return AcademicPaper::with([
-            'authors' => fn($q) => $q->select('authors.id', 'authors.name'),
+            'authors' => fn ($q) => $q->select('authors.id', 'authors.name'),
             'researchAdviser:id,name',
             'technicalAdviser:id,name',
             'dean:id,name',
-            'copies' => fn($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
+            'copies' => fn ($q) => $q->select('id', 'academic_paper_id', 'copy_number', 'status'),
         ])->find($this->selectedPaperId);
     }
 

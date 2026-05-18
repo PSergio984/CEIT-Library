@@ -3,11 +3,17 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\Attendance;
+use App\Models\Notification;
 use App\Models\Role;
+use App\Models\User;
 use App\Traits\CreatesQrCanonicalMessage;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
@@ -80,9 +86,9 @@ class AdminAttendanceLogIndex extends AdminComponent
                         });
                 });
             })
-            ->when($this->statusFilter, fn($q) => $q->where('attendances.status', $this->statusFilter))
-            ->when($this->roleFilter, fn($q) => $q->where('attendances.role_id', $this->roleFilter))
-            ->when($this->selectedDate, fn($q) => $q->whereDate('attendances.time_in', $this->selectedDate));
+            ->when($this->statusFilter, fn ($q) => $q->where('attendances.status', $this->statusFilter))
+            ->when($this->roleFilter, fn ($q) => $q->where('attendances.role_id', $this->roleFilter))
+            ->when($this->selectedDate, fn ($q) => $q->whereDate('attendances.time_in', $this->selectedDate));
     }
 
     protected function applySorting($query)
@@ -125,7 +131,7 @@ class AdminAttendanceLogIndex extends AdminComponent
 
                 return [
                     'id' => $attendance->id,
-                    'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
+                    'user_name' => trim(($attendance->user?->first_name ?? '').' '.($attendance->user?->last_name ?? '')) ?: 'N/A',
                     'role_name' => $attendance->role?->name ?? 'N/A',
                     'role_badge_color' => match (strtolower($attendance->role?->name ?? '')) {
                         'student' => 'badge-success',
@@ -263,7 +269,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                 return ['found' => false];
             }
         } catch (\Exception $e) {
-            Log::error('QR Scanner Error: ' . $e->getMessage(), [
+            Log::error('QR Scanner Error: '.$e->getMessage(), [
                 'exception' => $e,
                 'data_length' => strlen($qrData ?? ''),
             ]);
@@ -324,7 +330,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                 return 'invalid';
             }
 
-            $user = \App\Models\User::find($data['user_id']);
+            $user = User::find($data['user_id']);
             if (! $user) {
                 Log::warning('User not found in QR code', ['user_id' => $data['user_id']]);
 
@@ -332,7 +338,7 @@ class AdminAttendanceLogIndex extends AdminComponent
             }
 
             // Check rate limiting per user (prevent rapid repeated scans)
-            $rateLimitKey = 'qr_rate_limit:' . $data['user_id'];
+            $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
             $recentScans = Cache::get($rateLimitKey, 0);
 
             if ($recentScans >= 60) { // Max 60 scans per minute for testing
@@ -356,7 +362,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                 'user_id' => $data['user_id'],
                 'user' => $user,
             ];
-        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+        } catch (DecryptException $e) {
             Log::warning('QR code decryption failed - possible tampering', ['error' => $e->getMessage()]);
 
             return 'invalid';
@@ -377,7 +383,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         $user = $data['user'];
 
         // Get the current user who is scanning
-        $currentUser = \Illuminate\Support\Facades\Auth::user();
+        $currentUser = Auth::user();
 
         // Get the librarian ID if current user has an active librarian duty
         // scanned_by must reference librarians.id, not users.id
@@ -395,8 +401,8 @@ class AdminAttendanceLogIndex extends AdminComponent
         if ($activeSession) {
             // User is checking out (time out)
             try {
-                return \Illuminate\Support\Facades\DB::transaction(function () use ($activeSession, $user) {
-                    $activeSession->time_out = \Carbon\Carbon::now();
+                return DB::transaction(function () use ($activeSession, $user) {
+                    $activeSession->time_out = Carbon::now();
                     $activeSession->status = 'completed';
                     $activeSession->calculateDuration();
                     $activeSession->save();
@@ -405,7 +411,7 @@ class AdminAttendanceLogIndex extends AdminComponent
                     $durationText = $this->formatDuration($minutes);
 
                     // Create check-out notification for the user
-                    \App\Models\Notification::create([
+                    Notification::create([
                         'user_id' => $user->id,
                         'type' => 'attendance_checkout',
                         'title' => 'Library Check-out Successful',
@@ -443,18 +449,18 @@ class AdminAttendanceLogIndex extends AdminComponent
         } else {
             // User is checking in (time in)
             try {
-                return \Illuminate\Support\Facades\DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
+                return DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
                         'role_id' => $user->role_id,
                         'scanned_by' => $scannedBy,
                         'scanned_by_admin_id' => $scannedByAdminId,
-                        'time_in' => \Carbon\Carbon::now(),
+                        'time_in' => Carbon::now(),
                         'status' => 'active',
                     ]);
 
                     // Create check-in notification for the user
-                    \App\Models\Notification::create([
+                    Notification::create([
                         'user_id' => $user->id,
                         'type' => 'attendance_checkin',
                         'title' => 'Library Check-in Successful',
@@ -496,13 +502,13 @@ class AdminAttendanceLogIndex extends AdminComponent
         if ($minutes < 1) {
             return 'less than 1 minute';
         } elseif ($minutes < 60) {
-            return $minutes . ' ' . ($minutes === 1 ? 'minute' : 'minutes');
+            return $minutes.' '.($minutes === 1 ? 'minute' : 'minutes');
         } else {
             $hours = (int) floor($minutes / 60);
             $remainingMinutes = $minutes % 60;
-            $hoursText = $hours . ' ' . ($hours === 1 ? 'hour' : 'hours');
+            $hoursText = $hours.' '.($hours === 1 ? 'hour' : 'hours');
             if ($remainingMinutes > 0) {
-                return $hoursText . ' and ' . $remainingMinutes . ' ' . ($remainingMinutes === 1 ? 'minute' : 'minutes');
+                return $hoursText.' and '.$remainingMinutes.' '.($remainingMinutes === 1 ? 'minute' : 'minutes');
             }
 
             return $hoursText;
@@ -529,7 +535,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         $attendances = $query->get()->map(function ($attendance) {
             return [
                 'id' => $attendance->id,
-                'user_name' => trim(($attendance->user?->first_name ?? '') . ' ' . ($attendance->user?->last_name ?? '')) ?: 'N/A',
+                'user_name' => trim(($attendance->user?->first_name ?? '').' '.($attendance->user?->last_name ?? '')) ?: 'N/A',
                 'role_name' => $attendance->role?->name ?? 'N/A',
                 'scanned_by_name' => $attendance->scanned_by_name,
                 'time_in' => $attendance->time_in,
@@ -542,18 +548,18 @@ class AdminAttendanceLogIndex extends AdminComponent
         // Build filter description for PDF
         $filterDescription = [];
         if ($this->search) {
-            $filterDescription[] = 'Search: ' . $this->search;
+            $filterDescription[] = 'Search: '.$this->search;
         }
         if ($this->statusFilter) {
             $statusName = $this->statusFilter === 'active' ? 'Active' : 'Completed';
-            $filterDescription[] = 'Status: ' . $statusName;
+            $filterDescription[] = 'Status: '.$statusName;
         }
         if ($this->roleFilter) {
             $role = Role::find($this->roleFilter);
-            $filterDescription[] = 'Role: ' . ($role?->name ?? 'Unknown');
+            $filterDescription[] = 'Role: '.($role?->name ?? 'Unknown');
         }
         if ($this->selectedDate) {
-            $filterDescription[] = 'Date: ' . date('M d, Y', strtotime($this->selectedDate));
+            $filterDescription[] = 'Date: '.date('M d, Y', strtotime($this->selectedDate));
         }
 
         $filterText = ! empty($filterDescription) ? implode(' | ', $filterDescription) : 'All Records';
@@ -566,7 +572,7 @@ class AdminAttendanceLogIndex extends AdminComponent
             'totalRecords' => $attendances->count(),
         ]);
 
-        $filename = 'attendance-log-' . now()->format('Y-m-d-His') . '.pdf';
+        $filename = 'attendance-log-'.now()->format('Y-m-d-His').'.pdf';
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();

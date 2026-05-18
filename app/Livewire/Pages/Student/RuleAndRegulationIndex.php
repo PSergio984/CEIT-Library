@@ -5,10 +5,12 @@ namespace App\Livewire\Pages\Student;
 use App\Models\RuleHeader;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 
 #[Title('Rules and Regulations')]
+#[Layout('components.layouts.app')]
 class RuleAndRegulationIndex extends Component
 {
     #[Computed]
