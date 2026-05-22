@@ -31,7 +31,7 @@ jobs:
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
     steps:
     - uses: actions/checkout@v4
-    - uses: shivammathur/setup-php@15c43e89cdef867065b0213be354c2841860869e
+    - uses: shivammathur/setup-php@v2
       with:
-        php-version: '8.2'
-        extensions: mb
+        php-version: '8.5'
+        extensions: mb, dom, curl, libxml, mysql

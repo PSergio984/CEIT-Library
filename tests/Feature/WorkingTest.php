@@ -155,12 +155,10 @@ class WorkingTest extends TestCase
         // This test verifies that we can create academic papers without fulltext index errors
         $paper = AcademicPaper::factory()->create([
             'title' => 'A Paper About Fulltext Search',
-            'research_project_adviser' => 'Dr. Fulltext Expert',
         ]);
 
         $this->assertDatabaseHas('academic_papers', [
             'title' => 'A Paper About Fulltext Search',
-            'research_project_adviser' => 'Dr. Fulltext Expert',
         ]);
     }
 }

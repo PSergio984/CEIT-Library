@@ -38,7 +38,8 @@ if (config('app.env') !== 'production') {
 
 // User routes
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::get('/dashboard', StudentDashboard::class)->name('student.dashboard');
+    Route::get('/dashboard', StudentDashboard::class)->name('dashboard');
+    Route::get('/student/dashboard', StudentDashboard::class)->name('student.dashboard');
     Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)
         ->whereNumber('academicPaper')
         ->name('academic-paper.show');
@@ -73,6 +74,9 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/logs', AdminBorrowTransactions::class)
             ->middleware('can:view-borrow-logs')
             ->name('borrow-logs');
+        Route::get('/borrow-logs', AdminBorrowTransactions::class)
+            ->middleware('can:view-borrow-logs')
+            ->name('logs');
 
         // Notifications - Accessible by both Admin and Librarian
         Route::get('/notifications', AdminNotifications::class)
@@ -109,6 +113,9 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/attendance', AdminAttendanceLogIndex::class)
             ->middleware('can:view-attendance-logs')
             ->name('attendance-logs');
+        Route::get('/attendance-logs', AdminAttendanceLogIndex::class)
+            ->middleware('can:view-attendance-logs')
+            ->name('attendance');
 
         // Violation logs (Librarian and Admin can view)
         Route::get('/violations', AdminViolationLogIndex::class)
@@ -119,6 +126,9 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/librarians', AdminAssignLibrarians::class)
             ->middleware('can:manage-librarian-batches')
             ->name('librarians');
+        Route::get('/assign-librarians', AdminAssignLibrarians::class)
+            ->middleware('can:manage-librarian-batches')
+            ->name('assign-librarians');
 
         // Role management (Super Admin only)
         Route::get('/manage-roles', AdminManageRoles::class)

@@ -2,12 +2,36 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
-use Tests\Traits\CreatesTestDatabase;
 
 abstract class TestCase extends BaseTestCase
 {
-    use CreatesTestDatabase;
+    use RefreshDatabase;
+
+    /**
+     * Creates the application.
+     *
+     * @return \Illuminate\Foundation\Application
+     */
+    public function createApplication()
+    {
+        // Force SQLite in-memory for testing to avoid using the real database
+        putenv('DB_CONNECTION=sqlite');
+        putenv('DB_DATABASE=:memory:');
+        $_ENV['DB_CONNECTION'] = 'sqlite';
+        $_SERVER['DB_CONNECTION'] = 'sqlite';
+        $_ENV['DB_DATABASE'] = ':memory:';
+        $_SERVER['DB_DATABASE'] = ':memory:';
+
+        $app = parent::createApplication();
+
+        // Also force it in config just in case
+        $app->make('config')->set('database.default', 'sqlite');
+        $app->make('config')->set('database.connections.sqlite.database', ':memory:');
+
+        return $app;
+    }
 
     protected function setUp(): void
     {

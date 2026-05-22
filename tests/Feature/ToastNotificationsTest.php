@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use PHPUnit\Framework\Attributes\Test;
 
+use App\Models\AcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
 use App\Models\ResearchAdviser;

@@ -964,6 +964,7 @@ class UserTest extends TestCase
 
         ViolationTransaction::create([
             'user_id' => $user->id,
+            'violation_id' => $violation->id,
             'date_occurred' => Carbon::now(),
             'remarks' => 'Serious violation',
         ]);

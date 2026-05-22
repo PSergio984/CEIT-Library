@@ -38,9 +38,10 @@ class AcademicPaperTest extends TestCase
         $this->assertContains('title', $fillable);
         $this->assertContains('publication_year', $fillable);
         $this->assertContains('paper_type', $fillable);
-        $this->assertContains('research_project_adviser', $fillable);
+        $this->assertContains('research_adviser_id', $fillable);
+        $this->assertContains('technical_adviser_id', $fillable);
         $this->assertContains('department', $fillable);
-        $this->assertContains('dean', $fillable);
+        $this->assertContains('dean_id', $fillable);
     }
 
     public function test_academic_paper_can_have_multiple_authors()

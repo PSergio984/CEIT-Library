@@ -21,8 +21,6 @@ class CatalogSequenceTest extends TestCase
             'publication_year' => 2025,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
         ]);
 
         $paper2 = AcademicPaper::create([
@@ -30,8 +28,6 @@ class CatalogSequenceTest extends TestCase
             'publication_year' => 2025,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
         ]);
 
         $paper3 = AcademicPaper::create([
@@ -39,8 +35,6 @@ class CatalogSequenceTest extends TestCase
             'publication_year' => 2025,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
         ]);
 
         // Assert catalog codes are sequential
@@ -75,8 +69,6 @@ class CatalogSequenceTest extends TestCase
                 'publication_year' => 2025,
                 'paper_type' => 'Thesis',
                 'department' => 'Information Technology',
-                'research_project_adviser' => 'Dr. Test',
-                'dean' => 'Dean Test',
             ]);
         }
 
@@ -125,8 +117,6 @@ class CatalogSequenceTest extends TestCase
                 'publication_year' => 2025,
                 'paper_type' => 'Thesis',
                 'department' => 'Civil Engineering',
-                'research_project_adviser' => 'Dr. Test',
-                'dean' => 'Dean Test',
             ]);
 
             $this->assertEquals(
@@ -148,8 +138,6 @@ class CatalogSequenceTest extends TestCase
             'publication_year' => 2025,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
         ]);
 
         $cePaper = AcademicPaper::create([
@@ -189,8 +177,6 @@ class CatalogSequenceTest extends TestCase
             'publication_year' => 2024,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
         ]);
 
         $paper2025 = AcademicPaper::create([
@@ -198,8 +184,6 @@ class CatalogSequenceTest extends TestCase
             'publication_year' => 2025,
             'paper_type' => 'Thesis',
             'department' => 'Information Technology',
-            'research_project_adviser' => 'Dr. Test',
-            'dean' => 'Dean Test',
         ]);
 
         // Different years should have different sequence keys

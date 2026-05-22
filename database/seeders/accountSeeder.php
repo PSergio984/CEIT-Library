@@ -39,6 +39,7 @@ class AccountSeeder extends Seeder
         // Create the ONLY super_admin user
         $this->upsertSeedUser(['email' => $superAdminEmail], [
             'first_name' => 'Janrel',
+            'last_name' => 'Motovlogs',
 
             'password' => Hash::make($superAdminPassword),
             'email' => $superAdminEmail,

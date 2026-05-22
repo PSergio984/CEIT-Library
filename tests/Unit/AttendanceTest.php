@@ -37,10 +37,12 @@ class AttendanceTest extends TestCase
         $fillable = $attendance->getFillable();
 
         $this->assertContains('user_id', $fillable);
+        $this->assertContains('role_id', $fillable);
         $this->assertContains('time_in', $fillable);
         $this->assertContains('time_out', $fillable);
         $this->assertContains('status', $fillable);
         $this->assertContains('scanned_by', $fillable);
+        $this->assertContains('scanned_by_admin_id', $fillable);
         $this->assertContains('duration_minutes', $fillable);
     }
 
