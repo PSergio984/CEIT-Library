@@ -208,7 +208,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                 @forelse($this->availablePapers as $paper)
-                    <a href="/academic-papers/{{ $paper->department }}" 
+                    <a href="/academic-papers/{{ $paper->id }}" 
                        class="block p-4 bg-base-200 rounded-lg hover:bg-base-300 transition-colors">
                         <div class="flex items-start gap-3">
                             <x-mary-icon name="o-document-text" class="w-8 h-8 text-primary flex-shrink-0"/>

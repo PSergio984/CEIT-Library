@@ -2,6 +2,8 @@
 
 namespace Tests\Feature\Security;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\AdminManageRoles;
 use App\Livewire\Pages\Admin\AdminUserList;
 use App\Livewire\QrScanner;
@@ -45,6 +47,7 @@ class FrontendSecurityAuditTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function test_unauthorized_user_cannot_assign_roles()
     {
         Livewire::actingAs($this->student)
@@ -54,6 +57,7 @@ class FrontendSecurityAuditTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function test_unauthorized_user_cannot_delete_users()
     {
         $userToDelete = User::factory()->create();
@@ -66,6 +70,7 @@ class FrontendSecurityAuditTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function test_search_input_validation_prevents_excessive_length()
     {
         $longSearch = str_repeat('a', 101);
@@ -77,6 +82,7 @@ class FrontendSecurityAuditTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function test_unauthorized_user_cannot_handle_scan()
     {
         Livewire::actingAs($this->student)

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Attendance;
 use App\Models\BorrowTransaction;
@@ -27,6 +29,7 @@ class ExportTest extends TestCase
     }
 
     /** @test - TC037: Export - Attendance PDF */
+    #[Test]
     public function attendance_records_can_be_exported_to_pdf()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -45,6 +48,7 @@ class ExportTest extends TestCase
     }
 
     /** @test - TC038: Export - Borrow Transactions PDF */
+    #[Test]
     public function borrow_transactions_can_be_exported_to_pdf()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -70,6 +74,7 @@ class ExportTest extends TestCase
     }
 
     /** @test - TC089: Data Export - CSV Format */
+    #[Test]
     public function data_can_be_exported_in_csv_format()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class QrCodeGenerationTest extends TestCase
     }
 
     /** @test - TC073: QR Code - Borrow QR Generation */
+    #[Test]
     public function student_borrow_qr_code_can_be_generated()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);

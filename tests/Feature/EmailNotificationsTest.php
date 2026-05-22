@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
@@ -25,6 +27,7 @@ class EmailNotificationsTest extends TestCase
     }
 
     /** @test - TC026: Email - Librarian Assignment Alert */
+    #[Test]
     public function admins_receive_email_alerts_for_unassigned_librarian_duty_days()
     {
         Mail::fake();
@@ -49,6 +52,7 @@ class EmailNotificationsTest extends TestCase
     }
 
     /** @test - TC027: Email - Past Dates Excluded */
+    #[Test]
     public function past_dates_are_excluded_from_librarian_assignment_alerts()
     {
         Mail::fake();

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC001: Manage Roles - Super Admin Access */
+    #[Test]
     public function super_admin_can_access_manage_roles_page()
     {
         $superAdmin = User::factory()->create([
@@ -39,6 +42,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC001: Verify role cards are visible */
+    #[Test]
     public function manage_roles_page_shows_all_role_cards()
     {
         $superAdmin = User::factory()->create([
@@ -63,6 +67,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC001: Super Admin can assign Admin role */
+    #[Test]
     public function super_admin_can_assign_admin_role_to_student()
     {
         $superAdmin = User::factory()->create([
@@ -87,6 +92,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC002: Admin Cannot Access Manage Roles */
+    #[Test]
     public function admin_cannot_access_manage_roles_page()
     {
         $admin = User::factory()->create([
@@ -102,6 +108,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC003: Librarian Cannot Access Manage Roles */
+    #[Test]
     public function librarian_cannot_access_manage_roles_page()
     {
         $librarian = User::factory()->create([
@@ -117,6 +124,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC004: Student Cannot Access Manage Roles */
+    #[Test]
     public function student_cannot_access_manage_roles_page()
     {
         $student = User::factory()->create([
@@ -132,6 +140,7 @@ class ManageRolesTest extends TestCase
     }
 
     /** @test - TC051: Only Super Admin can assign Admin and Super Admin roles */
+    #[Test]
     public function only_super_admin_can_assign_admin_and_super_admin_roles()
     {
         $superAdmin = User::factory()->create([

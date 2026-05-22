@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Author;
 use App\Models\Dean;
 use App\Models\ResearchAdviser;
@@ -41,6 +43,7 @@ class ToastNotificationsTest extends TestCase
     }
 
     /** @test - TC082: Toast Notifications - Success Messages */
+    #[Test]
     public function success_toast_notifications_appear_after_actions()
     {
         $this->seedRequiredData();
@@ -68,6 +71,7 @@ class ToastNotificationsTest extends TestCase
     }
 
     /** @test - TC083: Toast Notifications - Error Messages */
+    #[Test]
     public function error_toast_notifications_appear_on_failures()
     {
         $this->seedRequiredData();

@@ -18,10 +18,115 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
-    <!-- PWA -->
-    <link rel="manifest" href="/build/manifest.webmanifest">
+    <!-- PWA & Push Notifications -->
+    <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#0046ad">
     <link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                        console.log('Service Worker registered successfully.', reg);
+                        @auth
+                            requestPushPermission(reg);
+                        @endauth
+
+                        // Check if there is already a waiting worker on page load
+                        if (reg.waiting) {
+                            window.pwaWaitingWorker = reg.waiting;
+                            window.dispatchEvent(new CustomEvent('pwa-update-available'));
+                        }
+
+                        // Listen for future updates
+                        reg.onupdatefound = () => {
+                            const newWorker = reg.installing;
+                            if (newWorker) {
+                                newWorker.addEventListener('statechange', () => {
+                                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                        window.pwaWaitingWorker = newWorker;
+                                        window.dispatchEvent(new CustomEvent('pwa-update-available'));
+                                    }
+                                });
+                            }
+                        };
+                    })
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+
+            // Reload page when the active service worker changes (after skipWaiting)
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                window.location.reload();
+            });
+        }
+
+        async function requestPushPermission(reg) {
+            try {
+                const permission = await Notification.requestPermission();
+                if (permission !== 'granted') {
+                    console.log('Notification permission denied.');
+                    return;
+                }
+
+                const response = await fetch('/api/push/vapid-key');
+                const data = await response.json();
+                if (!data.publicKey) {
+                    console.log('No public key provided.');
+                    return;
+                }
+
+                const subscribeOptions = {
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(data.publicKey)
+                };
+
+                const subscription = await reg.pushManager.subscribe(subscribeOptions);
+                
+                await fetch('/api/push/subscribe', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(subscription)
+                });
+                console.log('User is subscribed to Push Notifications.');
+            } catch (err) {
+                console.error('Failed to subscribe user to Push:', err);
+            }
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later.
+            window.deferredPrompt = e;
+            // Update UI notify the user they can install the PWA
+            window.dispatchEvent(new CustomEvent('pwa-install-available'));
+        });
+
+        window.addEventListener('appinstalled', (e) => {
+            // Hide the app-provided install promotion
+            window.deferredPrompt = null;
+            window.dispatchEvent(new CustomEvent('pwa-install-hidden'));
+            console.log('PWA was installed');
+        });
+
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+    </script>
 
     @livewireStyles
 </head>
@@ -31,7 +136,10 @@
     {{-- NAVBAR mobile only --}}
     <x-mary-nav sticky class="lg:hidden">
         <x-slot:brand>
-            <div class="font-bold text-primary ml-2">CEIT Library</div>
+            <label for="main-drawer" class="btn btn-square btn-ghost lg:hidden mr-2">
+                <x-mary-icon name="o-bars-3" class="w-6 h-6" />
+            </label>
+            <div class="font-bold text-primary">CEIT Library</div>
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}
@@ -89,6 +197,8 @@
 
             </x-mary-menu>
 
+
+
         </x-slot:sidebar>
 
         {{-- CONTENT --}}
@@ -99,13 +209,13 @@
                     <livewire:layout.navigation />
                 </div>
 
-                <div class="flex-1">
+                <div class="flex-1 p-5 lg:px-10 lg:py-8">
                     {{ $slot }}
                 </div>
 
                 <!-- Footer -->
-                <footer class="bg-background border-t border-border mt-auto">
-                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                <footer class="bg-background border-t border-border mt-auto w-full">
+                    <div class="max-w-7xl mx-auto py-6 px-5 lg:px-10">
                         <div class="text-center text-sm text-muted-foreground">
                             <p>&copy; {{ date('Y') }} PLV eLib - CEIT Library Management System</p>
                             <p class="mt-1">Pamantasan ng Lungsod ng Valenzuela</p>
@@ -114,8 +224,6 @@
                 </footer>
             </div>
         </x-slot:content>
-
-        </div>
     </x-mary-main>
 
     {{-- BOTTOM NAVIGATION (Mobile only) --}}
@@ -131,12 +239,14 @@
             </a>
             
             {{-- Scanner link - Hidden for regular students if not in dev, but plan asks for it --}}
+            @can('librarian-or-admin-access')
             <a href="/test-qr" class="flex flex-col items-center justify-center w-full h-full">
                 <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
                     <x-mary-icon name="o-qr-code" class="w-7 h-7" />
                 </div>
                 <span class="text-[10px] mt-1 font-bold text-primary">Scan</span>
             </a>
+            @endcan
 
             <a href="/notifications" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('notifications*') ? 'text-primary' : 'text-base-content/70' }}">
                 <div class="relative">

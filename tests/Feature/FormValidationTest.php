@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
@@ -43,6 +45,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test - TC081: Form Validation - Required Fields */
+    #[Test]
     public function required_field_validation_works_on_forms()
     {
         $this->seedRequiredData();
@@ -78,6 +81,7 @@ class FormValidationTest extends TestCase
     // ============================================================================
 
     /** @test */
+    #[Test]
     public function register_form_validates_first_name_field()
     {
         $component = Volt::test('pages.auth.register');
@@ -109,6 +113,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function register_form_validates_last_name_field()
     {
         $component = Volt::test('pages.auth.register');
@@ -133,6 +138,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function register_form_validates_email_domain()
     {
         $component = Volt::test('pages.auth.register');
@@ -150,6 +156,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function register_form_validates_password_requirements()
     {
         $component = Volt::test('pages.auth.register');
@@ -183,6 +190,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function login_form_validates_email_field()
     {
         $component = Volt::test('pages.auth.login');
@@ -204,6 +212,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function login_form_validates_password_field()
     {
         $component = Volt::test('pages.auth.login');
@@ -218,6 +227,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function forgot_password_form_validates_email_field()
     {
         $component = Volt::test('pages.auth.forgot-password');
@@ -238,6 +248,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function reset_password_form_validates_password_requirements()
     {
         $component = Volt::test('pages.auth.reset-password', [
@@ -259,6 +270,7 @@ class FormValidationTest extends TestCase
     // ============================================================================
 
     /** @test */
+    #[Test]
     public function profile_update_form_validates_first_name()
     {
         $user = User::factory()->create([
@@ -293,6 +305,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function profile_update_form_validates_last_name()
     {
         $user = User::factory()->create([
@@ -320,6 +333,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function update_password_form_validates_current_password()
     {
         $user = User::factory()->create([
@@ -340,6 +354,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function update_password_form_validates_new_password_requirements()
     {
         $user = User::factory()->create([
@@ -360,6 +375,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function delete_user_form_validates_password()
     {
         $user = User::factory()->create([
@@ -378,6 +394,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function confirm_password_form_validates_password()
     {
         $user = User::factory()->create([
@@ -396,6 +413,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function valid_profile_update_submits_successfully()
     {
         $user = User::factory()->create([
@@ -419,6 +437,7 @@ class FormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function valid_password_update_submits_successfully()
     {
         $user = User::factory()->create([

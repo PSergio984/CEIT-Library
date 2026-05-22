@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\BorrowTransaction;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +26,7 @@ class TransactionHistoryTest extends TestCase
     }
 
     /** @test - TC035: Transaction History - Sidebar Visibility */
+    #[Test]
     public function transaction_history_sidebar_is_properly_visible()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

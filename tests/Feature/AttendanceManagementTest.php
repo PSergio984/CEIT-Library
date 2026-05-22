@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\ActiveUsersTab;
 use App\Models\Attendance;
 use App\Models\Librarian;
@@ -37,6 +39,7 @@ class AttendanceManagementTest extends TestCase
     }
 
     /** @test - TC060: Attendance - Manual Declare Forgot Timeout */
+    #[Test]
     public function admin_can_declare_forgot_timeout_for_active_attendance()
     {
         $this->seedRequiredData();

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\AcademicPaper;
 use App\Models\Author;
@@ -43,6 +45,7 @@ class AuthorManagementTest extends TestCase
     }
 
     /** @test - TC076: Author Management - Add New Author */
+    #[Test]
     public function new_author_can_be_added_to_academic_paper()
     {
         $this->seedRequiredData();

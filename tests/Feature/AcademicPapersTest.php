@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Dean;
 use App\Models\ResearchAdviser;
@@ -27,6 +29,7 @@ class AcademicPapersTest extends TestCase
     }
 
     /** @test - TC012: Academic Papers - Create Button Visibility (Super Admin) */
+    #[Test]
     public function super_admin_can_see_create_button_on_academic_papers_page()
     {
         $superAdmin = User::factory()->create([
@@ -44,6 +47,7 @@ class AcademicPapersTest extends TestCase
     }
 
     /** @test - TC013: Academic Papers - Admin CRUD Allowed */
+    #[Test]
     public function admin_can_create_edit_and_delete_academic_papers()
     {
         $admin = User::factory()->create([
@@ -64,6 +68,7 @@ class AcademicPapersTest extends TestCase
     }
 
     /** @test - TC014: Academic Papers - Librarian Read-only */
+    #[Test]
     public function librarian_can_view_academic_papers_but_not_create_edit_or_delete()
     {
         $librarian = User::factory()->create([
@@ -88,6 +93,7 @@ class AcademicPapersTest extends TestCase
     }
 
     /** @test - TC015: Academic Papers - Student Denied */
+    #[Test]
     public function student_cannot_access_academic_papers_admin_page()
     {
         $student = User::factory()->create([
@@ -101,6 +107,7 @@ class AcademicPapersTest extends TestCase
     }
 
     /** @test - TC016: Academic Papers - Filters & Pagination */
+    #[Test]
     public function academic_papers_page_has_filters_and_pagination()
     {
         $admin = User::factory()->create([

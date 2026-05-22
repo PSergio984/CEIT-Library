@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Student\AttendanceQr;
 use App\Livewire\QrScanner;
 use App\Models\Attendance;
@@ -105,6 +107,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function qr_code_component_generates_valid_svg_data_uri(): void
     {
         $this->actingAs($this->student);
@@ -127,6 +130,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_svg_contains_valid_qr_pattern(): void
     {
         $this->actingAs($this->student);
@@ -148,6 +152,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_download_returns_valid_png(): void
     {
         // Skip if Imagick is not installed
@@ -178,6 +183,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_data_is_encrypted_and_contains_required_fields(): void
     {
         $this->actingAs($this->student);
@@ -198,6 +204,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function generated_qr_code_can_be_scanned_successfully(): void
     {
         // Step 1: Generate QR code as student
@@ -223,6 +230,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_allows_check_in_and_check_out_with_same_code(): void
     {
         // Generate QR data
@@ -254,6 +262,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function third_scan_with_same_qr_code_creates_new_attendance(): void
     {
         $encryptedData = $this->generateValidQrData($this->student);
@@ -288,6 +297,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function svg_qr_code_uses_correct_size_and_margin(): void
     {
         // Generate a test QR code with the same settings as the component
@@ -314,6 +324,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function png_qr_code_uses_higher_error_correction(): void
     {
         // Skip if Imagick is not installed (required for PNG generation)
@@ -341,6 +352,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_with_margin_8_is_more_scannable_than_margin_0(): void
     {
         $testData = 'test-scannable-data-12345';
@@ -368,6 +380,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function error_correction_q_allows_25_percent_damage_recovery(): void
     {
         // Skip if Imagick is not installed (required for PNG generation)
@@ -405,6 +418,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function qr_code_is_cached_and_consistent_across_requests(): void
     {
         $this->actingAs($this->student);
@@ -429,6 +443,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_caching_provides_consistent_results(): void
     {
         $this->actingAs($this->student);
@@ -453,6 +468,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function invalid_qr_data_is_rejected_gracefully(): void
     {
         $this->actingAs($this->librarian);
@@ -467,6 +483,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function tampered_qr_data_is_rejected(): void
     {
         $encryptedData = $this->generateValidQrData($this->student);
@@ -484,6 +501,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_with_invalid_hash_is_rejected(): void
     {
         // Generate QR data with incorrect hash
@@ -518,6 +536,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function qr_code_generation_is_fast_enough(): void
     {
         $this->actingAs($this->student);
@@ -536,6 +555,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function cached_qr_code_retrieval_is_very_fast(): void
     {
         $this->actingAs($this->student);
@@ -560,6 +580,7 @@ class QrCodeScannabilityTest extends TestCase
     // ==========================================
 
     /** @test */
+    #[Test]
     public function qr_code_contains_correct_user_information(): void
     {
         $this->actingAs($this->student);
@@ -578,6 +599,7 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_hash_prevents_data_modification(): void
     {
         $encryptedData = $this->generateValidQrData($this->student);

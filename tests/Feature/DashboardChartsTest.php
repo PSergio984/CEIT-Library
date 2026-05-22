@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +26,7 @@ class DashboardChartsTest extends TestCase
     }
 
     /** @test - TC065: Dashboard - Charts Rendering */
+    #[Test]
     public function dashboard_charts_render_correctly_with_data()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

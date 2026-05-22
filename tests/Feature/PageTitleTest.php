@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class PageTitleTest extends TestCase
     }
 
     /** @test - TC052: Web Page Title - Dynamic Updates */
+    #[Test]
     public function browser_tab_title_updates_based_on_current_page()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

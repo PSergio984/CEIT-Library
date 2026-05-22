@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Student\Transaction;
 use App\Models\AcademicPaper;
@@ -49,6 +51,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-001: Cannot borrow a book that is already borrowed by another user */
+    #[Test]
     public function cannot_borrow_already_borrowed_book(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -97,6 +100,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-002: Double borrow attempt with stale inventory status is blocked */
+    #[Test]
     public function double_borrow_blocked_even_with_stale_inventory_status(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -143,6 +147,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-003: Only original borrower's QR can return the book */
+    #[Test]
     public function only_original_borrower_qr_can_return_book(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -195,6 +200,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-004: Original borrower CAN return with their QR */
+    #[Test]
     public function original_borrower_can_return_with_their_qr(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -242,6 +248,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-005: Student can generate return QR from transaction history */
+    #[Test]
     public function student_can_generate_return_qr_from_transaction_history(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -282,6 +289,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-006: Return QR modal can be closed */
+    #[Test]
     public function return_qr_modal_can_be_closed(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -314,6 +322,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-007: Cannot generate return QR for another user's transaction */
+    #[Test]
     public function cannot_generate_return_qr_for_another_users_transaction(): void
     {
         $student1 = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -350,6 +359,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-008: Cannot generate return QR for completed transaction */
+    #[Test]
     public function cannot_generate_return_qr_for_completed_transaction(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -381,6 +391,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-009: Generated return QR works with admin scanner */
+    #[Test]
     public function generated_return_qr_works_with_admin_scanner(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -432,6 +443,7 @@ class BorrowSecurityTest extends TestCase
     }
 
     /** @test - TC-BS-010: Can generate return QR for overdue transaction */
+    #[Test]
     public function can_generate_return_qr_for_overdue_transaction(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);

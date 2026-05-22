@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use App\Models\Librarian;
@@ -26,6 +28,7 @@ class BorrowTransactionCreditScoreTest extends TestCase
     }
 
     /** @test - TC059: Borrow Transaction - Credit Score Block */
+    #[Test]
     public function students_with_low_credit_score_cannot_borrow()
     {
         $librarianUser = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,6 +27,7 @@ class EmailVerificationTest extends TestCase
     }
 
     /** @test - TC053: Email Verification - Account Activation */
+    #[Test]
     public function new_users_must_verify_email_before_accessing_system()
     {
         Mail::fake();
@@ -58,6 +61,7 @@ class EmailVerificationTest extends TestCase
     }
 
     /** @test - TC054: Welcome Email - New User */
+    #[Test]
     public function welcome_email_is_sent_after_email_verification()
     {
         Mail::fake();
@@ -83,6 +87,7 @@ class EmailVerificationTest extends TestCase
     }
 
     /** @test - TC055: Overdue Email - Automated Notification */
+    #[Test]
     public function overdue_email_is_sent_when_borrowed_item_exceeds_due_date()
     {
         Mail::fake();
@@ -102,6 +107,7 @@ class EmailVerificationTest extends TestCase
     }
 
     /** @test - TC056: Password Reset - Email Flow */
+    #[Test]
     public function password_reset_email_functionality_works()
     {
         Mail::fake();

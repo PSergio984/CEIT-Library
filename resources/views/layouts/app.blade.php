@@ -97,13 +97,13 @@
                     <livewire:layout.navigation />
                 </div>
 
-                <div class="flex-1">
+                <div class="flex-1 p-5 lg:px-10 lg:py-8">
                     {{ $slot }}
                 </div>
 
                 <!-- Footer -->
-                <footer class="bg-background border-t border-border mt-auto">
-                    <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
+                <footer class="bg-background border-t border-border mt-auto w-full">
+                    <div class="max-w-7xl mx-auto py-6 px-5 lg:px-10">
                         <div class="text-center text-sm text-muted-foreground">
                             <p>&copy; {{ date('Y') }} PLV eLib - CEIT Library Management System</p>
                             <p class="mt-1">Pamantasan ng Lungsod ng Valenzuela</p>
@@ -112,8 +112,6 @@
                 </footer>
             </div>
         </x-slot:content>
-
-        </div>
     </x-mary-main>
 
     {{-- Toast --}}

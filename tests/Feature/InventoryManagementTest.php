@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use App\Models\Role;
@@ -25,6 +27,7 @@ class InventoryManagementTest extends TestCase
     }
 
     /** @test - TC069: Inventory Management - View Inventory List */
+    #[Test]
     public function inventory_items_list_can_be_viewed()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

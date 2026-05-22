@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
@@ -41,6 +43,7 @@ class PaginationAndLoadingTest extends TestCase
     }
 
     /** @test - TC030: Pagination - Loading States */
+    #[Test]
     public function pagination_shows_loading_overlay_during_page_transitions()
     {
         $this->seedRequiredData();
@@ -63,6 +66,7 @@ class PaginationAndLoadingTest extends TestCase
     }
 
     /** @test - TC031: User Statistics - All Users Count */
+    #[Test]
     public function user_statistics_show_all_users_not_just_current_page()
     {
         $this->seedRequiredData();
@@ -88,6 +92,7 @@ class PaginationAndLoadingTest extends TestCase
     }
 
     /** @test - TC036: Academic Papers - Pagination Fix */
+    #[Test]
     public function academic_papers_table_pagination_works_correctly()
     {
         $this->seedRequiredData();
@@ -111,6 +116,7 @@ class PaginationAndLoadingTest extends TestCase
     }
 
     /** @test - TC049: Lazy Loading - Table Data */
+    #[Test]
     public function tables_use_lazy_loading_with_placeholders()
     {
         $this->seedRequiredData();
@@ -127,6 +133,7 @@ class PaginationAndLoadingTest extends TestCase
     }
 
     /** @test - TC050: Lazy Loading - Filter Application */
+    #[Test]
     public function applying_filters_shows_loading_state()
     {
         $this->seedRequiredData();

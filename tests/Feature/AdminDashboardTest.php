@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +26,7 @@ class AdminDashboardTest extends TestCase
     }
 
     /** @test - TC010: Student cannot access Admin Dashboard */
+    #[Test]
     public function student_cannot_access_admin_dashboard()
     {
         $student = User::factory()->create([
@@ -37,6 +40,7 @@ class AdminDashboardTest extends TestCase
     }
 
     /** @test - TC011: Super Admin can view dashboard metrics */
+    #[Test]
     public function super_admin_can_view_dashboard_metrics()
     {
         $superAdmin = User::factory()->create([
@@ -56,6 +60,7 @@ class AdminDashboardTest extends TestCase
     }
 
     /** @test - TC011: Dashboard shows statistics cards */
+    #[Test]
     public function dashboard_displays_statistics_cards()
     {
         $superAdmin = User::factory()->create([
@@ -75,6 +80,7 @@ class AdminDashboardTest extends TestCase
     }
 
     /** @test - TC064: Dashboard statistics display accurate data */
+    #[Test]
     public function dashboard_statistics_show_accurate_counts()
     {
         $superAdmin = User::factory()->create([

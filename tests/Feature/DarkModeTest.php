@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class DarkModeTest extends TestCase
     }
 
     /** @test - TC088: Dark Mode - Toggle (If Implemented) */
+    #[Test]
     public function dark_mode_can_be_toggled_if_feature_exists()
     {
         // This test is conditional - only if dark mode is implemented

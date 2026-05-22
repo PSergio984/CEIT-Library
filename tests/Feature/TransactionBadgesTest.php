@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
@@ -26,6 +28,7 @@ class TransactionBadgesTest extends TestCase
     }
 
     /** @test - TC040: Transaction Badge - Active/Overdue Indicator */
+    #[Test]
     public function transaction_badges_show_active_and_overdue_indicators()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

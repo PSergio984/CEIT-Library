@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class ProfileViewTest extends TestCase
     }
 
     /** @test - TC087: Profile - View User Information */
+    #[Test]
     public function user_can_view_their_profile_information()
     {
         $user = User::factory()->create([

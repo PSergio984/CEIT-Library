@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
@@ -41,6 +43,7 @@ class FiltersTest extends TestCase
     }
 
     /** @test - TC039: Filters - Consistency */
+    #[Test]
     public function filter_controls_are_consistent_across_all_pages()
     {
         $this->seedRequiredData();
@@ -65,6 +68,7 @@ class FiltersTest extends TestCase
     }
 
     /** @test - TC063: Academic Paper - Search and Filter */
+    #[Test]
     public function academic_papers_can_be_searched_and_filtered()
     {
         $this->seedRequiredData();
@@ -108,6 +112,7 @@ class FiltersTest extends TestCase
     }
 
     /** @test - TC077: Department Filter - All Departments */
+    #[Test]
     public function department_filter_shows_all_configured_departments()
     {
         $this->seedRequiredData();
@@ -124,6 +129,7 @@ class FiltersTest extends TestCase
     }
 
     /** @test - TC078: Search - Real-time Results */
+    #[Test]
     public function search_shows_real_time_results_as_user_types()
     {
         $this->seedRequiredData();

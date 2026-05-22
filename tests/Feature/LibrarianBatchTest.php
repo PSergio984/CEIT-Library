@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
@@ -25,6 +27,7 @@ class LibrarianBatchTest extends TestCase
     }
 
     /** @test - TC066: Librarian Batch - Create with 5 Students */
+    #[Test]
     public function librarian_batch_requires_exactly_5_students()
     {
         $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
@@ -49,6 +52,7 @@ class LibrarianBatchTest extends TestCase
     }
 
     /** @test - TC067: Librarian Batch - Assign to Date */
+    #[Test]
     public function librarian_batch_can_be_assigned_to_specific_date()
     {
         $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);

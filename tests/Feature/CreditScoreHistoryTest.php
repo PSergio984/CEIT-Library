@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\ScoreIncrement;
 use App\Models\User;
@@ -24,6 +26,7 @@ class CreditScoreHistoryTest extends TestCase
     }
 
     /** @test - TC024: Credit Score History - View and Filter */
+    #[Test]
     public function user_can_view_and_filter_credit_score_history()
     {
         $user = User::factory()->create([

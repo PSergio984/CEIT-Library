@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class BorrowLogsTest extends TestCase
     }
 
     /** @test - TC008: Borrow Logs - Super Admin Full Access */
+    #[Test]
     public function super_admin_can_access_borrow_logs_with_full_functionality()
     {
         $superAdmin = User::factory()->create([

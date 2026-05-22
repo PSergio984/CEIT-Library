@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Dean;
@@ -32,6 +34,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC028: Librarian Assignment - Sunday Restriction */
+    #[Test]
     public function sunday_dates_cannot_be_selected_for_librarian_duty()
     {
         $admin = User::factory()->create([
@@ -52,6 +55,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC032: Password - Weak Validation */
+    #[Test]
     public function weak_passwords_are_rejected()
     {
         $user = User::factory()->create([
@@ -69,6 +73,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC034: Name Capitalization - Auto Format */
+    #[Test]
     public function names_are_automatically_capitalized()
     {
         $user = User::factory()->create([
@@ -83,6 +88,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC045: Attendance QR - Database Integrity */
+    #[Test]
     public function attendance_qr_codes_maintain_database_integrity()
     {
         $student = User::factory()->create([
@@ -95,6 +101,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC051: Super Admin Check - Role Assignment */
+    #[Test]
     public function only_super_admin_can_assign_admin_and_super_admin_roles()
     {
         $superAdmin = User::factory()->create([
@@ -110,6 +117,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC057: Borrow Transaction - Create New */
+    #[Test]
     public function borrow_transaction_can_be_created()
     {
         $student = User::factory()->create([
@@ -138,6 +146,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC058: Borrow Transaction - Return Item */
+    #[Test]
     public function borrow_transaction_can_be_returned()
     {
         $student = User::factory()->create([
@@ -171,6 +180,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC061: Violation - Record New Violation */
+    #[Test]
     public function new_violation_can_be_recorded()
     {
         $admin = User::factory()->create([
@@ -190,6 +200,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC062: Academic Paper - Create with Multiple Copies */
+    #[Test]
     public function academic_paper_can_be_created_with_multiple_copies()
     {
         $admin = User::factory()->create([
@@ -216,6 +227,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC064: Dashboard - Statistics Cards */
+    #[Test]
     public function dashboard_displays_statistics_cards()
     {
         $admin = User::factory()->create([
@@ -231,6 +243,7 @@ class AdditionalFeaturesTest extends TestCase
     }
 
     /** @test - TC072: QR Code - Student Attendance QR */
+    #[Test]
     public function student_can_generate_attendance_qr_code()
     {
         $student = User::factory()->create([

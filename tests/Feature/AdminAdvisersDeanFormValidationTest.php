@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Models\Role;
 use App\Models\User;
@@ -31,6 +33,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function create_form_is_valid_when_name_meets_requirements(): void
     {
         Livewire::actingAs($this->admin)
@@ -52,6 +55,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function create_form_is_invalid_when_name_is_empty(): void
     {
         $component = Livewire::actingAs($this->admin)
@@ -63,6 +67,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function create_form_is_invalid_when_name_is_too_short(): void
     {
         $component = Livewire::actingAs($this->admin)
@@ -74,6 +79,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function create_form_is_invalid_when_name_has_less_than_2_letters(): void
     {
         $component = Livewire::actingAs($this->admin)
@@ -85,6 +91,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_dirty_when_name_changes(): void
     {
         // Create a research adviser entry
@@ -114,6 +121,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_not_dirty_when_name_is_same_as_original(): void
     {
         // Create a research adviser entry
@@ -135,6 +143,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_not_dirty_when_only_whitespace_differs(): void
     {
         // Create a research adviser entry
@@ -155,6 +164,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_valid_when_dirty_and_name_meets_requirements(): void
     {
         // Create a research adviser entry
@@ -176,6 +186,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_invalid_when_not_dirty(): void
     {
         // Create a research adviser entry
@@ -196,6 +207,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_invalid_when_dirty_but_name_is_too_short(): void
     {
         // Create a research adviser entry
@@ -217,6 +229,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function original_name_persists_across_livewire_requests(): void
     {
         // Create a research adviser entry
@@ -247,6 +260,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function can_save_valid_create_form(): void
     {
         Livewire::actingAs($this->admin)
@@ -264,6 +278,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function can_save_valid_edit_form(): void
     {
         // Create a research adviser entry
@@ -289,6 +304,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function close_modals_resets_form_state(): void
     {
         // Create a research adviser entry
@@ -311,6 +327,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function works_with_different_tabs(): void
     {
         // Test technical advisers tab
@@ -366,6 +383,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function real_time_validation_triggers_on_property_update(): void
     {
         // Test that validation errors appear when setting invalid name
@@ -377,6 +395,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function validation_errors_clear_when_valid_name_entered(): void
     {
         Livewire::actingAs($this->admin)
@@ -389,6 +408,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function closing_modal_clears_validation_errors(): void
     {
         Livewire::actingAs($this->admin)
@@ -401,6 +421,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function opening_create_modal_after_edit_with_errors_starts_fresh(): void
     {
         // Create a research adviser entry
@@ -424,6 +445,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_invalid_with_numbers_only(): void
     {
         // Create a research adviser entry
@@ -445,6 +467,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function edit_form_is_invalid_with_single_character(): void
     {
         // Create a research adviser entry
@@ -466,6 +489,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function create_form_validation_rejects_special_characters_only(): void
     {
         Livewire::actingAs($this->admin)
@@ -476,6 +500,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function opening_edit_modal_after_create_with_errors_starts_fresh(): void
     {
         // Create a research adviser entry
@@ -499,6 +524,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function opening_edit_modal_clears_previous_edit_modal_errors(): void
     {
         // Create two research adviser entries
@@ -528,6 +554,7 @@ class AdminAdvisersDeanFormValidationTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function opening_create_modal_clears_all_form_state_including_errors(): void
     {
         // Create a research adviser entry

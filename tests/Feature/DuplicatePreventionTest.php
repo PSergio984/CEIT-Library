@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\AcademicPaper;
 use App\Models\Author;
@@ -43,6 +45,7 @@ class DuplicatePreventionTest extends TestCase
     }
 
     /** @test - TC090: Duplicate Prevention - Academic Paper */
+    #[Test]
     public function system_prevents_duplicate_academic_papers()
     {
         $this->seedRequiredData();

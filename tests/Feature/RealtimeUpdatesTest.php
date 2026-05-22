@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Attendance;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +26,7 @@ class RealtimeUpdatesTest extends TestCase
     }
 
     /** @test - TC046: Wire Polling - Real-time Countdown */
+    #[Test]
     public function time_sensitive_data_updates_in_real_time_using_wire_polling()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

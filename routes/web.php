@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\QrCodeDownloadController;
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminAdvisersDeans;
@@ -52,6 +53,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/qr-code/download/{inventoryId}', [QrCodeDownloadController::class, 'download'])
         ->whereNumber('inventoryId')
         ->name('qr-code.download');
+
+    // PWA Push Notifications routes
+    Route::get('/api/push/vapid-key', [PushSubscriptionController::class, 'getVapidKey']);
+    Route::post('/api/push/subscribe', [PushSubscriptionController::class, 'subscribe']);
 });
 
 // Admin routes - Granular permission control

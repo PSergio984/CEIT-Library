@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Models\Role;
 use App\Models\User;
@@ -25,6 +27,7 @@ class DatePickerValidationTest extends TestCase
     }
 
     /** @test - TC047: Date Picker - Prevent Past Date Selection */
+    #[Test]
     public function past_dates_cannot_be_selected_in_librarian_assignment_date_picker()
     {
         $this->seedRequiredData();

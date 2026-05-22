@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -25,6 +27,7 @@ class ProfileManagementTest extends TestCase
     }
 
     /** @test - TC009: Profile Page - View Profile */
+    #[Test]
     public function authenticated_user_can_view_profile_page()
     {
         $user = User::factory()->create([
@@ -39,6 +42,7 @@ class ProfileManagementTest extends TestCase
     }
 
     /** @test - TC009: Profile shows user information */
+    #[Test]
     public function profile_page_displays_user_information()
     {
         $user = User::factory()->create([
@@ -57,6 +61,7 @@ class ProfileManagementTest extends TestCase
     }
 
     /** @test - TC025: Profile - Update Password Success */
+    #[Test]
     public function user_can_update_password_successfully()
     {
         $oldPassword = 'OldPassword123!';
@@ -87,6 +92,7 @@ class ProfileManagementTest extends TestCase
     }
 
     /** @test - TC032: Password - Weak Validation */
+    #[Test]
     public function weak_passwords_are_rejected()
     {
         $user = User::factory()->create([

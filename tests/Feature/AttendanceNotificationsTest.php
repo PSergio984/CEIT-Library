@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\QrScanner;
 use App\Models\Attendance;
 use App\Models\Librarian;
@@ -99,6 +101,7 @@ class AttendanceNotificationsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function check_in_creates_notification_for_student(): void
     {
         // Act as the librarian
@@ -135,6 +138,7 @@ class AttendanceNotificationsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function check_out_creates_notification_for_student(): void
     {
         // Act as the librarian
@@ -182,6 +186,7 @@ class AttendanceNotificationsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function notification_types_are_correctly_set(): void
     {
         $this->actingAs($this->librarian);
@@ -208,6 +213,7 @@ class AttendanceNotificationsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function notification_contains_correct_data_structure(): void
     {
         $this->actingAs($this->librarian);
@@ -230,6 +236,7 @@ class AttendanceNotificationsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function notifications_page_shows_attendance_notifications(): void
     {
         // Create check-in notification
@@ -269,6 +276,7 @@ class AttendanceNotificationsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function qr_code_v5_format_is_validated_correctly(): void
     {
         $this->actingAs($this->librarian);

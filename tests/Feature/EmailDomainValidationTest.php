@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
@@ -23,6 +25,7 @@ class EmailDomainValidationTest extends TestCase
     }
 
     /** @test - TC043: Email Domain - Validation Rule */
+    #[Test]
     public function only_plv_edu_ph_emails_are_accepted_during_registration()
     {
         // Test invalid email domain using Livewire Volt component

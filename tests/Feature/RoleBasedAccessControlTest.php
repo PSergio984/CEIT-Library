@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class RoleBasedAccessControlTest extends TestCase
@@ -28,7 +29,8 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
-    public function admin_can_access_librarian_assignment_page()
+    #[Test]
+    public function test_admin_can_access_librarian_assignment_page()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
 
@@ -39,6 +41,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_cannot_access_librarian_assignment_page()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -57,6 +60,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function student_cannot_access_librarian_assignment_page()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -68,6 +72,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function admin_can_access_test_qr_page()
     {
         if (config('app.env') === 'production') {
@@ -83,6 +88,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function active_librarian_can_access_test_qr_page()
     {
         if (config('app.env') === 'production') {
@@ -104,6 +110,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function student_cannot_access_test_qr_page()
     {
         if (config('app.env') === 'production') {
@@ -119,6 +126,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function expired_librarian_cannot_access_test_qr_page()
     {
         if (config('app.env') === 'production') {
@@ -141,6 +149,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function admin_can_access_admin_dashboard()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -152,6 +161,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function super_admin_can_access_admin_dashboard()
     {
         $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
@@ -163,6 +173,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function student_cannot_access_admin_dashboard()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -174,6 +185,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function unauthenticated_user_redirected_to_login()
     {
         $response = $this->get(route('admin.dashboard'));
@@ -182,6 +194,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function gate_assign_librarian_role_allows_admin()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -190,6 +203,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function gate_assign_librarian_role_denies_student()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -198,6 +212,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function gate_librarian_or_admin_access_allows_admin()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -206,6 +221,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function gate_librarian_or_admin_access_allows_active_librarian()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -220,6 +236,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function gate_librarian_or_admin_access_denies_student()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -230,6 +247,7 @@ class RoleBasedAccessControlTest extends TestCase
     // GRANULAR PERMISSION TESTS
 
     /** @test */
+    #[Test]
     public function librarian_can_access_admin_dashboard()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -241,6 +259,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_can_access_borrow_logs()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -252,6 +271,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_can_access_violation_logs()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -263,6 +283,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_can_view_rules_but_not_edit()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -278,6 +299,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_can_view_academic_papers_read_only()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -290,6 +312,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_can_view_attendance_logs()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -302,6 +325,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_cannot_access_student_management()
     {
         $user = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -311,6 +335,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function admin_can_access_all_admin_pages()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -333,6 +358,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function super_admin_can_access_manage_roles()
     {
         $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
@@ -344,6 +370,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function admin_cannot_access_manage_roles()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -355,6 +382,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function librarian_cannot_access_manage_roles()
     {
         $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -366,6 +394,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function student_cannot_access_manage_roles()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -377,6 +406,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function admin_has_all_permissions()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -410,6 +440,7 @@ class RoleBasedAccessControlTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function student_cannot_access_any_admin_page()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -431,3 +462,4 @@ class RoleBasedAccessControlTest extends TestCase
         }
     }
 }
+

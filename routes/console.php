@@ -97,6 +97,9 @@ Schedule::command('attendance:check-missing-timeouts')->dailyAt('00:30');
 // Check for overdue borrow transactions every 5 minutes
 Schedule::command('transactions:mark-overdue')->everyFiveMinutes();
 
+// Send warning notifications to users whose borrowing deadline is approaching (expiring within 30 minutes)
+Schedule::command('transactions:send-deadline-warnings')->everyFiveMinutes();
+
 // Schedule librarian batch status updates to run every hour
 Schedule::command('librarian:update-batch-statuses')->hourly();
 

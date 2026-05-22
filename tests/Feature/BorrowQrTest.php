@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Models\AcademicPaper;
@@ -29,6 +31,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-001: Student can generate borrow QR code for available copy */
+    #[Test]
     public function student_can_generate_borrow_qr_for_available_copy(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -59,6 +62,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-002: QR code contains correct encrypted data */
+    #[Test]
     public function borrow_qr_contains_correct_encrypted_data(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -84,6 +88,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-003: Cannot generate QR for unavailable copy */
+    #[Test]
     public function cannot_generate_qr_for_unavailable_copy(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -110,6 +115,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-004: Cannot generate QR for non-existent copy */
+    #[Test]
     public function cannot_generate_qr_for_nonexistent_copy(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -131,6 +137,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-005: QR modal can be closed */
+    #[Test]
     public function qr_modal_can_be_closed(): void
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
@@ -162,6 +169,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-006: Admin can scan and process borrow QR code */
+    #[Test]
     public function admin_can_scan_and_process_borrow_qr(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -200,6 +208,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-007: Borrow QR with invalid encryption is rejected */
+    #[Test]
     public function borrow_qr_with_invalid_encryption_is_rejected(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -218,6 +227,7 @@ class BorrowQrTest extends TestCase
     }
 
     /** @test - TC-BQ-008: Borrow QR with missing fields is rejected */
+    #[Test]
     public function borrow_qr_with_missing_fields_is_rejected(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

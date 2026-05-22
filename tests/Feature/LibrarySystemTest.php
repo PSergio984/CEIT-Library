@@ -193,7 +193,7 @@ class LibrarySystemTest extends TestCase
 
         // Check if relationship exists before testing
         if (method_exists($paper, 'authors')) {
-            $paper->authors()->attach([$author1->id, $author2->id]);
+            $paper->authors()->sync([$author1->id, $author2->id]);
 
             $this->assertCount(2, $paper->authors);
             $this->assertTrue($paper->authors->contains($author1));
@@ -382,14 +382,15 @@ class LibrarySystemTest extends TestCase
 
     public function test_academic_paper_search_functionality()
     {
-        AcademicPaper::factory()->create(['title' => 'Machine Learning Fundamentals']);
-        AcademicPaper::factory()->create(['title' => 'Advanced Database Systems']);
-        AcademicPaper::factory()->create(['title' => 'Web Development Basics']);
+        $uniqueTitle = 'Machine Learning Fundamentals ' . uniqid();
+        AcademicPaper::factory()->create(['title' => $uniqueTitle]);
+        AcademicPaper::factory()->create(['title' => 'Advanced Database Systems ' . uniqid()]);
+        AcademicPaper::factory()->create(['title' => 'Web Development Basics ' . uniqid()]);
 
         // Search by title
-        $results = AcademicPaper::where('title', 'like', '%Machine%')->get();
+        $results = AcademicPaper::where('title', 'like', '%' . $uniqueTitle . '%')->get();
         $this->assertCount(1, $results);
-        $this->assertEquals('Machine Learning Fundamentals', $results->first()->title);
+        $this->assertEquals($uniqueTitle, $results->first()->title);
 
         // Search by department (not category - category doesn't exist in schema)
         AcademicPaper::factory()->create(['department' => 'Information Technology']);

@@ -62,6 +62,7 @@ class BorrowTransaction extends Model
         'notes',
         'duration_minutes',
         'overdue_notified_at',
+        'warning_notified_at',
     ];
 
     protected $casts = [
@@ -69,6 +70,7 @@ class BorrowTransaction extends Model
         'time_out' => 'datetime',
         'expires_at' => 'datetime',
         'overdue_notified_at' => 'datetime',
+        'warning_notified_at' => 'datetime',
     ];
 
     protected static function booted()

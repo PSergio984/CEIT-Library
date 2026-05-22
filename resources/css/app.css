@@ -209,3 +209,38 @@
 .badge-error {
     @apply bg-error text-error-content;
 }
+
+/* ===================================
+   Layout & Footer Positioning Fix
+   =================================== */
+main {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.drawer {
+    flex-grow: 1;
+}
+
+.drawer-content {
+    display: flex !important;
+    flex-direction: column !important;
+    padding: 0 !important;
+    flex-grow: 1 !important;
+}
+
+.drawer-content > .min-h-screen {
+    min-height: calc(100vh - 4rem) !important;
+    flex-grow: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+@media (min-width: 1024px) {
+    .drawer-content > .min-h-screen {
+        min-height: 100vh !important;
+    }
+}
+
+

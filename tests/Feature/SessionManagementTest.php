@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class SessionManagementTest extends TestCase
     }
 
     /** @test - TC074: Session Timeout - Auto Logout */
+    #[Test]
     public function user_is_logged_out_after_session_timeout()
     {
         $user = User::factory()->create();

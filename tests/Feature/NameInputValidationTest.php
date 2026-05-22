@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +26,7 @@ class NameInputValidationTest extends TestCase
     }
 
     /** @test - TC044: Name Input - Special Characters Filtering */
+    #[Test]
     public function numbers_and_symbols_are_rejected_in_name_fields()
     {
         $user = User::factory()->create();

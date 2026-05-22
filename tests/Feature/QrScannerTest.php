@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Livewire\QrScanner;
 use App\Models\Librarian;
 use App\Models\Role;
@@ -28,6 +30,7 @@ class QrScannerTest extends TestCase
     }
 
     /** @test - TC029: QR Scanner - Error Handling */
+    #[Test]
     public function qr_scanner_shows_inline_errors_instead_of_modal_alerts()
     {
         $librarianUser = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -49,6 +52,7 @@ class QrScannerTest extends TestCase
     }
 
     /** @test - TC030: QR Scanner - v6 Optimized Payload Validation */
+    #[Test]
     public function qr_scanner_validates_v6_optimized_payload()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);

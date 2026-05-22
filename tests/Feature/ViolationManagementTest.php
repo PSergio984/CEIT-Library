@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Violation;
@@ -25,6 +27,7 @@ class ViolationManagementTest extends TestCase
     }
 
     /** @test - TC020: Violation Management - Student Access Control */
+    #[Test]
     public function student_cannot_access_violation_management()
     {
         $student = User::factory()->create([
@@ -40,6 +43,7 @@ class ViolationManagementTest extends TestCase
     }
 
     /** @test - TC021: Violations - Create Violation Type */
+    #[Test]
     public function admin_can_create_violation_type()
     {
         $admin = User::factory()->create([
@@ -63,6 +67,7 @@ class ViolationManagementTest extends TestCase
     }
 
     /** @test - TC022: Violation Transactions - Record Violation */
+    #[Test]
     public function admin_can_record_violation_transaction()
     {
         $admin = User::factory()->create([

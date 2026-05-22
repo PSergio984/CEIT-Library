@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +26,7 @@ class MiddlewareTest extends TestCase
     }
 
     /** @test - TC041: Librarian Middleware - Admin Access Prevention */
+    #[Test]
     public function librarian_users_cannot_access_admin_only_features()
     {
         $librarianUser = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -42,6 +45,7 @@ class MiddlewareTest extends TestCase
     }
 
     /** @test - TC042: Credit Score Middleware - Access Control */
+    #[Test]
     public function credit_score_middleware_enforces_minimum_score_requirements()
     {
         $student = User::factory()->create([
@@ -57,6 +61,7 @@ class MiddlewareTest extends TestCase
     }
 
     /** @test - TC075: Middleware - Guest Only Routes */
+    #[Test]
     public function authenticated_users_cannot_access_guest_only_pages()
     {
         $user = User::factory()->create();

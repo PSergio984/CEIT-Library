@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class NavigationTest extends TestCase
     }
 
     /** @test - TC084: Breadcrumb Navigation - Trail Display */
+    #[Test]
     public function breadcrumb_navigation_shows_current_path()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -37,6 +40,7 @@ class NavigationTest extends TestCase
     }
 
     /** @test - TC085: Sidebar - Active Menu Highlighting */
+    #[Test]
     public function active_menu_item_is_highlighted_in_sidebar()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -53,6 +57,7 @@ class NavigationTest extends TestCase
     }
 
     /** @test - TC086: Sidebar - Collapse/Expand */
+    #[Test]
     public function sidebar_can_be_collapsed_and_expanded()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);

@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
@@ -25,6 +27,7 @@ class RulesAndRegulationsTest extends TestCase
     }
 
     /** @test - TC068: Rules and Regulations - View List */
+    #[Test]
     public function rules_and_regulations_can_be_viewed_by_admin()
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
@@ -45,6 +48,7 @@ class RulesAndRegulationsTest extends TestCase
     }
 
     /** @test - TC069: Rules and Regulations - Student View List */
+    #[Test]
     public function rules_and_regulations_can_be_viewed_by_student()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);

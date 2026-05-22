@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
@@ -25,6 +27,7 @@ class AssignLibrariansTest extends TestCase
     }
 
     /** @test - TC005: Super Admin can access Assign Librarians page */
+    #[Test]
     public function super_admin_can_access_assign_librarians_page()
     {
         $superAdmin = User::factory()->create([
@@ -38,6 +41,7 @@ class AssignLibrariansTest extends TestCase
     }
 
     /** @test - TC006: Admin can access Assign Librarians page */
+    #[Test]
     public function admin_can_access_assign_librarians_page()
     {
         $admin = User::factory()->create([
@@ -51,6 +55,7 @@ class AssignLibrariansTest extends TestCase
     }
 
     /** @test - TC007: Librarian cannot access Assign Librarians page */
+    #[Test]
     public function librarian_cannot_access_assign_librarians_page()
     {
         $librarian = User::factory()->create([
@@ -64,6 +69,7 @@ class AssignLibrariansTest extends TestCase
     }
 
     /** @test - TC007: Student cannot access Assign Librarians page */
+    #[Test]
     public function student_cannot_access_assign_librarians_page()
     {
         $student = User::factory()->create([
@@ -77,6 +83,7 @@ class AssignLibrariansTest extends TestCase
     }
 
     /** @test - TC028: Sunday dates cannot be selected for librarian duty */
+    #[Test]
     public function sunday_dates_cannot_be_selected_for_librarian_duty()
     {
         $admin = User::factory()->create([

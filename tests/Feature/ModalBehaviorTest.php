@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -23,6 +25,7 @@ class ModalBehaviorTest extends TestCase
     }
 
     /** @test - TC079: Modal - Close on Escape Key */
+    #[Test]
     public function modals_can_be_closed_with_escape_key()
     {
         // This is primarily a frontend test
@@ -38,6 +41,7 @@ class ModalBehaviorTest extends TestCase
     }
 
     /** @test - TC080: Modal - Close on Backdrop Click */
+    #[Test]
     public function modals_close_when_clicking_outside_modal_area()
     {
         // This is primarily a frontend test

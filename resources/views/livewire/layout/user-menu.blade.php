@@ -46,7 +46,42 @@ new class extends Component
 }; ?>
 
 {{-- User Menu Dropdown - Compact version for mobile actions --}}
-<div class="flex items-center gap-2">
+<div class="flex items-center gap-2" 
+     x-data="{ 
+         installAvailable: !!window.deferredPrompt, 
+         updateAvailable: !!window.pwaWaitingWorker 
+     }"
+     @pwa-install-available.window="installAvailable = true"
+     @pwa-install-hidden.window="installAvailable = false"
+     @pwa-update-available.window="updateAvailable = true">
+
+    {{-- PWA Update Button --}}
+    <button x-show="updateAvailable" 
+            x-cloak 
+            @click="if (window.pwaWaitingWorker) { window.pwaWaitingWorker.postMessage({ type: 'SKIP_WAITING' }); }"
+            class="btn btn-warning btn-xs sm:btn-sm gap-1 sm:gap-2 rounded-xl text-xs font-semibold shadow-md animate-pulse">
+        <x-mary-icon name="o-arrow-path" class="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
+        <span>Update App</span>
+    </button>
+
+    {{-- PWA Install Button --}}
+    <button x-show="installAvailable" 
+            x-cloak 
+            @click="
+                if (window.deferredPrompt) {
+                    window.deferredPrompt.prompt();
+                    window.deferredPrompt.userChoice.then(choice => {
+                        if (choice.outcome === 'accepted') {
+                            installAvailable = false;
+                        }
+                    });
+                }
+            "
+            class="btn btn-ghost btn-circle text-primary hover:bg-primary/10"
+            title="Install App">
+        <x-mary-icon name="o-arrow-down-tray" class="w-5 h-5 animate-pulse" />
+    </button>
+
     @auth
         {{-- Notification Bell Icon --}}
         <a href="{{ $this->notificationUrl }}" wire:navigate class="btn btn-ghost btn-circle relative">

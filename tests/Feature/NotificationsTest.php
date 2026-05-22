@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +26,7 @@ class NotificationsTest extends TestCase
     }
 
     /** @test - TC023: Notifications - View and Manage User Notifications */
+    #[Test]
     public function user_can_view_and_manage_notifications()
     {
         $user = User::factory()->create([

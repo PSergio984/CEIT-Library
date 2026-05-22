@@ -1,0 +1,22 @@
+{
+  "name": "CEIT Library Management System",
+  "short_name": "CEIT Library",
+  "description": "PLV eLib - CEIT Library Management System",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0046ad",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/images/ceit-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/ceit-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

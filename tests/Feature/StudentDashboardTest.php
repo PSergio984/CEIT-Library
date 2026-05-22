@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\AcademicPaper;
 use App\Models\Attendance;
 use App\Models\BorrowTransaction;
@@ -27,6 +29,7 @@ class StudentDashboardTest extends TestCase
     }
 
     /** @test - TC070: Student Dashboard - View Personal Stats */
+    #[Test]
     public function student_can_view_their_dashboard_with_personal_statistics()
     {
         $student = User::factory()->create([
@@ -54,6 +57,7 @@ class StudentDashboardTest extends TestCase
     }
 
     /** @test - TC071: Student - View Borrowed Books History */
+    #[Test]
     public function student_can_view_their_borrow_history()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);

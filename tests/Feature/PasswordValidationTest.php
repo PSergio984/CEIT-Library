@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +26,7 @@ class PasswordValidationTest extends TestCase
     }
 
     /** @test - TC033: Rate Limiting - Password Reset */
+    #[Test]
     public function password_reset_requests_are_rate_limited()
     {
         // Clear any existing rate limiters

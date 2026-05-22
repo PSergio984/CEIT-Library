@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
+
 use App\Models\Attendance;
 use App\Models\Role;
 use App\Models\User;
@@ -24,6 +26,7 @@ class AttendanceLogsTest extends TestCase
     }
 
     /** @test - TC017: Attendance Logs - Student Access Control */
+    #[Test]
     public function student_cannot_access_attendance_logs()
     {
         $student = User::factory()->create([
@@ -37,6 +40,7 @@ class AttendanceLogsTest extends TestCase
     }
 
     /** @test - TC018: Attendance Logs - Open Scanner (Authorized) */
+    #[Test]
     public function authorized_role_can_open_qr_scanner()
     {
         $admin = User::factory()->create([
@@ -52,6 +56,7 @@ class AttendanceLogsTest extends TestCase
     }
 
     /** @test - TC019: Attendance Logs - Time In/Out via QR */
+    #[Test]
     public function attendance_toggles_between_time_in_and_time_out()
     {
         $librarian = User::factory()->create([
