@@ -238,7 +238,6 @@
                 <span class="text-[10px] mt-1 font-medium">Papers</span>
             </a>
             
-            {{-- Scanner link - Hidden for regular students if not in dev, but plan asks for it --}}
             @can('librarian-or-admin-access')
             <a href="/test-qr" class="flex flex-col items-center justify-center w-full h-full">
                 <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
@@ -267,5 +266,4 @@
     {{-- Toast --}}
     <x-mary-toast />
 </body>
-
 </html>
