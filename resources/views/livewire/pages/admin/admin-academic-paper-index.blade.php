@@ -285,8 +285,7 @@
 
                         <button x-data="{ loading: false }"
                             @click="
-                            @if ($row->can_delete) loading = true;
-                                $wire.confirmDelete({{ $row->id }}).finally(() => loading = false) @endif
+                            {{ $row->can_delete ? 'loading = true; $wire.confirmDelete('.$row->id.').finally(() => loading = false)' : '' }}
                         "
                             :disabled="loading || {{ $row->can_delete ? 'false' : 'true' }}"
                             class="btn btn-sm btn-ghost {{ $row->can_delete ? 'text-error' : 'text-base-content/40' }} tooltip"
