@@ -29,8 +29,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 
-// Test route for QR code system (only available in non-production environments)
-if (config('app.env') !== 'production') {
+// Test route for QR code system (only available in local environment)
+if (config('app.env') === 'local') {
     Route::middleware(['auth', 'verified', 'librarian.or.admin'])->group(function () {
         Route::get('/test-qr', TestQrScanner::class)->name('test-qr');
     });
