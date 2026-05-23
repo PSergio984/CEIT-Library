@@ -65,20 +65,20 @@
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
 
-                <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" />
+                <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" wire:navigate.hover />
 
                 @can('view-academic-papers')
-                    <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" />
+                    <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" wire:navigate.hover />
                 @endcan
 
                 @can('manage-advisers-deans')
-                    <x-mary-menu-item title="Advisers & Deans" icon="o-academic-cap" link="/admin/advisers-deans" />
+                    <x-mary-menu-item title="Advisers & Deans" icon="o-academic-cap" link="/admin/advisers-deans" wire:navigate.hover />
                 @endcan
 
-                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" />
+                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" wire:navigate.hover />
                 
                 {{-- Notifications with Badge --}}
-                <x-mary-menu-item title="Notifications" icon="o-bell" link="/admin/notifications">
+                <x-mary-menu-item title="Notifications" icon="o-bell" link="/admin/notifications" wire:navigate.hover>
                     @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
                         <x-slot:actions>
                             <span class="badge badge-primary badge-sm">{{ auth()->user()->unreadNotifications()->count() }}</span>
@@ -91,25 +91,25 @@
                 @endcan --}}
 
                 @can('manage-librarian-batches')
-                    <x-mary-menu-item title="Librarian Batches" icon="o-building-library" link="/admin/librarians" />
+                    <x-mary-menu-item title="Librarian Batches" icon="o-building-library" link="/admin/librarians" wire:navigate.hover />
                 @endcan
 
                 @can('manage-user-roles')
-                    <x-mary-menu-item title="Manage Roles" icon="o-shield-check" link="/admin/manage-roles" />
+                    <x-mary-menu-item title="Manage Roles" icon="o-shield-check" link="/admin/manage-roles" wire:navigate.hover />
                 @endcan
 
                 <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
-                    link="/admin/rule-and-regulation" />
+                    link="/admin/rule-and-regulation" wire:navigate.hover />
 
                 @can('view-attendance-logs')
-                    <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" />
+                    <x-mary-menu-item title="Attendance" icon="o-user-group" link="/admin/attendance" wire:navigate.hover />
                 @endcan
 
                 @can('view-violation-logs')
-                    <x-mary-menu-item title="Violations" icon="o-exclamation-triangle" link="/admin/violations" />
+                    <x-mary-menu-item title="Violations" icon="o-exclamation-triangle" link="/admin/violations" wire:navigate.hover />
                 @endcan
 
-                <x-mary-menu-item title="View as Student" icon="o-eye" link="/dashboard" />
+                <x-mary-menu-item title="View as Student" icon="o-eye" link="/dashboard" wire:navigate.hover />
 
             </x-mary-menu>
 
