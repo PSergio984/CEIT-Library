@@ -96,14 +96,12 @@ class AcademicPapersTest extends TestCase
     #[Test]
     public function student_cannot_access_academic_papers_admin_page()
     {
-        $student = User::factory()->create([
-            'role_id' => $this->getRoleId('student'),
-        ]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
 
         $response = $this->actingAs($student)
             ->get(route('admin.academic-paper.index'));
 
-        $response->assertStatus(403);
+        $response->assertStatus(302)->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC016: Academic Papers - Filters & Pagination */

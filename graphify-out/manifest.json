@@ -12,8 +12,8 @@
     "hash": "42a8eed546561bf636cb32bb698df6f9"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\_ide_helper.php": {
-    "mtime": 1760689194.1229453,
-    "hash": "9af435278dfa1772c819ea77c93c2842"
+    "mtime": 1779542472.6478753,
+    "hash": "c5f985f37737ba460b1b1146a74e9a84"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\_ide_helper_models.php": {
     "mtime": 1764048450.1397126,
@@ -92,8 +92,8 @@
     "hash": "e12040b64113735ce0274f7723b64610"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Http\\Middleware\\CheckCreditScore.php": {
-    "mtime": 1778951853.8858097,
-    "hash": "9739ec7d926f2cdcf699a5bf1050cbe8"
+    "mtime": 1779541722.342097,
+    "hash": "71468063df16fe329b93082c203a596a"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Http\\Middleware\\LibrarianOrAdmin.php": {
     "mtime": 1778951853.8985467,
@@ -152,8 +152,8 @@
     "hash": "5b09fd95360b7f26f4a6113e10314a3d"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Livewire\\Pages\\Admin\\AdminBorrowTransactions.php": {
-    "mtime": 1779525921.6204357,
-    "hash": "c813cde40b9b2e8d8b5b1710bb222617"
+    "mtime": 1779530629.8909667,
+    "hash": "189a2ef6aa256e10e865accb2fe92dd2"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Livewire\\Pages\\Admin\\AdminComponent.php": {
     "mtime": 1779522165.4738588,
@@ -208,8 +208,8 @@
     "hash": "4add25cb206305d891f7d8c1c41df9f6"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Livewire\\Pages\\Student\\AttendanceQr.php": {
-    "mtime": 1779523231.6672313,
-    "hash": "77a2d6d1efa09c812c8ba537dc0290e3"
+    "mtime": 1779526774.5549154,
+    "hash": "76d4d1bdb1f957b1f470e5e5c5933dbe"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Livewire\\Pages\\Student\\CreditScoreHistory.php": {
     "mtime": 1778954559.6834152,
@@ -328,16 +328,16 @@
     "hash": "ed347b1352da7772e063420f7ed669c3"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Providers\\AppServiceProvider.php": {
-    "mtime": 1779521584.9362001,
-    "hash": "9406fa3d9a639fe79401ec82189747e1"
+    "mtime": 1779541748.6173804,
+    "hash": "ae07822905e4ee39808d7e5bc5ff8636"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Providers\\VoltServiceProvider.php": {
     "mtime": 1757396692.6376116,
     "hash": "b231dc2e6a8c3bd5b1224f74bcdcb200"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Rules\\NoHtmlTags.php": {
-    "mtime": 1779523063.8604648,
-    "hash": "88dac9ca9166c466a47ada84ee5abcf6"
+    "mtime": 1779530779.6890728,
+    "hash": "09dd4450410276048e8c2716868f00af"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Rules\\PlvEmailDomain.php": {
     "mtime": 1778951858.5228982,
@@ -352,12 +352,12 @@
     "hash": "69082cbf82902e60c51ad86fb88f1722"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Traits\\CreatesQrCanonicalMessage.php": {
-    "mtime": 1779525895.6123452,
-    "hash": "c92f4fa06509d12e94009efa1bf5e7e8"
+    "mtime": 1779526713.862343,
+    "hash": "015119554315a34bff3a6a3601e27b5c"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\Traits\\ProcessesAttendanceQr.php": {
-    "mtime": 1779525724.6175442,
-    "hash": "d553f55668ee57d41ac1f60740f52f19"
+    "mtime": 1779530889.7784622,
+    "hash": "867bdf4f67a517c86bd69d9bd246ce66"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\app\\View\\Components\\AcademicPaperDetailModal.php": {
     "mtime": 1762692657.4996684,
@@ -424,8 +424,8 @@
     "hash": "8c2daadb3f84863916297f91d5f864e6"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\config\\mail.php": {
-    "mtime": 1756489211.0,
-    "hash": "56b14578a660ef83c41fa599620bef6b"
+    "mtime": 1779542318.359656,
+    "hash": "1fbabbf3c96527ab98ad1269cd1735ac"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\config\\mary.php": {
     "mtime": 1765126478.374729,
@@ -460,8 +460,8 @@
     "hash": "7b76da91db965496b4432cdd2f004cd4"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\database\\factories\\AcademicPaperFactory.php": {
-    "mtime": 1778951858.9334848,
-    "hash": "3702fa343d02de8ab228381bfa7b4896"
+    "mtime": 1779542498.4272897,
+    "hash": "2faeac9053337455442e8f5c270f583b"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\database\\factories\\AttendanceFactory.php": {
     "mtime": 1778954683.1648676,
@@ -512,8 +512,8 @@
     "hash": "b10fa72ce0a8abbcaf9e69b71054c11c"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\database\\factories\\ViolationFactory.php": {
-    "mtime": 1778951859.2377746,
-    "hash": "638db4d4c9bfc7430493e68091c94eef"
+    "mtime": 1779542498.4519866,
+    "hash": "5f8b2ddd43a269018c30b8e9125db41c"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\database\\factories\\ViolationTransactionFactory.php": {
     "mtime": 1778951859.2530909,
@@ -644,8 +644,8 @@
     "hash": "38d29242ebd80d09602d3bc57fad4176"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\database\\seeders\\DatabaseSeeder.php": {
-    "mtime": 1779524718.6103005,
-    "hash": "93d2d107a261b3e96987976ae13ea6e0"
+    "mtime": 1779530827.002349,
+    "hash": "0295be360e4ee8068593919353de5bc1"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\lang\\en\\auth.php": {
     "mtime": 1763882864.5717905,
@@ -668,8 +668,8 @@
     "hash": "d8eda274115af5fd2aaa8230af329ef7"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\public\\sw.js": {
-    "mtime": 1779415281.810595,
-    "hash": "82f658d9e803da9b4854556899ed34ea"
+    "mtime": 1779541545.1171231,
+    "hash": "cf3a740ca1b40aeab773edfef77ba798"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\resources\\js\\app.js": {
     "mtime": 1765222862.4191523,
@@ -1003,13 +1003,25 @@
     "mtime": 1777354453.291791,
     "hash": "362ab82d2a432aa82df0537668d0ac08"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\0497f16c109fd4f463303fe9db61fa67.blade.php": {
+    "mtime": 1779541219.7583997,
+    "hash": "1373e9359ad50eb018395a552aee439f"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\049c8085f3027a78b8da365ff14eccba.php": {
     "mtime": 1779525933.84509,
     "hash": "c5273a833b058ab9605aa34619af81ed"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\05e896443d8df507c59a2d74b80de16a.php": {
+    "mtime": 1779541219.8033023,
+    "hash": "8bc6d5c2aab774a484c8bf7440c90f96"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\06bc7ef2849d1f85091f8fda443f16a2.php": {
     "mtime": 1779525933.7122796,
     "hash": "ede92e9fe066280e8fa10fffc83c4dc0"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\06c50f8664582b08cfc0a9f30c73f317.blade.php": {
+    "mtime": 1779541219.8124201,
+    "hash": "b7b0f75ab1e05a0f5ebd4bb4601c6e16"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\073aec5024cccc404448cd58cd4e1b3b.php": {
     "mtime": 1779525935.6103005,
@@ -1051,13 +1063,29 @@
     "mtime": 1779525933.3192577,
     "hash": "3d05cf297f6755ea17a2ff67e5ede345"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\10f40817b05ae48c865c0a4ef5346ff4.blade.php": {
+    "mtime": 1779541219.6967826,
+    "hash": "1e7be477b8aa1ed552c847ade604ddef"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\118eb4bdbecbfc7e8f92c31909866bb9.php": {
     "mtime": 1779525933.243577,
     "hash": "ebd4c062e5d27346d44ae654b3649c56"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\11c1766bd458bf9825b6ec64a39d0162.php": {
+    "mtime": 1779541219.8099053,
+    "hash": "3cb0bcb87c96330e7b57535f6f175e62"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\121393d81d2c5e6a18c9eacaf8965f1c.php": {
+    "mtime": 1779541219.6311965,
+    "hash": "8e71de3cbb6b632f4f63214daf044c5f"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\12fd15ee4f7c8e8516c76dcefa864844.php": {
     "mtime": 1779525935.8973162,
     "hash": "b5d26c33873b73d5e7f653cde42e9f28"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\14c42b81e39d754f37d93572daf6c969.blade.php": {
+    "mtime": 1779541219.7270455,
+    "hash": "11b38665bac45b6897fdea0b2973119e"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\152165d9cfcc507fb7ee9b3da2a454e8.php": {
     "mtime": 1779525933.5749564,
@@ -1135,9 +1163,17 @@
     "mtime": 1779525933.977082,
     "hash": "9683f0fd4939016d830928e8137f30ba"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\22ecf325ba15f033a216034a62a3d219.php": {
+    "mtime": 1779541219.7820702,
+    "hash": "04d9dba05d2b35a92f4ae56dabcee254"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\233f1e561efeb82b173c3ce957e838e1.php": {
     "mtime": 1779525933.9600358,
     "hash": "01d0087465f608101d1132e7e8a32e25"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\245453a759fa07b741dbc3c05827b50e.blade.php": {
+    "mtime": 1779541219.7220457,
+    "hash": "1cfd5e6f70bfedb07fed49ad15d295d9"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\255dd9bc7e32a07512cd183a7a21478a.php": {
     "mtime": 1779525933.5779564,
@@ -1171,6 +1207,10 @@
     "mtime": 1779525933.3137603,
     "hash": "a09888f4459e0942a306e63bba80c521"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\2b1b6cdfeb5ce703dffa667500245be6.php": {
+    "mtime": 1779541219.6987827,
+    "hash": "b78ab36e346ba61e9545416e84ac218d"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\2c26a215b918b168fa16159f5b94871c.php": {
     "mtime": 1779525933.7212875,
     "hash": "eb3839622db24b511b56284d95978181"
@@ -1199,9 +1239,21 @@
     "mtime": 1779525933.6360385,
     "hash": "ef3af515f9bfd2fdeab7e666c42c2150"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\34008c123f2500cdb2e7865c7d1f7535.php": {
+    "mtime": 1779541219.6446705,
+    "hash": "4057e3497f32c9818ff34de10b538c50"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\34b93c44cd62338b8a8746dd58e1eca3.php": {
+    "mtime": 1779541219.7432895,
+    "hash": "84711bbf0682b42acf0cb088e62995a2"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\35e9cfc8fce9c2bfbcfaddac6c34160e.php": {
     "mtime": 1779525933.7984836,
     "hash": "96aee794de397b747efd6b00cca5e120"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\378d3206459a1552374c751d8f90d241.php": {
+    "mtime": 1779541219.7563825,
+    "hash": "a18766e5277ccec4b033cc03a1378f4f"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\3a44be1f05e1f0f430d5c5ebb78e5f37.php": {
     "mtime": 1779525933.214047,
@@ -1230,6 +1282,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\3efdd21eec3c77e7031d1e52cd7e3def.blade.php": {
     "mtime": 1779525935.9333642,
     "hash": "867f907f45787c24cca8e21f52d74b59"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\3f9d78deaba9351c74131dfb2945dd88.php": {
+    "mtime": 1779541219.7932773,
+    "hash": "f4cb48ec99e11f36fde85c90f48479b6"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\400e04d650e1c7d80ee7f72826230b32.php": {
     "mtime": 1779525933.4827561,
@@ -1263,9 +1319,21 @@
     "mtime": 1779525933.9324653,
     "hash": "9661a8e7fcaaa32bebb44196769ac0f6"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\47fb1c739e63e03d68384c57c3ea8d9e.php": {
+    "mtime": 1779541219.7790585,
+    "hash": "6c976e97e2d2c2ab38f939161612e37c"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\4943bc92ebba41e8b0e508149542e0ad.blade.php": {
+    "mtime": 1779541219.6161635,
+    "hash": "c67a666cdfccaeda53323f6ff818e7fb"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\4964a1bfda22e90fef86d7c3de2835e8.php": {
     "mtime": 1779525933.7919643,
     "hash": "ac9fd344e6da76ef6e8c5e01aa278690"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\49a34f61c599f701b8fe603fbd983039.php": {
+    "mtime": 1779541219.6684651,
+    "hash": "f5e1d4e812ff8835c9b630ab098566bc"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\4ca2cf44f5513cabe55d31771d0d79fe.php": {
     "mtime": 1779525933.7313037,
@@ -1279,6 +1347,10 @@
     "mtime": 1779525933.8823392,
     "hash": "ff977b3ec3018926af4b75d8f72539b4"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\4eb082b325825d10ac3e77fbc80634a8.blade.php": {
+    "mtime": 1779541219.714013,
+    "hash": "e79cbb3bda8bd34637dbc6bc91914386"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\4edd7b1d98289c5a4e2550436a063a06.php": {
     "mtime": 1779525933.926458,
     "hash": "9df91b4bab4b745966ef1d33d91abc2f"
@@ -1290,6 +1362,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\50e954b13d5b36e42e08c91783b3a44b.php": {
     "mtime": 1779525934.8857815,
     "hash": "5e912d90a35ea74b1b08db888824d9b1"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\5124f005c85d62b7181de185b0ad19e7.php": {
+    "mtime": 1779541219.7084174,
+    "hash": "798431d153a6a72d6088ca0e521e4adf"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\51cf89e1406e977f730846effc1c457f.php": {
     "mtime": 1779525935.8567343,
@@ -1339,6 +1415,10 @@
     "mtime": 1779525935.128139,
     "hash": "17388b0dd82f8cfba218a01ce3de71eb"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\5bd28a9411b11a240e67fb20f14f09ac.blade.php": {
+    "mtime": 1779541219.8074012,
+    "hash": "0ea789bd52e8fada543e409764af9c44"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\5dacf64ad40484221ffb9ca09e6ae989.php": {
     "mtime": 1779525933.5043035,
     "hash": "dcfb14c43bb4d4b2cccce5b9c4894c8c"
@@ -1371,9 +1451,21 @@
     "mtime": 1779525933.8485887,
     "hash": "b122760ea0ddd591614aeddf71954531"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\66aefd79dda0f1fbf9f9c748abd3857a.blade.php": {
+    "mtime": 1779541219.7422893,
+    "hash": "20d4a3e60d1d7e00cb18e8e8a03c8cf1"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\66b7f24f3c1220f2b497ad56d3669d3a.blade.php": {
+    "mtime": 1779541219.7711391,
+    "hash": "c8d6f55e33fc61c053569d0734568276"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\6789520888a49259a750560c07cf909f.php": {
     "mtime": 1779525933.2877052,
     "hash": "3aecc80453782b2c3be8bf8222a0c526"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\67e4797a54d608ded8803ba0bb84bad9.php": {
+    "mtime": 1779541219.6801789,
+    "hash": "5aecfa24447739596d7231045fb5ec3f"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\69e9a884efde7a5217937ddc29efc2ee.php": {
     "mtime": 1779525933.5894687,
@@ -1390,6 +1482,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\6d346c6aaefe7c64aaa93bae9a6f2f64.php": {
     "mtime": 1779525933.7784498,
     "hash": "2382e1feb8018bb7a6c4111c90ee221f"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\6e3a5b16bef4cf434c9f535d3637e0f3.php": {
+    "mtime": 1779541219.7614214,
+    "hash": "a30777d24c6abc2b208191d506d05897"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\6ff91aec078bf24334a17e847d93c685.php": {
     "mtime": 1779525933.469717,
@@ -1415,6 +1511,10 @@
     "mtime": 1779525933.9304607,
     "hash": "93b02fb5d990d5556ecae599248a62e5"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\778f33a6506cdf207c2673f856cb3147.php": {
+    "mtime": 1779541219.7380636,
+    "hash": "de65b7d8c1b7177279cdfa69185bd30f"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\7832b916d5a693cb232730bd4096aae6.php": {
     "mtime": 1779525933.964552,
     "hash": "00039c857e9a45ee1c33b9577a6f4e98"
@@ -1422,6 +1522,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\78d21a0900646fc894684a3ffd89dc02.blade.php": {
     "mtime": 1779525933.9580357,
     "hash": "7bdb183c393e053d5bff8407346a42c6"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\78e64ddcccf18737c331cd44c54737fe.blade.php": {
+    "mtime": 1779541219.7160208,
+    "hash": "d7763cfa8df99f93a881a6a50776eea4"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\793500948f0085e0e341953ae430523e.blade.php": {
     "mtime": 1779525935.944881,
@@ -1447,6 +1551,10 @@
     "mtime": 1779525935.8802826,
     "hash": "9b4ce6783088e24d96105ab80f3a3be3"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\7ca188b02221e8702b129abeaa2dd8a3.php": {
+    "mtime": 1779541219.7679298,
+    "hash": "82137ed463230bd575633b0be457a8b3"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\7cf5b6e0356baf246c4a81b77daab674.php": {
     "mtime": 1779525933.8170307,
     "hash": "5a756a393556d1f898ae324ae5c5ec7f"
@@ -1466,6 +1574,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\7e1860614afae104e717fe24b10e434a.php": {
     "mtime": 1779525933.5519028,
     "hash": "c6b8e7aadc5e24c43a5f9501799e3d6b"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\7e5593c332d6ad0bff6a7eade0673365.php": {
+    "mtime": 1779541219.7124372,
+    "hash": "449db1fb11c845ae59669d5057ce6bee"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\7f2019e39ad6cbf6b30ab11e438b0b07.php": {
     "mtime": 1779525933.6165104,
@@ -1507,6 +1619,10 @@
     "mtime": 1779525933.3047314,
     "hash": "cbc44d16ebd05ba4fbe3487e7d974e76"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\85c90975ebb015756e85a5a5e768d939.blade.php": {
+    "mtime": 1779541219.6436696,
+    "hash": "668ba254e98aa6cbe8ef83d633aa301f"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\87605882b76bdc7e2f1adfbfc8a5cec4.php": {
     "mtime": 1779525933.60249,
     "hash": "b72c3cee15899d0c2d7b4aae39eeea0a"
@@ -1519,9 +1635,17 @@
     "mtime": 1779525933.2170477,
     "hash": "0fbc63c8b79b62de549f2a9b2c1f3c22"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\8bdb98c4ea118aa426839064dcddfae6.php": {
+    "mtime": 1779541219.6065814,
+    "hash": "3a7f75b56cce07dd1b0e5c9693cb4d47"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\8c77c3a4602e934e909c448eec8015e4.php": {
     "mtime": 1779525933.599476,
     "hash": "3ae2a1aab0cf45ba34b7a2bca499ce18"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\8ce949a950519a716d7ca23276b7f38c.php": {
+    "mtime": 1779541219.5034256,
+    "hash": "cfc50d477801fb13892e576a8b0456dd"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\8daf3edd40ae538d5143e4d8c3526f74.php": {
     "mtime": 1779525933.310242,
@@ -1571,6 +1695,10 @@
     "mtime": 1779525933.290205,
     "hash": "c036a0bf1da54737040c76681a040a24"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\9811cea6fb2ae7f01d7899cb71bb42e7.blade.php": {
+    "mtime": 1779541219.683189,
+    "hash": "2a59122df5a3f4497f9afb3f2e547274"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\9a6e8f7ea8589585ab1b56963ba8025c.php": {
     "mtime": 1779525933.6094985,
     "hash": "73efa72479e00b52d01388f85946c3d6"
@@ -1579,9 +1707,17 @@
     "mtime": 1779525935.9208436,
     "hash": "96123c305818fbc1cc0ef42c650ccca9"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\9ac0791ccdddf28932dce68bca648c4f.php": {
+    "mtime": 1779541219.7735014,
+    "hash": "fe9323309f114ff0f1a93ee60b19490a"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\9ae1f6d15a698e66924e2a75ab9a8c7b.php": {
     "mtime": 1779525934.904307,
     "hash": "d0a9e669e38784c14b231b791b39ca05"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\9bff5d2b7fad994a256349b4988662c6.blade.php": {
+    "mtime": 1779541219.6341956,
+    "hash": "8432e24c4c4733936f74f8c48beb083a"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\9f2148a5ce961b56ec3109693ca5e967.php": {
     "mtime": 1779525934.881776,
@@ -1611,9 +1747,17 @@
     "mtime": 1779525935.6027894,
     "hash": "be499fc0752463f31a7d8a224d3d9aba"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\a6daa7afc5347a51f2bb954f847c1518.blade.php": {
+    "mtime": 1779541219.7340598,
+    "hash": "ab37814a7a6a6d9f16e5e724d4f16646"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\a6db25b949811e247e5d8b69d9721293.blade.php": {
     "mtime": 1779525933.9179466,
     "hash": "ae8526410b81f1bd4c8073bbfa01bd63"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\a70e38f6a3a6d4dd5a7608614cc5db06.blade.php": {
+    "mtime": 1779541219.7473714,
+    "hash": "9812c2aaa31d4f7519b3ad178e94b349"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\a73b328af8f23cf4eac1ae8fb0da064d.php": {
     "mtime": 1779525936.400212,
@@ -1627,6 +1771,10 @@
     "mtime": 1779525933.4470716,
     "hash": "2c349d85a0136d926e33aaad8bedc170"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\a902101b1054162d0f5aa408915bb5c0.php": {
+    "mtime": 1779541219.750379,
+    "hash": "3d7ef8bb9da12e416743146fe750c328"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\a97ebb7dad5ca187b497b3887e76c771.php": {
     "mtime": 1779525933.4395313,
     "hash": "7c42db3467d0b4718156640b8a099063"
@@ -1635,9 +1783,17 @@
     "mtime": 1779525935.605796,
     "hash": "e877533e20746815a858f09acb0c809c"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\ad491598d042bfc126a303ab1be77116.blade.php": {
+    "mtime": 1779541219.754374,
+    "hash": "ee21c78e26a49405539eca2b6bb84e67"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\ae76527491b6e93231bfb827f433f2e8.php": {
     "mtime": 1779525933.2741895,
     "hash": "32de8b31c8e764cf1179a0fcbcc07075"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b0b6b0dac425c8a93814678b0fff71c7.blade.php": {
+    "mtime": 1779541219.7659335,
+    "hash": "690782b42f9cfb4c49fb2eb6478dc0d0"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b2a1b5c39ac2bb38a3b9cad9abe86764.php": {
     "mtime": 1779525935.9473855,
@@ -1647,6 +1803,10 @@
     "mtime": 1779525933.620512,
     "hash": "371a91fc85ad426345ce33a761b7979b"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b7191c7de435906e33cc3abc3a58c8c6.php": {
+    "mtime": 1779541219.8144166,
+    "hash": "897e352a5710db00d4aef37f75584e15"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b798118cf85cb1399880341685a263b6.php": {
     "mtime": 1779525933.5338595,
     "hash": "0ecb0d056cafb499b7ac9bd7d6920617"
@@ -1654,6 +1814,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b79f8a5b4d595c2f00a87b6294be7771.php": {
     "mtime": 1779525933.3458202,
     "hash": "69a86870be4b36dc274d61ef6579302d"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b8e33172b338115a287150ce25061381.php": {
+    "mtime": 1779541219.724045,
+    "hash": "b7ba78711fd018d57c4aa1c4ff1cf466"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\b9902df31e2307bbff27bd37a386611c.php": {
     "mtime": 1779525933.820031,
@@ -1771,6 +1935,14 @@
     "mtime": 1779525933.571953,
     "hash": "b86e76e94ec8f0ffc6e3b54edaa08500"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d09fb81d12a2f8ec873453112da5d696.php": {
+    "mtime": 1779541219.674151,
+    "hash": "a8517d6ed32ee49a96c03e0663ef6443"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d0f86caa3b7210f2c09fee5fd2c58b89.php": {
+    "mtime": 1779541219.685191,
+    "hash": "b98931efbf601aa61ca3ba5063f76b26"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d136c28e797737e45bcb178479e3cd8b.php": {
     "mtime": 1779525933.692229,
     "hash": "f5d38bddc9dd3fa5218d95100ac4ce8d"
@@ -1783,6 +1955,10 @@
     "mtime": 1779525933.5243478,
     "hash": "8f8fecf00d6f19b612f6758348b8aa47"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d1b62486e132ee22857b886473e90032.php": {
+    "mtime": 1779541219.705798,
+    "hash": "ffddf068c567f9d2b26cbfb3fa643c5c"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d1b6a71e2a9926a7d4d24509a3e99d39.php": {
     "mtime": 1779525935.9128425,
     "hash": "8417c2e751c5ad52e06c41d063800efd"
@@ -1790,6 +1966,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d1c2d9d0afa88eea5e1d19bd3c9a600e.php": {
     "mtime": 1779525933.561923,
     "hash": "f71c8fe547320bad79e5037ff55252f1"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d2cdb5b459a4ba0613d4ced6748c6cb7.php": {
+    "mtime": 1779541219.7180219,
+    "hash": "3fbffd53bd1ada33500a4895425446f6"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\d42bc7c96039771f6ca5b4b7134a7ba7.php": {
     "mtime": 1779525933.2455924,
@@ -1826,6 +2006,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\dbbb47d339389d79d169070048727b8a.blade.php": {
     "mtime": 1779525933.8939154,
     "hash": "e2202a313c67c5ab213f848c10064196"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\dd342a48fb0f1a48363535e3808bc3cc.blade.php": {
+    "mtime": 1779541219.7775097,
+    "hash": "a9f12f9946dbee1c41342ce7ebbb9750"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\dd6997eb7883ae5a17b69e518bb694a6.php": {
     "mtime": 1779525935.904825,
@@ -1895,6 +2079,10 @@
     "mtime": 1779525935.8833022,
     "hash": "8568950fbfd80d29dc62ec6dbff07bb8"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\ee435d5062a18670e6accdeab52cd617.blade.php": {
+    "mtime": 1779541219.732064,
+    "hash": "8302eafac0fdba5e68644a4aedb0aa76"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\ee4c8e083267f72044cc9590e67bf909.php": {
     "mtime": 1779525936.3937123,
     "hash": "47c298448c89fa3725f1f67e9887eb2b"
@@ -1903,6 +2091,10 @@
     "mtime": 1779525933.3027298,
     "hash": "964f295d3e1713bca361d8c81ff3d87e"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\ee5fb9ba03c79e30882bf1ae23757a85.php": {
+    "mtime": 1779541219.6181626,
+    "hash": "be9c0253a1d34d695d2a6e471fa04412"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\eeebbd7c7611eed7ef25312c725bc0a4.blade.php": {
     "mtime": 1779525935.9659512,
     "hash": "d5bfaed2cd7eff26ba2874d35cd0bebe"
@@ -1910,6 +2102,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\f0f42b8ce05064c33e70ea65041ad857.php": {
     "mtime": 1779525933.2766893,
     "hash": "fff9166aaff694d60f6460645274316f"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\f14f98b1d52c6f9243acc5cd8a9a3a17.blade.php": {
+    "mtime": 1779541219.678151,
+    "hash": "823bd8a459f7c82e29e77bcaae9c285a"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\f1dfb60a4b4e2e07ef96453ddbf417f2.php": {
     "mtime": 1779525935.131644,
@@ -1922,6 +2118,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\f3e1d24b22ced24bd8d6e686f60e044f.php": {
     "mtime": 1779525933.8235457,
     "hash": "7106c41d1813f0e8eac430b081c0dc8a"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\f4cd0128a0d53faaddb5fd6316868d22.php": {
+    "mtime": 1779541219.730056,
+    "hash": "654fc998959a2c64513ad1e312f2cf7e"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\f520313fa6afb676e69125b39c18b616.php": {
     "mtime": 1779525933.698733,
@@ -1955,6 +2155,10 @@
     "mtime": 1779525933.6711514,
     "hash": "25a839b5b4094040c7032920498ec24f"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\fc2c42065461c21d96a51da6eb693250.blade.php": {
+    "mtime": 1779541219.672151,
+    "hash": "aa405f398a05dee82c859522a7eaf2f6"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\fd8ee84d45e483486de5d21e9fdc9d1e.php": {
     "mtime": 1779525936.33099,
     "hash": "ed6c1a113437d62225c96ce4f4556a2f"
@@ -1987,6 +2191,14 @@
     "mtime": 1779525935.1201136,
     "hash": "0521337aa15196df37932de1e80d1fdb"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\classes\\66146164.php": {
+    "mtime": 1779541219.7902718,
+    "hash": "814c1cd4b514012b277d704152e2a7f8"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\classes\\6a7ad3eb.php": {
+    "mtime": 1779541219.6573913,
+    "hash": "a64f4efe1ee951e2ff1d07bba3823a84"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\classes\\836a62bd.php": {
     "mtime": 1779525935.2800539,
     "hash": "ac0fdd12f86e6cb353bde1680cc350c6"
@@ -2018,6 +2230,14 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\views\\64fc290c.blade.php": {
     "mtime": 1779525934.0,
     "hash": "3cf21e5095011db0f16afcb48d60ce1a"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\views\\66146164.blade.php": {
+    "mtime": 1779541218.0,
+    "hash": "b404859a70f51f64d30e767c0a7299f6"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\views\\6a7ad3eb.blade.php": {
+    "mtime": 1779541218.0,
+    "hash": "eceba346bc56ff77f7d5d20ab30fc1fb"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\livewire\\views\\836a62bd.blade.php": {
     "mtime": 1779525934.0,
@@ -2084,12 +2304,12 @@
     "hash": "f936365b62cdb8e595d9a242f209a9ef"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\BorrowQrTest.php": {
-    "mtime": 1779526009.094286,
-    "hash": "6e0ab843214b18cc7c82a6630b1fa39e"
+    "mtime": 1779530890.6174493,
+    "hash": "6d1d5babe3e4f35a78292fe38172d4a1"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\BorrowSecurityTest.php": {
-    "mtime": 1779457235.1566164,
-    "hash": "4c72e06f6ad238f5fa27fd0ffddd4bd4"
+    "mtime": 1779530698.2577705,
+    "hash": "e5fa3aae46dcbecd9052d093b1d94813"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\BorrowTransactionCreditScoreTest.php": {
     "mtime": 1779457235.1576161,
@@ -2176,8 +2396,8 @@
     "hash": "78cc66189032e77b135e4f2c81109db5"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\MiddlewareTest.php": {
-    "mtime": 1779522380.6813855,
-    "hash": "aa25e4ab1a5ddef207628fc53dc3dc50"
+    "mtime": 1779541731.5586379,
+    "hash": "100bd1762de3d995f64586165cee3bcb"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\ModalBehaviorTest.php": {
     "mtime": 1779457235.1677246,
@@ -2228,8 +2448,8 @@
     "hash": "9c99d8b524fa33ed525d63c136ba584e"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\QrScannerTest.php": {
-    "mtime": 1779523469.8625753,
-    "hash": "15eed845c157cd57d6e76cbce28535be"
+    "mtime": 1779526875.129126,
+    "hash": "5defb5c5994ce16f613f8b7586974a8d"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\QuickTest.php": {
     "mtime": 1760331850.0352683,
@@ -44300,8 +44520,8 @@
     "hash": "f5ddd4c8d613d26c5e9fbbf1c0622ca5"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\GEMINI.md": {
-    "mtime": 1778932554.6109326,
-    "hash": "3ab4553b2b8e1c8d8706710f9c7bf92b"
+    "mtime": 1779530873.9839206,
+    "hash": "b457f0332fd110e7c40893e7cce03d25"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\qodana.yaml": {
     "mtime": 1760331850.0167549,
@@ -44335,9 +44555,17 @@
     "mtime": 1778945635.5148902,
     "hash": "b5d3983da93fff952eca42373837e2a4"
   },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\docs\\superpowers\\plans\\2025-03-05-sonarqube-cleanup.md": {
+    "mtime": 1779542264.4967196,
+    "hash": "edd5719e1e6b41da8592352960bf5499"
+  },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\docs\\superpowers\\plans\\2026-05-16-qr-scanner-overhaul.md": {
     "mtime": 1778936722.7238913,
     "hash": "0361b770ac6430b5ec8894263ffad31d"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\docs\\superpowers\\plans\\2026-05-23-atomic-nonce-replay-check.md": {
+    "mtime": 1779530420.843748,
+    "hash": "a34db8d3b24e39704e48138a50a5d2b2"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\docs\\superpowers\\specs\\2026-05-18-phase-1-expansion-design.md": {
     "mtime": 1779116196.9219377,

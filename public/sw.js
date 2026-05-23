@@ -49,8 +49,14 @@ self.addEventListener('notificationclick', event => {
         ? event.notification.data.url 
         : '/notifications';
     
+    // Ensure targetUrl is relative to our origin and avoid open redirects
     if (targetUrl.startsWith('/')) {
         targetUrl = self.location.origin + targetUrl;
+    } else {
+        const url = new URL(targetUrl, self.location.origin);
+        if (url.origin !== self.location.origin) {
+            targetUrl = self.location.origin + '/notifications';
+        }
     }
 
     event.waitUntil(
@@ -68,6 +74,11 @@ self.addEventListener('notificationclick', event => {
 });
 
 self.addEventListener('message', event => {
+    // Verify the origin of the message
+    if (event.origin !== self.location.origin) {
+        return;
+    }
+
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
     }

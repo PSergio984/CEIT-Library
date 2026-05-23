@@ -969,8 +969,8 @@ class UserTest extends TestCase
             'remarks' => 'Serious violation',
         ]);
 
-        // Credit score should be reduced by penalty (100 - 150 = -50)
-        $this->assertEquals(-50, $user->fresh()->credit_score);
+        // Credit score should be reduced by penalty (100 - 150 = -50, capped at 0 by CHECK constraint)
+        $this->assertEquals(0, $user->fresh()->credit_score);
     }
 
     /**

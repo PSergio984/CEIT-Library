@@ -30,15 +30,15 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('qr-scanning', function (Request $request) {
-            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+            return $this->rateLimitForUser($request, 300, 30);
         });
 
         RateLimiter::for('search', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            return $this->rateLimitForUser($request, 500, 60);
         });
 
         RateLimiter::for('transactions', function (Request $request) {
-            return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
+            return $this->rateLimitForUser($request, 200, 20);
         });
 
         // Admin access gate (for backward compatibility and general admin check)
@@ -157,5 +157,17 @@ class AppServiceProvider extends ServiceProvider
         if (env('APP_ENV') == 'production') {
             $this->app['request']->server->set('HTTPS', true);
         }
+    }
+
+    /**
+     * Helper to determine rate limit based on user role.
+     */
+    protected function rateLimitForUser(Request $request, int $staffLimit, int $studentLimit)
+    {
+        $user = $request->user();
+        $isStaff = $user ? ($user->isLibrarian() || $user->hasAdminAccess()) : false;
+        $limit = $isStaff ? $staffLimit : $studentLimit;
+
+        return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
     }
 }

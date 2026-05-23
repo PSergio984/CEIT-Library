@@ -174,16 +174,16 @@
 
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" wire:transition>
-                <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" />
-                <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/academic-papers" />
-                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
-                    link="/rule-and-regulation" />
-                <x-mary-menu-item title="Profile" icon="o-user" link="/profile" />
-                <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" />
-                <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" />
+                <x-mary-menu-item title="Dashboard" tooltip="Dashboard" icon="o-home" link="/dashboard" wire:navigate.hover />
+                <x-mary-menu-item title="Academic Papers" tooltip="Academic Papers" icon="o-book-open" link="/academic-papers" wire:navigate.hover />
+                <x-mary-menu-item title="Rules & Regulations" tooltip="Rules & Regulations" icon="o-clipboard-document-list"
+                    link="/rule-and-regulation" wire:navigate.hover />
+                <x-mary-menu-item title="Profile" tooltip="Profile" icon="o-user" link="/profile" wire:navigate.hover />
+                <x-mary-menu-item title="Transactions" tooltip="Transactions" icon="o-archive-box" link="/transactions" wire:navigate.hover />
+                <x-mary-menu-item title="Credit Score History" tooltip="Credit Score History" icon="o-chart-bar" link="/credit-score-history" wire:navigate.hover />
                 
                 {{-- Notifications with Badge --}}
-                <x-mary-menu-item title="Notifications" icon="o-bell" link="/notifications">
+                <x-mary-menu-item title="Notifications" tooltip="Notifications" icon="o-bell" link="/notifications" wire:navigate.hover>
                     @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
                         <x-slot:actions>
                             <span class="badge badge-primary badge-sm">{{ auth()->user()->unreadNotifications()->count() }}</span>
@@ -192,7 +192,7 @@
                 </x-mary-menu-item>
                 
                 @can('access-admin-dashboard')
-                    <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" />
+                    <x-mary-menu-item title="Admin Dashboard" tooltip="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" wire:navigate.hover />
                 @endcan
 
             </x-mary-menu>
@@ -227,8 +227,8 @@
     </x-mary-main>
 
     {{-- BOTTOM NAVIGATION (Mobile only) --}}
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-base-100 border-t border-base-300 pb-safe">
-        <div class="flex justify-around items-center h-16">
+    <div id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-base-100 border-t border-base-300 h-16 shadow-2xl">
+        <div class="flex justify-around items-center h-full">
             <a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('dashboard*') || request()->is('student/dashboard*') ? 'text-primary' : 'text-base-content/70' }}">
                 <x-mary-icon name="o-home" class="w-6 h-6" />
                 <span class="text-[10px] mt-1 font-medium">Home</span>
@@ -238,7 +238,6 @@
                 <span class="text-[10px] mt-1 font-medium">Papers</span>
             </a>
             
-            {{-- Scanner link - Hidden for regular students if not in dev, but plan asks for it --}}
             @can('librarian-or-admin-access')
             <a href="/test-qr" class="flex flex-col items-center justify-center w-full h-full">
                 <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
@@ -267,5 +266,4 @@
     {{-- Toast --}}
     <x-mary-toast />
 </body>
-
 </html>

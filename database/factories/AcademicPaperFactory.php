@@ -35,7 +35,9 @@ class AcademicPaperFactory extends Factory
         return [
             'title' => $this->faker->unique()->sentence(6, true),
             'publication_year' => $this->faker->numberBetween(2002, 2025),
-            'paper_type' => $this->faker->randomElement(['Thesis', 'Feasib', 'Capstone', 'Research', 'Practicum', 'Report']),
+            'paper_type' => $this->faker->randomElement([
+                'Thesis', 'Feasib', 'Capstone', 'Research', 'Practicum', 'Report',
+            ]),
             'research_adviser_id' => ResearchAdviser::inRandomOrder()->first()?->id,
             'technical_adviser_id' => TechnicalAdviser::inRandomOrder()->first()?->id,
             'department' => $department,
