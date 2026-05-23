@@ -149,7 +149,7 @@
     {{-- MAIN --}}
     <x-mary-main full-width class="flex-1 flex flex-col">
         {{-- SIDEBAR --}}
-        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit !z-[9999]">
+        <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
 
             {{-- BRAND --}}
             <div class="flex items-center justify-center py-4">
@@ -266,10 +266,6 @@
 
     {{-- Toast --}}
     <x-mary-toast />
-</body>
-
-</html>
--mary-toast />
 </body>
 
 </html>
