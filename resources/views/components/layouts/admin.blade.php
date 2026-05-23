@@ -69,20 +69,20 @@
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
 
-                <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" wire:navigate.hover />
+                <x-mary-menu-item title="Dashboard" icon="o-home" link="/admin/dashboard" tooltip="Dashboard" wire:navigate.hover />
 
                 @can('view-academic-papers')
-                    <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" wire:navigate.hover />
+                    <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/admin/academic-papers" tooltip="Academic Papers" wire:navigate.hover />
                 @endcan
 
                 @can('manage-advisers-deans')
-                    <x-mary-menu-item title="Advisers & Deans" icon="o-academic-cap" link="/admin/advisers-deans" wire:navigate.hover />
+                    <x-mary-menu-item title="Advisers & Deans" icon="o-academic-cap" link="/admin/advisers-deans" tooltip="Advisers & Deans" wire:navigate.hover />
                 @endcan
 
-                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" wire:navigate.hover />
+                <x-mary-menu-item title="Borrow Logs" icon="o-archive-box-arrow-down" link="/admin/logs" tooltip="Borrow Logs" wire:navigate.hover />
                 
                 {{-- Notifications with Badge --}}
-                <x-mary-menu-item title="Notifications" icon="o-bell" link="/admin/notifications" wire:navigate.hover>
+                <x-mary-menu-item title="Notifications" icon="o-bell" link="/admin/notifications" tooltip="Notifications" wire:navigate.hover>
                     @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
                         <x-slot:actions>
                             <span class="badge badge-primary badge-sm">{{ auth()->user()->unreadNotifications()->count() }}</span>
