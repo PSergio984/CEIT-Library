@@ -40,19 +40,6 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('transactions', function (Request $request) {
             return $this->rateLimitForUser($request, 200, 20);
         });
-    }
-
-    /**
-     * Helper to determine rate limit based on user role.
-     */
-    protected function rateLimitForUser(Request $request, int $staffLimit, int $studentLimit)
-    {
-        $user = $request->user();
-        $isStaff = $user ? ($user->isLibrarian() || $user->hasAdminAccess()) : false;
-        $limit = $isStaff ? $staffLimit : $studentLimit;
-
-        return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
-    }
 
         // Admin access gate (for backward compatibility and general admin check)
         Gate::define('Admin-access', function ($user) {
