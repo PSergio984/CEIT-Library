@@ -316,7 +316,7 @@ class DatabaseSeeder extends Seeder
         // 1. Create 1 ACTIVE batch (on duty today) - exactly 5 students
         $this->command->info('Creating active batch for today...');
         // Exclude special users from librarian batch selection
-        $excludedIds = collect([$sampleAdmin->id]);
+        $excludedIds = collect([$sampleAdmin->id, $specificStudent->id]);
         $filteredStudents = $students->filter(fn ($s) => ! $excludedIds->contains($s->id));
         $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);
@@ -337,7 +337,7 @@ class DatabaseSeeder extends Seeder
 
         // 2. Create 2 EXPIRED batches (dates in the past) - 5 students each
         $this->command->info('Creating 2 expired batches...');
-        $remainingStudents = $students->diff($allLibrarianStudents);
+        $remainingStudents = $filteredStudents->diff($allLibrarianStudents);
 
         // Expired Batch 1 (ended 3 days ago)
         $expiredBatch1Students = $remainingStudents->random(5);

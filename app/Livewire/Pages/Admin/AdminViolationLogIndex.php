@@ -11,6 +11,11 @@ class AdminViolationLogIndex extends AdminComponent
 {
     public string $selectedTab = 'violations-tab';
 
+    public function mount()
+    {
+        $this->authorizeAccess();
+    }
+
     public function placeholder()
     {
         return view('components.loading-placeholder');

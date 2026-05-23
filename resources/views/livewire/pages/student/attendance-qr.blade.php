@@ -1,4 +1,4 @@
-<div class="p-4 sm:p-8 bg-base-100 shadow-lg sm:rounded-lg text-base-content">
+<div class="p-4 sm:p-8 bg-base-100 shadow-lg sm:rounded-lg text-base-content" wire:poll.15s>
     {{-- Attendance QR Component --}}
     <div class="max-w-xl">
         {{-- Header with Icon --}}

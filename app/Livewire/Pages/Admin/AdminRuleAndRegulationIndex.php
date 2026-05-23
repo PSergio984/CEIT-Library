@@ -53,8 +53,10 @@ class AdminRuleAndRegulationIndex extends AdminComponent
         return Gate::allows('manage-rules');
     }
 
-    public function mount(): void
+    public function mount()
     {
+        $this->authorizeAccess();
+
         // Anyone with view-rules permission can access (Librarian or Admin)
         $this->authorize('view-rules');
 

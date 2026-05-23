@@ -19,8 +19,8 @@ class AttendanceQr extends Component
 
     // QR code generation version - increment when generation parameters change to invalidate cache
     // v5: Simplified QR - removed timestamp/expiration
-    // v6: Optimized Payload - removed user object, shortened nonce for better scannability
-    private const QR_CODE_VERSION = 'v6';
+    // v7: Dynamic QR - added timestamp for replay protection (15s TTL)
+    private const QR_CODE_VERSION = 'v7';
 
     // QR code generation settings for optimal scannability
     private const QR_SVG_SIZE = 350;      // Reduced size for faster rendering
@@ -52,8 +52,8 @@ class AttendanceQr extends Component
 
     /**
      * Generate encrypted attendance data for QR code
-     * Format: encrypted JSON with user_id, nonce, and hash for tamper protection
-     * v6: Removed user object and shortened nonce to reduce QR complexity
+     * Format: encrypted JSON with user_id, nonce, timestamp, and hash for tamper protection
+     * v7: Added timestamp and shortened cache TTL to 15s to prevent replay attacks
      */
     private function generateAttendanceData(): string
     {
@@ -62,10 +62,10 @@ class AttendanceQr extends Component
             abort(401, 'Unauthenticated');
         }
 
-        // Use user-specific cache key (permanent QR per user)
+        // Use user-specific cache key
         $cacheKey = 'qr_data:'.self::QR_CODE_VERSION.":user:{$user->id}";
 
-        // Try to reuse the cached QR data
+        // Try to reuse the cached QR data (Short TTL)
         $cachedData = Cache::get($cacheKey);
 
         if (is_array($cachedData) && isset($cachedData['encrypted_data'])) {
@@ -77,13 +77,14 @@ class AttendanceQr extends Component
             throw new \RuntimeException('QR HMAC secret is missing or insecure.');
         }
 
-        // Generate unique nonce for replay attack protection (shortened to 16 for v6)
+        // Generate unique nonce for replay attack protection
         $nonce = Str::random(16);
 
         $data = [
-            'v' => 6, // Add version marker to payload
+            'v' => 7, // Version 7
             'user_id' => $user->id,
             'nonce' => $nonce,
+            'timestamp' => time(), // Current Unix timestamp
         ];
 
         // Add hash for tamper protection covering entire payload
@@ -93,13 +94,16 @@ class AttendanceQr extends Component
         // Encrypt the data to prevent tampering
         $encryptedData = Crypt::encryptString(json_encode($data));
 
-        // Cache permanently (no TTL - user can regenerate if needed by clearing cache)
-        Cache::forever($cacheKey, [
-            'encrypted_data' => $encryptedData,
-            'created_at' => Carbon::now()->format('Y-m-d-His'),
-        ]);
+        // Standardize format: Use JSON wrapper for consistency with borrow QR
+        $qrJson = json_encode(['encrypted' => $encryptedData]);
 
-        return $encryptedData;
+        // Cache for 15 seconds maximum
+        Cache::put($cacheKey, [
+            'encrypted_data' => $qrJson,
+            'created_at' => Carbon::now()->format('Y-m-d-His'),
+        ], 15);
+
+        return $qrJson;
     }
 
     /**
@@ -146,8 +150,8 @@ class AttendanceQr extends Component
             ->errorCorrection(self::QR_ERROR_CORRECTION_SVG)
             ->generate($attendanceData);
 
-        // Cache permanently
-        Cache::forever($svgCacheKey, $svg);
+        // Cache for 15 seconds
+        Cache::put($svgCacheKey, $svg, 15);
 
         $this->cachedQrCodeSvg = $svg;
 
@@ -224,11 +228,11 @@ class AttendanceQr extends Component
 
             $createdAt = Carbon::now()->format('Y-m-d-His');
 
-            // Cache permanently
-            Cache::forever($pngCacheKey, [
+            // Cache for 15 seconds
+            Cache::put($pngCacheKey, [
                 'data' => base64_encode($pngData),
                 'created_at' => $createdAt,
-            ]);
+            ], 15);
         }
 
         $fileName = 'attendance-qrcode-'.$user->id.'.png';

@@ -10,6 +10,7 @@ Route::middleware('guest')->group(function () {
         ->name('register');
 
     Volt::route('login', 'pages.auth.login')
+        ->middleware('throttle:login')
         ->name('login');
 
     // Rate limit: 3 attempts per minute for forgot password

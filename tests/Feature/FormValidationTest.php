@@ -453,4 +453,46 @@ class FormValidationTest extends TestCase
 
         $component->assertHasNoErrors();
     }
+
+    /** @test - Security Hardening: HTML Tag Rejection */
+    #[Test]
+    public function borrow_transaction_form_rejects_html_tags_in_notes()
+    {
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $this->actingAs($admin);
+
+        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+            ->set('form.notes', '<script>alert("xss")</script>')
+            ->call('saveTransaction')
+            ->assertHasErrors(['form.notes']);
+    }
+
+    /** @test - Security Hardening: Control Character Rejection */
+    #[Test]
+    public function borrow_transaction_form_rejects_control_characters_in_notes()
+    {
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $this->actingAs($admin);
+
+        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+            ->set('form.notes', "Illegal\0Character")
+            ->call('saveTransaction')
+            ->assertHasErrors(['form.notes']);
+    }
+
+    /** @test - Security Hardening: Search Filter Protection */
+    #[Test]
+    public function admin_borrow_transactions_validates_search_query()
+    {
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $this->actingAs($admin);
+
+        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+            ->set('search', '<b>Bold Search</b>')
+            ->assertHasErrors(['search']);
+            
+        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+            ->set('search', "Control\x01Char")
+            ->assertHasErrors(['search']);
+    }
 }

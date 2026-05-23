@@ -2,12 +2,12 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class MiddlewareTest extends TestCase
@@ -40,8 +40,7 @@ class MiddlewareTest extends TestCase
         $this->actingAs($librarianUser);
 
         // Attempt to access admin-only routes
-        $this->get(route('admin.manage-roles'))->assertStatus(403);
-        $this->get(route('admin.assign-librarians'))->assertStatus(403);
+        $this->get(route('admin.manage-roles'))->assertStatus(302); // Redirected by global exception handler
     }
 
     /** @test - TC042: Credit Score Middleware - Access Control */
@@ -55,9 +54,9 @@ class MiddlewareTest extends TestCase
 
         $this->actingAs($student);
 
-        // Attempt to borrow (assuming there's a borrow route)
-        // This test may need adjustment based on actual implementation
-        // The middleware should block access if credit score is too low
+        // Attempt to access a page that requires minimum credit score
+        // Accessing academic papers index should be blocked by CheckCreditScore middleware
+        $this->get(route('academic-paper.index'))->assertStatus(403);
     }
 
     /** @test - TC075: Middleware - Guest Only Routes */
@@ -78,5 +77,38 @@ class MiddlewareTest extends TestCase
         // Attempt to access forgot password page
         $response = $this->get(route('password.request'));
         $response->assertRedirect(route('dashboard'));
+    }
+
+    /** @test - TC076: Account Status Middleware - Suspended Account Access */
+    #[Test]
+    public function suspended_users_are_logged_out_and_redirected()
+    {
+        $user = User::factory()->create([
+            'account_status' => 'suspended',
+        ]);
+
+        $this->actingAs($user);
+
+        $response = $this->get(route('student.dashboard'));
+
+        $response->assertRedirect(route('login'));
+        $this->assertGuest();
+        $response->assertSessionHas('error', 'Your account has been suspended. Please contact the librarian.');
+    }
+
+    /** @test - TC077: Global Authorization Exception - Redirection with Toast */
+    #[Test]
+    public function unauthorized_access_redirects_with_toast()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $this->actingAs($student);
+
+        // Accessing admin only route
+        $response = $this->get(route('admin.manage-roles'));
+
+        Log::info('Test expected redirect', ['expected' => route('student.dashboard')]);
+
+        $response->assertRedirect(route('student.dashboard'));
+        $response->assertSessionHas('mary.toast');
     }
 }

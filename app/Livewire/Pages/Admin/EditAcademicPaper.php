@@ -14,6 +14,7 @@ class EditAcademicPaper extends AdminComponent
 
     public function mount(AcademicPaper $academicPaper)
     {
+        $this->authorizeAccess();
         $this->form->setAcademicPaper($academicPaper);
     }
 

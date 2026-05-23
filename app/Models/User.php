@@ -173,27 +173,33 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Check if user has active librarian batch duty (for QR scanning)
-    public function hasActiveLibrarianDuty()
+    public function hasActiveLibrarianDuty(): bool
     {
-        return $this->librarianDuty()
-            ->where('status', 'active')
-            ->where('expires_at', '>', now())
-            ->exists();
+        $librarian = $this->librarianDuty;
+
+        if (! $librarian || $librarian->status !== 'active') {
+            return false;
+        }
+
+        return ! $librarian->isExpired();
     }
 
     // Alias for backward compatibility - checks BOTH role and batch duty
-    public function isLibrarian()
+    public function isLibrarian(): bool
     {
         return $this->hasLibrarianRole() || $this->hasActiveLibrarianDuty();
     }
 
     // Get active librarian record
-    public function getActiveLibrarianDuty()
+    public function getActiveLibrarianDuty(): ?Librarian
     {
-        return $this->librarianDuty()
-            ->where('status', 'active')
-            ->where('expires_at', '>', now())
-            ->first();
+        $librarian = $this->librarianDuty;
+
+        if ($librarian && $librarian->status === 'active' && ! $librarian->isExpired()) {
+            return $librarian;
+        }
+
+        return null;
     }
 
     // Check if user has specific librarian permission

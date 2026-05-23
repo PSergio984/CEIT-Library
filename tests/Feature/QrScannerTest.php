@@ -51,9 +51,9 @@ class QrScannerTest extends TestCase
         $component->assertSet('hasError', true);
     }
 
-    /** @test - TC030: QR Scanner - v6 Optimized Payload Validation */
+    /** @test - TC030: QR Scanner - v7 Optimized Payload Validation */
     #[Test]
-    public function qr_scanner_validates_v6_optimized_payload()
+    public function qr_scanner_validates_v7_optimized_payload()
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
         $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
@@ -64,12 +64,14 @@ class QrScannerTest extends TestCase
             'end_date' => now()->addDay(),
         ]);
 
-        // Generate a v6-style payload
+        // Generate a v7-style payload
         $nonce = Str::random(16);
+        $timestamp = time();
         $data = [
-            'v' => 6,
+            'v' => 7,
             'user_id' => $student->id,
             'nonce' => $nonce,
+            'timestamp' => $timestamp,
         ];
 
         // Access the private/protected methods via a wrapper or by reflection
@@ -80,17 +82,18 @@ class QrScannerTest extends TestCase
             $secret = 'test-secret-at-least-16-chars';
         }
 
-        // Canonical message: user_id|nonce
-        $canonicalMessage = $student->id.'|'.$nonce;
+        // Canonical message: user_id|nonce|timestamp
+        $canonicalMessage = $student->id.'|'.$nonce.'|'.$timestamp;
         $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
         $encryptedData = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encryptedData]);
 
         $this->actingAs($librarian);
 
-        // Test valid v6 QR code scan
+        // Test valid v7 QR code scan
         Livewire::test(QrScanner::class)
-            ->call('handleScan', $encryptedData)
+            ->call('handleScan', $qrContent)
             ->assertHasNoErrors()
             ->assertDispatched('attendanceRecorded');
 
@@ -98,5 +101,137 @@ class QrScannerTest extends TestCase
             'user_id' => $student->id,
             'status' => 'active',
         ]);
+    }
+
+    /** @test - Security Hardening: v7 Dynamic Payload & Replay Protection */
+    #[Test]
+    public function qr_scanner_validates_v7_dynamic_payload()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
+        Librarian::factory()->create([
+            'user_id' => $librarian->id,
+            'status' => 'active',
+        ]);
+
+        $nonce = Str::random(16);
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'nonce' => $nonce,
+            'timestamp' => time(),
+        ];
+
+        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
+        config(['app.qr_hmac_secret' => $secret]);
+
+        $canonicalMessage = $student->id.'|'.$nonce.'|'.$data['timestamp'];
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+        $encryptedData = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encryptedData]);
+
+        $this->actingAs($librarian);
+
+        Livewire::test(QrScanner::class)
+            ->call('handleScan', $qrContent)
+            ->assertHasNoErrors()
+            ->assertDispatched('attendanceRecorded');
+    }
+
+    /** @test - Security Hardening: Outdated Timestamp Rejection */
+    #[Test]
+    public function qr_scanner_rejects_outdated_timestamp()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
+        Librarian::factory()->create(['user_id' => $librarian->id, 'status' => 'active']);
+
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'nonce' => Str::random(16),
+            'timestamp' => time() - 120, // 2 minutes old
+        ];
+
+        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
+        config(['app.qr_hmac_secret' => $secret]);
+
+        $canonicalMessage = $student->id.'|'.$data['nonce'].'|'.$data['timestamp'];
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+        $encryptedData = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encryptedData]);
+
+        $this->actingAs($librarian);
+
+        Livewire::test(QrScanner::class)
+            ->call('handleScan', $qrContent)
+            ->assertSet('hasError', true);
+    }
+
+    /** @test - Security Hardening: Future Timestamp Rejection */
+    #[Test]
+    public function qr_scanner_rejects_future_timestamp()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
+        Librarian::factory()->create(['user_id' => $librarian->id, 'status' => 'active']);
+
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'nonce' => Str::random(16),
+            'timestamp' => time() + 120, // 2 minutes in future
+        ];
+
+        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
+        config(['app.qr_hmac_secret' => $secret]);
+
+        $canonicalMessage = $student->id.'|'.$data['nonce'].'|'.$data['timestamp'];
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+        $encryptedData = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encryptedData]);
+
+        $this->actingAs($librarian);
+
+        Livewire::test(QrScanner::class)
+            ->call('handleScan', $qrContent)
+            ->assertSet('hasError', true);
+    }
+
+    /** @test - Security Hardening: Nonce Replay Rejection */
+    #[Test]
+    public function qr_scanner_rejects_nonce_replay()
+    {
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
+        Librarian::factory()->create(['user_id' => $librarian->id, 'status' => 'active']);
+
+        $nonce = 'duplicate-nonce-123';
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'nonce' => $nonce,
+            'timestamp' => time(),
+        ];
+
+        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
+        config(['app.qr_hmac_secret' => $secret]);
+
+        $canonicalMessage = $student->id.'|'.$nonce.'|'.$data['timestamp'];
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+        $encryptedData = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encryptedData]);
+
+        $this->actingAs($librarian);
+
+        // First scan - should succeed
+        Livewire::test(QrScanner::class)
+            ->call('handleScan', $qrContent)
+            ->assertHasNoErrors();
+
+        // Second scan with same encrypted data (same nonce) - should fail
+        Livewire::test(QrScanner::class)
+            ->call('handleScan', $qrContent)
+            ->assertSet('hasError', true);
     }
 }

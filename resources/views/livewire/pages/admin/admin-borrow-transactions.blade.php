@@ -231,16 +231,20 @@
     <x-mary-modal wire:model="showEditModal" title="Edit Transaction" persistent class="backdrop-blur">
         <div class="space-y-4">
             <div>
-                <x-mary-select label="Status" wire:model="editStatus" :options="[['id' => 'started', 'name' => 'Started'], ['id' => 'completed', 'name' => 'Completed']]" option-value="id"
+                <x-mary-select label="Status" wire:model="form.status" :options="[['id' => 'started', 'name' => 'Started'], ['id' => 'completed', 'name' => 'Completed']]" option-value="id"
                     option-label="name" required />
             </div>
 
             <div>
-                <x-mary-datetime label="Time Out" wire:model="editTimeOut" type="datetime-local"
+                <x-mary-datetime label="Time Out" wire:model="form.time_out" type="datetime-local"
                     hint="Leave empty for active transactions" />
             </div>
 
-            @if ($editStatus === 'completed' && empty($editTimeOut))
+            <div>
+                <x-mary-textarea label="Notes" wire:model="form.notes" placeholder="Add notes..." rows="3" />
+            </div>
+
+            @if ($form->status === 'completed' && empty($form->time_out))
                 <div class="alert alert-warning">
                     <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none"
                         viewBox="0 0 24 24">
