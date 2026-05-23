@@ -227,8 +227,8 @@
     </x-mary-main>
 
     {{-- BOTTOM NAVIGATION (Mobile only) --}}
-    <div class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-base-100 border-t border-base-300 pb-safe">
-        <div class="flex justify-around items-center h-16">
+    <div id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-base-100 border-t border-base-300 h-16 shadow-2xl">
+        <div class="flex justify-around items-center h-full">
             <a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('dashboard*') || request()->is('student/dashboard*') ? 'text-primary' : 'text-base-content/70' }}">
                 <x-mary-icon name="o-home" class="w-6 h-6" />
                 <span class="text-[10px] mt-1 font-medium">Home</span>
