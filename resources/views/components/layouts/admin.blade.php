@@ -46,7 +46,11 @@
                 <div class="flex items-center">
                     <div class="flex-shrink-0">
                         <a href="/dashboard">
-                            <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" class="h-10 w-10" alt="CEIT Logo">
+                            <img 
+                                src="{{ Vite::asset('resources/images/ceit-logo.png') }}" 
+                                class="h-10 w-10" 
+                                alt="CEIT Logo"
+                            >
                         </a>
                     </div>
                     <div class="flex items-center gap-3">

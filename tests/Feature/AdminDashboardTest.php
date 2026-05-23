@@ -36,7 +36,7 @@ class AdminDashboardTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.dashboard'));
 
-        $response->assertStatus(403);
+        $response->assertStatus(302)->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC011: Super Admin can view dashboard metrics */

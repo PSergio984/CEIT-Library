@@ -12,7 +12,7 @@ class InventoryFactory extends Factory
     public function definition()
     {
         return [
-            'copy_number' => $this->faker->numberBetween(1, 10), // Removed unique()
+            'copy_number' => $this->faker->unique()->numberBetween(1, 100),
             'status' => $this->faker->randomElement(['Available', 'Reserved', 'Unavailable']),
         ];
     }
