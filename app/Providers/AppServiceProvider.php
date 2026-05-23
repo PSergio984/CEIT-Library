@@ -30,29 +30,29 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('qr-scanning', function (Request $request) {
-            $user = $request->user();
-            // Cache role status in request to avoid re-querying
-            $isStaff = $user ? $user->isLibrarian() || $user->hasAdminAccess() : false;
-            $limit = $isStaff ? 300 : 30;
-
-            return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
+            return $this->rateLimitForUser($request, 300, 30);
         });
 
         RateLimiter::for('search', function (Request $request) {
-            $user = $request->user();
-            $isStaff = $user ? $user->isLibrarian() || $user->hasAdminAccess() : false;
-            $limit = $isStaff ? 500 : 60;
-
-            return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
+            return $this->rateLimitForUser($request, 500, 60);
         });
 
         RateLimiter::for('transactions', function (Request $request) {
-            $user = $request->user();
-            $isStaff = $user ? $user->isLibrarian() || $user->hasAdminAccess() : false;
-            $limit = $isStaff ? 200 : 20;
-
-            return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
+            return $this->rateLimitForUser($request, 200, 20);
         });
+    }
+
+    /**
+     * Helper to determine rate limit based on user role.
+     */
+    protected function rateLimitForUser(Request $request, int $staffLimit, int $studentLimit)
+    {
+        $user = $request->user();
+        $isStaff = $user ? ($user->isLibrarian() || $user->hasAdminAccess()) : false;
+        $limit = $isStaff ? $staffLimit : $studentLimit;
+
+        return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
+    }
 
         // Admin access gate (for backward compatibility and general admin check)
         Gate::define('Admin-access', function ($user) {
