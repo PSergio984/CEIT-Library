@@ -33,7 +33,7 @@ class CheckCreditScore
                 ];
 
                 if ($request->routeIs($restrictedRoutes)) {
-                    abort(403, 'Your credit score is too low to access this resource. Please settle your violations.');
+                    return redirect()->route('student.dashboard')->with('error', 'Your credit score is too low to access this resource. Please settle your violations.');
                 }
             }
         }
