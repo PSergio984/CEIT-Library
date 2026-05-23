@@ -337,7 +337,7 @@ class DatabaseSeeder extends Seeder
 
         // 2. Create 2 EXPIRED batches (dates in the past) - 5 students each
         $this->command->info('Creating 2 expired batches...');
-        $remainingStudents = $students->diff($allLibrarianStudents);
+        $remainingStudents = $filteredStudents->diff($allLibrarianStudents);
 
         // Expired Batch 1 (ended 3 days ago)
         $expiredBatch1Students = $remainingStudents->random(5);

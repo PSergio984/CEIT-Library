@@ -6,6 +6,7 @@ use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -54,8 +55,8 @@ class MiddlewareTest extends TestCase
         $this->actingAs($student);
 
         // Attempt to access a page that requires minimum credit score
-        // Assuming /academic-papers requires it via CheckCreditScore middleware
-        // $this->get(route('academic-paper.index'))->assertStatus(403);
+        // Accessing academic papers index should be blocked by CheckCreditScore middleware
+        $this->get(route('academic-paper.index'))->assertStatus(403);
     }
 
     /** @test - TC075: Middleware - Guest Only Routes */
@@ -105,7 +106,7 @@ class MiddlewareTest extends TestCase
         // Accessing admin only route
         $response = $this->get(route('admin.manage-roles'));
 
-        \Illuminate\Support\Facades\Log::info('Test expected redirect', ['expected' => route('student.dashboard')]);
+        Log::info('Test expected redirect', ['expected' => route('student.dashboard')]);
 
         $response->assertRedirect(route('student.dashboard'));
         $response->assertSessionHas('mary.toast');

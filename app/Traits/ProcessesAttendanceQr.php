@@ -92,7 +92,7 @@ trait ProcessesAttendanceQr
 
             // 2. Nonce Replay Prevention (One-time use check)
             $nonceKey = 'qr_nonce:'.$data['nonce'];
-            if (Cache::has($nonceKey)) {
+            if (! Cache::add($nonceKey, true, 150)) {
                 Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
                     'user_id' => $data['user_id'],
                     'nonce' => $data['nonce'],
@@ -100,9 +100,6 @@ trait ProcessesAttendanceQr
 
                 return 'invalid';
             }
-
-            // Store nonce in cache for 150 seconds (longer than QR validity window) to block reuse
-            Cache::put($nonceKey, true, 150);
 
             // --- END REPLAY PROTECTION ---
 
@@ -166,6 +163,20 @@ trait ProcessesAttendanceQr
             $scannedByAdminId = $currentUser->id;
         }
 
+        // Authorization Check: Ensure the scanner is authorized (librarian on duty or admin)
+        if (! $scannedBy && ! $scannedByAdminId) {
+            Log::warning('Unauthorized attendance scan attempt', [
+                'user_id' => $currentUser?->id,
+                'target_user_id' => $userId,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'You are not authorized to process attendance scans.',
+                'title' => 'Authorization Failed',
+            ];
+        }
+
         // Check if user has an active session
         $activeSession = Attendance::getActiveSession($userId);
 
@@ -214,7 +225,7 @@ trait ProcessesAttendanceQr
 
                 return [
                     'success' => false,
-                    'message' => "Database error during check-out: {$e->getMessage()}",
+                    'message' => 'An error occurred while checking out. Please try again later.',
                     'title' => 'Check-out Failed',
                 ];
             }
@@ -259,7 +270,7 @@ trait ProcessesAttendanceQr
 
                 return [
                     'success' => false,
-                    'message' => "Database error during check-in: {$e->getMessage()}",
+                    'message' => 'An error occurred while checking in. Please try again later.',
                     'title' => 'Check-in Failed',
                 ];
             }

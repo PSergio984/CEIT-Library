@@ -67,8 +67,8 @@ class NoHtmlTags implements ValidationRule
             return true;
         }
 
-        // Check with regex for any <tag> pattern
-        return (bool) preg_match('/<[^>]*>/', $value);
+        // Check with regex for real HTML/XML-style tags (case and unicode safe)
+        return (bool) preg_match('/<\s*\/?\s*[A-Za-z][A-Za-z0-9:_-]*(\s+[^<>]*)?>/iu', $value);
     }
 
     /**

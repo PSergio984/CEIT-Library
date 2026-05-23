@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Models\AcademicPaper;
@@ -12,7 +10,9 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class BorrowQrTest extends TestCase
@@ -252,7 +252,7 @@ class BorrowQrTest extends TestCase
         $paper = AcademicPaper::factory()->create();
         $inventory = Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Available']);
 
-        $nonce = \Illuminate\Support\Str::random(16);
+        $nonce = Str::random(16);
         $timestamp = time();
         $data = [
             'v' => 7,
@@ -274,6 +274,9 @@ class BorrowQrTest extends TestCase
         $component = Livewire::test(AdminBorrowTransactions::class)
             ->call('processScannedQr', $qrContent);
 
+        // Verify first scan was NOT blocked by security (should show confirmation modal)
+        $component->assertSet('showConfirmBorrowModal', true);
+
         // Second scan with same nonce - should be rejected
         Livewire::test(AdminBorrowTransactions::class)
             ->call('processScannedQr', $qrContent)
@@ -292,7 +295,7 @@ class BorrowQrTest extends TestCase
             'v' => 7,
             'user_id' => $student->id,
             'p' => ['inventory_id' => 1, 'paper_id' => 1, 'requested_by' => $student->id],
-            'nonce' => \Illuminate\Support\Str::random(16),
+            'nonce' => Str::random(16),
             'timestamp' => time() - 300, // 5 minutes old
         ];
 

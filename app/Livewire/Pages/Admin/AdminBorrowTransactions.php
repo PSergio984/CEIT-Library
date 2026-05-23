@@ -11,7 +11,7 @@ use App\Models\User;
 use App\Rules\NoHtmlTags;
 use App\Rules\SafeText;
 use App\Traits\CreatesQrCanonicalMessage;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
@@ -227,7 +227,7 @@ class AdminBorrowTransactions extends AdminComponent
 
         $this->form->update();
 
-        $this->success("Transaction updated successfully!");
+        $this->success('Transaction updated successfully!');
         $this->closeEditModal();
     }
 
@@ -285,7 +285,7 @@ class AdminBorrowTransactions extends AdminComponent
             $data = $decryptedData;
 
             // --- REPLAY ATTACK PROTECTION (Wave 3 / Security Fix WR-01) ---
-            
+
             // 1. Verify HMAC signature if hash is present (v7)
             if (isset($data['hash'])) {
                 $secret = config('app.qr_hmac_secret');
@@ -298,6 +298,7 @@ class AdminBorrowTransactions extends AdminComponent
                     \Log::warning('Borrow QR code hash mismatch - possible tampering');
                     $this->error('Security verification failed. This QR code may have been tampered with.');
                     $this->isProcessingQr = false;
+
                     return ['found' => false];
                 }
             }
@@ -309,6 +310,7 @@ class AdminBorrowTransactions extends AdminComponent
                     \Log::warning('Borrow QR code rejected: Timestamp skew too high', ['time_diff' => $timeDiff]);
                     $this->error('QR code expired. Please ask the student to generate a new one.');
                     $this->isProcessingQr = false;
+
                     return ['found' => false];
                 }
             }
@@ -316,13 +318,13 @@ class AdminBorrowTransactions extends AdminComponent
             // 3. Nonce Replay Prevention (v7)
             if (isset($data['nonce'])) {
                 $nonceKey = 'qr_nonce:'.$data['nonce'];
-                if (\Illuminate\Support\Facades\Cache::has($nonceKey)) {
+                if (! Cache::add($nonceKey, true, 150)) {
                     \Log::warning('Borrow QR code rejected: Replay attack detected (nonce reuse)');
                     $this->error('This QR code has already been used.');
                     $this->isProcessingQr = false;
+
                     return ['found' => false];
                 }
-                \Illuminate\Support\Facades\Cache::put($nonceKey, true, 150);
             }
 
             // --- END REPLAY PROTECTION ---
