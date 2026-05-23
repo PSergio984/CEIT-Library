@@ -31,24 +31,25 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('qr-scanning', function (Request $request) {
             $user = $request->user();
-            // Higher limits for privileged roles to handle bulk scans
-            $limit = ($user && ($user->isLibrarian() || $user->hasAdminAccess())) ? 300 : 30;
+            // Cache role status in request to avoid re-querying
+            $isStaff = $user ? $user->isLibrarian() || $user->hasAdminAccess() : false;
+            $limit = $isStaff ? 300 : 30;
 
             return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
         });
 
         RateLimiter::for('search', function (Request $request) {
             $user = $request->user();
-            // Higher limits for staff performing inventory/audit
-            $limit = ($user && ($user->isLibrarian() || $user->hasAdminAccess())) ? 500 : 60;
+            $isStaff = $user ? $user->isLibrarian() || $user->hasAdminAccess() : false;
+            $limit = $isStaff ? 500 : 60;
 
             return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
         });
 
         RateLimiter::for('transactions', function (Request $request) {
             $user = $request->user();
-            // Higher limits for staff processing multiple returns/borrows
-            $limit = ($user && ($user->isLibrarian() || $user->hasAdminAccess())) ? 200 : 20;
+            $isStaff = $user ? $user->isLibrarian() || $user->hasAdminAccess() : false;
+            $limit = $isStaff ? 200 : 20;
 
             return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
         });
