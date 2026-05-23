@@ -174,16 +174,16 @@
 
             {{-- MENU --}}
             <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" wire:transition>
-                <x-mary-menu-item title="Dashboard" icon="o-home" link="/dashboard" wire:navigate.hover />
-                <x-mary-menu-item title="Academic Papers" icon="o-book-open" link="/academic-papers" wire:navigate.hover />
-                <x-mary-menu-item title="Rules & Regulations" icon="o-clipboard-document-list"
+                <x-mary-menu-item title="Dashboard" tooltip="Dashboard" icon="o-home" link="/dashboard" wire:navigate.hover />
+                <x-mary-menu-item title="Academic Papers" tooltip="Academic Papers" icon="o-book-open" link="/academic-papers" wire:navigate.hover />
+                <x-mary-menu-item title="Rules & Regulations" tooltip="Rules & Regulations" icon="o-clipboard-document-list"
                     link="/rule-and-regulation" wire:navigate.hover />
-                <x-mary-menu-item title="Profile" icon="o-user" link="/profile" wire:navigate.hover />
-                <x-mary-menu-item title="Transactions" icon="o-archive-box" link="/transactions" wire:navigate.hover />
-                <x-mary-menu-item title="Credit Score History" icon="o-chart-bar" link="/credit-score-history" wire:navigate.hover />
+                <x-mary-menu-item title="Profile" tooltip="Profile" icon="o-user" link="/profile" wire:navigate.hover />
+                <x-mary-menu-item title="Transactions" tooltip="Transactions" icon="o-archive-box" link="/transactions" wire:navigate.hover />
+                <x-mary-menu-item title="Credit Score History" tooltip="Credit Score History" icon="o-chart-bar" link="/credit-score-history" wire:navigate.hover />
                 
                 {{-- Notifications with Badge --}}
-                <x-mary-menu-item title="Notifications" icon="o-bell" link="/notifications" wire:navigate.hover>
+                <x-mary-menu-item title="Notifications" tooltip="Notifications" icon="o-bell" link="/notifications" wire:navigate.hover>
                     @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
                         <x-slot:actions>
                             <span class="badge badge-primary badge-sm">{{ auth()->user()->unreadNotifications()->count() }}</span>
@@ -192,7 +192,7 @@
                 </x-mary-menu-item>
                 
                 @can('access-admin-dashboard')
-                    <x-mary-menu-item title="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" wire:navigate.hover />
+                    <x-mary-menu-item title="Admin Dashboard" tooltip="Admin Dashboard" icon="o-squares-2x2" link="/admin/dashboard" wire:navigate.hover />
                 @endcan
 
             </x-mary-menu>

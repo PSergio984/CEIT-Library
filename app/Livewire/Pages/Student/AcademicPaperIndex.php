@@ -74,6 +74,7 @@ class AcademicPaperIndex extends Component
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
+            ['key' => 'actions', 'label' => ''],
         ];
 
         // Leave yearFromFilter empty to show "Year From" placeholder by default
