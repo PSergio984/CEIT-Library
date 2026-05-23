@@ -43,5 +43,8 @@ fi
 echo "Running migrations..."
 php artisan migrate --force
 
+# Ensure nginx owns storage and cache files created by root during startup
+chown -R nginx:nginx /var/www/html/storage /var/www/html/bootstrap/cache
+
 #Run supervisord to manage php-fpm and nginx
 exec /usr/bin/supervisord -n -c /etc/supervisor/conf.d/supervisord.conf
