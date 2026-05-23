@@ -252,6 +252,7 @@ class AdminAcademicPaperIndex extends AdminComponent
 
     public function mount(?string $dept = null)
     {
+        $this->authorizeAccess();
         $this->dept = $dept;
         $this->sortBy = ['column' => 'id', 'direction' => 'asc'];
 

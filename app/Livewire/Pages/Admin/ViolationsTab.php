@@ -81,6 +81,8 @@ class ViolationsTab extends AdminComponent
 
     public function save()
     {
+        $this->authorize('manage-violation-logs');
+
         // Let the form's validate() method handle all validation including penalty_score range
         // This ensures all validation errors are shown together, not one at a time
         $this->isEdit
@@ -99,6 +101,8 @@ class ViolationsTab extends AdminComponent
 
     public function deleteConfirmed()
     {
+        $this->authorize('manage-violation-logs');
+
         Violation::findOrFail($this->editingId)->delete();
         $this->success('Violation deleted!');
         $this->confirmDeleteModal = false;

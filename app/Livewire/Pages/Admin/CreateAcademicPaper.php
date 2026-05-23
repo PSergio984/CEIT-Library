@@ -26,6 +26,7 @@ class CreateAcademicPaper extends AdminComponent
 
     public function mount()
     {
+        $this->authorizeAccess();
         $this->form->populateYearChoices();
     }
 

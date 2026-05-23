@@ -38,11 +38,12 @@ created: 2026-05-23
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 02-01-01 | 01 | 1 | D-01 / D-02 | T-02-01 | Redirect unauthorized users with toast and check component-level mount gates | feature | `php85 artisan test --filter=MiddlewareTest` | ✅ W0 | ⬜ pending |
-| 02-01-02 | 01 | 1 | D-03 / D-04 | T-02-02 | Global middleware blocks suspended users and throttle sensitive endpoints | feature | `php85 artisan test --filter=MiddlewareTest` | ✅ W0 | ⬜ pending |
+| 02-01-01 | 01 | 1 | D-01 / D-03 / D-04 | T-02-02 | Global middleware blocks suspended users, exception handler redirects unauthorized with toast, rate limiters configured | feature | `php85 artisan test --filter=MiddlewareTest` | ✅ W0 | ⬜ pending |
+| 02-01-02 | 01 | 1 | D-02 | T-02-01 | Component-level authorization gates checked in mount() and action methods | feature | `php85 artisan test --filter=MiddlewareTest` | ✅ W0 | ⬜ pending |
 | 02-02-01 | 02 | 2 | D-05 / D-06 | T-02-03 | Form Object validation using custom SafeText / NoHtmlTags rules | feature | `php85 artisan test --filter=FormValidationTest` | ✅ W0 | ⬜ pending |
 | 02-02-02 | 02 | 2 | D-07 / D-08 | T-02-04 | Inputs strictly bound by database constraints and custom messages verified | feature | `php85 artisan test --filter=FormValidationTest` | ✅ W0 | ⬜ pending |
-| 02-03-01 | 03 | 3 | D-09 / D-10 | T-02-05 | QR scan time-window check enforces ±60s clock drift and nonce replay cache | feature | `php85 artisan test --filter=QrScannerTest` | ✅ W0 | ⬜ pending |
+| 02-03-01 | 03 | 3 | D-09 | T-02-05 | QR code dynamically includes timestamp and client auto-refreshes every 15s | manual | N/A | ✅ W0 | ⬜ pending |
+| 02-03-02 | 03 | 3 | D-09 / D-10 | T-02-05 | QR scan time-window check enforces ±60s clock drift and nonce replay cache | feature | `php85 artisan test --filter=QrScannerTest` | ✅ W0 | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 

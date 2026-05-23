@@ -24,19 +24,19 @@ class NoHtmlTags implements ValidationRule
         $normalized = $this->normalizeInput($value);
 
         if ($this->containsHtmlTags($normalized)) {
-            $fail('The :attribute cannot contain HTML tags.', $attribute);
+            $fail('The :attribute cannot contain HTML tags.');
 
             return;
         }
 
         if ($this->containsUnsafeProtocols($normalized)) {
-            $fail('The :attribute contains potentially unsafe content.', $attribute);
+            $fail('The :attribute contains potentially unsafe content.');
 
             return;
         }
 
         if ($this->containsEventHandlers($normalized)) {
-            $fail('The :attribute contains potentially unsafe content.', $attribute);
+            $fail('The :attribute contains potentially unsafe content.');
 
             return;
         }
@@ -58,13 +58,17 @@ class NoHtmlTags implements ValidationRule
     }
 
     /**
-     * Check if the input contains HTML tags using strip_tags as a comprehensive check.
+     * Check if the input contains HTML tags using strip_tags and regex as a comprehensive check.
      */
     private function containsHtmlTags(string $value): bool
     {
-        $stripped = strip_tags($value);
+        // Check with strip_tags
+        if (strip_tags($value) !== $value) {
+            return true;
+        }
 
-        return $stripped !== $value;
+        // Check with regex for any <tag> pattern
+        return (bool) preg_match('/<[^>]*>/', $value);
     }
 
     /**

@@ -44,10 +44,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->whereNumber('academicPaper')
         ->name('academic-paper.show');
     Route::get('/academic-papers', AcademicPaperIndex::class)
+        ->middleware('throttle:search')
         ->name('academic-paper.index');
     Route::get('/rule-and-regulation', RuleAndRegulationIndex::class)->name('rules-and-regulations.index');
     Route::get('/credit-score-history', CreditScoreHistory::class)->name('CreditScoreHistory');
-    Route::get('/transactions', Transaction::class)->name('transactions');
+    Route::get('/transactions', Transaction::class)
+        ->middleware('throttle:transactions')
+        ->name('transactions');
     Route::get('/notifications', StudentNotifications::class)->name('notifications');
 
     // QR Code download route
@@ -90,7 +93,7 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         // SUPER ADMIN ONLY ROUTES
 
         // Academic Papers - VIEW (Librarian and Admin can view)
-        Route::middleware('can:view-academic-papers')->group(function () {
+        Route::middleware(['can:view-academic-papers', 'throttle:search'])->group(function () {
             Route::get('/academic-papers', AdminAcademicPaperIndex::class)
                 ->name('academic-paper.index');
             Route::get('/academic-papers/{academicPaper}', AdminShowAcademicPaper::class)
@@ -111,10 +114,10 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
 
         // Attendance logs (Super Admin only)
         Route::get('/attendance', AdminAttendanceLogIndex::class)
-            ->middleware('can:view-attendance-logs')
+            ->middleware(['can:view-attendance-logs', 'throttle:qr-scanning'])
             ->name('attendance-logs');
         Route::get('/attendance-logs', AdminAttendanceLogIndex::class)
-            ->middleware('can:view-attendance-logs')
+            ->middleware(['can:view-attendance-logs', 'throttle:qr-scanning'])
             ->name('attendance');
 
         // Violation logs (Librarian and Admin can view)

@@ -56,6 +56,8 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function mount()
     {
+        $this->authorizeAccess();
+
         // Authorize that only super admins can access this page
         $this->authorize('manage-librarian-batches');
 

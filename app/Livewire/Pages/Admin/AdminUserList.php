@@ -21,6 +21,11 @@ class AdminUserList extends AdminComponent
 {
     use AuthorizesRequests, Toast, WithPagination;
 
+    public function mount()
+    {
+        $this->authorizeAccess();
+    }
+
     public $perPage = 20;
 
     #[Validate('string|max:100|nullable')]

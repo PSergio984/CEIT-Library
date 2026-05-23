@@ -2,16 +2,20 @@
 
 namespace App\Livewire\Pages\Admin;
 
+use App\Livewire\Forms\BorrowTransactionForm;
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\Notification;
 use App\Models\User;
+use App\Rules\NoHtmlTags;
+use App\Rules\SafeText;
 use App\Traits\CreatesQrCanonicalMessage;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -21,7 +25,14 @@ class AdminBorrowTransactions extends AdminComponent
 {
     use CreatesQrCanonicalMessage, Toast, WithPagination;
 
-    public $perPage = 20;
+    public BorrowTransactionForm $form;
+
+    public int $perPage = 10;
+
+    public function mount()
+    {
+        $this->authorizeAccess();
+    }
 
     public $search = '';
 
@@ -31,14 +42,38 @@ class AdminBorrowTransactions extends AdminComponent
 
     public $selectedDate = '';
 
+    public function rules(): array
+    {
+        return [
+            'search' => ['nullable', 'string', 'max:100', new NoHtmlTags, new SafeText],
+            'paperTypeFilter' => ['nullable', 'string', 'max:50', new NoHtmlTags, new SafeText],
+            'statusFilter' => ['nullable', 'string', 'max:20', 'in:started,completed'],
+            'selectedDate' => ['nullable', 'date'],
+        ];
+    }
+
+    public function updatedSearch()
+    {
+        $this->validateOnly('search');
+    }
+
+    public function updatedPaperTypeFilter()
+    {
+        $this->validateOnly('paperTypeFilter');
+    }
+
+    public function updatedStatusFilter()
+    {
+        $this->validateOnly('statusFilter');
+    }
+
+    public function updatedSelectedDate()
+    {
+        $this->validateOnly('selectedDate');
+    }
+
     // Edit modal properties
     public $showEditModal = false;
-
-    public $editingTransactionId = null;
-
-    public $editStatus = '';
-
-    public $editTimeOut = '';
 
     // QR Scanner modal properties
     public $showQrModal = false;
@@ -176,59 +211,23 @@ class AdminBorrowTransactions extends AdminComponent
             return;
         }
 
-        $this->editingTransactionId = $transactionId;
-        $this->editStatus = $transaction->status ?? 'started';
-        $this->editTimeOut = $transaction->time_out ? $transaction->time_out->format('Y-m-d\TH:i') : '';
+        $this->form->setTransaction($transaction);
         $this->showEditModal = true;
     }
 
     public function closeEditModal()
     {
         $this->showEditModal = false;
-        $this->editingTransactionId = null;
-        $this->editStatus = '';
-        $this->editTimeOut = '';
+        $this->form->reset();
     }
 
     public function saveTransaction()
     {
-        $this->validate([
-            'editStatus' => 'required|in:started,completed',
-            'editTimeOut' => 'nullable|date',
-        ]);
+        $this->authorize('manage-borrow-logs');
 
-        $transaction = BorrowTransaction::find($this->editingTransactionId);
+        $this->form->update();
 
-        if (! $transaction) {
-            $this->error('Transaction not found!');
-
-            return;
-        }
-
-        if ($this->editStatus === 'completed' && empty($this->editTimeOut)) {
-            $this->error('Time Out is required when status is completed!');
-
-            return;
-        }
-
-        \DB::transaction(function () use ($transaction) {
-            $transaction->update([
-                'status' => $this->editStatus,
-                'time_out' => $this->editStatus === 'completed'
-                    ? Carbon::parse($this->editTimeOut)
-                    : null,
-            ]);
-
-            $inventory = $transaction->inventory()->lockForUpdate()->first();
-
-            if ($inventory) {
-                $inventory->update([
-                    'status' => $this->editStatus === 'completed' ? 'Available' : 'Unavailable',
-                ]);
-            }
-        });
-
-        $this->success("Transaction #$this->editingTransactionId updated successfully!");
+        $this->success("Transaction updated successfully!");
         $this->closeEditModal();
     }
 
@@ -251,8 +250,9 @@ class AdminBorrowTransactions extends AdminComponent
 
     public function processScannedQr($qrData)
     {
+        $this->authorize('manage-borrow-logs');
+
         \Log::info('=== QR Processing Started ===');
-        \Log::info('Raw QR Data:', ['data' => $qrData]);
 
         $this->isProcessingQr = true;
 
@@ -261,24 +261,71 @@ class AdminBorrowTransactions extends AdminComponent
 
             // Parse the JSON data from QR code
             $data = json_decode($qrData, true);
-            \Log::info('Decoded JSON:', ['data' => $data]);
 
-            // Check if data is encrypted (new format)
-            if (isset($data['encrypted'])) {
-                \Log::info('Encrypted QR detected, decrypting...');
-                $decryptedData = $this->decryptQrData($data['encrypted']);
+            // ENFORCE encryption - do not allow raw JSON payloads (Security Fix CR-01)
+            if (! $data || ! isset($data['encrypted'])) {
+                \Log::warning('Unencrypted or invalid QR format detected in borrow log');
+                $this->error('Invalid QR code format! Only official encrypted QR codes are accepted.');
+                $this->isProcessingQr = false;
 
-                if (! $decryptedData) {
-                    \Log::error('Failed to decrypt QR data');
-                    $this->error('Invalid or corrupted QR code!');
+                return ['found' => false];
+            }
+
+            \Log::info('Encrypted QR detected, decrypting...');
+            $decryptedData = $this->decryptQrData($data['encrypted']);
+
+            if (! $decryptedData) {
+                \Log::error('Failed to decrypt QR data');
+                $this->error('Invalid or corrupted QR code!');
+                $this->isProcessingQr = false;
+
+                return ['found' => false];
+            }
+
+            $data = $decryptedData;
+
+            // --- REPLAY ATTACK PROTECTION (Wave 3 / Security Fix WR-01) ---
+            
+            // 1. Verify HMAC signature if hash is present (v7)
+            if (isset($data['hash'])) {
+                $secret = config('app.qr_hmac_secret');
+                $dataForCanonical = $data;
+                unset($dataForCanonical['hash']);
+                $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
+                $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+
+                if (! hash_equals($expectedHash, $data['hash'])) {
+                    \Log::warning('Borrow QR code hash mismatch - possible tampering');
+                    $this->error('Security verification failed. This QR code may have been tampered with.');
                     $this->isProcessingQr = false;
-
                     return ['found' => false];
                 }
-
-                $data = $decryptedData;
-                \Log::info('Decrypted Data:', ['data' => $data]);
             }
+
+            // 2. Validate timestamp freshness (v7)
+            if (isset($data['timestamp'])) {
+                $timeDiff = time() - $data['timestamp'];
+                if (abs($timeDiff) > 60) {
+                    \Log::warning('Borrow QR code rejected: Timestamp skew too high', ['time_diff' => $timeDiff]);
+                    $this->error('QR code expired. Please ask the student to generate a new one.');
+                    $this->isProcessingQr = false;
+                    return ['found' => false];
+                }
+            }
+
+            // 3. Nonce Replay Prevention (v7)
+            if (isset($data['nonce'])) {
+                $nonceKey = 'qr_nonce:'.$data['nonce'];
+                if (\Illuminate\Support\Facades\Cache::has($nonceKey)) {
+                    \Log::warning('Borrow QR code rejected: Replay attack detected (nonce reuse)');
+                    $this->error('This QR code has already been used.');
+                    $this->isProcessingQr = false;
+                    return ['found' => false];
+                }
+                \Illuminate\Support\Facades\Cache::put($nonceKey, true, 150);
+            }
+
+            // --- END REPLAY PROTECTION ---
 
             if (! $data || ! isset($data['p'])) {
                 \Log::error('Invalid QR format - missing p key');
@@ -494,6 +541,8 @@ class AdminBorrowTransactions extends AdminComponent
 
     public function confirmBorrow()
     {
+        $this->authorize('manage-borrow-logs');
+
         try {
             if (empty($this->pendingBorrowData)) {
                 $this->error('No pending borrow request!');
@@ -546,7 +595,7 @@ class AdminBorrowTransactions extends AdminComponent
                     'paper_title' => $paper->title,
                     'inventory_id' => $inventory->id,
                     'copy_number' => $inventory->copy_number,
-                    'expires_at' => $this->pendingBorrowData['expires_at'],
+                    'expires_at' => $expiresAt->toIso8601String(),
                 ],
             ]);
 

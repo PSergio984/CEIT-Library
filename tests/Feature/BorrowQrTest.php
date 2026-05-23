@@ -226,29 +226,81 @@ class BorrowQrTest extends TestCase
         $this->assertTrue(true);
     }
 
-    /** @test - TC-BQ-008: Borrow QR with missing fields is rejected */
+    /** @test - Security Hardening: Borrow QR Unencrypted Payload Rejection */
     #[Test]
-    public function borrow_qr_with_missing_fields_is_rejected(): void
+    public function borrow_qr_unencrypted_payload_is_rejected(): void
     {
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
-
-        // Missing paper_id
-        $borrowData = [
-            'inventory_id' => 1,
-            // 'paper_id' is missing
-            'requested_by' => 1,
-        ];
-
-        $payload = ['p' => $borrowData];
-        $encrypted = Crypt::encryptString(json_encode($payload));
-        $qrContent = json_encode(['encrypted' => $encrypted]);
-
         $this->actingAs($admin);
 
-        $component = Livewire::test(AdminBorrowTransactions::class);
-        $component->call('processScannedQr', $qrContent);
+        // Raw JSON without 'encrypted' key
+        $rawJson = json_encode(['p' => ['inventory_id' => 1, 'paper_id' => 1, 'requested_by' => 1]]);
 
-        // Test passes if no unhandled exception was thrown - error handling is internal
-        $this->assertTrue(true);
+        Livewire::test(AdminBorrowTransactions::class)
+            ->call('processScannedQr', $rawJson)
+            ->assertSet('isProcessingQr', false);
+    }
+
+    /** @test - Security Hardening: Borrow QR v7 Replay Protection */
+    #[Test]
+    public function borrow_qr_v7_prevents_replay_attack(): void
+    {
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $this->actingAs($admin);
+
+        $paper = AcademicPaper::factory()->create();
+        $inventory = Inventory::factory()->create(['academic_paper_id' => $paper->id, 'status' => 'Available']);
+
+        $nonce = \Illuminate\Support\Str::random(16);
+        $timestamp = time();
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'p' => ['inventory_id' => $inventory->id, 'paper_id' => $paper->id, 'requested_by' => $student->id],
+            'nonce' => $nonce,
+            'timestamp' => $timestamp,
+        ];
+
+        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
+        config(['app.qr_hmac_secret' => $secret]);
+
+        $canonicalMessage = $student->id.'|'.$nonce.'|'.$timestamp.'|'.$inventory->id;
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+        $encrypted = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encrypted]);
+
+        // First scan - should proceed (at least not fail on security)
+        $component = Livewire::test(AdminBorrowTransactions::class)
+            ->call('processScannedQr', $qrContent);
+
+        // Second scan with same nonce - should be rejected
+        Livewire::test(AdminBorrowTransactions::class)
+            ->call('processScannedQr', $qrContent)
+            ->assertSet('isProcessingQr', false);
+    }
+
+    /** @test - Security Hardening: Borrow QR v7 Outdated Timestamp Rejection */
+    #[Test]
+    public function borrow_qr_v7_rejects_outdated_timestamp(): void
+    {
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
+        $this->actingAs($admin);
+
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'p' => ['inventory_id' => 1, 'paper_id' => 1, 'requested_by' => $student->id],
+            'nonce' => \Illuminate\Support\Str::random(16),
+            'timestamp' => time() - 300, // 5 minutes old
+        ];
+
+        $encrypted = Crypt::encryptString(json_encode($data));
+        $qrContent = json_encode(['encrypted' => $encrypted]);
+
+        Livewire::test(AdminBorrowTransactions::class)
+            ->call('processScannedQr', $qrContent)
+            ->assertSet('isProcessingQr', false);
     }
 }

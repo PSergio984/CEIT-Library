@@ -316,7 +316,7 @@ class DatabaseSeeder extends Seeder
         // 1. Create 1 ACTIVE batch (on duty today) - exactly 5 students
         $this->command->info('Creating active batch for today...');
         // Exclude special users from librarian batch selection
-        $excludedIds = collect([$sampleAdmin->id]);
+        $excludedIds = collect([$sampleAdmin->id, $specificStudent->id]);
         $filteredStudents = $students->filter(fn ($s) => ! $excludedIds->contains($s->id));
         $activeBatchStudents = $filteredStudents->random(5);
         $allLibrarianStudents = $allLibrarianStudents->merge($activeBatchStudents);

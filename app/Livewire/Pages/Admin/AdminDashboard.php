@@ -18,6 +18,11 @@ use Livewire\Attributes\Title;
 #[Lazy]
 class AdminDashboard extends AdminComponent
 {
+    public function mount()
+    {
+        $this->authorizeAccess();
+    }
+
     #[Computed]
     public function stats()
     {

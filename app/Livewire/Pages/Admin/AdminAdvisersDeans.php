@@ -18,6 +18,11 @@ class AdminAdvisersDeans extends AdminComponent
 {
     use Toast, WithPagination;
 
+    public function mount()
+    {
+        $this->authorizeAccess();
+    }
+
     // Active tab: 'research', 'technical', 'deans', or 'authors'
     public string $activeTab = 'research';
 
@@ -191,6 +196,8 @@ class AdminAdvisersDeans extends AdminComponent
 
     public function save()
     {
+        $this->authorize('manage-advisers-deans');
+
         // Trim the name before validation to prevent whitespace-only changes from being considered dirty
         $this->name = trim($this->name);
 
@@ -240,6 +247,8 @@ class AdminAdvisersDeans extends AdminComponent
 
     public function delete(): void
     {
+        $this->authorize('manage-advisers-deans');
+
         if (! $this->deleteId) {
             $this->closeModals();
 

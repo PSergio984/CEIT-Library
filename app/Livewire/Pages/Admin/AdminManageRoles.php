@@ -33,6 +33,8 @@ class AdminManageRoles extends AdminComponent
 
     public function mount()
     {
+        $this->authorizeAccess();
+
         // Only super admins can manage roles
         $this->authorize('manage-user-roles');
     }
@@ -126,6 +128,7 @@ class AdminManageRoles extends AdminComponent
             }
         }
 
+        $oldRoleId = $user->role_id;
         $user->update(['role_id' => $this->selectedRoleId]);
 
         // Create notification for role change
@@ -148,7 +151,7 @@ class AdminManageRoles extends AdminComponent
             'title' => 'Your Role Has Been Updated',
             'message' => $roleChangeMessage,
             'data' => [
-                'old_role_id' => $user->role_id,
+                'old_role_id' => $oldRoleId,
                 'old_role_name' => $oldRole,
                 'new_role_id' => $this->selectedRoleId,
                 'new_role_name' => $newRole->display_name,
@@ -167,7 +170,7 @@ class AdminManageRoles extends AdminComponent
             'data' => [
                 'target_user_id' => $user->id,
                 'target_user_name' => $user->first_name.' '.$user->last_name,
-                'old_role_id' => $user->role_id,
+                'old_role_id' => $oldRoleId,
                 'old_role_name' => $oldRole,
                 'new_role_id' => $this->selectedRoleId,
                 'new_role_name' => $newRole->display_name,

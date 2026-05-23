@@ -10,7 +10,7 @@ trait CreatesQrCanonicalMessage
      * Create a canonical message for HMAC that covers all sensitive fields
      * Uses a deterministic approach for different payload versions
      */
-    private function createCanonicalMessage(array $data): string
+    protected function createCanonicalMessage(array $data): string
     {
         // Define the fixed order for canonical fields to ensure deterministic hashing
         // We only use essential fields for the signature
@@ -33,7 +33,10 @@ trait CreatesQrCanonicalMessage
         }
 
         // Additional data fields (used for paper scans, etc.)
-        if (isset($data['inventory_id'])) {
+        // Support nested payload fields in v7
+        if (isset($data['p']['inventory_id'])) {
+            $parts[] = $data['p']['inventory_id'];
+        } elseif (isset($data['inventory_id'])) {
             $parts[] = $data['inventory_id'];
         }
 
@@ -75,15 +78,33 @@ trait CreatesQrCanonicalMessage
     }
 
     /**
-     * Create encrypted canonical QR message
+     * Create encrypted canonical QR message for books (v7)
+     * Includes nonce, timestamp and HMAC signature for replay protection
      */
     protected function createEncryptedQrMessage(array $borrowData): string
     {
-        // Wrap borrow data in 'p' key structure
-        $payload = ['p' => $borrowData];
+        $user = \Illuminate\Support\Facades\Auth::user();
+        $secret = config('app.qr_hmac_secret');
+
+        if (! is_string($secret) || strlen($secret) < 16) {
+            throw new \RuntimeException('QR HMAC secret is missing or insecure.');
+        }
+
+        // v7: Add nonce and timestamp for replay protection
+        $data = [
+            'v' => 7,
+            'user_id' => $user?->id,
+            'p' => $borrowData, // Payload (inventory_id, paper_id, etc.)
+            'nonce' => \Illuminate\Support\Str::random(16),
+            'timestamp' => time(),
+        ];
+
+        // Add hash for tamper protection covering entire payload
+        $canonicalMessage = $this->createCanonicalMessage($data);
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
         // Encrypt the entire payload
-        $encrypted = $this->encryptQrData($payload);
+        $encrypted = $this->encryptQrData($data);
 
         // Return as JSON with encrypted data
         return json_encode(['encrypted' => $encrypted]);

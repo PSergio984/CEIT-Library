@@ -85,6 +85,8 @@ class ViolationTransactionsTab extends AdminComponent
 
     public function undoConfirmed()
     {
+        $this->authorize('manage-violation-logs');
+
         try {
             $transaction = ViolationTransaction::findOrFail($this->editingId);
             $transaction->delete();
