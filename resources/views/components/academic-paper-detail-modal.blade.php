@@ -174,7 +174,7 @@
                                                 <x-mary-button 
                                                     wire:click="confirmCopyDelete({{ $copy->id }})"
                                                     :disabled="$isOnlyCopy"
-                                                    class="btn-sm btn-error gap-2 shadow-sm hover:shadow-md transition-shadow tooltip tooltip-left"
+                                                    class="btn-sm {{ $isOnlyCopy ? 'btn-ghost' : 'btn-error' }} gap-2 shadow-sm hover:shadow-md transition-shadow tooltip tooltip-left"
                                                     data-tip="{{ $isOnlyCopy ? 'Cannot delete the only copy. Delete the entire paper instead.' : 'Delete this copy' }}"
                                                     icon="o-trash"
                                                     label="{{ $isOnlyCopy ? 'Only Copy' : 'Delete Copy' }}"
