@@ -19,8 +19,23 @@ class CheckCreditScore
     {
         // Share credit score status with all views
         if (Auth::check()) {
-            $hasZeroCreditScore = Auth::user()->credit_score < 1;
+            $user = Auth::user();
+            $hasZeroCreditScore = $user->credit_score < 1;
             View::share('hasZeroCreditScore', $hasZeroCreditScore);
+
+            // Block access to specific routes if credit score is 0
+            // Admins are exempt from credit score checks
+            if ($hasZeroCreditScore && ! $user->hasAdminAccess()) {
+                $restrictedRoutes = [
+                    'academic-paper.index',
+                    'academic-paper.show',
+                    'test-qr',
+                ];
+
+                if ($request->routeIs($restrictedRoutes)) {
+                    abort(403, 'Your credit score is too low to access this resource. Please settle your violations.');
+                }
+            }
         }
 
         return $next($request);

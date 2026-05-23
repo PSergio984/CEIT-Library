@@ -24,7 +24,7 @@ php artisan storage:link --force
 echo "Running migrations..."
 php artisan migrate --force
 
-if [ "${RUN_DB_SEED:-false}" = "true" ]; then
+if [[ "${RUN_DB_SEED:-false}" = "true" ]]; then
   echo "Running seeders..."
   php artisan db:seed --force
 else

@@ -30,15 +30,27 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('qr-scanning', function (Request $request) {
-            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+            $user = $request->user();
+            // Higher limits for privileged roles to handle bulk scans
+            $limit = ($user && ($user->isLibrarian() || $user->hasAdminAccess())) ? 300 : 30;
+
+            return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
         });
 
         RateLimiter::for('search', function (Request $request) {
-            return Limit::perMinute(60)->by($request->user()?->id ?: $request->ip());
+            $user = $request->user();
+            // Higher limits for staff performing inventory/audit
+            $limit = ($user && ($user->isLibrarian() || $user->hasAdminAccess())) ? 500 : 60;
+
+            return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
         });
 
         RateLimiter::for('transactions', function (Request $request) {
-            return Limit::perMinute(20)->by($request->user()?->id ?: $request->ip());
+            $user = $request->user();
+            // Higher limits for staff processing multiple returns/borrows
+            $limit = ($user && ($user->isLibrarian() || $user->hasAdminAccess())) ? 200 : 20;
+
+            return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
         });
 
         // Admin access gate (for backward compatibility and general admin check)
