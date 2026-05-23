@@ -158,4 +158,16 @@ class AppServiceProvider extends ServiceProvider
             $this->app['request']->server->set('HTTPS', true);
         }
     }
+
+    /**
+     * Helper to determine rate limit based on user role.
+     */
+    protected function rateLimitForUser(Request $request, int $staffLimit, int $studentLimit)
+    {
+        $user = $request->user();
+        $isStaff = $user ? ($user->isLibrarian() || $user->hasAdminAccess()) : false;
+        $limit = $isStaff ? $staffLimit : $studentLimit;
+
+        return Limit::perMinute($limit)->by($user?->id ?: $request->ip());
+    }
 }
