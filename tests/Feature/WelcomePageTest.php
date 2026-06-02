@@ -34,11 +34,16 @@ class WelcomePageTest extends TestCase
         $response = $this->get('/');
 
         // Hero section text requested by plan
+        $response->assertSee('PLV CEIT Library');
         $response->assertSee('Liquid Glass'); 
         $response->assertSee('Premium');
         
         // Navigation links (checking for expected UI elements)
         $response->assertSee('Log in');
         $response->assertSee('Register');
+
+        // Check for Liquid Glass theme indicators
+        $response->assertSee('backdrop-blur-md');
+        $response->assertSee('bg-slate-900/60');
     }
 }
