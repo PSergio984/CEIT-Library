@@ -3,7 +3,7 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Auth\Notifications\ResetPassword;
+use App\Notifications\CustomResetPassword;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Password;
@@ -35,7 +35,7 @@ class PasswordResetTest extends TestCase
 
         $component->assertHasNoErrors();
 
-        Notification::assertSentTo($user, ResetPassword::class);
+        Notification::assertSentTo($user, CustomResetPassword::class);
     }
 
     public function test_reset_password_screen_can_be_rendered(): void
@@ -53,11 +53,11 @@ class PasswordResetTest extends TestCase
         $component->assertHasNoErrors();
 
         $resetToken = null;
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use (&$resetToken) {
+        Notification::assertSentTo($user, CustomResetPassword::class, function ($notification) use (&$resetToken) {
             $resetToken = $notification->token;
-
             return true;
         });
+
 
         $this->assertNotNull($resetToken);
 
@@ -84,18 +84,18 @@ class PasswordResetTest extends TestCase
         $component->assertHasNoErrors();
 
         $resetToken = null;
-        Notification::assertSentTo($user, ResetPassword::class, function ($notification) use (&$resetToken) {
+        Notification::assertSentTo($user, CustomResetPassword::class, function ($notification) use (&$resetToken) {
             $resetToken = $notification->token;
-
             return true;
         });
+
 
         $this->assertNotNull($resetToken);
 
         $component = Volt::test('pages.auth.reset-password', ['token' => $resetToken])
             ->set('email', $user->email)
-            ->set('password', 'new-password')
-            ->set('password_confirmation', 'new-password');
+            ->set('password', 'Password123!')
+            ->set('password_confirmation', 'Password123!');
 
         $component->call('resetPassword');
 
@@ -104,7 +104,7 @@ class PasswordResetTest extends TestCase
             ->assertHasNoErrors();
 
         $user->refresh();
-        $this->assertTrue(Hash::check('new-password', $user->password));
+        $this->assertTrue(Hash::check('Password123!', $user->password));
     }
 
     public function test_password_reset_requires_valid_email(): void
