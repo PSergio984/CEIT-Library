@@ -2,8 +2,9 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
+use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
+use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Models\AcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
@@ -12,11 +13,19 @@ use App\Models\Role;
 use App\Models\TechnicalAdviser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FiltersTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Livewire::withoutLazyLoading();
+    }
 
     protected function getRoleId(string $roleName): int
     {
@@ -51,20 +60,20 @@ class FiltersTest extends TestCase
         $this->actingAs($admin);
 
         // Check Academic Papers page
-        $response = $this->get(route('admin.academic-paper.index'));
-        $response->assertStatus(200);
-        $response->assertSeeHtml('Department');
-        $response->assertSeeHtml('Search');
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->assertStatus(200)
+            ->assertSeeHtml('Department')
+            ->assertSeeHtml('Search');
 
         // Check Borrow Logs page
-        $response = $this->get(route('admin.logs'));
-        $response->assertStatus(200);
-        $response->assertSeeHtml('Search');
+        Livewire::test(AdminBorrowTransactions::class)
+            ->assertStatus(200)
+            ->assertSeeHtml('Search');
 
         // Check Attendance Logs page
-        $response = $this->get(route('admin.attendance'));
-        $response->assertStatus(200);
-        $response->assertSeeHtml('Search');
+        Livewire::test(AdminAttendanceLogIndex::class)
+            ->assertStatus(200)
+            ->assertSeeHtml('Search');
     }
 
     /** @test - TC063: Academic Paper - Search and Filter */
@@ -90,25 +99,25 @@ class FiltersTest extends TestCase
         ]);
 
         // Test search
-        $response = $this->get(route('admin.academic-paper.index', ['search' => 'Machine Learning']));
-        $response->assertStatus(200);
-        $response->assertSee('Machine Learning Research', false);
+        Livewire::test(AdminAcademicPaperIndex::class, ['search' => 'Machine Learning'])
+            ->assertStatus(200)
+            ->assertSee('Machine Learning Research');
 
         // Test department filter
-        $response = $this->get(route('admin.academic-paper.index', ['department' => 'Computer Science']));
-        $response->assertStatus(200);
-        $response->assertSee('Machine Learning Research', false);
-        $response->assertDontSee('Data Structures', false);
+        Livewire::test(AdminAcademicPaperIndex::class, ['departmentFilter' => 'Computer Science'])
+            ->assertStatus(200)
+            ->assertSee('Machine Learning Research')
+            ->assertDontSee('Data Structures');
 
         // Test type filter
-        $response = $this->get(route('admin.academic-paper.index', ['type' => 'Thesis']));
-        $response->assertStatus(200);
-        $response->assertSee('Machine Learning Research', false);
+        Livewire::test(AdminAcademicPaperIndex::class, ['paperTypeFilter' => 'Thesis'])
+            ->assertStatus(200)
+            ->assertSee('Machine Learning Research');
 
         // Test year filter
-        $response = $this->get(route('admin.academic-paper.index', ['year' => 2024]));
-        $response->assertStatus(200);
-        $response->assertSee('Machine Learning Research', false);
+        Livewire::test(AdminAcademicPaperIndex::class, ['yearFilter' => '2024'])
+            ->assertStatus(200)
+            ->assertSee('Machine Learning Research');
     }
 
     /** @test - TC077: Department Filter - All Departments */
@@ -119,13 +128,11 @@ class FiltersTest extends TestCase
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
         $this->actingAs($admin);
 
-        $response = $this->get(route('admin.academic-paper.index'));
-        $response->assertStatus(200);
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->assertStatus(200)
+            ->assertSeeHtml('Department');
 
         // Verify department filter dropdown exists
-        $response->assertSeeHtml('Department');
-
-        // Departments should match config file (this is primarily a frontend check)
     }
 
     /** @test - TC078: Search - Real-time Results */
@@ -140,14 +147,14 @@ class FiltersTest extends TestCase
         AcademicPaper::factory()->create(['title' => 'Data Mining']);
 
         // Test search with partial match
-        $response = $this->get(route('admin.academic-paper.index', ['search' => 'Mac']));
-        $response->assertStatus(200);
-        $response->assertSee('Machine Learning', false);
+        Livewire::test(AdminAcademicPaperIndex::class, ['search' => 'Mac'])
+            ->assertStatus(200)
+            ->assertSee('Machine Learning');
 
         // Test search with full term
-        $response = $this->get(route('admin.academic-paper.index', ['search' => 'Machine Learning']));
-        $response->assertStatus(200);
-        $response->assertSee('Machine Learning', false);
-        $response->assertDontSee('Data Mining', false);
+        Livewire::test(AdminAcademicPaperIndex::class, ['search' => 'Machine Learning'])
+            ->assertStatus(200)
+            ->assertSee('Machine Learning')
+            ->assertDontSee('Data Mining');
     }
 }

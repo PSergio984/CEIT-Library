@@ -2,12 +2,11 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Attendance;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AttendanceLogsTest extends TestCase
@@ -36,7 +35,7 @@ class AttendanceLogsTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.attendance-logs'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC018: Attendance Logs - Open Scanner (Authorized) */
