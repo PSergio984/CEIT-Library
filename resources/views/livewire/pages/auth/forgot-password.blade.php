@@ -8,10 +8,14 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Forgot Password - ' . config('branding.name'))]
 class extends Component
 {
     public string $email = '';
+
+    public function rendering(\Illuminate\View\View $view): void
+    {
+        $view->title('Forgot Password - ' . config('branding.name'));
+    }
 
     /**
      * Send a password reset link to the provided email address.

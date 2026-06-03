@@ -11,11 +11,15 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Reset Password - ' . config('branding.name'))]
 class extends Component
 {
     #[Locked]
     public string $token = '';
+
+    public function rendering(\Illuminate\View\View $view): void
+    {
+        $view->title('Reset Password - ' . config('branding.name'));
+    }
 
     public string $email = '';
 

@@ -12,10 +12,14 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Register - ' . config('branding.name'))]
 class extends Component
 {
     public string $first_name = '';
+
+    public function rendering(\Illuminate\View\View $view): void
+    {
+        $view->title('Register - ' . config('branding.name'));
+    }
 
     public string $last_name = '';
 

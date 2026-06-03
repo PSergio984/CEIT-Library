@@ -7,10 +7,14 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Login - ' . config('branding.name'))]
 class extends Component
 {
     public LoginForm $form;
+
+    public function rendering(\Illuminate\View\View $view): void
+    {
+        $view->title('Login - ' . config('branding.name'));
+    }
 
     /**
      * Handle an incoming authentication request.
