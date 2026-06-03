@@ -465,12 +465,6 @@
                         <li>
                             <a href="#features" class="text-slate-600 dark:text-slate-400 hover:text-[#0046ad] dark:hover:text-white transition-colors duration-200">About Us</a>
                         </li>
-                        <li>
-                            <a href="#stats" class="text-slate-600 dark:text-slate-400 hover:text-[#0046ad] dark:hover:text-white transition-colors duration-200">Ph-Ejournal</a>
-                        </li>
-                        <li>
-                            <a href="#hero" class="text-slate-600 dark:text-slate-400 hover:text-[#0046ad] dark:hover:text-white transition-colors duration-200">Download PLV-QLib</a>
-                        </li>
                     </ul>
                 </div>
 

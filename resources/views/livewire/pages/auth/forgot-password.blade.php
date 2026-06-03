@@ -64,7 +64,7 @@ class extends Component
 }; ?>
 
     <!-- Main Content Card -->
-    <div class="relative w-9/12 max-w-2xl mx-auto" x-data="{
+    <div class="relative w-full max-w-2xl mx-auto" x-data="{
         email: '',
         touched: false,
         error: '',
@@ -86,7 +86,7 @@ class extends Component
     }">
         <!-- Card Header with curve and logo -->
         <div class="relative z-20">
-            <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
+            <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
                 <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
                     <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
                         class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
@@ -94,34 +94,34 @@ class extends Component
             </div>
         </div>
         <!-- Card Body -->
-        <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
-            <div class="mb-4 text-base sm:text-lg md:text-xl text-gray-700">
+        <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
+            <div class="mb-6 text-base text-slate-700 dark:text-slate-300 text-center">
                 {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
             </div>
 
 
             <x-mary-form wire:submit="sendPasswordResetLink">
                 <!-- Email Address -->
-                <div>
+                <div class="mb-4">
                     <x-text-input wire:model="email" id="email" name="email" type="email"
                                 placeholder="Email"
-                                class="block mt-4 w-full px-3 py-2 text-base text-gray-900 bg-white border border-gray-400 rounded-lg focus:border-[#273F4F] focus:ring-[#273F4F] focus:ring-2 focus:outline-none placeholder-gray-500"
+                                class="block w-full px-4 py-3 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-400 dark:border-slate-700 rounded-lg focus:border-[#273F4F] dark:focus:border-sky-400 focus:ring-[#273F4F] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-colors duration-300"
                                 required autofocus
                                 x-on:input="email = $event.target.value"
                                 x-on:blur="validateEmail()"/>
                     <x-input-error :messages="$errors->get('email')" class="mt-2"/>
                     <template x-if="touched && error && !$wire.__instance.snapshot.memo.errors?.email">
-                        <p class="text-red-500 text-xs mt-2" x-text="error"></p>
+                        <p class="text-red-600 dark:text-red-400 text-xs mt-2" x-text="error"></p>
                     </template>
                 </div>
 
                 <!-- Session Status -->
-                <x-auth-session-status class="mt-4 text-green-600 text-center text-base sm:text-lg"
+                <x-auth-session-status class="mt-4 text-green-600 dark:text-green-400 text-center text-base font-medium"
                                     :status="session('status')"/>
 
                 <div class="flex flex-col items-center mt-6">
                     <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="sendPasswordResetLink"
-                                    class="w-full"
+                                    class="w-full dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white"
                                     x-bind:disabled="!isFormValid"
                                     x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
                         {{ __('Email Password Reset Link') }}
