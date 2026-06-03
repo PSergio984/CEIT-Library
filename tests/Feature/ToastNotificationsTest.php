@@ -11,8 +11,9 @@ use App\Models\ResearchAdviser;
 use App\Models\Role;
 use App\Models\TechnicalAdviser;
 use App\Models\User;
+use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Livewire\Volt\Volt;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 class ToastNotificationsTest extends TestCase
@@ -54,7 +55,7 @@ class ToastNotificationsTest extends TestCase
         $academicPaperData = AcademicPaper::factory()->make()->toArray();
         $authorIds = Author::inRandomOrder()->limit(2)->pluck('id')->toArray();
 
-        $component = Volt::test('pages.admin.academic-papers.academic-paper-form')
+        $component = Livewire::test(CreateAcademicPaper::class)
             ->set('form.title', $academicPaperData['title'])
             ->set('form.publication_year', $academicPaperData['publication_year'])
             ->set('form.paper_type', $academicPaperData['paper_type'])
@@ -65,7 +66,7 @@ class ToastNotificationsTest extends TestCase
             ->set('form.author_ids', $authorIds)
             ->set('form.number_of_copies', 1);
 
-        $component->call('store');
+        $component->call('save');
         $component->assertHasNoErrors();
 
         // Success toast should be dispatched (this is primarily a frontend check)
@@ -80,11 +81,11 @@ class ToastNotificationsTest extends TestCase
         $this->actingAs($admin);
 
         // Attempt invalid operation
-        $component = Volt::test('pages.admin.academic-papers.academic-paper-form')
+        $component = Livewire::test(CreateAcademicPaper::class)
             ->set('form.title', '')
             ->set('form.publication_year', '');
 
-        $component->call('store');
+        $component->call('save');
         $component->assertHasErrors();
 
         // Error toast should be dispatched (this is primarily a frontend check)

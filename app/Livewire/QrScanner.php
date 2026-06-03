@@ -46,6 +46,7 @@ class QrScanner extends Component
             $data = trim($data);
 
             if (empty($data)) {
+                $this->hasError = true;
                 $this->error('Invalid QR code: Empty data', 'Scan Error');
                 $this->stopScanning();
 
@@ -127,6 +128,7 @@ class QrScanner extends Component
             $data = trim($data);
 
             if (empty($data)) {
+                $this->hasError = true;
                 $this->error('Invalid QR code: Empty data', 'Scan Error');
 
                 // Don't stop scanning immediately - let the error toast display

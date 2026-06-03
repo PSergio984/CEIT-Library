@@ -20,21 +20,21 @@ class ViolationNotificationTest extends TestCase
     {
         parent::setUp();
 
-        // Create roles
-        Role::create(['name' => 'Student', 'display_name' => 'Student', 'description' => 'Student role']);
-        Role::create(['name' => 'Admin', 'display_name' => 'Admin', 'description' => 'Admin role']);
+        // Create roles using firstOrCreate to avoid unique constraint violations
+        Role::firstOrCreate(['name' => 'student'], ['display_name' => 'Student', 'description' => 'Student role']);
+        Role::firstOrCreate(['name' => 'admin'], ['display_name' => 'Admin', 'description' => 'Admin role']);
     }
 
     public function test_notification_is_created_when_admin_records_violation(): void
     {
         // Create an admin user
-        $adminRole = Role::where('name', 'Admin')->first();
+        $adminRole = Role::where('name', 'admin')->first();
         $admin = User::factory()->create([
             'role_id' => $adminRole->id,
         ]);
 
         // Create a student user
-        $studentRole = Role::where('name', 'Student')->first();
+        $studentRole = Role::where('name', 'student')->first();
         $student = User::factory()->create([
             'role_id' => $studentRole->id,
         ]);
@@ -81,19 +81,22 @@ class ViolationNotificationTest extends TestCase
         $this->assertEquals($violation->id, $notification->data['violation_id']);
         $this->assertEquals($violation->name, $notification->data['violation_name']);
         $this->assertEquals($violation->penalty_score, $notification->data['penalty_score']);
+        $this->assertEquals($student->fresh()->credit_score, $notification->data['credit_score']);
+        $this->assertEquals('Test remark', $notification->data['remarks']);
         $this->assertEquals($admin->id, $notification->data['recorded_by']);
+        $this->assertArrayHasKey('recorded_at', $notification->data);
     }
 
     public function test_notification_is_created_when_admin_declares_forgot_timeout(): void
     {
         // Create an admin user
-        $adminRole = Role::where('name', 'Admin')->first();
+        $adminRole = Role::where('name', 'admin')->first();
         $admin = User::factory()->create([
             'role_id' => $adminRole->id,
         ]);
 
         // Create a student user
-        $studentRole = Role::where('name', 'Student')->first();
+        $studentRole = Role::where('name', 'student')->first();
         $student = User::factory()->create([
             'role_id' => $studentRole->id,
         ]);
@@ -128,5 +131,10 @@ class ViolationNotificationTest extends TestCase
         // Assert notification data
         $this->assertEquals('Forgot to time out', $notification->data['violation_name']);
         $this->assertEquals($admin->id, $notification->data['recorded_by']);
+        $this->assertEquals($student->fresh()->credit_score, $notification->data['credit_score']);
+        $this->assertEquals('Declared by admin: forgot to time out', $notification->data['remarks']);
+        $this->assertArrayHasKey('violation_id', $notification->data);
+        $this->assertArrayHasKey('penalty_score', $notification->data);
+        $this->assertArrayHasKey('recorded_at', $notification->data);
     }
 }

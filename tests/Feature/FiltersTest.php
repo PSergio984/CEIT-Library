@@ -21,12 +21,6 @@ class FiltersTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected function setUp(): void
-    {
-        parent::setUp();
-        Livewire::withoutLazyLoading();
-    }
-
     protected function getRoleId(string $roleName): int
     {
         return Role::where('name', $roleName)->value('id') ?? match ($roleName) {

@@ -101,6 +101,8 @@ class RoleBasedAccessControlTest extends TestCase
             'user_id' => $user->id,
             'status' => 'active',
             'expires_at' => now()->addDays(30),
+            'start_date' => null,
+            'end_date' => null,
         ]);
 
         $response = $this->actingAs($user)
@@ -230,6 +232,8 @@ class RoleBasedAccessControlTest extends TestCase
             'user_id' => $user->id,
             'status' => 'active',
             'expires_at' => now()->addDays(30),
+            'start_date' => null,
+            'end_date' => null,
         ]);
 
         $this->assertTrue(Gate::forUser($user)->allows('librarian-or-admin-access'));

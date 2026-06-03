@@ -2,7 +2,7 @@
 
 namespace Tests\Feature\Livewire;
 
-use App\Livewire\CreditScoreHistory;
+use App\Livewire\Pages\Student\CreditScoreHistory;
 use Livewire\Livewire;
 use Tests\TestCase;
 

@@ -12,7 +12,7 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Register - CEIT Library')]
+#[Title('Register - ' . config('branding.name'))]
 class extends Component
 {
     public string $first_name = '';

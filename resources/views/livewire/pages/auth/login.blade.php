@@ -7,7 +7,7 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Login - CEIT Library')]
+#[Title('Login - ' . config('branding.name'))]
 class extends Component
 {
     public LoginForm $form;

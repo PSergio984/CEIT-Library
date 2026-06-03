@@ -77,8 +77,8 @@ class ExportTest extends TestCase
     #[Test]
     public function data_can_be_exported_in_csv_format()
     {
-        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
-        $this->actingAs($admin);
+        $superAdmin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
+        $this->actingAs($superAdmin);
 
         // Create some users
         User::factory()->count(10)->create();

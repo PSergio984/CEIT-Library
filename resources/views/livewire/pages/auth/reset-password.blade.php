@@ -11,7 +11,7 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Reset Password - CEIT Library')]
+#[Title('Reset Password - ' . config('branding.name'))]
 class extends Component
 {
     #[Locked]

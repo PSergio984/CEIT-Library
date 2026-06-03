@@ -91,9 +91,9 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function academicPapers()
     {
-        // Optimize: Only eager load what's displayed in list view
-        // Authors and full copy details are loaded lazily in detail modal
+        // Optimize: Eager load primary relations displayed in list view
         $query = AcademicPaper::query()
+            ->with(['authors:id,name', 'copies:id,academic_paper_id,status'])
             ->when($this->dept, function ($q) {
                 $departmentName = $this->resolveDepartmentName($this->dept);
                 if ($departmentName) {

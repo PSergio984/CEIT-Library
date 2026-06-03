@@ -8,7 +8,7 @@ use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Forgot Password - CEIT Library')]
+#[Title('Forgot Password - ' . config('branding.name'))]
 class extends Component
 {
     public string $email = '';
@@ -42,18 +42,18 @@ class extends Component
             return;
         }
 
+        RateLimiter::hit($key, $decaySeconds);
+
         $status = Password::sendResetLink(
             $this->only('email')
         );
 
         if ($status !== Password::RESET_LINK_SENT) {
             $this->addError('email', __($status));
-            RateLimiter::hit($key, $decaySeconds);
 
             return;
         }
 
-        RateLimiter::clear($key);
         $this->reset('email');
         session()->flash('status', __($status));
     }

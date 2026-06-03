@@ -376,13 +376,13 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     private function buildAcademicPapersQuery()
     {
-        // Optimize: Only eager load what's displayed in table view
-        // Authors, advisers, and full copy details are loaded lazily in detail modal
+        // Optimize: Eager load primary relations displayed in table and search
         return AcademicPaper::query()
             ->with([
-                'copies' => function ($query) {
-                    $query->select('id', 'academic_paper_id', 'status');
-                },
+                'authors:id,name',
+                'researchAdviser:id,name',
+                'technicalAdviser:id,name',
+                'copies:id,academic_paper_id,status',
             ])
             // filter by department if provided via route slug
             ->when($this->dept, function ($q) {

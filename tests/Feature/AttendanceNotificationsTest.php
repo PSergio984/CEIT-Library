@@ -62,26 +62,32 @@ class AttendanceNotificationsTest extends TestCase
      */
     private function createCanonicalMessage(array $data): string
     {
-        $fields = [
-            'user_id' => $data['user_id'] ?? '',
-            'nonce' => $data['nonce'] ?? '',
-            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
-        ];
+        $parts = [];
+        $parts[] = $data['user_id'] ?? ($data['id'] ?? '');
+        $parts[] = $data['nonce'] ?? '';
 
-        return implode('|', [
-            $fields['user_id'],
-            $fields['nonce'],
-            $fields['user'],
-        ]);
+        if (isset($data['timestamp'])) {
+            $parts[] = $data['timestamp'];
+        }
+
+        if (isset($data['user'])) {
+            $userValue = is_array($data['user'])
+                ? json_encode($data['user'], JSON_UNESCAPED_SLASHES)
+                : (string) $data['user'];
+            $parts[] = $userValue;
+        }
+
+        return implode('|', $parts);
     }
 
     /**
-     * Generate valid QR data for a user (same format as AttendanceQr component)
+     * Generate valid QR data for a user (v7 format)
      */
     private function generateValidQrData(User $user): string
     {
         $secret = config('app.qr_hmac_secret');
         $nonce = Str::random(32);
+        $timestamp = time();
 
         $userPayload = [
             'id' => $user->id,
@@ -91,13 +97,15 @@ class AttendanceNotificationsTest extends TestCase
         $data = [
             'user_id' => $user->id,
             'nonce' => $nonce,
+            'timestamp' => $timestamp,
             'user' => $userPayload,
         ];
 
         $canonicalMessage = $this->createCanonicalMessage($data);
         $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
-        return Crypt::encryptString(json_encode($data));
+        $encrypted = Crypt::encryptString(json_encode($data));
+        return json_encode(['encrypted' => $encrypted]);
     }
 
     /** @test */
@@ -133,8 +141,13 @@ class AttendanceNotificationsTest extends TestCase
         $this->assertNotNull($notification);
         $this->assertEquals('Library Check-in Successful', $notification->title);
         $this->assertStringContainsString('Welcome to the library', $notification->message);
+        
+        // Assert full data structure
+        $this->assertIsArray($notification->data);
         $this->assertArrayHasKey('attendance_id', $notification->data);
         $this->assertArrayHasKey('time_in', $notification->data);
+        $this->assertEquals(Attendance::where('user_id', $this->student->id)->first()->id, $notification->data['attendance_id']);
+        $this->assertMatchesRegularExpression('/\w{3} \d{2}, \d{4} \d{2}:\d{2} [AP]M/', $notification->data['time_in']);
     }
 
     /** @test */
@@ -178,11 +191,20 @@ class AttendanceNotificationsTest extends TestCase
         $this->assertNotNull($notification);
         $this->assertEquals('Library Check-out Successful', $notification->title);
         $this->assertStringContainsString('checked out of the library', $notification->message);
+        
+        // Assert full data structure
+        $this->assertIsArray($notification->data);
         $this->assertArrayHasKey('attendance_id', $notification->data);
         $this->assertArrayHasKey('time_in', $notification->data);
         $this->assertArrayHasKey('time_out', $notification->data);
         $this->assertArrayHasKey('duration_minutes', $notification->data);
         $this->assertArrayHasKey('duration_text', $notification->data);
+        
+        $this->assertEquals($attendance->id, $notification->data['attendance_id']);
+        $this->assertMatchesRegularExpression('/\w{3} \d{2}, \d{4} \d{2}:\d{2} [AP]M/', $notification->data['time_in']);
+        $this->assertMatchesRegularExpression('/\w{3} \d{2}, \d{4} \d{2}:\d{2} [AP]M/', $notification->data['time_out']);
+        $this->assertGreaterThan(0, $notification->data['duration_minutes']);
+        $this->assertNotEmpty($notification->data['duration_text']);
     }
 
     /** @test */
@@ -277,26 +299,26 @@ class AttendanceNotificationsTest extends TestCase
 
     /** @test */
     #[Test]
-    public function qr_code_v5_format_is_validated_correctly(): void
+    public function qr_code_v7_format_is_validated_correctly(): void
     {
         $this->actingAs($this->librarian);
 
-        // Generate QR with v5 format (no timestamp)
+        // Generate QR with v7 format
         $qrData = $this->generateValidQrData($this->student);
 
         // Decrypt and verify format
-        $decrypted = json_decode(Crypt::decryptString($qrData), true);
+        $wrapper = json_decode($qrData, true);
+        $this->assertArrayHasKey('encrypted', $wrapper);
+        
+        $decrypted = json_decode(Crypt::decryptString($wrapper['encrypted']), true);
 
-        // V5 format should have: user_id, nonce, user, hash
+        // V7 format should have: user_id, nonce, timestamp, hash
         $this->assertArrayHasKey('user_id', $decrypted);
         $this->assertArrayHasKey('nonce', $decrypted);
-        $this->assertArrayHasKey('user', $decrypted);
+        $this->assertArrayHasKey('timestamp', $decrypted);
         $this->assertArrayHasKey('hash', $decrypted);
 
-        // V5 format should NOT have timestamp
-        $this->assertArrayNotHasKey('timestamp', $decrypted);
-
-        // Scan should work without timestamp
+        // Scan should work
         Livewire::test(QrScanner::class)->call('handleFileUploadScan', $qrData);
 
         // Verify success

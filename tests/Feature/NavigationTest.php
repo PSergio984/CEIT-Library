@@ -13,6 +13,16 @@ class NavigationTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Ensure roles are seeded
+        if (\App\Models\Role::count() === 0) {
+            $this->seed();
+        }
+    }
+
     protected function getRoleId(string $roleName): int
     {
         return Role::where('name', $roleName)->value('id') ?? match ($roleName) {
@@ -28,7 +38,7 @@ class NavigationTest extends TestCase
     #[Test]
     public function breadcrumb_navigation_shows_current_path()
     {
-        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
         $this->actingAs($admin);
 
         $response = $this->get(route('admin.manage-roles'));

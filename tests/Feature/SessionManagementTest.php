@@ -36,6 +36,7 @@ class SessionManagementTest extends TestCase
 
         // Simulate session expiration by clearing session
         $this->app['session']->flush();
+        \Illuminate\Support\Facades\Auth::logout();
 
         // Attempt to access protected page
         $response = $this->get(route('dashboard'));

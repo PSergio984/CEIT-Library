@@ -217,7 +217,7 @@
                 <footer class="bg-background border-t border-border mt-auto w-full">
                     <div class="max-w-7xl mx-auto py-6 px-5 lg:px-10">
                         <div class="text-center text-sm text-muted-foreground">
-                            <p>&copy; {{ date('Y') }} PLV eLib - CEIT Library Management System</p>
+                            <p>&copy; {{ date('Y') }} {{ config('branding.full_branding') }}</p>
                             <p class="mt-1">Pamantasan ng Lungsod ng Valenzuela</p>
                         </div>
                     </div>
@@ -265,5 +265,8 @@
 
     {{-- Toast --}}
     <x-mary-toast />
+</body>
+</html>
+ />
 </body>
 </html>

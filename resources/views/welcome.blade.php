@@ -56,7 +56,7 @@
 
     <!-- Hero Section -->
     <main class="relative z-10 min-h-[90vh] flex flex-col items-center justify-center px-6 text-center">
-        <div x-data="{ show: false }" x-init="setTimeout(() => show = true, 100)" class="max-w-5xl">
+        <div x-data="{ show: false }" x-init="nextTick(() => show = true)" class="max-w-5xl">
             <h2 x-show="show" 
                 x-transition:enter="transition ease-out duration-1000"
                 x-transition:enter-start="opacity-0 -translate-y-10"
@@ -70,7 +70,7 @@
                 x-transition:enter-start="opacity-0 scale-95"
                 x-transition:enter-end="opacity-100 scale-100"
                 class="text-5xl md:text-8xl lg:text-9xl font-bold tracking-tighter leading-[0.9] mb-8" x-cloak>
-                Liquid <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Glass</span>
+                PLV CEIT <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-teal-400">Library</span>
             </h1>
 
             <p x-show="show"

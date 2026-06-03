@@ -32,10 +32,17 @@ abstract class TestCase extends BaseTestCase
 
         return $app;
     }
-
     protected function setUp(): void
     {
         parent::setUp();
+
+        if (class_exists(\Livewire\Livewire::class)) {
+            \Livewire\Livewire::withoutLazyLoading();
+        }
+
+        if (class_exists(\Livewire\Features\SupportLazyLoading\SupportLazyLoading::class)) {
+            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::$disableWhileTesting = true;
+        }
 
         if (class_exists(\Livewire\Features\SupportTesting\SupportTesting::class)) {
             \Livewire\Features\SupportTesting\SupportTesting::provide();
