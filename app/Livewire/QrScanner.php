@@ -122,6 +122,12 @@ class QrScanner extends Component
 
     public function handleFileUploadScan(string $data)
     {
+        if (! Gate::allows('librarian-or-admin-access')) {
+            $this->redirect(route('student.dashboard'));
+
+            return;
+        }
+
         try {
             // Log the uploaded QR data for debugging
             Log::info('File upload scan initiated', [

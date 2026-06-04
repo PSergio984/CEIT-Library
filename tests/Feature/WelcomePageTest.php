@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -42,11 +43,30 @@ class WelcomePageTest extends TestCase
         $response->assertSee('Sign In');
         $response->assertDontSee('Enter Dashboard');
 
-        // 2. Authenticated view
+        // 2. Student view — dashboard link must point to student dashboard
         $student = User::factory()->create();
         $responseAuth = $this->actingAs($student)->get('/');
         $responseAuth->assertSee('PLV CEIT Library');
         $responseAuth->assertSee('Enter Dashboard');
         $responseAuth->assertDontSee('Get Started');
+        $responseAuth->assertSeeHtml('href="'.route('student.dashboard').'"');
+    }
+
+    /**
+     * Test that an admin user's dashboard link points to the admin dashboard.
+     */
+    public function test_admin_sees_admin_dashboard_href(): void
+    {
+        $adminRole = Role::firstOrCreate(
+            ['name' => 'admin'],
+            ['display_name' => 'Admin', 'description' => 'Admin']
+        );
+
+        $admin = User::factory()->create(['role_id' => $adminRole->id]);
+
+        $response = $this->actingAs($admin)->get('/');
+
+        $response->assertSee('Enter Dashboard');
+        $response->assertSeeHtml('href="'.route('admin.dashboard').'"');
     }
 }

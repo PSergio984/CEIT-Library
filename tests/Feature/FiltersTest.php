@@ -95,23 +95,27 @@ class FiltersTest extends TestCase
         ]);
 
         // Test search
-        Livewire::test(AdminAcademicPaperIndex::class, ['search' => 'Machine Learning'])
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->set('search', 'Machine Learning')
             ->assertStatus(200)
             ->assertSee('Machine Learning Research');
 
         // Test department filter
-        Livewire::test(AdminAcademicPaperIndex::class, ['departmentFilter' => 'Computer Science'])
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->set('departmentFilter', 'Computer Science')
             ->assertStatus(200)
             ->assertSee('Machine Learning Research')
             ->assertDontSee('Data Structures');
 
         // Test type filter
-        Livewire::test(AdminAcademicPaperIndex::class, ['paperTypeFilter' => 'Thesis'])
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->set('paperTypeFilter', 'Thesis')
             ->assertStatus(200)
             ->assertSee('Machine Learning Research');
 
         // Test year filter
-        Livewire::test(AdminAcademicPaperIndex::class, ['yearFilter' => '2024'])
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->set('yearFilter', '2024')
             ->assertStatus(200)
             ->assertSee('Machine Learning Research');
     }
@@ -126,6 +130,7 @@ class FiltersTest extends TestCase
 
         // Seed papers for each valid department name to populate the availableDepartments computed list
         $expectedDepts = config('departments.valid_names', []);
+        $this->assertNotEmpty($expectedDepts, 'departments.valid_names config must not be empty');
         foreach ($expectedDepts as $dept) {
             AcademicPaper::factory()->create([
                 'department' => $dept,
@@ -153,12 +158,14 @@ class FiltersTest extends TestCase
         AcademicPaper::factory()->create(['title' => 'Data Mining']);
 
         // Test search with partial match
-        Livewire::test(AdminAcademicPaperIndex::class, ['search' => 'Mac'])
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->set('search', 'Mac')
             ->assertStatus(200)
             ->assertSee('Machine Learning');
 
         // Test search with full term
-        Livewire::test(AdminAcademicPaperIndex::class, ['search' => 'Machine Learning'])
+        Livewire::test(AdminAcademicPaperIndex::class)
+            ->set('search', 'Machine Learning')
             ->assertStatus(200)
             ->assertSee('Machine Learning')
             ->assertDontSee('Data Mining');

@@ -40,6 +40,8 @@ abstract class TestCase extends BaseTestCase
 
     protected bool $disableLivewireLazyLoading = false;
 
+    private static bool $flushStateListenerRegistered = false;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -47,11 +49,14 @@ abstract class TestCase extends BaseTestCase
         if ($this->disableLivewireLazyLoading) {
             if (class_exists(Livewire::class)) {
                 Livewire::withoutLazyLoading();
-                Livewire::listen('flush-state', function () {
-                    if (class_exists(SupportLazyLoading::class)) {
-                        SupportLazyLoading::$disableWhileTesting = true;
-                    }
-                });
+                if (! self::$flushStateListenerRegistered) {
+                    Livewire::listen('flush-state', function () {
+                        if (class_exists(SupportLazyLoading::class)) {
+                            SupportLazyLoading::$disableWhileTesting = true;
+                        }
+                    });
+                    self::$flushStateListenerRegistered = true;
+                }
             }
             if (class_exists(SupportLazyLoading::class)) {
                 SupportLazyLoading::$disableWhileTesting = true;
@@ -68,5 +73,13 @@ abstract class TestCase extends BaseTestCase
                 return $this->assertSee($component); // Fallback to basic see
             });
         }
+    }
+
+    protected function tearDown(): void
+    {
+        if (class_exists(SupportLazyLoading::class)) {
+            SupportLazyLoading::$disableWhileTesting = false;
+        }
+        parent::tearDown();
     }
 }

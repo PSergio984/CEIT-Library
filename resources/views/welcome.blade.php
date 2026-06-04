@@ -2,7 +2,11 @@
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
     <script>
-        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        function getPrefersDark() {
+            return localStorage.getItem('theme') === 'dark' ||
+                (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        }
+        if (getPrefersDark()) {
             document.documentElement.classList.add('dark');
             document.documentElement.setAttribute('data-theme', 'dark');
         } else {
@@ -303,7 +307,7 @@
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#0d0f14] text-slate-900 dark:text-white antialiased overflow-x-hidden transition-colors duration-300"
       x-data="{ 
-          darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+          darkMode: getPrefersDark(),
           toggleTheme() {
               this.darkMode = !this.darkMode;
               if (this.darkMode) {

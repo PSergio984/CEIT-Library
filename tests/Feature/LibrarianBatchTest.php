@@ -44,7 +44,7 @@ class LibrarianBatchTest extends TestCase
             ->set('selectedStudents', array_slice($students->pluck('id')->toArray(), 0, 2));
 
         $component->call('createBatch');
-        $component->assertHasErrors();
+        $component->assertHasErrors(['selectedStudents']);
 
         // Create batch with exactly 5 students
         $component = Livewire::test(AdminAssignLibrarians::class)
@@ -83,9 +83,11 @@ class LibrarianBatchTest extends TestCase
 
         $component->assertHasNoErrors();
 
-        $this->assertDatabaseHas('librarians', [
-            'id' => $librarian->id,
-            'status' => 'active',
-        ]);
+        foreach ($librarians as $lib) {
+            $this->assertDatabaseHas('librarians', [
+                'id' => $lib->id,
+                'status' => 'active',
+            ]);
+        }
     }
 }
