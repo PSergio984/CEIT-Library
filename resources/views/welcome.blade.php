@@ -93,17 +93,63 @@
         /* --- Scroll reveal --- */
         .reveal {
             opacity: 0;
-            transform: translateY(48px) scale(0.96);
-            filter: blur(4px);
-            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-                        filter 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            transform: translateY(48px) scale(0.95) rotateX(6deg) rotateY(-6deg);
+            filter: blur(8px);
+            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            transform-style: preserve-3d;
+            perspective: 1000px;
         }
-        .reveal.visible { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-        .reveal-delay-1 { transition-delay: 0.08s; }
-        .reveal-delay-2 { transition-delay: 0.16s; }
-        .reveal-delay-3 { transition-delay: 0.24s; }
-        .reveal-delay-4 { transition-delay: 0.32s; }
+        .reveal.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1) rotateX(0deg) rotateY(0deg);
+            filter: blur(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.1s; }
+        .reveal-delay-2 { transition-delay: 0.2s; }
+        .reveal-delay-3 { transition-delay: 0.3s; }
+        .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* --- Icon ring SVG hover rotation/scale --- */
+        .icon-ring {
+            background: rgba(0, 70, 173, 0.05);
+            border: 1px solid rgba(0, 70, 173, 0.08);
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .dark .icon-ring {
+            background: rgba(96, 165, 250, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .feature-card:hover .icon-ring {
+            background: rgba(0, 70, 173, 0.1);
+            border-color: rgba(0, 70, 173, 0.2);
+        }
+        .dark .feature-card:hover .icon-ring {
+            background: rgba(96, 165, 250, 0.12);
+            border-color: rgba(96, 165, 250, 0.25);
+        }
+        .feature-card:hover .icon-ring svg {
+            transform: scale(1.15) rotate(8deg);
+        }
+        .icon-ring svg {
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* --- Header Word Reveal --- */
+        .reveal-word {
+            opacity: 0.08;
+            transform: translateY(10px);
+            filter: blur(2px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .reveal.visible .reveal-word {
+            opacity: 1;
+            transform: translateY(0);
+            filter: blur(0);
+        }
 
         /* --- Stat numbers --- */
         .stat-number {
@@ -115,6 +161,46 @@
         }
         .dark .stat-number {
             color: #60a5fa;
+        }
+
+        /* --- Premium Glare Light-Sweep for Glass Cards --- */
+        .glass-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 20%;
+            height: 200%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.22) 30%,
+                rgba(255, 255, 255, 0.3) 50%,
+                rgba(255, 255, 255, 0.22) 70%,
+                rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(30deg);
+            transition: transform 0s;
+            pointer-events: none;
+            z-index: 5;
+        }
+        .dark .glass-card::after {
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0) 0%,
+                rgba(255, 255, 255, 0.1) 30%,
+                rgba(255, 255, 255, 0.16) 50%,
+                rgba(255, 255, 255, 0.1) 70%,
+                rgba(255, 255, 255, 0) 100%
+            );
+        }
+        .glass-card:hover::after {
+            transform: translate(900%, -30%) rotate(30deg);
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* --- Solid divider --- */
@@ -131,17 +217,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* --- Feature card icon container --- */
-        .icon-ring {
-            background: rgba(0, 70, 173, 0.06);
-            border: 1px solid rgba(0, 70, 173, 0.15);
-            transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
-        }
-        .feature-card:hover .icon-ring {
-            background: rgba(0, 70, 173, 0.12);
-            border-color: rgba(0, 70, 173, 0.3);
-            transform: scale(1.06);
-        }
+
         /* Cards: hover lifts + brightens border — cursor-pointer for UX */
         .feature-card {
             cursor: pointer;
@@ -313,22 +389,22 @@
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {{-- Stat 1 --}}
                     <div class="glass-card rounded-2xl p-6 text-center reveal feature-card" data-reveal>
-                        <div class="stat-number mb-2" data-count="1200" data-suffix="+">1,200+</div>
+                        <div class="stat-number mb-2" data-count="1200" data-suffix="+">0+</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">Theses Indexed</p>
                     </div>
                     {{-- Stat 2 --}}
                     <div class="glass-card rounded-2xl p-6 text-center reveal reveal-delay-1 feature-card" data-reveal>
-                        <div class="stat-number mb-2" data-count="480" data-suffix="+">480+</div>
+                        <div class="stat-number mb-2" data-count="480" data-suffix="+">0+</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">Active Students</p>
                     </div>
                     {{-- Stat 3 --}}
                     <div class="glass-card rounded-2xl p-6 text-center reveal reveal-delay-2 feature-card" data-reveal>
-                        <div class="stat-number mb-2" data-count="3200" data-suffix="+">3,200+</div>
+                        <div class="stat-number mb-2" data-count="3200" data-suffix="+">0+</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">QR Scans Logged</p>
                     </div>
                     {{-- Stat 4 --}}
                     <div class="glass-card rounded-2xl p-6 text-center reveal reveal-delay-3 feature-card" data-reveal>
-                        <div class="stat-number mb-2" data-count="99" data-suffix="%">99%</div>
+                        <div class="stat-number mb-2" data-count="99" data-suffix="%">0%</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">Uptime Reliability</p>
                     </div>
                 </div>
@@ -339,7 +415,14 @@
             <div class="max-w-6xl mx-auto">
 
                 <div class="text-center mb-14 reveal" data-reveal>
-                    <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4 text-slate-900 dark:text-white transition-colors duration-300">Built for modern<br><span class="text-[#0046ad] dark:text-[#60a5fa] transition-colors duration-300">academic research.</span></h2>
+                    <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4 text-slate-900 dark:text-white transition-colors duration-300">
+                        <span class="reveal-word inline-block" style="transition-delay: 0.05s;">Built</span>
+                        <span class="reveal-word inline-block" style="transition-delay: 0.1s;">for</span>
+                        <span class="reveal-word inline-block" style="transition-delay: 0.15s;">modern</span>
+                        <br>
+                        <span class="reveal-word inline-block text-[#0046ad] dark:text-[#60a5fa]" style="transition-delay: 0.2s;">academic</span>
+                        <span class="reveal-word inline-block text-[#0046ad] dark:text-[#60a5fa]" style="transition-delay: 0.25s;">research.</span>
+                    </h2>
                     <p class="text-slate-500 dark:text-slate-400 max-w-lg mx-auto text-base transition-colors duration-300">Every feature engineered to eliminate friction between students and their resources.</p>
                 </div>
 
@@ -509,18 +592,79 @@
     </div>{{-- end dark scroll section --}}
 
     <script>
+        // Cubic ease-out curve for count animation
+        function easeOutCubic(t) {
+            return 1 - Math.pow(1 - t, 3);
+        }
+
+        function animateCount(element, start, end, duration, suffix = '') {
+            let startTime = null;
+
+            function animation(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                const easedProgress = easeOutCubic(progress);
+                const currentValue = Math.floor(start + easedProgress * (end - start));
+                
+                // Format with commas if >= 1000
+                element.textContent = (currentValue >= 1000 ? currentValue.toLocaleString() : currentValue) + suffix;
+
+                if (progress < 1) {
+                    requestAnimationFrame(animation);
+                } else {
+                    element.textContent = (end >= 1000 ? end.toLocaleString() : end) + suffix;
+                }
+            }
+
+            requestAnimationFrame(animation);
+        }
+
         // Intersection Observer for scroll-reveal animations
         const reveals = document.querySelectorAll('[data-reveal]');
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('visible');
+                    
+                    // Search for any stat numbers in the revealed card
+                    const statNums = entry.target.querySelectorAll('[data-count]');
+                    statNums.forEach(statNum => {
+                        const target = parseInt(statNum.getAttribute('data-count'), 10);
+                        const suffix = statNum.getAttribute('data-suffix') || '';
+                        animateCount(statNum, 0, target, 2000, suffix);
+                    });
+
                     observer.unobserve(entry.target);
                 }
             });
         }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
 
         reveals.forEach(el => observer.observe(el));
+
+        // Premium 3D Tilt hover effect for feature-cards (on desktops)
+        const cards = document.querySelectorAll('.feature-card');
+        if (window.matchMedia('(hover: hover)').matches) {
+            cards.forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    const xc = rect.width / 2;
+                    const yc = rect.height / 2;
+                    
+                    // Max rotation: 7 degrees for sub-pixel smoothness
+                    const angleX = (yc - y) / yc * 7;
+                    const angleY = (x - xc) / xc * 7;
+                    
+                    card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) translateY(-4px)`;
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateY(0)';
+                });
+            });
+        }
     </script>
 
     @livewireScripts
