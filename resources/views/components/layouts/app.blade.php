@@ -267,6 +267,3 @@
     <x-mary-toast />
 </body>
 </html>
- />
-</body>
-</html>

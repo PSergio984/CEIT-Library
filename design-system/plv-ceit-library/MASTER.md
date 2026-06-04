@@ -1,6 +1,6 @@
 # Design System Master File
 
-> **LOGIC:** When building a specific page, first check `design-system/pages/[page-name].md`.
+> **LOGIC:** When building a specific page, first check `design-system/plv-ceit-library/pages/[page-name].md`.
 > If that file exists, its rules **override** this Master file.
 > If not, strictly follow the rules below.
 
@@ -159,7 +159,7 @@
 
 **Best For:** Premium SaaS, high-end e-commerce, creative platforms, branding experiences, luxury portfolios
 
-**Key Effects:** Morphing elements (SVG/CSS), fluid animations (400-600ms curves), dynamic blur (backdrop-filter), color transitions
+**Key Effects:** Morphing elements (SVG/CSS), long-form fluid/morphing motion (400-600ms), micro-interactions/transitions (150-300ms), dynamic blur (backdrop-filter), color transitions
 
 ### Page Pattern
 

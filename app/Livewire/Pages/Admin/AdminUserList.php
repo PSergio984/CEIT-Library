@@ -8,6 +8,7 @@ use App\Rules\PlvEmailDomain;
 use App\Rules\ProperName;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
@@ -342,7 +343,11 @@ class AdminUserList extends AdminComponent
 
     public function deleteUser()
     {
-        $this->authorize('manage-students');
+        if (! Gate::allows('manage-students')) {
+            $this->redirect(route('student.dashboard'));
+
+            return;
+        }
 
         if ($this->selectedStudentId) {
             $student = User::findOrFail($this->selectedStudentId);

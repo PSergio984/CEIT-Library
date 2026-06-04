@@ -89,6 +89,8 @@
                                 icon="o-eye"
                                 label="View Details"
                                 spinner
+                                wire:loading.attr="disabled"
+                                wire:target="showPaperDetails({{ $paper->id }})"
                             />
                         @else
                             <div class="flex flex-col gap-2 w-full">
@@ -195,6 +197,8 @@
                                 icon="o-eye"
                                 label="View"
                                 spinner
+                                wire:loading.attr="disabled"
+                                wire:target="showPaperDetails({{ $row->id }})"
                             />
                         @else
                             <div class="flex flex-col gap-1">

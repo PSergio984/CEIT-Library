@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\AcademicPaper;
 use App\Models\Author;
@@ -14,6 +12,7 @@ use App\Models\TechnicalAdviser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AuthorManagementTest extends TestCase
@@ -56,7 +55,7 @@ class AuthorManagementTest extends TestCase
         $author = Author::factory()->create(['name' => 'New Author']);
 
         $academicPaperData = AcademicPaper::factory()->make()->toArray();
-        $authorIds = Author::inRandomOrder()->limit(2)->pluck('id')->toArray();
+        $authorIds = Author::where('id', '!=', $author->id)->inRandomOrder()->limit(2)->pluck('id')->toArray();
         $authorIds[] = $author->id; // Add new author
 
         Livewire::actingAs($admin)

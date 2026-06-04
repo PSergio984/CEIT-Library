@@ -63,7 +63,7 @@
                             @php
                                 $userBorrowedThis = isset($this->userActiveBorrows[$copy->id]);
                             @endphp
-                            <tr class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
+                            <tr wire:key="copy-{{ $copy->id }}" class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
                                 <td class="px-4 py-3 text-base-content font-medium">{{ $copy->id }}</td>
                                 <td class="px-4 py-3">
                                     @if($userBorrowedThis)

@@ -1,6 +1,6 @@
 <nav class="flex items-center gap-3 justify-end">
     @auth
-        <a href="{{ url('/dashboard') }}" wire:navigate
+        <a href="{{ auth()->user()->can('Admin-access') ? route('admin.dashboard') : route('student.dashboard') }}" wire:navigate
             class="btn border-none bg-[#0046ad] hover:bg-[#003da0] text-white font-bold rounded-xl px-5 hover:shadow-[0_0_16px_-3px_rgba(0,70,173,0.5)] active:scale-95 whitespace-nowrap">
             Dashboard
         </a>

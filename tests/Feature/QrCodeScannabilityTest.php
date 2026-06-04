@@ -2,18 +2,18 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Student\AttendanceQr;
 use App\Livewire\QrScanner;
 use App\Models\Attendance;
 use App\Models\Librarian;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tests\TestCase;
 
@@ -33,7 +33,7 @@ use Tests\TestCase;
  */
 class QrCodeScannabilityTest extends TestCase
 {
-    use RefreshDatabase, \App\Traits\CreatesQrCanonicalMessage;
+    use CreatesQrCanonicalMessage, RefreshDatabase;
 
     private User $student;
 
@@ -256,7 +256,7 @@ class QrCodeScannabilityTest extends TestCase
         Livewire::test(QrScanner::class)
             ->call('handleFileUploadScan', $qrJson)
             ->assertSet('hasError', true);
-        
+
         $this->assertDatabaseCount('attendances', 1);
     }
 
@@ -521,11 +521,12 @@ class QrCodeScannabilityTest extends TestCase
         ];
 
         $encryptedData = Crypt::encryptString(json_encode($data));
+        $wrappedData = json_encode(['encrypted' => $encryptedData]);
 
         $this->actingAs($this->librarian);
 
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $wrappedData)
             ->assertSet('hasError', true);
 
         $this->assertDatabaseCount('attendances', 0);

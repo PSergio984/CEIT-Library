@@ -2,8 +2,13 @@
 
 namespace Tests;
 
+use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
+use Illuminate\Testing\TestResponse;
+use Livewire\Features\SupportLazyLoading\SupportLazyLoading;
+use Livewire\Features\SupportTesting\SupportTesting;
+use Livewire\Livewire;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -12,7 +17,7 @@ abstract class TestCase extends BaseTestCase
     /**
      * Creates the application.
      *
-     * @return \Illuminate\Foundation\Application
+     * @return Application
      */
     public function createApplication()
     {
@@ -32,25 +37,34 @@ abstract class TestCase extends BaseTestCase
 
         return $app;
     }
+
+    protected bool $disableLivewireLazyLoading = false;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        if (class_exists(\Livewire\Livewire::class)) {
-            \Livewire\Livewire::withoutLazyLoading();
+        if ($this->disableLivewireLazyLoading) {
+            if (class_exists(Livewire::class)) {
+                Livewire::withoutLazyLoading();
+                Livewire::listen('flush-state', function () {
+                    if (class_exists(SupportLazyLoading::class)) {
+                        SupportLazyLoading::$disableWhileTesting = true;
+                    }
+                });
+            }
+            if (class_exists(SupportLazyLoading::class)) {
+                SupportLazyLoading::$disableWhileTesting = true;
+            }
         }
 
-        if (class_exists(\Livewire\Features\SupportLazyLoading\SupportLazyLoading::class)) {
-            \Livewire\Features\SupportLazyLoading\SupportLazyLoading::$disableWhileTesting = true;
-        }
-
-        if (class_exists(\Livewire\Features\SupportTesting\SupportTesting::class)) {
-            \Livewire\Features\SupportTesting\SupportTesting::provide();
+        if (class_exists(SupportTesting::class)) {
+            SupportTesting::provide();
         }
 
         // Workaround for Livewire 4 / Laravel 13 macro issues
-        if (!\Illuminate\Testing\TestResponse::hasMacro('assertSeeLivewire')) {
-            \Illuminate\Testing\TestResponse::macro('assertSeeLivewire', function ($component) {
+        if (! TestResponse::hasMacro('assertSeeLivewire')) {
+            TestResponse::macro('assertSeeLivewire', function ($component) {
                 return $this->assertSee($component); // Fallback to basic see
             });
         }

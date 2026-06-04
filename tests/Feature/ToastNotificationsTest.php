@@ -2,8 +2,7 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
+use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\AcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
@@ -11,9 +10,9 @@ use App\Models\ResearchAdviser;
 use App\Models\Role;
 use App\Models\TechnicalAdviser;
 use App\Models\User;
-use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ToastNotificationsTest extends TestCase
@@ -68,8 +67,8 @@ class ToastNotificationsTest extends TestCase
 
         $component->call('save');
         $component->assertHasNoErrors();
-
-        // Success toast should be dispatched (this is primarily a frontend check)
+        $component->assertRedirect('/admin/academic-papers');
+        $component->assertSessionHas('mary.toast.title', 'New Academic Paper created');
     }
 
     /** @test - TC083: Toast Notifications - Error Messages */
@@ -87,7 +86,6 @@ class ToastNotificationsTest extends TestCase
 
         $component->call('save');
         $component->assertHasErrors();
-
-        // Error toast should be dispatched (this is primarily a frontend check)
+        $component->assertSessionMissing('mary.toast.title');
     }
 }

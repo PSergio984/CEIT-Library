@@ -18,7 +18,7 @@ class AdminComponent extends Component
     public function authorizeAccess(): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
-            throw new AuthorizationException;
+            $this->redirect(route('student.dashboard'));
         }
     }
 }

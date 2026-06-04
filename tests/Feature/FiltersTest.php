@@ -21,6 +21,8 @@ class FiltersTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected bool $disableLivewireLazyLoading = true;
+
     protected function getRoleId(string $roleName): int
     {
         return Role::where('name', $roleName)->value('id') ?? match ($roleName) {
@@ -122,11 +124,21 @@ class FiltersTest extends TestCase
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
         $this->actingAs($admin);
 
-        Livewire::test(AdminAcademicPaperIndex::class)
+        // Seed papers for each valid department name to populate the availableDepartments computed list
+        $expectedDepts = config('departments.valid_names', []);
+        foreach ($expectedDepts as $dept) {
+            AcademicPaper::factory()->create([
+                'department' => $dept,
+            ]);
+        }
+
+        $lw = Livewire::test(AdminAcademicPaperIndex::class)
             ->assertStatus(200)
             ->assertSeeHtml('Department');
 
-        // Verify department filter dropdown exists
+        foreach ($expectedDepts as $dept) {
+            $lw->assertSee($dept);
+        }
     }
 
     /** @test - TC078: Search - Real-time Results */

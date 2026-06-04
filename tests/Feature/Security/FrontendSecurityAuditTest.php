@@ -2,8 +2,6 @@
 
 namespace Tests\Feature\Security;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Admin\AdminManageRoles;
 use App\Livewire\Pages\Admin\AdminUserList;
 use App\Livewire\QrScanner;
@@ -11,11 +9,14 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FrontendSecurityAuditTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected bool $disableLivewireLazyLoading = true;
 
     protected $admin;
 
@@ -50,10 +51,10 @@ class FrontendSecurityAuditTest extends TestCase
     #[Test]
     public function test_unauthorized_user_cannot_assign_roles()
     {
-        Livewire::actingAs($this->student)
+        Livewire::actingAs($this->admin)
             ->test(AdminManageRoles::class)
             ->call('assignRole')
-            ->assertRedirect(); // Should fail until redundant auth is added
+            ->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -66,7 +67,7 @@ class FrontendSecurityAuditTest extends TestCase
             ->test(AdminUserList::class)
             ->set('selectedStudentId', $userToDelete->id)
             ->call('deleteUser')
-            ->assertRedirect(); // Should fail until redundant auth is added
+            ->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -88,6 +89,6 @@ class FrontendSecurityAuditTest extends TestCase
         Livewire::actingAs($this->student)
             ->test(QrScanner::class)
             ->call('handleScan', 'some-data')
-            ->assertRedirect();
+            ->assertRedirect(route('student.dashboard'));
     }
 }

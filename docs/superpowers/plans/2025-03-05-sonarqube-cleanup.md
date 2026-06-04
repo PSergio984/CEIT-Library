@@ -10,7 +10,7 @@
 
 ---
 
-### Task 1: Modernize Shell Scripts
+## Task 1: Modernize Shell Scripts
 
 **Files:**
 - Modify: `Docker/start.sh`
@@ -37,7 +37,7 @@ git add Docker/start.sh
 git commit -m "chore: modernize shell script conditionals to use [["
 ```
 
-### Task 2: Split Long Lines in Config and Factories
+## Task 2: Split Long Lines in Config and Factories
 
 **Files:**
 - Modify: `config/mail.php`
@@ -83,7 +83,7 @@ git add config/mail.php database/factories/AcademicPaperFactory.php database/fac
 git commit -m "chore: split long lines to satisfy SonarQube quality gates"
 ```
 
-### Task 3: `_ide_helper.php` Cleanup
+## Task 3: `_ide_helper.php` Cleanup
 
 **Files:**
 - Modify: `_ide_helper.php`
@@ -130,7 +130,7 @@ git add _ide_helper.php
 git commit -m "chore: cleanup _ide_helper.php PSR-12 braces and whitespace"
 ```
 
-### Task 4: Final Verification and Cleanup
+## Task 4: Final Verification and Cleanup
 
 - [ ] **Step 1: Verify .gitignore contains graphify-out/cache**
 

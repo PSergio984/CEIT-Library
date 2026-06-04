@@ -2,10 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class WelcomePageTest extends TestCase
 {
+    use RefreshDatabase;
+
     /**
      * Test if the welcome page renders correctly.
      */
@@ -31,19 +35,18 @@ class WelcomePageTest extends TestCase
      */
     public function test_welcome_page_contains_hero_section_and_links(): void
     {
+        // 1. Guest view
         $response = $this->get('/');
-
-        // Hero section text requested by plan
         $response->assertSee('PLV CEIT Library');
-        $response->assertSee('Liquid Glass'); 
-        $response->assertSee('Premium');
-        
-        // Navigation links (checking for expected UI elements)
-        $response->assertSee('Log in');
-        $response->assertSee('Register');
+        $response->assertSee('Get Started');
+        $response->assertSee('Sign In');
+        $response->assertDontSee('Enter Dashboard');
 
-        // Check for Liquid Glass theme indicators
-        $response->assertSee('backdrop-blur-md');
-        $response->assertSee('bg-slate-900/60');
+        // 2. Authenticated view
+        $student = User::factory()->create();
+        $responseAuth = $this->actingAs($student)->get('/');
+        $responseAuth->assertSee('PLV CEIT Library');
+        $responseAuth->assertSee('Enter Dashboard');
+        $responseAuth->assertDontSee('Get Started');
     }
 }

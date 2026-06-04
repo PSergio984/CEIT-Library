@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Notifications\CustomResetPassword;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Password;
 use Livewire\Volt\Volt;
 use Tests\TestCase;
 
@@ -55,9 +54,9 @@ class PasswordResetTest extends TestCase
         $resetToken = null;
         Notification::assertSentTo($user, CustomResetPassword::class, function ($notification) use (&$resetToken) {
             $resetToken = $notification->token;
+
             return true;
         });
-
 
         $this->assertNotNull($resetToken);
 
@@ -86,9 +85,9 @@ class PasswordResetTest extends TestCase
         $resetToken = null;
         Notification::assertSentTo($user, CustomResetPassword::class, function ($notification) use (&$resetToken) {
             $resetToken = $notification->token;
+
             return true;
         });
-
 
         $this->assertNotNull($resetToken);
 

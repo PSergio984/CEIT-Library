@@ -1,6 +1,7 @@
 # Phase 3 Validation: Premium Landing Page & Stability
 
 ## 1. Requirement Tracking
+
 | ID | Requirement | Status | Verification Method |
 |----|-------------|--------|---------------------|
 | REQ-01 | Premium Landing Page | ⚪ Pending | Visual inspection & `WelcomePageTest` |

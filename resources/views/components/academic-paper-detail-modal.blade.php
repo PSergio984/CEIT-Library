@@ -141,7 +141,7 @@
                         </thead>
                         <tbody>
                             @foreach($selectedPaper->copies as $copy)
-                                <tr class="hover:bg-base-200/50 transition-all duration-200 border-b border-base-200 last:border-b-0">
+                                <tr wire:key="copy-{{ $copy->id }}" class="hover:bg-base-200/50 transition-all duration-200 border-b border-base-200 last:border-b-0">
                                     <td class="px-6 py-4">
                                         <span class="font-mono font-semibold text-primary">{{ $copy->id }}</span>
                                     </td>
@@ -179,6 +179,8 @@
                                                     icon="o-trash"
                                                     label="{{ $isOnlyCopy ? 'Only Copy' : 'Delete Copy' }}"
                                                     spinner
+                                                    wire:loading.attr="disabled"
+                                                    wire:target="confirmCopyDelete({{ $copy->id }})"
                                                 />
                                             @else
                                                 <div class="flex items-center gap-2 text-base-content/60">

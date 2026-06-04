@@ -12,7 +12,7 @@
     </script>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>PLV CEIT Library | Digital Library Management</title>
+    <title>{{ config('branding.name', 'PLV CEIT Library') }} | Digital Library Management</title>
     <meta name="description" content="The official digital library management system for CEIT, Pamantasan ng Lungsod ng Valenzuela. Search theses, borrow with QR, and manage resources seamlessly.">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -383,10 +383,12 @@
             {{-- CTAs --}}
             <div class="flex flex-col sm:flex-row items-center justify-center gap-4 animate-fade-in-up anim-delay-300">
                 @guest
-                    <a href="{{ route('register') }}" wire:navigate
-                       class="btn border-none bg-[#0046ad] hover:bg-[#003da0] text-white font-bold rounded-2xl h-auto py-4 px-8 hover:shadow-[0_0_32px_-4px_rgba(0,70,173,0.6)] transition-all duration-300 active:scale-95 whitespace-nowrap">
-                        Get Started
-                    </a>
+                    @if (Route::has('register'))
+                        <a href="{{ route('register') }}" wire:navigate
+                           class="btn border-none bg-[#0046ad] hover:bg-[#003da0] text-white font-bold rounded-2xl h-auto py-4 px-8 hover:shadow-[0_0_32px_-4px_rgba(0,70,173,0.6)] transition-all duration-300 active:scale-95 whitespace-nowrap">
+                            Get Started
+                        </a>
+                    @endif
                     <a href="{{ route('login') }}" wire:navigate
                        class="btn btn-outline border-white/10 hover:border-white/20 text-white/90 hover:text-white hover:bg-white/10 rounded-2xl h-auto py-4 px-8 transition-all duration-300 active:scale-95 whitespace-nowrap">
                         Sign In
@@ -712,10 +714,12 @@
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         @guest
-                            <a href="{{ route('register') }}" wire:navigate
-                               class="btn border-none bg-[#0046ad] hover:bg-[#003da0] text-white font-bold rounded-xl px-6 hover:shadow-[0_0_24px_-4px_rgba(0,70,173,0.55)] transition-all duration-200 active:scale-95 whitespace-nowrap">
-                                Create Account
-                            </a>
+                            @if (Route::has('register'))
+                                <a href="{{ route('register') }}" wire:navigate
+                                   class="btn border-none bg-[#0046ad] hover:bg-[#003da0] text-white font-bold rounded-xl px-6 hover:shadow-[0_0_24px_-4px_rgba(0,70,173,0.55)] transition-all duration-200 active:scale-95 whitespace-nowrap">
+                                    Create Account
+                                </a>
+                            @endif
                             <a href="{{ route('login') }}" wire:navigate
                                class="btn btn-outline border-slate-300 dark:border-white/10 hover:border-slate-400 dark:hover:border-white/20 text-slate-800 dark:text-white/90 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/10 rounded-xl px-6 transition-all duration-200 active:scale-95 whitespace-nowrap">
                                 Sign In

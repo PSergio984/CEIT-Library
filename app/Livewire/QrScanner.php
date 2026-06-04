@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Traits\CreatesQrCanonicalMessage;
 use App\Traits\ProcessesAttendanceQr;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -39,7 +40,11 @@ class QrScanner extends Component
 
     public function handleScan(string $data)
     {
-        $this->authorize('librarian-or-admin-access');
+        if (! Gate::allows('librarian-or-admin-access')) {
+            $this->redirect(route('student.dashboard'));
+
+            return;
+        }
 
         try {
             // Basic validation

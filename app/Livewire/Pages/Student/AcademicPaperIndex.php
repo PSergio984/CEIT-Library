@@ -138,7 +138,7 @@ class AcademicPaperIndex extends Component
                     });
                 }
             })
-            ->with(['authors'])
+
             ->withCount([
                 'copies as available_copies' => function ($query) {
                     $query->where('status', 'Available');

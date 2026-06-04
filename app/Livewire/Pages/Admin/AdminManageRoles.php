@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\User;
 use Auth;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
@@ -34,9 +35,6 @@ class AdminManageRoles extends AdminComponent
     public function mount()
     {
         $this->authorizeAccess();
-
-        // Only super admins can manage roles
-        $this->authorize('manage-user-roles');
     }
 
     public function getUsersProperty()
@@ -101,7 +99,11 @@ class AdminManageRoles extends AdminComponent
 
     public function assignRole()
     {
-        $this->authorize('manage-user-roles');
+        if (! Gate::allows('manage-user-roles')) {
+            $this->redirect(route('student.dashboard'));
+
+            return;
+        }
 
         $this->validate([
             'selectedUserId' => 'required|exists:users,id',

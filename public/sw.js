@@ -53,8 +53,12 @@ self.addEventListener('notificationclick', event => {
     if (targetUrl.startsWith('/')) {
         targetUrl = self.location.origin + targetUrl;
     } else {
-        const url = new URL(targetUrl, self.location.origin);
-        if (url.origin !== self.location.origin) {
+        try {
+            const url = new URL(targetUrl, self.location.origin);
+            if (url.origin !== self.location.origin) {
+                targetUrl = self.location.origin + '/notifications';
+            }
+        } catch (e) {
             targetUrl = self.location.origin + '/notifications';
         }
     }

@@ -88,7 +88,7 @@ This phase focuses on transforming the entry point of the application into a pre
 **When to use:** For staggered reveals in the "Features" section of the landing page.
 **Example:**
 ```html
-<div x-data="{ shown: false }" x-intersect.once="show = true">
+<div x-data="{ shown: false }" x-intersect.once="shown = true">
     <div :class="shown ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'" class="transition-all duration-700 ease-out">
         <h3>Premium Feature</h3>
     </div>
