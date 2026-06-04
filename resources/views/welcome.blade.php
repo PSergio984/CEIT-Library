@@ -91,9 +91,8 @@
         }
 
         /* --- Scroll reveal --- */
-        .reveal {
+        [data-reveal] {
             opacity: 0;
-            transform: translateY(48px) scale(0.95) rotateX(6deg) rotateY(-6deg);
             filter: blur(8px);
             transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
                         transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -101,15 +100,58 @@
             transform-style: preserve-3d;
             perspective: 1000px;
         }
-        .reveal.visible {
+        [data-reveal].visible {
             opacity: 1;
-            transform: translateY(0) scale(1) rotateX(0deg) rotateY(0deg);
             filter: blur(0);
+            transform: translate(0) scale(1) rotate(0) rotateX(0deg) rotateY(0deg) !important;
+        }
+        .reveal-left {
+            transform: translateX(-80px) rotate(-3deg) scale(0.96);
+        }
+        .reveal-right {
+            transform: translateX(80px) rotate(3deg) scale(0.96);
+        }
+        .reveal-up {
+            transform: translateY(80px) scale(0.96);
+        }
+        .reveal {
+            transform: translateY(48px) scale(0.95) rotateX(6deg) rotateY(-6deg);
         }
         .reveal-delay-1 { transition-delay: 0.1s; }
         .reveal-delay-2 { transition-delay: 0.2s; }
         .reveal-delay-3 { transition-delay: 0.3s; }
         .reveal-delay-4 { transition-delay: 0.4s; }
+
+        /* --- Infinite Marquee Ticker --- */
+        .marquee-container {
+            display: flex;
+            overflow: hidden;
+            user-select: none;
+            gap: 2rem;
+            position: relative;
+        }
+        .marquee-content {
+            flex-shrink: 0;
+            display: flex;
+            justify-content: space-around;
+            min-width: 100%;
+            gap: 2rem;
+            animation: scroll-left 25s linear infinite;
+        }
+        .marquee-content.reverse {
+            animation: scroll-right 25s linear infinite;
+        }
+        @keyframes scroll-left {
+            from { transform: translateX(0); }
+            to { transform: translateX(-100%); }
+        }
+        @keyframes scroll-right {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .marquee-container:hover .marquee-content {
+            animation-play-state: paused;
+        }
 
         /* --- Icon ring SVG hover rotation/scale --- */
         .icon-ring {
@@ -380,6 +422,31 @@
         {{-- Seamless top: the hero gradient already fades to the background color --}}
         <div class="h-1 bg-[#f8fafc] dark:bg-[#0d0f14] transition-colors duration-300"></div>
 
+        {{-- ---- DEPARTMENT MARQUEE TICKER ---- --}}
+        <section class="py-10 border-b border-slate-200/50 dark:border-white/5 bg-slate-50/50 dark:bg-[#090b0f]/30 overflow-hidden">
+            <div class="marquee-container opacity-60 hover:opacity-100 transition-opacity duration-300">
+                <div class="marquee-content">
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Information Technology</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Computer Engineering</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Electronics Engineering</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">VITS Student Society</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">ACES Student Society</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">EES Student Society</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Pamantasan ng Lungsod ng Valenzuela</span>
+                </div>
+                <!-- Duplicate for seamless scroll -->
+                <div class="marquee-content" aria-hidden="true">
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Information Technology</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Computer Engineering</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Electronics Engineering</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">VITS Student Society</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">ACES Student Society</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">EES Student Society</span>
+                    <span class="text-sm font-semibold tracking-wider text-slate-400 dark:text-slate-500 uppercase mx-8">Pamantasan ng Lungsod ng Valenzuela</span>
+                </div>
+            </div>
+        </section>
+
         {{-- ---- STATS ROW ---- --}}
         <section class="px-6 md:px-12 lg:px-16 pb-20 pt-10" id="stats">
             <div class="max-w-6xl mx-auto">
@@ -388,24 +455,78 @@
 
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
                     {{-- Stat 1 --}}
-                    <div class="glass-card rounded-2xl p-6 text-center reveal feature-card" data-reveal>
+                    <div class="glass-card rounded-2xl p-6 text-center reveal-left feature-card" data-reveal>
                         <div class="stat-number mb-2" data-count="1200" data-suffix="+">0+</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">Theses Indexed</p>
                     </div>
                     {{-- Stat 2 --}}
-                    <div class="glass-card rounded-2xl p-6 text-center reveal reveal-delay-1 feature-card" data-reveal>
+                    <div class="glass-card rounded-2xl p-6 text-center reveal-up reveal-delay-1 feature-card" data-reveal>
                         <div class="stat-number mb-2" data-count="480" data-suffix="+">0+</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">Active Students</p>
                     </div>
                     {{-- Stat 3 --}}
-                    <div class="glass-card rounded-2xl p-6 text-center reveal reveal-delay-2 feature-card" data-reveal>
+                    <div class="glass-card rounded-2xl p-6 text-center reveal-up reveal-delay-2 feature-card" data-reveal>
                         <div class="stat-number mb-2" data-count="3200" data-suffix="+">0+</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">QR Scans Logged</p>
                     </div>
                     {{-- Stat 4 --}}
-                    <div class="glass-card rounded-2xl p-6 text-center reveal reveal-delay-3 feature-card" data-reveal>
+                    <div class="glass-card rounded-2xl p-6 text-center reveal-right reveal-delay-3 feature-card" data-reveal>
                         <div class="stat-number mb-2" data-count="99" data-suffix="%">0%</div>
                         <p class="text-slate-600 dark:text-slate-400 text-sm font-semibold transition-colors duration-300">Uptime Reliability</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- ---- HOW IT WORKS (TIMELINE) ---- --}}
+        <section class="px-6 md:px-12 lg:px-16 py-32 border-t border-b border-slate-200/50 dark:border-white/5 bg-slate-50/20 dark:bg-[#0a0c10]/20" id="workflow">
+            <div class="max-w-6xl mx-auto">
+                <div class="text-center mb-20 reveal-up" data-reveal>
+                    <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4 text-slate-900 dark:text-white transition-colors duration-300">
+                        <span class="reveal-word inline-block" style="transition-delay: 0.05s;">Digital</span>
+                        <span class="reveal-word inline-block" style="transition-delay: 0.1s;">borrowing</span>
+                        <span class="reveal-word inline-block" style="transition-delay: 0.15s;">simplified.</span>
+                    </h2>
+                    <p class="text-slate-500 dark:text-slate-400 max-w-lg mx-auto text-base transition-colors duration-300">
+                        Three simple steps from discovery to academic success.
+                    </p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+                    {{-- Connecting Line for Timeline (Hidden on Mobile) --}}
+                    <div class="hidden md:block absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 dark:bg-white/10 -translate-y-1/2 z-0"></div>
+
+                    {{-- Step 1 --}}
+                    <div class="glass-card rounded-2xl p-8 relative z-10 reveal-left feature-card" data-reveal>
+                        <div class="absolute -top-6 left-8 w-12 h-12 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            1
+                        </div>
+                        <h3 class="text-xl font-bold mt-4 mb-3 text-slate-900 dark:text-white">Browse Theses</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                            Search our extensive repository of engineering and technology research papers by category, author, or keyword.
+                        </p>
+                    </div>
+
+                    {{-- Step 2 --}}
+                    <div class="glass-card rounded-2xl p-8 relative z-10 reveal-up reveal-delay-1 feature-card" data-reveal>
+                        <div class="absolute -top-6 left-8 w-12 h-12 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            2
+                        </div>
+                        <h3 class="text-xl font-bold mt-4 mb-3 text-slate-900 dark:text-white">Request QR Code</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                            Generate a personalized transaction QR code directly from your dashboard for the thesis you wish to borrow.
+                        </p>
+                    </div>
+
+                    {{-- Step 3 --}}
+                    <div class="glass-card rounded-2xl p-8 relative z-10 reveal-right reveal-delay-2 feature-card" data-reveal>
+                        <div class="absolute -top-6 left-8 w-12 h-12 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
+                            3
+                        </div>
+                        <h3 class="text-xl font-bold mt-4 mb-3 text-slate-900 dark:text-white">Scan & Read</h3>
+                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                            Present your generated QR code to the library counter for scanning. Instantly checkout and begin your study.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -414,7 +535,7 @@
         <section class="px-6 md:px-12 lg:px-16 pb-24" id="features">
             <div class="max-w-6xl mx-auto">
 
-                <div class="text-center mb-14 reveal" data-reveal>
+                <div class="text-center mb-14 reveal-up" data-reveal>
                     <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4 text-slate-900 dark:text-white transition-colors duration-300">
                         <span class="reveal-word inline-block" style="transition-delay: 0.05s;">Built</span>
                         <span class="reveal-word inline-block" style="transition-delay: 0.1s;">for</span>
@@ -430,7 +551,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
                     {{-- Feature: QR Borrowing --}}
-                    <div class="glass-card rounded-2xl p-7 feature-card reveal reveal-delay-1" data-reveal>
+                    <div class="glass-card rounded-2xl p-7 feature-card reveal-left" data-reveal>
                         <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-[#0046ad] dark:text-blue-400 transition-colors duration-300">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
@@ -441,7 +562,7 @@
                     </div>
 
                     {{-- Feature: Smart Search --}}
-                    <div class="glass-card rounded-2xl p-7 feature-card reveal reveal-delay-2" data-reveal>
+                    <div class="glass-card rounded-2xl p-7 feature-card reveal-up reveal-delay-1" data-reveal>
                         <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-emerald-600 dark:text-emerald-400 transition-colors duration-300">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -452,7 +573,7 @@
                     </div>
 
                     {{-- Feature: Role-Based Access --}}
-                    <div class="glass-card rounded-2xl p-7 feature-card reveal reveal-delay-3" data-reveal>
+                    <div class="glass-card rounded-2xl p-7 feature-card reveal-right reveal-delay-2" data-reveal>
                         <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-indigo-600 dark:text-indigo-400 transition-colors duration-300">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -463,7 +584,7 @@
                     </div>
 
                     {{-- Feature: Attendance Tracking (wide card) --}}
-                    <div class="glass-card rounded-2xl p-7 feature-card reveal reveal-delay-1 md:col-span-2" data-reveal>
+                    <div class="glass-card rounded-2xl p-7 feature-card reveal-left md:col-span-2" data-reveal>
                         <div class="flex items-start gap-5">
                             <div class="icon-ring w-12 h-12 flex-shrink-0 rounded-xl flex items-center justify-center text-cyan-600 dark:text-cyan-400 transition-colors duration-300">
                                 <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -478,7 +599,7 @@
                     </div>
 
                     {{-- Feature: Real-Time Notifications --}}
-                    <div class="glass-card rounded-2xl p-7 feature-card reveal reveal-delay-2" data-reveal>
+                    <div class="glass-card rounded-2xl p-7 feature-card reveal-right reveal-delay-1" data-reveal>
                         <div class="icon-ring w-12 h-12 rounded-xl flex items-center justify-center mb-5 text-rose-600 dark:text-rose-400 transition-colors duration-300">
                             <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -488,6 +609,88 @@
                         <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed transition-colors duration-300">Instant alerts for borrow events, librarian assignments, and system updates — powered by Laravel event broadcasting.</p>
                     </div>
 
+                </div>
+            </div>
+        </section>
+
+        {{-- ---- TESTIMONIAL CAROUSEL ---- --}}
+        <section class="px-6 md:px-12 lg:px-16 pb-32 pt-10" id="testimonials">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-16 reveal-up" data-reveal>
+                    <h2 class="text-3xl md:text-5xl font-black tracking-tight mb-4 text-slate-900 dark:text-white transition-colors duration-300">
+                        <span class="reveal-word inline-block" style="transition-delay: 0.05s;">What</span>
+                        <span class="reveal-word inline-block" style="transition-delay: 0.1s;">our</span>
+                        <span class="reveal-word inline-block" style="transition-delay: 0.15s;">community</span>
+                        <span class="reveal-word inline-block text-[#0046ad] dark:text-[#60a5fa]" style="transition-delay: 0.2s;">says.</span>
+                    </h2>
+                </div>
+
+                {{-- Carousel Slider using Alpine.js --}}
+                <div class="glass-card rounded-3xl p-8 md:p-12 reveal-up" data-reveal
+                     x-data="{ 
+                         active: 0,
+                         testimonials: [
+                             {
+                                 quote: 'The QR-based borrowing system has completely cut down our thesis checkout times. It used to take 10 minutes of manual logging; now it is done in 5 seconds.',
+                                 author: 'Danielle Santos',
+                                 role: 'IT Student Researcher'
+                             },
+                             {
+                                 quote: 'Managing research papers was once a logistical nightmare. PLV CEIT Library gives us total visibility over thesis location, borrowing history, and logs.',
+                                 author: 'Ma’am Cynthia Cruz',
+                                 role: 'Head Librarian'
+                             },
+                             {
+                                 quote: 'Being able to search through previous CEIT research theses dynamically saves us days of duplicate academic scope research. A must-have system.',
+                                 author: 'Jayson Rivera',
+                                 role: 'Computer Engineering Student'
+                             }
+                         ],
+                         next() { this.active = (this.active + 1) % this.testimonials.length; },
+                         prev() { this.active = (this.active - 1 + this.testimonials.length) % this.testimonials.length; }
+                     }">
+                    
+                    <div class="relative min-h-[160px] md:min-h-[120px] flex items-center justify-center">
+                        <template x-for="(t, index) in testimonials" :key="index">
+                            <div x-show="active === index"
+                                 x-transition:enter="transition ease-out duration-500 transform"
+                                 x-transition:enter-start="opacity-0 translate-x-12"
+                                 x-transition:enter-end="opacity-100 translate-x-0"
+                                 x-transition:leave="transition ease-in duration-350 transform absolute"
+                                 x-transition:leave-start="opacity-100 translate-x-0"
+                                 x-transition:leave-end="opacity-0 -translate-x-12"
+                                 class="text-center">
+                                <p class="text-base md:text-xl italic text-slate-700 dark:text-slate-300 leading-relaxed font-light mb-6">
+                                    “<span x-text="t.quote"></span>”
+                                </p>
+                                <div class="font-bold text-[#0046ad] dark:text-[#60a5fa] text-sm md:text-base" x-text="t.author"></div>
+                                <div class="text-xs text-slate-500 dark:text-slate-400 font-medium" x-text="t.role"></div>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Navigation Dots & Arrows --}}
+                    <div class="flex items-center justify-between mt-10 border-t border-slate-200/50 dark:border-white/5 pt-6">
+                        <button @click="prev()" class="btn btn-ghost btn-circle btn-sm text-slate-600 dark:text-white/70 hover:bg-slate-200/40 dark:hover:bg-white/10" aria-label="Previous Testimonial">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <div class="flex items-center gap-1.5">
+                            <template x-for="(t, index) in testimonials" :key="index">
+                                <button @click="active = index"
+                                        class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                                        :class="active === index ? 'bg-[#0046ad] dark:bg-blue-500 w-6' : 'bg-slate-300 dark:bg-white/20'"></button>
+                            </template>
+                        </div>
+
+                        <button @click="next()" class="btn btn-ghost btn-circle btn-sm text-slate-600 dark:text-white/70 hover:bg-slate-200/40 dark:hover:bg-white/10" aria-label="Next Testimonial">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>
