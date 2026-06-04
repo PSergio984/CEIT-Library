@@ -65,7 +65,7 @@ class AssignLibrariansTest extends TestCase
         $response = $this->actingAs($librarian)
             ->get(route('admin.librarians'));
 
-        $response->assertStatus(403);
+        $response->assertStatus(302)->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC007: Student cannot access Assign Librarians page */
@@ -79,7 +79,7 @@ class AssignLibrariansTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.librarians'));
 
-        $response->assertStatus(403);
+        $response->assertStatus(302)->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC028: Sunday dates cannot be selected for librarian duty */

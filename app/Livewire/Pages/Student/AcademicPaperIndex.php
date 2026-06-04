@@ -74,6 +74,7 @@ class AcademicPaperIndex extends Component
             ['key' => 'title', 'label' => 'Title'],
             ['key' => 'publication_year', 'label' => 'Year'],
             ['key' => 'status', 'label' => 'Status', 'class' => 'font-semibold'],
+            ['key' => 'actions', 'label' => ''],
         ];
 
         // Leave yearFromFilter empty to show "Year From" placeholder by default
@@ -90,9 +91,9 @@ class AcademicPaperIndex extends Component
     #[Computed]
     public function academicPapers()
     {
-        // Optimize: Only eager load what's displayed in list view
-        // Authors and full copy details are loaded lazily in detail modal
+        // Optimize: Eager load primary relations displayed in list view
         $query = AcademicPaper::query()
+            ->with(['authors:id,name', 'copies:id,academic_paper_id,status'])
             ->when($this->dept, function ($q) {
                 $departmentName = $this->resolveDepartmentName($this->dept);
                 if ($departmentName) {
@@ -137,6 +138,7 @@ class AcademicPaperIndex extends Component
                     });
                 }
             })
+
             ->withCount([
                 'copies as available_copies' => function ($query) {
                     $query->where('status', 'Available');

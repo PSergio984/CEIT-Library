@@ -37,7 +37,10 @@ return Application::configure(basePath: dirname(__DIR__))
                 $user = Auth::user();
                 $redirectTo = $user ? route('student.dashboard') : route('login');
 
-                return redirect($redirectTo)->with('mary.toast', [
+                $response = new \Illuminate\Http\RedirectResponse($redirectTo);
+                $response->setSession(app('session.store'));
+
+                return $response->with('mary.toast', [
                     'type' => 'warning',
                     'title' => 'Access Denied',
                     'description' => 'You do not have permission to access this page.',

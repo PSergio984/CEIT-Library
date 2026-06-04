@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ManageRolesTest extends TestCase
@@ -104,7 +103,7 @@ class ManageRolesTest extends TestCase
         $response = $this->actingAs($admin)
             ->get(route('admin.manage-roles'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC003: Librarian Cannot Access Manage Roles */
@@ -120,7 +119,7 @@ class ManageRolesTest extends TestCase
         $response = $this->actingAs($librarian)
             ->get(route('admin.manage-roles'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC004: Student Cannot Access Manage Roles */
@@ -136,7 +135,7 @@ class ManageRolesTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.manage-roles'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC051: Only Super Admin can assign Admin and Super Admin roles */

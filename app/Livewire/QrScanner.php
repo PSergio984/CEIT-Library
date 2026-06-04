@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Traits\CreatesQrCanonicalMessage;
 use App\Traits\ProcessesAttendanceQr;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
 use Mary\Traits\Toast;
@@ -39,13 +40,18 @@ class QrScanner extends Component
 
     public function handleScan(string $data)
     {
-        $this->authorize('librarian-or-admin-access');
+        if (! Gate::allows('librarian-or-admin-access')) {
+            $this->redirect(route('student.dashboard'));
+
+            return;
+        }
 
         try {
             // Basic validation
             $data = trim($data);
 
             if (empty($data)) {
+                $this->hasError = true;
                 $this->error('Invalid QR code: Empty data', 'Scan Error');
                 $this->stopScanning();
 
@@ -116,6 +122,12 @@ class QrScanner extends Component
 
     public function handleFileUploadScan(string $data)
     {
+        if (! Gate::allows('librarian-or-admin-access')) {
+            $this->redirect(route('student.dashboard'));
+
+            return;
+        }
+
         try {
             // Log the uploaded QR data for debugging
             Log::info('File upload scan initiated', [
@@ -127,6 +139,7 @@ class QrScanner extends Component
             $data = trim($data);
 
             if (empty($data)) {
+                $this->hasError = true;
                 $this->error('Invalid QR code: Empty data', 'Scan Error');
 
                 // Don't stop scanning immediately - let the error toast display

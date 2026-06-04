@@ -56,7 +56,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($user)
             ->get(route('admin.librarians'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -68,7 +68,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.librarians'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -101,6 +101,8 @@ class RoleBasedAccessControlTest extends TestCase
             'user_id' => $user->id,
             'status' => 'active',
             'expires_at' => now()->addDays(30),
+            'start_date' => null,
+            'end_date' => null,
         ]);
 
         $response = $this->actingAs($user)
@@ -122,7 +124,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('test-qr'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -145,7 +147,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($user)
             ->get(route('test-qr'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -181,7 +183,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.dashboard'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -230,6 +232,8 @@ class RoleBasedAccessControlTest extends TestCase
             'user_id' => $user->id,
             'status' => 'active',
             'expires_at' => now()->addDays(30),
+            'start_date' => null,
+            'end_date' => null,
         ]);
 
         $this->assertTrue(Gate::forUser($user)->allows('librarian-or-admin-access'));
@@ -378,7 +382,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($admin)
             ->get(route('admin.manage-roles'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -390,7 +394,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($librarian)
             ->get(route('admin.manage-roles'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -402,7 +406,7 @@ class RoleBasedAccessControlTest extends TestCase
         $response = $this->actingAs($student)
             ->get(route('admin.manage-roles'));
 
-        $response->assertStatus(403);
+        $response->assertRedirect(route('student.dashboard'));
     }
 
     /** @test */
@@ -458,8 +462,7 @@ class RoleBasedAccessControlTest extends TestCase
 
         foreach ($routes as $route) {
             $response = $this->actingAs($student)->get(route($route));
-            $response->assertStatus(403, "Student should not access {$route}");
+            $response->assertRedirect(route('student.dashboard'), "Student should not access {$route}");
         }
     }
 }
-

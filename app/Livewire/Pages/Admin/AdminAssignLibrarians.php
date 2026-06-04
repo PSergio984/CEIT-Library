@@ -70,9 +70,8 @@ class AdminAssignLibrarians extends AdminComponent
      */
     public function placeholder()
     {
-        return view('components.loading-placeholder', [
+        return view('components.skeleton', [
             'message' => 'Loading Librarian Batches...',
-            'subtext' => 'Please wait while we fetch the data',
         ]);
     }
 
@@ -649,9 +648,6 @@ class AdminAssignLibrarians extends AdminComponent
 
     public function render()
     {
-        // Update statuses on every render to ensure fresh data
-        $this->updateBatchStatuses();
-
         return view('livewire.pages.admin.admin-assign-librarians', [
             'groupedLibrarians' => $this->groupedLibrarians,
             'availableBatches' => $this->availableBatches,

@@ -6,12 +6,12 @@ set -e
 CERT_PATH="/etc/ssl/certs/aiven-ca.pem"
 
 #Accept either raw PEM in AIVEN_CA_CERT or base64 in AIVEN_CA_B64
-if [ -n "${AIVEN_CA_CERT:-}" ]; then
+if [[ -n "${AIVEN_CA_CERT:-}" ]]; then
   mkdir -p $(dirname "$CERT_PATH")
   echo "$AIVEN_CA_CERT" > "$CERT_PATH"
   chmod 644 "$CERT_PATH"
   echo "Wrote AIVEN CA to $CERT_PATH"
-elif [ -n "${AIVEN_CA_B64:-}" ]; then
+elif [[ -n "${AIVEN_CA_B64:-}" ]]; then
   mkdir -p $(dirname "$CERT_PATH")
   echo "$AIVEN_CA_B64" | base64 -d > "$CERT_PATH"
   chmod 644 "$CERT_PATH"
@@ -35,7 +35,7 @@ echo "Caching views..."
 php artisan view:cache
 
 #Ensure storage link exists
-if [ ! -L /var/www/html/public/storage ]; then
+if [[ ! -L /var/www/html/public/storage ]]; then
   php artisan storage:link
 fi
 

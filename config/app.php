@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'name' => env('APP_NAME', 'CEIT Library'),
+    'name' => env('APP_NAME', 'PLV CEIT Library'),
 
     /*
     |--------------------------------------------------------------------------

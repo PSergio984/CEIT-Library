@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use Livewire\Volt\Volt;
 use Tests\TestCase;
 
 class PasswordValidationTest extends TestCase
@@ -29,25 +30,30 @@ class PasswordValidationTest extends TestCase
     #[Test]
     public function password_reset_requests_are_rate_limited()
     {
+        config(['auth.passwords.users.throttle' => 0]);
+        
+        $email = 'test@plv.edu.ph';
+        $user = User::factory()->create(['email' => $email]);
+        
         // Clear any existing rate limiters
-        RateLimiter::clear('password.reset');
+        $key = 'forgot-password|' . strtolower($email) . '|' . request()->ip();
+        RateLimiter::clear($key);
 
-        $user = User::factory()->create();
+        $component = Volt::test('pages.auth.forgot-password');
 
-        // Make 3 requests rapidly
+        // Make 3 requests rapidly (limit is 3 in config/throttle.php)
         for ($i = 0; $i < 3; $i++) {
-            $response = $this->post(route('password.email'), [
-                'email' => $user->email,
-            ]);
-            $response->assertStatus(302); // Redirect after submission
+            $component->set('email', $email)
+                ->call('sendPasswordResetLink')
+                ->assertHasNoErrors('email');
         }
 
         // 4th request should be rate limited
-        $response = $this->post(route('password.email'), [
-            'email' => $user->email,
-        ]);
-
-        // Should receive rate limit error
-        $response->assertStatus(429); // Too Many Requests
+        $component->set('email', $email)
+            ->call('sendPasswordResetLink')
+            ->assertHasErrors(['email']);
+            
+        $errorMessage = $component->errors()->get('email')[0];
+        $this->assertStringContainsString('Too many password reset attempts', $errorMessage);
     }
 }

@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 class QrScannerFileUploadTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, \App\Traits\CreatesQrCanonicalMessage;
 
     /**
      * Test that file upload scan with valid QR data successfully records attendance
@@ -40,34 +40,15 @@ class QrScannerFileUploadTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Generate valid QR data (same structure as AttendanceQr component - no timestamp)
-        $secret = config('app.qr_hmac_secret');
-        $nonce = Str::random(32);
-
-        $userPayload = [
-            'id' => $student->id,
-            'email' => $student->email,
-        ];
-
-        $data = [
-            'user_id' => $student->id,
-            'nonce' => $nonce,
-            'user' => $userPayload,
-        ];
-
-        // Add hash for tamper protection
-        $canonicalMessage = $this->createCanonicalMessage($data);
-        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
-
-        // Encrypt the data
-        $encryptedData = Crypt::encryptString(json_encode($data));
+        // Generate valid QR data (v7 format)
+        $qrJson = $this->generateValidQrData($student);
 
         // Act as the librarian
         $this->actingAs($librarian);
 
         // Test the component
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson)
             ->assertDispatched('attendanceRecorded');
 
         // Assert attendance was created
@@ -79,7 +60,6 @@ class QrScannerFileUploadTest extends TestCase
 
     /**
      * Test that file upload scan with tampered hash shows error
-     * (Replaces the expired QR test since we no longer use timestamps)
      */
     public function test_file_upload_scan_with_tampered_hash_shows_error(): void
     {
@@ -94,29 +74,24 @@ class QrScannerFileUploadTest extends TestCase
         ]);
 
         // Generate QR data with INVALID hash (tampered)
-        $nonce = Str::random(32);
-
-        $userPayload = [
-            'id' => $student->id,
-            'email' => $student->email,
-        ];
-
         $data = [
+            'v' => 7,
             'user_id' => $student->id,
-            'nonce' => $nonce,
-            'user' => $userPayload,
+            'nonce' => Str::random(16),
+            'timestamp' => time(),
             'hash' => 'invalid-tampered-hash-12345', // Wrong hash
         ];
 
         // Encrypt the data
         $encryptedData = Crypt::encryptString(json_encode($data));
+        $qrJson = json_encode(['encrypted' => $encryptedData]);
 
         // Act as the librarian
         $this->actingAs($librarian);
 
         // Test the component
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson)
             ->assertSet('hasError', true);
 
         // Assert NO attendance was created
@@ -138,7 +113,7 @@ class QrScannerFileUploadTest extends TestCase
 
         Livewire::test(QrScanner::class)
             ->call('handleFileUploadScan', '')
-            ->assertSet('hasError', false); // Empty check happens before hasError is set
+            ->assertSet('hasError', true);
     }
 
     /**
@@ -159,7 +134,7 @@ class QrScannerFileUploadTest extends TestCase
     }
 
     /**
-     * Test that file upload scan prevents replay attacks (using nonce more than twice)
+     * Test that file upload scan prevents replay attacks (using nonce more than once)
      */
     public function test_file_upload_scan_prevents_replay_attacks(): void
     {
@@ -173,7 +148,7 @@ class QrScannerFileUploadTest extends TestCase
             'role_id' => 2,
         ]);
 
-        // Create librarian duty record manually (avoid factory column issues)
+        // Create librarian duty record manually
         Librarian::create([
             'user_id' => $librarian->id,
             'batch_no' => 2025002,
@@ -182,66 +157,41 @@ class QrScannerFileUploadTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Generate valid QR data (no timestamp)
-        $secret = config('app.qr_hmac_secret');
-        $nonce = Str::random(32);
-
-        $userPayload = [
-            'id' => $student->id,
-            'email' => $student->email,
-        ];
-
-        $data = [
-            'user_id' => $student->id,
-            'nonce' => $nonce,
-            'user' => $userPayload,
-        ];
-
-        // Add hash
-        $canonicalMessage = $this->createCanonicalMessage($data);
-        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
-
-        // Encrypt the data
-        $encryptedData = Crypt::encryptString(json_encode($data));
+        // Generate valid QR data (v7 format)
+        $qrJson = $this->generateValidQrData($student);
 
         // Act as the librarian
         $this->actingAs($librarian);
 
         // First scan - should succeed (check-in)
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson)
             ->assertDispatched('attendanceRecorded');
 
-        // Second scan with SAME QR code - should succeed (check-out)
+        // Second scan with SAME QR code - should fail (replay attack prevention via nonce reuse)
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
-            ->assertDispatched('attendanceRecorded');
-
-        // Third scan with SAME QR code - should fail (replay attack prevention)
-        Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson)
             ->assertSet('hasError', true);
     }
 
     /**
-     * Helper method to create canonical message for HMAC
-     * Must match the implementation in CreatesQrCanonicalMessage trait
-     * Note: Timestamp is no longer included in the canonical message
+     * Helper method to generate valid QR data in v7 format
      */
-    private function createCanonicalMessage(array $data): string
+    private function generateValidQrData(User $user): string
     {
-        // Sort keys to ensure consistent ordering (no timestamp)
-        $fields = [
-            'user_id' => $data['user_id'] ?? '',
-            'nonce' => $data['nonce'] ?? '',
-            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
+        $secret = config('app.qr_hmac_secret');
+        $data = [
+            'v' => 7,
+            'user_id' => $user->id,
+            'nonce' => Str::random(16),
+            'timestamp' => time(),
         ];
 
-        // Create deterministic string representation (no timestamp)
-        return implode('|', [
-            $fields['user_id'],
-            $fields['nonce'],
-            $fields['user'],
-        ]);
+        $canonicalMessage = $this->createCanonicalMessage($data);
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+
+        $encryptedData = Crypt::encryptString(json_encode($data));
+        
+        return json_encode(['encrypted' => $encryptedData]);
     }
 }

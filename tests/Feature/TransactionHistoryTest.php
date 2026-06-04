@@ -34,7 +34,15 @@ class TransactionHistoryTest extends TestCase
 
         // Create some borrow transactions
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
-        BorrowTransaction::factory()->count(5)->create(['user_id' => $student->id]);
+        
+        $paper = \App\Models\AcademicPaper::factory()->create();
+        $inventory = \App\Models\Inventory::factory()->create(['academic_paper_id' => $paper->id]);
+
+        BorrowTransaction::factory()->count(5)->create([
+            'user_id' => $student->id,
+            'academic_paper_id' => $paper->id,
+            'inventory_id' => $inventory->id,
+        ]);
 
         $response = $this->get(route('admin.logs'));
         $response->assertStatus(200);

@@ -952,6 +952,7 @@ class UserTest extends TestCase
 
     /**
      * Test user credit score calculation with high penalty.
+     * Verifies that a penalty resulting in a negative score is capped at 0 by the database CHECK constraint.
      *
      * @return void
      */
@@ -969,8 +970,7 @@ class UserTest extends TestCase
             'remarks' => 'Serious violation',
         ]);
 
-        // Credit score should be reduced by penalty (100 - 150 = -50)
-        $this->assertEquals(-50, $user->fresh()->credit_score);
+        $this->assertEquals(0, $user->fresh()->credit_score);
     }
 
     /**

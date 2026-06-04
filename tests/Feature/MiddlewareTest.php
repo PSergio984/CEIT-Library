@@ -49,14 +49,15 @@ class MiddlewareTest extends TestCase
     {
         $student = User::factory()->create([
             'role_id' => $this->getRoleId('student'),
-            'credit_score' => 20, // Low credit score
+            'credit_score' => 0, // Zero credit score
         ]);
 
         $this->actingAs($student);
 
         // Attempt to access a page that requires minimum credit score
         // Accessing academic papers index should be blocked by CheckCreditScore middleware
-        $this->get(route('academic-paper.index'))->assertStatus(403);
+        // and redirected to dashboard by global exception handler
+        $this->get(route('academic-paper.index'))->assertStatus(302)->assertRedirect(route('student.dashboard'));
     }
 
     /** @test - TC075: Middleware - Guest Only Routes */

@@ -64,10 +64,10 @@ class extends Component
 }; ?>
 
     <!-- Main Content Card -->
-<div class="relative w-9/12 max-w-2xl mx-auto">
+<div class="relative w-full max-w-2xl mx-auto">
     <!-- Card Header with curve and logo -->
     <div class="relative z-20">
-        <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
+        <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
             <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
                 <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
                      class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
@@ -75,47 +75,47 @@ class extends Component
         </div>
     </div>
     <!-- Card Body -->
-    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
+    <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
         @if (session('verification-sent'))
-            <div class="mb-4 p-4 bg-green-50 border border-green-200 rounded-md">
+            <div class="mb-4 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md">
                 <div class="flex">
                     <div class="flex-shrink-0">
-                        <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                        <svg class="h-5 w-5 text-green-400 dark:text-green-500" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-green-700">{{ session('verification-sent') }}</p>
+                        <p class="text-sm text-green-700 dark:text-green-400">{{ session('verification-sent') }}</p>
                     </div>
                 </div>
             </div>
         @endif
         
-        <div class="mb-4 text-sm sm:text-base md:text-lg text-gray-700">
+        <div class="mb-4 text-sm sm:text-base md:text-lg text-slate-700 dark:text-slate-300 text-center">
             {{ __('Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.') }}
         </div>
         @if (session('status') == 'verification-link-sent')
-            <div class="mb-4 font-medium text-sm sm:text-base text-green-600">
+            <div class="mb-4 font-medium text-sm sm:text-base text-green-600 dark:text-green-400 text-center">
                 {{ __('A new verification link has been sent to the email address you provided during registration.') }}
             </div>
         @endif
         
         @error('sendVerification')
-            <div class="mb-4 font-medium text-sm sm:text-base text-red-600" role="alert">
+            <div class="mb-4 font-medium text-sm sm:text-base text-red-600 dark:text-red-400 text-center" role="alert">
                 {{ $message }}
             </div>
         @enderror
         
-        <div class="mt-4 flex flex-col items-center gap-4">
+        <div class="mt-6 flex flex-col items-center gap-4">
             <x-primary-button
                 wire:click="sendVerification"
                 wire:loading.attr="disabled"
                 wire:target="sendVerification"
-                class="w-3/4 !bg-[#273F4F] !text-white !border-none hover:!bg-[#1d2c38] flex items-center justify-center px-4 py-3 normal-case">
+                class="w-full sm:w-3/4 dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white flex items-center justify-center px-4 py-3 normal-case">
                 {{ __('Resend verification email') }}
             </x-primary-button>
             <button wire:click="logout" type="button"
-                    class="underline text-sm sm:text-base text-gray-700 hover:text-gray-900 rounded-md font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#273F4F]">
+                    class="underline text-sm sm:text-base text-slate-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-md font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#273F4F]">
                 {{ __('Log Out') }}
             </button>
         </div>

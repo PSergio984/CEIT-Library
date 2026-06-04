@@ -3,14 +3,17 @@
 use App\Livewire\Forms\LoginForm;
 use Illuminate\Support\Facades\Session;
 use Livewire\Attributes\Layout;
-use Livewire\Attributes\Title;
 use Livewire\Volt\Component;
 
 new #[Layout('layouts.guest')]
-#[Title('Login - CEIT Library')]
 class extends Component
 {
     public LoginForm $form;
+
+    public function rendering(\Illuminate\View\View $view): void
+    {
+        $view->title('Login - ' . config('branding.name'));
+    }
 
     /**
      * Handle an incoming authentication request.
@@ -83,7 +86,7 @@ class extends Component
 }">
     <!-- Card Header with curve and logo -->
     <div class="relative z-20">
-        <div class="bg-[#273F4F] h-24 rounded-t-2xl flex items-center justify-center overflow-hidden">
+        <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
             <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
                 <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
                      class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
@@ -92,9 +95,9 @@ class extends Component
     </div>
 
     <!-- Card Body -->
-    <div class="bg-[#D9D9D9] rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10">
+    <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
         <!-- Title -->
-        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] text-center mb-4 sm:mb-6 md:mb-8">Log in
+        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] dark:text-white text-center mb-4 sm:mb-6 md:mb-8">Log in
             to your account</h2>
         <!-- Session Status -->
         <x-auth-session-status class="mb-4" :status="session('status')" />
@@ -128,8 +131,8 @@ class extends Component
                     icon="o-envelope"
                     clearable
                     type="email"
-                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
-                    icon-class="!text-gray-700"
+                    class="!bg-white dark:!bg-slate-800 !border-gray-400 dark:!border-slate-700 !text-slate-900 dark:!text-white placeholder:!text-slate-500 dark:placeholder:!text-slate-400 !text-sm sm:!text-base"
+                    icon-class="!text-gray-700 dark:!text-slate-300"
                     required
                     autofocus
                     autocomplete="username"
@@ -137,7 +140,7 @@ class extends Component
                     x-on:input="fields.email = $event.target.value"
                     x-on:blur="validateField('email')"/>
                 <template x-if="touched.email && errors.email && !$wire.__instance.snapshot.memo.errors?.['form.email']">
-                    <p class="text-red-500 text-xs mt-1" x-text="errors.email"></p>
+                    <p class="text-red-600 dark:text-red-400 text-xs mt-1" x-text="errors.email"></p>
                 </template>
             </div>
 
@@ -148,13 +151,13 @@ class extends Component
                     placeholder="Password"
                     required
                     autocomplete="current-password"
-                    class="!bg-[#D9D9D9] !border-gray-400 !text-black placeholder:!text-gray-600 !text-sm sm:!text-base"
-                    icon-class="!text-gray-700"
+                    class="!bg-white dark:!bg-slate-800 !border-gray-400 dark:!border-slate-700 !text-slate-900 dark:!text-white placeholder:!text-slate-500 dark:placeholder:!text-slate-400 !text-sm sm:!text-base"
+                    icon-class="!text-gray-700 dark:!text-slate-300"
                     error-field="form.password"
                     x-on:input="fields.password = $event.target.value"
                     x-on:blur="validateField('password')"/>
                 <template x-if="touched.password && errors.password && !$wire.__instance.snapshot.memo.errors?.['form.password']">
-                    <p class="text-red-500 text-xs mt-1" x-text="errors.password"></p>
+                    <p class="text-red-600 dark:text-red-400 text-xs mt-1" x-text="errors.password"></p>
                 </template>
             </div>
 
@@ -164,11 +167,11 @@ class extends Component
                     <input wire:model="form.remember" id="remember" type="checkbox"
                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
                            name="remember">
-                    <span class="ms-2 text-sm text-gray-600">{{ __('Remember me') }}</span>
+                    <span class="ms-2 text-sm text-slate-700 dark:text-slate-300">{{ __('Remember me') }}</span>
                 </label>
 
                 @if (Route::has('password.request'))
-                    <a class="text-sm text-[#273F4F] hover:text-[#1e2f3a] underline font-medium"
+                    <a class="text-sm text-[#273F4F] dark:text-sky-400 hover:text-[#1e2f3a] dark:hover:text-sky-300 underline font-medium"
                        href="{{ route('password.request') }}" wire:navigate>
                         Forgot your password?
                     </a>
@@ -178,7 +181,7 @@ class extends Component
             <!-- Login Button -->
             <div class="mb-4 flex justify-center">
                 <x-primary-button 
-                    class="w-full sm:w-2/3 md:w-1/2" 
+                    class="w-full sm:w-2/3 md:w-1/2 dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white" 
                     wire:target="login" 
                     wire:loading.attr="disabled"
                     x-bind:disabled="!isFormValid"
@@ -189,9 +192,9 @@ class extends Component
 
             <!-- Register Link -->
             <div class="text-center">
-                <p class="text-sm text-gray-600">
+                <p class="text-sm text-slate-700 dark:text-slate-300">
                     Don't have an account?
-                    <a href="{{ route('register') }}" class="text-[#273F4F] hover:text-[#1e2f3a] underline font-medium"
+                    <a href="{{ route('register') }}" class="text-[#273F4F] dark:text-sky-400 hover:text-[#1e2f3a] dark:hover:text-sky-300 underline font-medium"
                        wire:navigate>
                         Register
                     </a>

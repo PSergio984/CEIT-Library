@@ -2,18 +2,18 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Student\AttendanceQr;
 use App\Livewire\QrScanner;
 use App\Models\Attendance;
 use App\Models\Librarian;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use Tests\TestCase;
 
@@ -33,7 +33,7 @@ use Tests\TestCase;
  */
 class QrCodeScannabilityTest extends TestCase
 {
-    use RefreshDatabase;
+    use CreatesQrCanonicalMessage, RefreshDatabase;
 
     private User $student;
 
@@ -58,48 +58,26 @@ class QrCodeScannabilityTest extends TestCase
     }
 
     /**
-     * Helper to create canonical message for HMAC (matches CreatesQrCanonicalMessage trait)
-     * Note: Timestamp is no longer included in the canonical message
-     */
-    private function createCanonicalMessage(array $data): string
-    {
-        $fields = [
-            'user_id' => $data['user_id'] ?? '',
-            'nonce' => $data['nonce'] ?? '',
-            'user' => isset($data['user']) ? json_encode($data['user'], JSON_UNESCAPED_SLASHES) : '',
-        ];
-
-        return implode('|', [
-            $fields['user_id'],
-            $fields['nonce'],
-            $fields['user'],
-        ]);
-    }
-
-    /**
-     * Generate valid encrypted QR data for testing
-     * Note: Timestamp is no longer part of the QR code data
+     * Generate valid encrypted QR data for testing (v7 format)
      */
     private function generateValidQrData(User $user): string
     {
         $secret = config('app.qr_hmac_secret');
-        $nonce = Str::random(32);
-
-        $userPayload = [
-            'id' => $user->id,
-            'email' => $user->email,
-        ];
+        $nonce = Str::random(16);
 
         $data = [
+            'v' => 7,
             'user_id' => $user->id,
             'nonce' => $nonce,
-            'user' => $userPayload,
+            'timestamp' => time(),
         ];
 
         $canonicalMessage = $this->createCanonicalMessage($data);
         $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
-        return Crypt::encryptString(json_encode($data));
+        $encryptedData = Crypt::encryptString(json_encode($data));
+
+        return json_encode(['encrypted' => $encryptedData]);
     }
 
     // ==========================================
@@ -211,14 +189,14 @@ class QrCodeScannabilityTest extends TestCase
         $this->actingAs($this->student);
 
         // Generate valid QR data (simulating what AttendanceQr component does)
-        $encryptedData = $this->generateValidQrData($this->student);
+        $qrJson = $this->generateValidQrData($this->student);
 
         // Step 2: Scan QR code as librarian
         $this->actingAs($this->librarian);
 
         // Simulate scanning the QR code
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson)
             ->assertDispatched('attendanceRecorded')
             ->assertSet('hasError', false);
 
@@ -231,16 +209,14 @@ class QrCodeScannabilityTest extends TestCase
 
     /** @test */
     #[Test]
-    public function qr_code_allows_check_in_and_check_out_with_same_code(): void
+    public function qr_code_allows_check_in_and_check_out_with_different_codes(): void
     {
-        // Generate QR data
-        $encryptedData = $this->generateValidQrData($this->student);
-
         $this->actingAs($this->librarian);
 
-        // First scan - Check IN
+        // First scan - Check IN (Code 1)
+        $qrJson1 = $this->generateValidQrData($this->student);
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson1)
             ->assertDispatched('attendanceRecorded');
 
         // Verify check-in
@@ -249,9 +225,11 @@ class QrCodeScannabilityTest extends TestCase
             'status' => 'active',
         ]);
 
-        // Second scan - Check OUT
+        // Second scan - Check OUT (Code 2)
+        // Must use a new code because of nonce replay protection
+        $qrJson2 = $this->generateValidQrData($this->student);
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson2)
             ->assertDispatched('attendanceRecorded');
 
         // Verify check-out (status should be completed)
@@ -263,23 +241,45 @@ class QrCodeScannabilityTest extends TestCase
 
     /** @test */
     #[Test]
-    public function third_scan_with_same_qr_code_creates_new_attendance(): void
+    public function qr_code_prevents_replay_attack(): void
     {
-        $encryptedData = $this->generateValidQrData($this->student);
+        $qrJson = $this->generateValidQrData($this->student);
 
         $this->actingAs($this->librarian);
 
-        // First scan - Check IN
+        // First scan - Should succeed
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData);
+            ->call('handleFileUploadScan', $qrJson)
+            ->assertDispatched('attendanceRecorded');
+
+        // Second scan with SAME QR code - Should fail (replay attack prevention)
+        Livewire::test(QrScanner::class)
+            ->call('handleFileUploadScan', $qrJson)
+            ->assertSet('hasError', true);
+
+        $this->assertDatabaseCount('attendances', 1);
+    }
+
+    /** @test */
+    #[Test]
+    public function multiple_check_ins_require_fresh_qr_codes(): void
+    {
+        $this->actingAs($this->librarian);
+
+        // First scan - Check IN
+        $qrJson1 = $this->generateValidQrData($this->student);
+        Livewire::test(QrScanner::class)
+            ->call('handleFileUploadScan', $qrJson1);
 
         // Second scan - Check OUT
+        $qrJson2 = $this->generateValidQrData($this->student);
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData);
+            ->call('handleFileUploadScan', $qrJson2);
 
-        // Third scan - Should create a NEW check-in (permanent QR, unlimited use)
+        // Third scan - Should create a NEW check-in
+        $qrJson3 = $this->generateValidQrData($this->student);
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $qrJson3)
             ->assertDispatched('attendanceRecorded');
 
         // Verify a new attendance record was created (should have 2 total now)
@@ -521,11 +521,12 @@ class QrCodeScannabilityTest extends TestCase
         ];
 
         $encryptedData = Crypt::encryptString(json_encode($data));
+        $wrappedData = json_encode(['encrypted' => $encryptedData]);
 
         $this->actingAs($this->librarian);
 
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $encryptedData)
+            ->call('handleFileUploadScan', $wrappedData)
             ->assertSet('hasError', true);
 
         $this->assertDatabaseCount('attendances', 0);
@@ -585,27 +586,28 @@ class QrCodeScannabilityTest extends TestCase
     {
         $this->actingAs($this->student);
 
-        $encryptedData = $this->generateValidQrData($this->student);
+        $qrJson = $this->generateValidQrData($this->student);
+        $qrData = json_decode($qrJson, true);
 
         // Decrypt and verify contents
-        $decryptedJson = Crypt::decryptString($encryptedData);
+        $decryptedJson = Crypt::decryptString($qrData['encrypted']);
         $data = json_decode($decryptedJson, true);
 
         $this->assertEquals($this->student->id, $data['user_id']);
-        $this->assertEquals($this->student->id, $data['user']['id']);
-        $this->assertEquals($this->student->email, $data['user']['email']);
         $this->assertArrayHasKey('nonce', $data);
         $this->assertArrayHasKey('hash', $data);
+        $this->assertArrayHasKey('timestamp', $data);
     }
 
     /** @test */
     #[Test]
     public function qr_code_hash_prevents_data_modification(): void
     {
-        $encryptedData = $this->generateValidQrData($this->student);
+        $qrJson = $this->generateValidQrData($this->student);
+        $qrData = json_decode($qrJson, true);
 
         // Decrypt the data
-        $decryptedJson = Crypt::decryptString($encryptedData);
+        $decryptedJson = Crypt::decryptString($qrData['encrypted']);
         $data = json_decode($decryptedJson, true);
 
         // Modify the user_id
@@ -613,12 +615,13 @@ class QrCodeScannabilityTest extends TestCase
 
         // Re-encrypt with modified data (but original hash)
         $modifiedEncrypted = Crypt::encryptString(json_encode($data));
+        $modifiedQrJson = json_encode(['encrypted' => $modifiedEncrypted]);
 
         $this->actingAs($this->librarian);
 
         // Should be rejected due to hash mismatch
         Livewire::test(QrScanner::class)
-            ->call('handleFileUploadScan', $modifiedEncrypted)
+            ->call('handleFileUploadScan', $modifiedQrJson)
             ->assertSet('hasError', true);
 
         $this->assertDatabaseCount('attendances', 0);

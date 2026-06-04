@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\QrScanner;
 use App\Models\Librarian;
 use App\Models\Role;
@@ -12,6 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class QrScannerTest extends TestCase
@@ -112,6 +111,8 @@ class QrScannerTest extends TestCase
         Librarian::factory()->create([
             'user_id' => $librarian->id,
             'status' => 'active',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
         ]);
 
         $nonce = Str::random(16);
@@ -144,7 +145,12 @@ class QrScannerTest extends TestCase
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
         $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
-        Librarian::factory()->create(['user_id' => $librarian->id, 'status' => 'active']);
+        Librarian::factory()->create([
+            'user_id' => $librarian->id,
+            'status' => 'active',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
 
         $data = [
             'v' => 7,
@@ -174,7 +180,12 @@ class QrScannerTest extends TestCase
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
         $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
-        Librarian::factory()->create(['user_id' => $librarian->id, 'status' => 'active']);
+        Librarian::factory()->create([
+            'user_id' => $librarian->id,
+            'status' => 'active',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
 
         $data = [
             'v' => 7,
@@ -204,7 +215,12 @@ class QrScannerTest extends TestCase
     {
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
         $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
-        Librarian::factory()->create(['user_id' => $librarian->id, 'status' => 'active']);
+        Librarian::factory()->create([
+            'user_id' => $librarian->id,
+            'status' => 'active',
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
 
         $nonce = 'duplicate-nonce-123';
         $data = [

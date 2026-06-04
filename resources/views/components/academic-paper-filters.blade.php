@@ -76,18 +76,15 @@
                 Filters
             </h3>
             
-            <button 
+            <x-mary-button 
                 x-show="hasActiveFilters"
-                @click="$wire.clearFilters()"
+                wire:click="clearFilters"
                 x-cloak
-                class="btn btn-ghost btn-sm gap-2"
-                title="Clear all filters"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-                <span class="hidden sm:inline">Clear</span>
-            </button>
+                class="btn-ghost btn-sm gap-2"
+                icon="o-x-mark"
+                label="Clear"
+                spinner
+            />
         </div>
 
         {{-- Filter Controls --}}

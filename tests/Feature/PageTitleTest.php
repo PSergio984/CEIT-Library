@@ -13,6 +13,16 @@ class PageTitleTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Ensure roles are seeded
+        if (\App\Models\Role::count() === 0) {
+            $this->seed();
+        }
+    }
+
     protected function getRoleId(string $roleName): int
     {
         return Role::where('name', $roleName)->value('id') ?? match ($roleName) {
@@ -28,7 +38,7 @@ class PageTitleTest extends TestCase
     #[Test]
     public function browser_tab_title_updates_based_on_current_page()
     {
-        $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
+        $admin = User::factory()->create(['role_id' => $this->getRoleId('super_admin')]);
         $this->actingAs($admin);
 
         // Check Dashboard title
