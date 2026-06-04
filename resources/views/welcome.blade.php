@@ -187,7 +187,7 @@
                         transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
                         filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .reveal.visible .reveal-word {
+        [data-reveal].visible .reveal-word {
             opacity: 1;
             transform: translateY(0);
             filter: blur(0);
@@ -487,7 +487,7 @@
                         <span class="reveal-word inline-block" style="transition-delay: 0.1s;">borrowing</span>
                         <span class="reveal-word inline-block" style="transition-delay: 0.15s;">simplified.</span>
                     </h2>
-                    <p class="text-slate-500 dark:text-slate-400 max-w-lg mx-auto text-base transition-colors duration-300">
+                    <p class="text-slate-600 dark:text-slate-350 max-w-lg mx-auto text-base transition-colors duration-300">
                         Three simple steps from discovery to academic success.
                     </p>
                 </div>
@@ -497,34 +497,40 @@
                     <div class="hidden md:block absolute top-1/2 left-4 right-4 h-0.5 bg-slate-200 dark:bg-white/10 -translate-y-1/2 z-0"></div>
 
                     {{-- Step 1 --}}
-                    <div class="glass-card rounded-2xl p-8 relative z-10 reveal-left feature-card" data-reveal>
-                        <div class="absolute -top-6 left-8 w-12 h-12 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            1
+                    <div class="glass-card rounded-2xl p-8 reveal-left feature-card" data-reveal>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-base flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                1
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Browse Theses</h3>
                         </div>
-                        <h3 class="text-xl font-bold mt-4 mb-3 text-slate-900 dark:text-white">Browse Theses</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        <p class="text-slate-600 dark:text-slate-350 text-sm leading-relaxed">
                             Search our extensive repository of engineering and technology research papers by category, author, or keyword.
                         </p>
                     </div>
 
                     {{-- Step 2 --}}
-                    <div class="glass-card rounded-2xl p-8 relative z-10 reveal-up reveal-delay-1 feature-card" data-reveal>
-                        <div class="absolute -top-6 left-8 w-12 h-12 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            2
+                    <div class="glass-card rounded-2xl p-8 reveal-up reveal-delay-1 feature-card" data-reveal>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-base flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                2
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Request QR Code</h3>
                         </div>
-                        <h3 class="text-xl font-bold mt-4 mb-3 text-slate-900 dark:text-white">Request QR Code</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        <p class="text-slate-600 dark:text-slate-350 text-sm leading-relaxed">
                             Generate a personalized transaction QR code directly from your dashboard for the thesis you wish to borrow.
                         </p>
                     </div>
 
                     {{-- Step 3 --}}
-                    <div class="glass-card rounded-2xl p-8 relative z-10 reveal-right reveal-delay-2 feature-card" data-reveal>
-                        <div class="absolute -top-6 left-8 w-12 h-12 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-lg flex items-center justify-center shadow-lg shadow-blue-500/20">
-                            3
+                    <div class="glass-card rounded-2xl p-8 reveal-right reveal-delay-2 feature-card" data-reveal>
+                        <div class="flex items-center gap-4 mb-4">
+                            <div class="w-10 h-10 rounded-full bg-[#0046ad] dark:bg-blue-600 text-white font-extrabold text-base flex items-center justify-center shadow-lg shadow-blue-500/20">
+                                3
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-900 dark:text-white">Scan & Read</h3>
                         </div>
-                        <h3 class="text-xl font-bold mt-4 mb-3 text-slate-900 dark:text-white">Scan & Read</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
+                        <p class="text-slate-600 dark:text-slate-350 text-sm leading-relaxed">
                             Present your generated QR code to the library counter for scanning. Instantly checkout and begin your study.
                         </p>
                     </div>
@@ -544,7 +550,7 @@
                         <span class="reveal-word inline-block text-[#0046ad] dark:text-[#60a5fa]" style="transition-delay: 0.2s;">academic</span>
                         <span class="reveal-word inline-block text-[#0046ad] dark:text-[#60a5fa]" style="transition-delay: 0.25s;">research.</span>
                     </h2>
-                    <p class="text-slate-500 dark:text-slate-400 max-w-lg mx-auto text-base transition-colors duration-300">Every feature engineered to eliminate friction between students and their resources.</p>
+                    <p class="text-slate-600 dark:text-slate-300 max-w-lg mx-auto text-base transition-colors duration-300">Every feature engineered to eliminate friction between students and their resources.</p>
                 </div>
 
                 {{-- 3-column feature grid --}}
@@ -558,7 +564,7 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold mb-2 text-slate-900 dark:text-white transition-colors duration-300">QR Code Borrowing</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed transition-colors duration-300">Scan once, borrow instantly. Our QR-driven system logs every transaction in real time — no paperwork, no delays.</p>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed transition-colors duration-300">Scan once, borrow instantly. Our QR-driven system logs every transaction in real time — no paperwork, no delays.</p>
                     </div>
 
                     {{-- Feature: Smart Search --}}
@@ -569,7 +575,7 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold mb-2 text-slate-900 dark:text-white transition-colors duration-300">Smart Search</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed transition-colors duration-300">Instantly surface theses, research papers, and academic resources with a high-speed indexed search engine.</p>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed transition-colors duration-300">Instantly surface theses, research papers, and academic resources with a high-speed indexed search engine.</p>
                     </div>
 
                     {{-- Feature: Role-Based Access --}}
@@ -580,7 +586,7 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold mb-2 text-slate-900 dark:text-white transition-colors duration-300">Role-Based Access</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed transition-colors duration-300">Super Admin, Admin, Librarian, and Student roles — each with granular permissions protecting intellectual property.</p>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed transition-colors duration-300">Super Admin, Admin, Librarian, and Student roles — each with granular permissions protecting intellectual property.</p>
                     </div>
 
                     {{-- Feature: Attendance Tracking (wide card) --}}
@@ -593,7 +599,7 @@
                             </div>
                             <div>
                                 <h3 class="text-lg font-bold mb-2 text-slate-900 dark:text-white transition-colors duration-300">Attendance & Violation Tracking</h3>
-                                <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed transition-colors duration-300">QR-powered attendance logs track every facility entry. Violations are recorded, reviewed, and managed through an automated admin workflow — keeping the library compliant and fair.</p>
+                                <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed transition-colors duration-300">QR-powered attendance logs track every facility entry. Violations are recorded, reviewed, and managed through an automated admin workflow — keeping the library compliant and fair.</p>
                             </div>
                         </div>
                     </div>
@@ -606,7 +612,7 @@
                             </svg>
                         </div>
                         <h3 class="text-lg font-bold mb-2 text-slate-900 dark:text-white transition-colors duration-300">Real-Time Notifications</h3>
-                        <p class="text-slate-600 dark:text-slate-400 text-sm leading-relaxed transition-colors duration-300">Instant alerts for borrow events, librarian assignments, and system updates — powered by Laravel event broadcasting.</p>
+                        <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed transition-colors duration-300">Instant alerts for borrow events, librarian assignments, and system updates — powered by Laravel event broadcasting.</p>
                     </div>
 
                 </div>
