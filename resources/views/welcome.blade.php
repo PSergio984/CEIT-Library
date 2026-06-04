@@ -303,7 +303,7 @@
 </head>
 <body class="bg-[#f8fafc] dark:bg-[#0d0f14] text-slate-900 dark:text-white antialiased overflow-x-hidden transition-colors duration-300"
       x-data="{ 
-          darkMode: document.documentElement.classList.contains('dark'),
+          darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
           toggleTheme() {
               this.darkMode = !this.darkMode;
               if (this.darkMode) {

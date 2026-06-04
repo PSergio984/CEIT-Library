@@ -32,7 +32,7 @@
         class="relative min-h-screen bg-white bg-cover bg-center bg-no-repeat font-sans"
         style="background-image: url('{{ asset('images/plvbg.jpg') }}');"
         x-data="{
-            darkMode: document.documentElement.classList.contains('dark'),
+            darkMode: localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
             toggleTheme() {
                 this.darkMode = !this.darkMode;
                 if (this.darkMode) {
