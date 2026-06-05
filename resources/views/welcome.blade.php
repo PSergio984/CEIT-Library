@@ -98,13 +98,16 @@
         /* --- Scroll reveal --- */
         [data-reveal] {
             opacity: 0;
-            will-change: transform, opacity;
+            filter: blur(4px);
+            will-change: transform, opacity, filter;
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 0.5s ease-out;
         }
         [data-reveal].visible {
             opacity: 1;
-            transform: translate3d(0, 0, 0) scale(1) rotate(0) rotateX(0deg) rotateY(0deg);
+            filter: blur(0);
+            transform: perspective(1000px) translate3d(0, 0, 0) scale(1) rotate(0) rotateX(0deg) rotateY(0deg);
         }
         .reveal-left {
             transform: translate3d(-80px, 0, 0) rotate(-3deg) scale(0.96);
@@ -116,7 +119,7 @@
             transform: translate3d(0, 80px, 0) scale(0.96);
         }
         .reveal {
-            transform: translate3d(0, 48px, 0) scale(0.95) rotateX(6deg) rotateY(-6deg);
+            transform: perspective(1000px) translate3d(0, 48px, 0) scale(0.95) rotateX(6deg) rotateY(-6deg);
         }
         .reveal-delay-1 { transition-delay: 0.1s; }
         .reveal-delay-2 { transition-delay: 0.2s; }
@@ -265,9 +268,10 @@
         /* Cards: hover lifts + brightens border — cursor-pointer for UX */
         .feature-card {
             cursor: pointer;
-            will-change: transform, opacity;
+            will-change: transform, opacity, filter;
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
                         transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 0.5s ease-out,
                         border-color 0.25s ease,
                         background 0.25s ease,
                         box-shadow 0.25s ease;
