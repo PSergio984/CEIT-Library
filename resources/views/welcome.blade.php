@@ -300,21 +300,6 @@
 
         /* --- Reduced motion --- */
         @media (prefers-reduced-motion: reduce) {
-            [data-reveal],
-            .reveal, .reveal-left, .reveal-right, .reveal-up,
-            .reveal-delay-1, .reveal-delay-2, .reveal-delay-3, .reveal-delay-4 {
-                transition: none !important;
-                opacity: 1 !important;
-                transform: none !important;
-                filter: none !important;
-            }
-            .feature-card {
-                transition: none !important;
-                transform: none !important;
-            }
-            .marquee-content {
-                animation: none !important;
-            }
             .accent-line { animation: none; }
             .animate-bounce, .animate-pulse { animation: none; }
         }
