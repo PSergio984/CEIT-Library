@@ -29,6 +29,29 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
 
+Route::get('/sitemap.xml', function () {
+    $urls = [
+        '',
+        '/login',
+        '/register',
+        '/forgot-password',
+    ];
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+    foreach ($urls as $url) {
+        $xml .= '<url>';
+        $xml .= '<loc>'.url($url).'</loc>';
+        $xml .= '<lastmod>'.now()->toAtomString().'</lastmod>';
+        $xml .= '<changefreq>weekly</changefreq>';
+        $xml .= '<priority>'.($url === '' ? '1.0' : '0.8').'</priority>';
+        $xml .= '</url>';
+    }
+    $xml .= '</urlset>';
+
+    return response($xml, 200, ['Content-Type' => 'application/xml']);
+});
+
 // Test route for QR code system (only available in local or testing environment)
 if (config('app.env') === 'local' || config('app.env') === 'testing') {
     Route::middleware(['auth', 'verified', 'librarian.or.admin'])->group(function () {

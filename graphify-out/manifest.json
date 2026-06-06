@@ -1032,8 +1032,8 @@
     "hash": "c76f56f127cf2b47b44885f779549e1e"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\routes\\web.php": {
-    "mtime": 1780417951.7323847,
-    "hash": "228e6bfe30d677d5f0e9f0952b330d96"
+    "mtime": 1780760557.6944065,
+    "hash": "b0087b792169128b62e76473a39c868a"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\storage\\framework\\views\\0183bea9c7f00b84720cc93f3881dd54.blade.php": {
     "mtime": 1780664254.0671673,
@@ -3178,6 +3178,10 @@
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\SimpleTest.php": {
     "mtime": 1765126478.4440765,
     "hash": "b550df8039f5753a19eb765621b5ddf8"
+  },
+  "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\SitemapTest.php": {
+    "mtime": 1780760557.7146077,
+    "hash": "9348500b4829a69399935c30f9a4f9fd"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\tests\\Feature\\StudentDashboardTest.php": {
     "mtime": 1779457235.1775835,
@@ -45308,8 +45312,8 @@
     "hash": "1ef8abc072f707f0e0e4dea53e850ea5"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\public\\robots.txt": {
-    "mtime": 1756489211.0,
-    "hash": "b6216d61c03e6ce0c9aea6ca7808f7ca"
+    "mtime": 1780760544.2906568,
+    "hash": "b2d7917e3f1fa742c758e471154a9ea6"
   },
   "C:\\Users\\admin\\Herd\\CEIT-Library\\vendor\\bacon\\bacon-qr-code\\README.md": {
     "mtime": 1670435217.0,
