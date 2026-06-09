@@ -79,7 +79,14 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(15, 23, 42, 0.08);
-            transition: background 0.3s ease, border-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+            transition:
+                background 0.3s ease,
+                border-color 0.3s ease,
+                transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
+            will-change: transform, opacity;
         }
         .dark .glass-card {
             background: rgba(19, 25, 38, 0.55);
@@ -97,29 +104,28 @@
         /* --- Scroll reveal --- */
         [data-reveal] {
             opacity: 0;
-            filter: blur(8px);
-            transition: opacity 1.2s cubic-bezier(0.16, 1, 0.3, 1),
-                        transform 1.2s cubic-bezier(0.16, 1, 0.3, 1),
-                        filter 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-            transform-style: preserve-3d;
-            perspective: 1000px;
+            filter: blur(4px);
+            will-change: transform, opacity, filter;
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 0.5s ease-out;
         }
         [data-reveal].visible {
             opacity: 1;
             filter: blur(0);
-            transform: translate(0) scale(1) rotate(0) rotateX(0deg) rotateY(0deg) !important;
+            transform: perspective(1000px) translate3d(0, 0, 0) scale(1) rotate(0) rotateX(0deg) rotateY(0deg);
         }
         .reveal-left {
-            transform: translateX(-80px) rotate(-3deg) scale(0.96);
+            transform: translate3d(-80px, 0, 0) rotate(-3deg) scale(0.96);
         }
         .reveal-right {
-            transform: translateX(80px) rotate(3deg) scale(0.96);
+            transform: translate3d(80px, 0, 0) rotate(3deg) scale(0.96);
         }
         .reveal-up {
-            transform: translateY(80px) scale(0.96);
+            transform: translate3d(0, 80px, 0) scale(0.96);
         }
         .reveal {
-            transform: translateY(48px) scale(0.95) rotateX(6deg) rotateY(-6deg);
+            transform: perspective(1000px) translate3d(0, 48px, 0) scale(0.95) rotateX(6deg) rotateY(-6deg);
         }
         .reveal-delay-1 { transition-delay: 0.1s; }
         .reveal-delay-2 { transition-delay: 0.2s; }
@@ -140,6 +146,7 @@
             justify-content: space-around;
             min-width: 100%;
             gap: 2rem;
+            will-change: transform;
             animation: scroll-left 25s linear infinite;
         }
         .marquee-content.reverse {
@@ -267,13 +274,19 @@
         /* Cards: hover lifts + brightens border — cursor-pointer for UX */
         .feature-card {
             cursor: pointer;
-            transition: transform 0.35s cubic-bezier(0.16,1,0.3,1),
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                        filter 0.5s ease-out,
                         border-color 0.25s ease,
                         background 0.25s ease,
                         box-shadow 0.25s ease;
         }
         .feature-card:hover {
-            transform: translateY(-3px);
+            will-change: transform, opacity, filter;
+            /* Disable transform transition during hover so JS mousemove tilt is instant */
+            transition: border-color 0.25s ease,
+                        background 0.25s ease,
+                        box-shadow 0.25s ease;
             border-color: rgba(0, 70, 173, 0.25);
             background: rgba(255, 255, 255, 0.85);
             box-shadow: 0 12px 30px -10px rgba(0, 70, 173, 0.08);
@@ -293,13 +306,20 @@
 
         /* --- Reduced motion --- */
         @media (prefers-reduced-motion: reduce) {
-            .reveal, .reveal-delay-1, .reveal-delay-2, .reveal-delay-3, .reveal-delay-4 {
-                transition: none;
-                opacity: 1;
-                transform: none;
-            }
             .accent-line { animation: none; }
             .animate-bounce, .animate-pulse { animation: none; }
+            [data-reveal] {
+                opacity: 1 !important;
+                filter: none !important;
+                transform: none !important;
+                transition: none !important;
+            }
+            .animate-fade-in-up, .animate-fade-in-scale {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
         }
 
         [x-cloak] { display: none !important; }
