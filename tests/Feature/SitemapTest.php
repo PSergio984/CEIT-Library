@@ -24,4 +24,16 @@ class SitemapTest extends TestCase
         $this->assertStringContainsString('<loc>'.url('/register').'</loc>', $content);
         $this->assertStringContainsString('<loc>'.url('/forgot-password').'</loc>', $content);
     }
+
+    /**
+     * Test that public/robots.txt points to the relative sitemap.xml.
+     */
+    public function test_robots_txt_contains_relative_sitemap(): void
+    {
+        $robotsPath = public_path('robots.txt');
+        $this->assertFileExists($robotsPath);
+
+        $content = file_get_contents($robotsPath);
+        $this->assertStringContainsString('Sitemap: /sitemap.xml', $content);
+    }
 }

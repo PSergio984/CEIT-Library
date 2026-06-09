@@ -79,8 +79,14 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(15, 23, 42, 0.08);
+            transition:
+                background 0.3s ease,
+                border-color 0.3s ease,
+                transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.3s ease;
+        }
+        .glass-card:hover {
             will-change: transform, opacity;
-            transition: background 0.3s ease, border-color 0.3s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
         }
         .dark .glass-card {
             background: rgba(19, 25, 38, 0.55);
@@ -268,7 +274,6 @@
         /* Cards: hover lifts + brightens border — cursor-pointer for UX */
         .feature-card {
             cursor: pointer;
-            will-change: transform, opacity, filter;
             transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
                         transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
                         filter 0.5s ease-out,
@@ -277,6 +282,7 @@
                         box-shadow 0.25s ease;
         }
         .feature-card:hover {
+            will-change: transform, opacity, filter;
             /* Disable transform transition during hover so JS mousemove tilt is instant */
             transition: border-color 0.25s ease,
                         background 0.25s ease,

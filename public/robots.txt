@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://ceit-library.test/sitemap.xml
+Sitemap: /sitemap.xml

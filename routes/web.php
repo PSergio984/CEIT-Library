@@ -32,16 +32,17 @@ Route::view('/', 'welcome');
 Route::get('/sitemap.xml', function () {
     $urls = [
         '',
-        '/login',
-        '/register',
-        '/forgot-password',
+        route('login'),
+        route('register'),
+        route('password.request'),
     ];
 
     $xml = '<?xml version="1.0" encoding="UTF-8"?>';
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     foreach ($urls as $url) {
+        $loc = str_starts_with($url, 'http') ? $url : url($url);
         $xml .= '<url>';
-        $xml .= '<loc>'.url($url).'</loc>';
+        $xml .= '<loc>'.$loc.'</loc>';
         $xml .= '<lastmod>'.now()->toAtomString().'</lastmod>';
         $xml .= '<changefreq>weekly</changefreq>';
         $xml .= '<priority>'.($url === '' ? '1.0' : '0.8').'</priority>';
