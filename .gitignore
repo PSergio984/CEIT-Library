@@ -19,6 +19,11 @@ graphify-out/
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/testing/
+/storage/framework/views/
 /vendor
 Homestead.json
 Homestead.yaml

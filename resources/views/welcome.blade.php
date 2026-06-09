@@ -308,6 +308,18 @@
         @media (prefers-reduced-motion: reduce) {
             .accent-line { animation: none; }
             .animate-bounce, .animate-pulse { animation: none; }
+            [data-reveal] {
+                opacity: 1 !important;
+                filter: none !important;
+                transform: none !important;
+                transition: none !important;
+            }
+            .animate-fade-in-up, .animate-fade-in-scale {
+                animation: none !important;
+                opacity: 1 !important;
+                transform: none !important;
+                transition: none !important;
+            }
         }
 
         [x-cloak] { display: none !important; }

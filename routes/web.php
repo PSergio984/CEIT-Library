@@ -37,13 +37,14 @@ Route::get('/sitemap.xml', function () {
         route('password.request'),
     ];
 
+    $lastmod = now()->toAtomString();
     $xml = '<?xml version="1.0" encoding="UTF-8"?>';
     $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
     foreach ($urls as $url) {
         $loc = str_starts_with($url, 'http') ? $url : url($url);
         $xml .= '<url>';
         $xml .= '<loc>'.$loc.'</loc>';
-        $xml .= '<lastmod>'.now()->toAtomString().'</lastmod>';
+        $xml .= '<lastmod>'.$lastmod.'</lastmod>';
         $xml .= '<changefreq>weekly</changefreq>';
         $xml .= '<priority>'.($url === '' ? '1.0' : '0.8').'</priority>';
         $xml .= '</url>';
