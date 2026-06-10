@@ -65,17 +65,15 @@ class extends Component
 
     <!-- Main Content Card -->
 <div class="relative w-full max-w-2xl mx-auto">
-    <!-- Card Header with curve and logo -->
-    <div class="relative z-20">
-        <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
-            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
-                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
-            </div>
-        </div>
+    <!-- Clean header and logo -->
+    <div class="flex flex-col items-center justify-center mb-6">
+        <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
+             class="w-20 h-20 rounded-full border-4 border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-800 shadow-lg mb-4">
+        <h2 class="text-xl sm:text-2xl font-extrabold text-[#0046ad] dark:text-sky-400 text-center tracking-tight">Verify Email</h2>
     </div>
-    <!-- Card Body -->
-    <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
+
+    <!-- Card Body Content -->
+    <div class="w-full px-2 sm:px-6">
         @if (session('verification-sent'))
             <div class="mb-4 p-4 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-md">
                 <div class="flex">
@@ -111,11 +109,11 @@ class extends Component
                 wire:click="sendVerification"
                 wire:loading.attr="disabled"
                 wire:target="sendVerification"
-                class="w-full sm:w-3/4 dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white flex items-center justify-center px-4 py-3 normal-case">
+                class="w-full sm:w-2/3 md:w-1/2 bg-[#0046ad] hover:bg-[#003da0] text-white border-none rounded-xl py-3 dark:bg-sky-600 dark:hover:bg-sky-500 flex items-center justify-center normal-case">
                 {{ __('Resend verification email') }}
             </x-primary-button>
             <button wire:click="logout" type="button"
-                    class="underline text-sm sm:text-base text-slate-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-md font-bold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#273F4F]">
+                    class="text-sm text-[#0046ad] dark:text-sky-400 hover:underline font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0046ad]">
                 {{ __('Log Out') }}
             </button>
         </div>

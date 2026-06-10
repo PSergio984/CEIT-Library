@@ -22,11 +22,27 @@
         <link rel="icon" type="image/png" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+        <style>
+            * { font-family: 'Outfit', sans-serif; }
+            .glass-card {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px);
+                border: 1px solid rgba(15, 23, 42, 0.08);
+                transition: background 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+            }
+            .dark .glass-card {
+                background: rgba(19, 25, 38, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+        </style>
     </head>
     <body
         class="relative min-h-screen bg-white bg-cover bg-center bg-no-repeat font-sans"
@@ -55,8 +71,8 @@
                 <div class="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 flex-shrink-0">
                     <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo" class="w-full h-full object-contain">
                 </div>
-                <span class="ml-1 sm:ml-2 hidden sm:inline">CEIT Library</span>
-                <span class="ml-1 sm:ml-2 sm:hidden">CEIT</span>
+                <span class="ml-1 sm:ml-2 hidden sm:inline">PLV CEIT Library</span>
+                <span class="ml-1 sm:ml-2 sm:hidden">PLV CEIT</span>
             </a>
             <div class="flex items-center space-x-2 sm:space-x-4 md:space-x-6">
                 {{-- Theme toggle — same system as welcome.blade.php (Alpine.js + localStorage + dark class) --}}
@@ -79,9 +95,8 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="flex items-center justify-center min-h-[calc(100vh-80px)] sm:min-h-[calc(100vh-88px)] md:min-h-[calc(100vh-96px)] text-center relative z-20 py-4 sm:py-6 md:py-8 lg:py-12 px-4 sm:px-6 md:px-8">
-            <div class="bg-white/50 dark:bg-slate-900/60 backdrop-blur-sm p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-2xl xl:max-w-4xl min-h-[400px] sm:min-h-[450px] md:min-h-[500px] lg:min-h-[550px] flex flex-col items-center justify-center mx-auto transition-colors duration-300">
+            <div class="glass-card p-4 sm:p-6 md:p-8 lg:p-12 xl:p-16 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-lg lg:max-w-2xl xl:max-w-4xl min-h-[400px] sm:min-h-[450px] md:min-h-[500px] lg:min-h-[550px] flex flex-col items-center justify-center mx-auto">
                 {{ $slot }}
             </div>
         </main>

@@ -99,18 +99,15 @@ class extends Component
 
 <!-- Main Content Card -->
 <div class="relative w-full max-w-2xl mx-auto">
-    <!-- Card Header with curve and logo -->
-    <div class="relative z-20">
-        <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
-            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
-                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
-            </div>
-        </div>
+    <!-- Clean header and logo -->
+    <div class="flex flex-col items-center justify-center mb-6">
+        <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
+             class="w-20 h-20 rounded-full border-4 border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-800 shadow-lg mb-4">
+        <h2 class="text-xl sm:text-2xl font-extrabold text-[#0046ad] dark:text-sky-400 text-center tracking-tight">Reset your password</h2>
     </div>
-    <!-- Card Body -->
-    <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
-        <h2 class="text-xl sm:text-2xl font-bold text-[#273F4F] dark:text-white text-center mb-8">Reset your password</h2>
+
+    <!-- Card Body Content -->
+    <div class="w-full px-2 sm:px-6">
         <form wire:submit="resetPassword" class="space-y-7" x-data="{
             showPassword: false,
             showConfirmPassword: false,
@@ -176,7 +173,7 @@ class extends Component
                     <x-text-input wire:model="password" id="password" name="password" 
                                   ::type="showPassword ? 'text' : 'password'"
                                   placeholder="New Password"
-                                  class="block w-full px-4 py-3 pr-12 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-400 dark:border-slate-700 rounded-lg focus:border-[#273F4F] dark:focus:border-sky-400 focus:ring-[#273F4F] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-all duration-200"
+                                  class="block w-full px-4 py-3 pr-12 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:border-[#0046ad] dark:focus:border-sky-400 focus:ring-[#0046ad] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-all duration-200"
                                   autocomplete="new-password"
                                   x-on:input="evaluatePassword($event.target.value)"
                                   x-on:blur="validateField('password')"
@@ -234,7 +231,7 @@ class extends Component
                     <x-text-input wire:model="password_confirmation" id="password_confirmation" name="password_confirmation"
                                   ::type="showConfirmPassword ? 'text' : 'password'"
                                   placeholder="Confirm Password"
-                                  class="block w-full px-4 py-3 pr-12 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-400 dark:border-slate-700 rounded-lg focus:border-[#273F4F] dark:focus:border-sky-400 focus:ring-[#273F4F] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-all duration-200"
+                                  class="block w-full px-4 py-3 pr-12 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:border-[#0046ad] dark:focus:border-sky-400 focus:ring-[#0046ad] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-all duration-200"
                                   autocomplete="new-password"
                                   x-on:input="password_confirmation = $event.target.value"
                                   x-on:blur="validateField('password_confirmation')"/>
@@ -255,9 +252,9 @@ class extends Component
                     <p class="text-red-600 dark:text-red-400 text-xs mt-1" x-text="errors.password_confirmation"></p>
                 </template>
             </div>
-            <div class="flex flex-col items-center mt-6">
+            <div class="flex justify-center mt-6">
                 <button type="submit"
-                        class="w-full bg-[#273F4F] dark:bg-sky-600 hover:bg-[#1d2c38] dark:hover:bg-sky-500 text-white font-bold rounded-lg py-4 text-lg shadow-md hover:shadow-lg active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#273F4F] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="w-full sm:w-2/3 md:w-1/2 bg-[#0046ad] hover:bg-[#003da0] text-white font-bold rounded-xl py-3 dark:bg-sky-600 dark:hover:bg-sky-500 active:scale-[0.98] transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#0046ad] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         x-bind:disabled="!isFormValid"
                         wire:loading.attr="disabled"
                         wire:target="resetPassword">

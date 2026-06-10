@@ -84,28 +84,21 @@ class extends Component
                !this.errors.password;
     }
 }">
-    <!-- Card Header with curve and logo -->
-    <div class="relative z-20">
-        <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
-            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
-                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
-            </div>
-        </div>
+    <!-- Clean header and logo -->
+    <div class="flex flex-col items-center justify-center mb-6">
+        <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
+             class="w-20 h-20 rounded-full border-4 border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-800 shadow-lg mb-4">
+        <h2 class="text-xl sm:text-2xl font-extrabold text-[#0046ad] dark:text-sky-400 text-center tracking-tight">Log in to your account</h2>
     </div>
 
-    <!-- Card Body -->
-    <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
-        <!-- Title -->
-        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] dark:text-white text-center mb-4 sm:mb-6 md:mb-8">Log in
-            to your account</h2>
+    <!-- Card Body Content -->
+    <div class="w-full px-2 sm:px-6">
         <!-- Session Status -->
         <x-auth-session-status class="mb-4" :status="session('status')" />
         
-        
         <!-- Email Verified Message -->
         @if (session('verified'))
-            <div class="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-md">
+            <div class="mb-4 p-4 bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200/50 dark:border-blue-800/30 rounded-md">
                 <div class="flex">
                     <div class="flex-shrink-0">
                         <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -113,7 +106,7 @@ class extends Component
                         </svg>
                     </div>
                     <div class="ml-3">
-                        <p class="text-sm text-blue-700">{{ session('verified') }}</p>
+                        <p class="text-sm text-blue-700 dark:text-blue-300">{{ session('verified') }}</p>
                     </div>
                 </div>
             </div>
@@ -122,16 +115,15 @@ class extends Component
         <x-mary-form wire:submit="login">
             <x-mary-errors title="Oops!" description="Please, fix them." icon="o-face-frown"/>
 
-
             <!-- Email Address -->
-            <div class="mb-4">
+            <div class="mb-4 text-left">
                 <x-mary-input
                     wire:model="form.email"
                     placeholder="Email"
                     icon="o-envelope"
                     clearable
                     type="email"
-                    class="!bg-white dark:!bg-slate-800 !border-gray-400 dark:!border-slate-700 !text-slate-900 dark:!text-white placeholder:!text-slate-500 dark:placeholder:!text-slate-400 !text-sm sm:!text-base"
+                    class="!bg-white dark:!bg-slate-800 !border-gray-300 dark:!border-slate-700 !text-slate-900 dark:!text-white placeholder:!text-slate-500 dark:placeholder:!text-slate-400 !text-sm sm:!text-base"
                     icon-class="!text-gray-700 dark:!text-slate-300"
                     required
                     autofocus
@@ -145,13 +137,13 @@ class extends Component
             </div>
 
             <!-- Password -->
-            <div class="mb-4">
+            <div class="mb-4 text-left">
                 <x-mary-password
                     wire:model="form.password"
                     placeholder="Password"
                     required
                     autocomplete="current-password"
-                    class="!bg-white dark:!bg-slate-800 !border-gray-400 dark:!border-slate-700 !text-slate-900 dark:!text-white placeholder:!text-slate-500 dark:placeholder:!text-slate-400 !text-sm sm:!text-base"
+                    class="!bg-white dark:!bg-slate-800 !border-gray-300 dark:!border-slate-700 !text-slate-900 dark:!text-white placeholder:!text-slate-500 dark:placeholder:!text-slate-400 !text-sm sm:!text-base"
                     icon-class="!text-gray-700 dark:!text-slate-300"
                     error-field="form.password"
                     x-on:input="fields.password = $event.target.value"
@@ -165,13 +157,13 @@ class extends Component
             <div class="flex items-center justify-between mb-6">
                 <label for="remember" class="inline-flex items-center">
                     <input wire:model="form.remember" id="remember" type="checkbox"
-                           class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                           class="rounded border-gray-300 dark:border-slate-700 text-indigo-600 shadow-sm focus:ring-indigo-500 bg-white dark:bg-slate-800"
                            name="remember">
                     <span class="ms-2 text-sm text-slate-700 dark:text-slate-300">{{ __('Remember me') }}</span>
                 </label>
 
                 @if (Route::has('password.request'))
-                    <a class="text-sm text-[#273F4F] dark:text-sky-400 hover:text-[#1e2f3a] dark:hover:text-sky-300 underline font-medium"
+                    <a class="text-sm text-[#0046ad] dark:text-sky-400 hover:underline font-medium"
                        href="{{ route('password.request') }}" wire:navigate>
                         Forgot your password?
                     </a>
@@ -181,7 +173,7 @@ class extends Component
             <!-- Login Button -->
             <div class="mb-4 flex justify-center">
                 <x-primary-button 
-                    class="w-full sm:w-2/3 md:w-1/2 dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white" 
+                    class="w-full sm:w-2/3 md:w-1/2 bg-[#0046ad] hover:bg-[#003da0] text-white border-none rounded-xl py-3 dark:bg-sky-600 dark:hover:bg-sky-500" 
                     wire:target="login" 
                     wire:loading.attr="disabled"
                     x-bind:disabled="!isFormValid"
@@ -191,10 +183,10 @@ class extends Component
             </div>
 
             <!-- Register Link -->
-            <div class="text-center">
-                <p class="text-sm text-slate-700 dark:text-slate-300">
+            <div class="text-center mt-4">
+                <p class="text-sm text-slate-600 dark:text-slate-400">
                     Don't have an account?
-                    <a href="{{ route('register') }}" class="text-[#273F4F] dark:text-sky-400 hover:text-[#1e2f3a] dark:hover:text-sky-300 underline font-medium"
+                    <a href="{{ route('register') }}" class="text-[#0046ad] dark:text-sky-400 hover:underline font-medium"
                        wire:navigate>
                         Register
                     </a>
