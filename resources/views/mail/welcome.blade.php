@@ -106,7 +106,7 @@
         <p class="message">
             We're excited to have you join us.<br>
             Your account has been created successfully.<br>
-            You can now access all features of the CEIT Library Management System.
+            You can now access all features of the PLV CEIT Library.
         </p>
         <a href="{{ config('app.url') }}" class="button">Go to Library Portal</a>
         <p class="message">
@@ -114,7 +114,7 @@
         </p>
     </div>
     <div class="footer">
-        <p class="school-name">Pamantasan ng Lungsod ng Valenzuela<br>CEIT Library Management System</p>
+        <p class="school-name">Pamantasan ng Lungsod ng Valenzuela<br>PLV CEIT Library</p>
         <p class="warning">
             If you're having trouble clicking the button, copy and paste this URL into your browser:<br>
             <a href="{{ config('app.url') }}" style="color: #273F4F; word-break: break-all;">{{ config('app.url') }}</a>

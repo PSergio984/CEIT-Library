@@ -1,6 +1,6 @@
-# CEIT Library System - Test Cases
+# PLV CEIT Library - Test Cases
 
-**Application:** CEIT Library System
+**Application:** PLV CEIT Library
 
 ---
 
@@ -786,10 +786,10 @@
 
 **Steps:**
 
-1. Navigate to Dashboard → Browser tab shows "Dashboard - CEIT Library"
-2. Navigate to Manage Roles → Tab title updates to "Manage Roles - CEIT Library"
-3. Navigate to Borrow Logs → Tab title shows "Borrow Logs - CEIT Library"
-4. Navigate to Profile → Tab title shows "Profile - CEIT Library"
+1. Navigate to Dashboard → Browser tab shows "Dashboard - PLV CEIT Library"
+2. Navigate to Manage Roles → Tab title updates to "Manage Roles - PLV CEIT Library"
+3. Navigate to Borrow Logs → Tab title shows "Borrow Logs - PLV CEIT Library"
+4. Navigate to Profile → Tab title shows "Profile - PLV CEIT Library"
 
 ---
 
@@ -804,7 +804,7 @@
 
 1. Complete registration form with @plv.edu.ph email → Account created, verification email sent
 2. Attempt to login without verifying email → Login blocked with message: "Please verify your email"
-3. Check email inbox for verification link → Email received with "Verify Your CEIT Library Account" subject
+3. Check email inbox for verification link → Email received with "Verify Your PLV CEIT Library Account" subject
 4. Click verification link in email → Redirected to system with success message
 5. Login with verified account → Login successful, dashboard accessible
 
@@ -819,7 +819,7 @@
 
 1. Verify email address via verification link → Email verified successfully
 2. Wait 30 seconds (email has delay) → Welcome email queued and processed
-3. Check email inbox → Welcome email received with subject "Welcome to CEIT Library Management System"
+3. Check email inbox → Welcome email received with subject "Welcome to PLV CEIT Library"
 4. Open welcome email → Email contains PLV branding and system introduction
 
 ---
@@ -848,7 +848,7 @@
 1. Navigate to "Forgot Password" page → Page displays with email input
 2. Enter registered email address → Email validation passes
 3. Click "Send Reset Link" → Success message appears
-4. Check email inbox → Email received with subject "Reset Your CEIT Library Password"
+4. Check email inbox → Email received with subject "Reset Your PLV CEIT Library Password"
 5. Click reset link in email → Password reset page opens with token
 6. Enter new password and confirm → Password updated successfully
 
