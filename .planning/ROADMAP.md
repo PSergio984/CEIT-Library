@@ -26,8 +26,8 @@
 
 **Requirements:** [REQ-01, REQ-02, REQ-03]
 
-**Plans:** 1/7 plans executed
-- [ ] 03-01-PLAN.md — Fix Authorization & Middleware Tests
+**Plans:** 2/7 plans executed
+- [x] 03-01-PLAN.md — Fix Authorization & Middleware Tests
 - [ ] 03-02-PLAN.md — Fix Auth, Profile & Seeder Tests
 - [ ] 03-03-PLAN.md — Fix UI & Lazy Loading Tests
 - [ ] 03-04-PLAN.md — Fix Notifications, QR Tests & DB Optimization
