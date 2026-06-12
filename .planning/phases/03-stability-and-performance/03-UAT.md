@@ -20,43 +20,37 @@ All UAT test cases have been executed and successfully passed.
 ## Tests
 
 ### 1. Cold Start Smoke Test
-expected: |
-  Start the application from scratch. Boot the dev server, run migrations, and ensure the local development homepage loads successfully without errors.
-result: passed
+- **Expected:** Start the application from scratch. Boot the dev server, run migrations, and ensure the local development homepage loads successfully without errors.
+- **Result:** Passed
 
 ### 2. Liquid Glass Landing Page
-expected: |
-  Visit the root URL (/) and verify that the page displays a premium landing page featuring a fixed school background (plvbg.jpg), translucent glassmorphism panels (backdrop-blur-md), and Outfit/DM Sans typography.
-result: passed
+- **Expected:** Visit the root URL (/) and verify that the page displays a premium landing page featuring a fixed school background (plvbg.jpg), translucent glassmorphism panels (backdrop-blur-md), and Outfit/DM Sans typography.
+- **Result:** Passed
 
 ### 3. Transitions and Scroll reveals
-expected: |
-  Scroll through the homepage and observe smooth hero entrance animations and staggered reveals of features using scroll intersection markers.
-result: passed
-notes: Resolved regression where scroll-reveal animations were overridden in prefers-reduced-motion environments.
+- **Expected:** Scroll through the homepage and observe smooth hero entrance animations and staggered reveals of features using scroll intersection markers.
+- **Result:** Passed
+- **Notes:** Resolved regression where scroll-reveal animations were overridden in prefers-reduced-motion environments.
 
 ### 4. Global Branding Consistency
-expected: |
-  Verify that layout headers, PWA manifests, and email footers/subject lines consistently read "PLV CEIT Library" on both desktop and mobile views.
-result: passed
+- **Expected:** Verify that layout headers, PWA manifests, and email footers/subject lines consistently read "PLV CEIT Library" on both desktop and mobile views.
+- **Result:** Passed
 
 ### 5. Reskinned Auth Pages
-expected: |
-  Visit /login, /register, and other auth URLs. Verify they use the premium Liquid Glass theme flat inside the primary layout panel, with clear input focus borders and matching buttons, without nested double cards.
-result: passed
+- **Expected:** Visit /login, /register, and other auth URLs. Verify they use the premium Liquid Glass theme flat inside the primary layout panel, with clear input focus borders and matching buttons, without nested double cards.
+- **Result:** Passed
 
 ### 6. Academic Paper Index list load
-expected: |
-  Access the Admin/Librarian Academic Papers panel. List the papers and verify that the index renders quickly and efficiently.
-result: passed
+- **Expected:** Access the Admin/Librarian Academic Papers panel. List the papers and verify that the index renders quickly and efficiently.
+- **Result:** Passed
 
 ## Summary
 
-total: 6
-passed: 6
-issues: 0
-pending: 0
-skipped: 0
+* **Total:** 6
+* **Passed:** 6
+* **Issues:** 0
+* **Pending:** 0
+* **Skipped:** 0
 
 ## Gaps
 
