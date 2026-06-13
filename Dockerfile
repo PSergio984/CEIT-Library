@@ -10,7 +10,7 @@ COPY . .
 RUN npm run build
 
 # Production stage
-FROM php:8.5-fpm-alpine
+FROM php:8.4-fpm-alpine
 
 # Install nginx, supervisor, and system dependencies
 RUN apk add --no-cache \

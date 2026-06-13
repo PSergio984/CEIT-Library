@@ -1,6 +1,6 @@
 {
-  "name": "CEIT Library Management System",
-  "short_name": "CEIT Library",
+  "name": "PLV CEIT Library",
+  "short_name": "PLV CEIT Library",
   "description": "PLV eLib - CEIT Library Management System",
   "start_url": "/",
   "display": "standalone",

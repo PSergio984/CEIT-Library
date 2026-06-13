@@ -84,20 +84,18 @@ class extends Component
             return this.email.trim() && !this.error && this.email.endsWith('@plv.edu.ph');
         }
     }">
-        <!-- Card Header with curve and logo -->
-        <div class="relative z-20">
-            <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
-                <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                    <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
-                        class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
-                </div>
-            </div>
+    <!-- Clean header and logo -->
+    <div class="flex flex-col items-center justify-center mb-6">
+        <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
+             class="w-20 h-20 rounded-full border-4 border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-800 shadow-lg mb-4">
+        <h2 class="text-xl sm:text-2xl font-extrabold text-[#0046ad] dark:text-sky-400 text-center tracking-tight">Forgot password?</h2>
+    </div>
+
+    <!-- Card Body Content -->
+    <div class="w-full px-2 sm:px-6">
+        <div class="mb-6 text-sm sm:text-base text-slate-600 dark:text-slate-400 text-center">
+            {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
         </div>
-        <!-- Card Body -->
-        <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
-            <div class="mb-6 text-base text-slate-700 dark:text-slate-300 text-center">
-                {{ __('Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.') }}
-            </div>
 
 
             <x-mary-form wire:submit="sendPasswordResetLink">
@@ -105,7 +103,7 @@ class extends Component
                 <div class="mb-4">
                     <x-text-input wire:model="email" id="email" name="email" type="email"
                                 placeholder="Email"
-                                class="block w-full px-4 py-3 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-400 dark:border-slate-700 rounded-lg focus:border-[#273F4F] dark:focus:border-sky-400 focus:ring-[#273F4F] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-colors duration-300"
+                                class="block w-full px-4 py-3 text-base text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-lg focus:border-[#0046ad] dark:focus:border-sky-400 focus:ring-[#0046ad] dark:focus:ring-sky-400 focus:ring-2 focus:outline-none placeholder-gray-500 dark:placeholder-slate-400 transition-colors duration-300"
                                 required autofocus
                                 x-on:input="email = $event.target.value"
                                 x-on:blur="validateEmail()"/>
@@ -119,9 +117,9 @@ class extends Component
                 <x-auth-session-status class="mt-4 text-green-600 dark:text-green-400 text-center text-base font-medium"
                                     :status="session('status')"/>
 
-                <div class="flex flex-col items-center mt-6">
+                <div class="flex justify-center mt-6">
                     <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="sendPasswordResetLink"
-                                    class="w-full dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white"
+                                    class="w-full sm:w-2/3 md:w-1/2 bg-[#0046ad] hover:bg-[#003da0] text-white border-none rounded-xl py-3 dark:bg-sky-600 dark:hover:bg-sky-500"
                                     x-bind:disabled="!isFormValid"
                                     x-bind:class="{ 'opacity-50 cursor-not-allowed': !isFormValid }">
                         {{ __('Email Password Reset Link') }}

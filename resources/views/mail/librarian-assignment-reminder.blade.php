@@ -273,7 +273,7 @@
         <div class="footer">
             <p class="school-name">
                 Pamantasan ng Lungsod ng Valenzuela<br>
-                CEIT Library Management System
+                PLV CEIT Library
             </p>
             <p class="footer-note">
                 This is an automated reminder sent 3 days in advance. If you have questions, please contact the system

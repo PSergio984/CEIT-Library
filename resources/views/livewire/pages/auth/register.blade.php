@@ -204,19 +204,15 @@ class extends Component
             return allFilled && noErrors && passwordValid && passwordsMatch;
         }
     }">
-    <!-- Card Header with curve and logo -->
-    <div class="relative z-20">
-        <div class="bg-[#273F4F] dark:bg-slate-950 h-24 rounded-t-2xl flex items-center justify-center overflow-hidden transition-colors duration-300">
-            <div class="absolute left-1/2 top-20 transform -translate-x-1/2 -translate-y-1/2 z-20">
-                <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
-                     class="w-20 h-20 rounded-full border-4 border-[#D9D9D9] bg-white shadow-lg">
-            </div>
-        </div>
+    <!-- Clean header and logo -->
+    <div class="flex flex-col items-center justify-center mb-6">
+        <img src="{{ Vite::asset('resources/images/ceit-logo.png') }}" alt="CEIT Logo"
+             class="w-20 h-20 rounded-full border-4 border-slate-200/50 dark:border-white/10 bg-white dark:bg-slate-800 shadow-lg mb-4">
+        <h2 class="text-xl sm:text-2xl font-extrabold text-[#0046ad] dark:text-sky-400 text-center tracking-tight">Create your account</h2>
     </div>
 
-    <!-- Card Body -->
-    <div class="bg-[#D9D9D9] dark:bg-slate-900 rounded-b-2xl pt-20 pb-12 px-8 sm:px-14 shadow-2xl -mt-8 relative z-10 transition-colors duration-300">
-        <h2 class="text-lg sm:text-xl md:text-2xl font-semibold text-[#273F4F] dark:text-white text-center mb-4 sm:mb-6 md:mb-8">Create your account</h2>
+    <!-- Card Body Content -->
+    <div class="w-full px-2 sm:px-6">
         <x-mary-form wire:submit="register">
             <x-mary-errors title="Oops!" description="Please, fix them." icon="o-face-frown" />
             
@@ -378,13 +374,13 @@ class extends Component
                 </template>
             </div>
             
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0">
-                <a class="underline text-xs sm:text-sm text-slate-700 dark:text-slate-300 hover:text-gray-900 dark:hover:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-0 mt-6">
+                <a class="text-sm text-[#0046ad] dark:text-sky-400 hover:underline font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                    href="{{ route('login') }}" wire:navigate>
                     {{ __('Already registered?') }}
                 </a>
                 <x-primary-button 
-                    class="sm:ml-auto order-1 sm:order-2 w-full sm:w-auto dark:bg-sky-600 dark:hover:bg-sky-500 dark:text-white" 
+                    class="sm:ml-auto order-1 sm:order-2 w-full sm:w-auto bg-[#0046ad] hover:bg-[#003da0] text-white border-none rounded-xl py-3 px-6 dark:bg-sky-600 dark:hover:bg-sky-500" 
                     wire:target="register"
                     icon="o-user-plus"
                     x-bind:disabled="!isFormValid"

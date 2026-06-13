@@ -5,6 +5,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="PLV CEIT Library - Official Library Management System of Pamantasan ng Lungsod ng Valenzuela, College of Engineering and Information Technology.">
+    <meta name="keywords" content="PLV CEIT Library, CEIT Library, PLV Library, Valenzuela College of Engineering, Library Management System">
 
     <title>@yield('title', $title ?? config('app.name'))</title>
 
@@ -139,7 +141,7 @@
             <label for="main-drawer" class="btn btn-square btn-ghost lg:hidden mr-2">
                 <x-mary-icon name="o-bars-3" class="w-6 h-6" />
             </label>
-            <div class="font-bold text-primary">CEIT Library</div>
+            <div class="font-bold text-primary">PLV CEIT Library</div>
         </x-slot:brand>
         <x-slot:actions>
             {{-- Mobile User Dropdown --}}
@@ -161,7 +163,7 @@
                     </div>
                     <div class="flex items-center gap-3">
                         <div class=" transition-all duration-300" x-show="!collapsed">
-                            <div class="font-bold text-xl text-base-content whitespace-nowrap">CEIT Library</div>
+                            <div class="font-bold text-xl text-base-content whitespace-nowrap">PLV CEIT Library</div>
                         </div>
                         {{-- Theme Toggle beside Library text --}}
                         <div x-show="!collapsed">
