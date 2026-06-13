@@ -28,5 +28,15 @@ jobs:
     - name: Directory Permissions
       run: chmod -R ug+rwx storage bootstrap/cache
 
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+
+    - name: Install Node Dependencies & Build Assets
+      run: |
+        npm ci
+        npm run build
+
     - name: Execute tests
       run: php artisan test
