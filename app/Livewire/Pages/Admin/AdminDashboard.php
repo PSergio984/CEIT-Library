@@ -70,6 +70,21 @@ class AdminDashboard extends AdminComponent
     }
 
     #[Computed]
+    public function loanTrends()
+    {
+        $trends = collect();
+        for ($i = 6; $i >= 0; $i--) {
+            $date = now()->subDays($i)->format('Y-m-d');
+            $count = BorrowTransaction::whereDate('created_at', $date)->count();
+            $trends->push([
+                'day' => now()->subDays($i)->format('D'),
+                'count' => $count
+            ]);
+        }
+        return $trends;
+    }
+
+    #[Computed]
     public function recentBorrowedPapers()
     {
         return BorrowTransaction::with(['user', 'inventory.academicPaper.authors'])

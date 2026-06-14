@@ -99,37 +99,16 @@ class Librarian extends Model
     {
         $today = Carbon::today();
 
-        return $query->where(function ($q) use ($today) {
-            // Start date is today or in the past (or null for no start constraint)
-            $q->where(function ($q2) use ($today) {
-                $q2->whereNull('start_date')
-                    ->orWhere('start_date', '<=', $today);
-            })
-              // AND (no end date OR end date is in the future)
+        return $query->where('status', 'active')
+            ->where(function ($q) use ($today) {
+                $q->where(function ($q2) use ($today) {
+                    $q2->whereNull('start_date')
+                        ->orWhere('start_date', '<=', $today);
+                })
                 ->where(function ($q2) use ($today) {
                     $q2->whereNull('end_date')
-                        ->orWhere('end_date', '>', $today); // Note: excludes duties ending today
+                        ->orWhere('end_date', '>=', $today);
                 });
-        });
-    }
-
-    // Get librarian by user ID if they have active duty
-    public static function getActiveLibrarianByUser($userId)
-    {
-        return static::where('user_id', $userId)
-            ->active()
-            ->first();
-    }
-
-    // Boot method to handle auto-expiry
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saving(function ($librarian) {
-            if ($librarian->isExpired()) {
-                $librarian->status = 'expired';
-            }
-        });
+            });
     }
 }
