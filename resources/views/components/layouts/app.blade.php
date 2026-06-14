@@ -21,10 +21,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- PWA & Push Notifications -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#0046ad">
     <link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
     <script>
+        // Clear App Badge on page load if supported
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(error => {
+                console.error('Error clearing app badge:', error);
+            });
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -97,22 +104,6 @@
                 console.error('Failed to subscribe user to Push:', err);
             }
         }
-
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later.
-            window.deferredPrompt = e;
-            // Update UI notify the user they can install the PWA
-            window.dispatchEvent(new CustomEvent('pwa-install-available'));
-        });
-
-        window.addEventListener('appinstalled', (e) => {
-            // Hide the app-provided install promotion
-            window.deferredPrompt = null;
-            window.dispatchEvent(new CustomEvent('pwa-install-hidden'));
-            console.log('PWA was installed');
-        });
 
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
@@ -267,5 +258,8 @@
 
     {{-- Toast --}}
     <x-mary-toast />
+
+    {{-- PWA Install Banner --}}
+    <x-pwa-install-banner />
 </body>
 </html>

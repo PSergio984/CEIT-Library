@@ -26,6 +26,29 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @livewireStyles
 
+    <!-- PWA & Push Notifications -->
+    <link rel="manifest" href="/manifest.webmanifest">
+    <meta name="theme-color" content="#0046ad">
+    <link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
+    <script>
+        // Clear App Badge on page load if supported
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(error => {
+                console.error('Error clearing app badge:', error);
+            });
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => {
+                        console.log('Service Worker registered successfully.', reg);
+                    })
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+
     <style>
         * { font-family: 'Outfit', sans-serif; }
 
@@ -814,7 +837,7 @@
             </div>
         </footer>
 
-    </div>{{-- end dark scroll section --}}
+    </div>
 
     <script>
         // Cubic ease-out curve for count animation
@@ -893,5 +916,8 @@
     </script>
 
     @livewireScripts
+
+    {{-- PWA Install Banner --}}
+    <x-pwa-install-banner />
 </body>
 </html>
