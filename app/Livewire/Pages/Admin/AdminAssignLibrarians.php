@@ -56,7 +56,7 @@ class AdminAssignLibrarians extends AdminComponent
 
     protected $listeners = ['batchUpdated' => 'render'];
 
-    public function mount(LibrarianStatusService $service)
+    public function mount()
     {
         $this->authorizeAccess();
 
@@ -64,7 +64,7 @@ class AdminAssignLibrarians extends AdminComponent
         $this->authorize('manage-librarian-batches');
 
         // Automatically update batch statuses based on current date
-        $service->syncAllBatches();
+        app(LibrarianStatusService::class)->syncAllBatches();
     }
 
     /**

@@ -266,30 +266,20 @@
 </div>
 </div>
 
-{{-- Modals --}}
-@if ($showCreateModal)
-    <livewire:pages.admin.create-academic-paper />
-@endif
-
-@if ($showEditModal)
-    <livewire:pages.admin.edit-academic-paper :paperId="$editingPaperId" :wire:key="'edit-paper-'.$editingPaperId" />
-@endif
-
 {{-- Delete Confirmation Modal --}}
-<x-mary-modal wire:model="showDeleteModal" title="Confirm Deletion" class="backdrop-blur-sm">
+<x-mary-modal id="delete-modal" title="Confirm Deletion" class="backdrop-blur-sm">
     <div class="p-4 bg-error/5 rounded-xl border border-error/10 mb-4">
-        <p class="text-sm font-medium">Are you sure you want to delete <span
-                class="font-bold">"{{ $deletingPaperTitle }}"</span>?</p>
+        <p class="text-sm font-medium">Are you sure you want to delete this paper?</p>
         <p class="text-xs opacity-70 mt-2">This action cannot be undone. All associated inventory records will also be
             removed.</p>
     </div>
 
     <x-slot:actions>
-        <button @click="$wire.showDeleteModal = false" class="btn btn-ghost">Cancel</button>
-        <button wire:click="delete" class="btn btn-error gap-2" wire:loading.attr="disabled">
-            <span wire:loading.remove wire:target="delete">Delete Paper</span>
-            <span wire:loading wire:target="delete" class="loading loading-spinner loading-xs"></span>
-            <span wire:loading wire:target="delete">Deleting...</span>
+        <button @click="$dispatch('close-delete-modal')" class="btn btn-ghost">Cancel</button>
+        <button wire:click="performDelete" class="btn btn-error gap-2" wire:loading.attr="disabled">
+            <span wire:loading.remove wire:target="performDelete">Delete Paper</span>
+            <span wire:loading wire:target="performDelete" class="loading loading-spinner loading-xs"></span>
+            <span wire:loading wire:target="performDelete">Deleting...</span>
         </button>
     </x-slot:actions>
 </x-mary-modal>
