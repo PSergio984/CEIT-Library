@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\BorrowTransaction;
-use App\Models\Notification;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 
@@ -47,18 +47,18 @@ class SendDeadlineWarnings extends Command
 
         $count = 0;
         foreach ($transactions as $transaction) {
-            Notification::create([
-                'user_id' => $transaction->user_id,
-                'type' => 'paper_deadline_warning',
-                'title' => 'Deadline Approaching!',
-                'message' => "Your borrowed material \"{$transaction->academicPaper->title}\" is due in less than 30 minutes. Please return it to avoid a penalty.",
-                'data' => [
+            app(NotificationService::class)->notify(
+                $transaction->user,
+                'paper_deadline_warning',
+                'Deadline Approaching!',
+                "Your borrowed material \"{$transaction->academicPaper->title}\" is due in less than 30 minutes. Please return it to avoid a penalty.",
+                [
                     'transaction_id' => $transaction->id,
                     'paper_title' => $transaction->academicPaper->title,
                     'expires_at' => $transaction->expires_at->format('M d, Y h:i A'),
                     'url' => '/student/dashboard',
-                ],
-            ]);
+                ]
+            );
 
             $transaction->update([
                 'warning_notified_at' => now(),

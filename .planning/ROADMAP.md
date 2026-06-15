@@ -21,7 +21,7 @@
 ### Phase 2: Security Hardening
 **Goal:** Enhance application security by auditing middleware and validation rules.
 
-### Phase 3: Stability & Performance
+### Phase 3: Stability & Performance [COMPLETE]
 **Goal:** Address remaining failing tests and optimize database queries. Transform the entry point into a premium, high-conversion landing page.
 
 **Requirements:** [REQ-01, REQ-02, REQ-03]
@@ -34,3 +34,21 @@
 - [x] 03-05-PLAN.md — Create Premium Liquid Glass Landing Page
 - [x] 03-06-PLAN.md — Global Branding & SEO Update
 - [x] 03-07-PLAN.md — Reskin Auth Pages
+
+### Phase 4: PWA Hardening & Offline Resilience [COMPLETE]
+**Goal:** Upgrade the PWA from basic manifest registration to a resilient, native-like experience.
+
+**Scope:**
+- [x] [R4.1] Implement Cache-First asset handling via `injectManifest`.
+- [x] [R4.2] Integrate App Badging API for unread notifications.
+- [x] [R4.3] Design and implement Branded "Install CEIT Lib" banner.
+- [x] [R4.4] Add real-time Offline Detection and safety overlays for the QR Scanner.
+
+### Phase 5: Workflow Optimization & UX Polish [COMPLETE]
+**Goal:** Resolve librarian system bugs and enhance overall user experience through performance refinements.
+
+**Scope:**
+- [x] [R5.1] Centralize and refactor Librarian Batch logic into a deterministic Service.
+- [x] [R5.2] Implement elegant Skeleton Loaders for all major tables.
+- [x] [R5.3] Enable balanced Hover Prefetching for sidebar navigation.
+- [x] [R5.4] Add Loan Trends and Top Borrowers widgets to the Admin Dashboard.

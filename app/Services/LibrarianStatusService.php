@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Librarian;
-use App\Models\Notification;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +15,7 @@ class LibrarianStatusService
     public function syncAllBatches(): void
     {
         $today = date('Y-m-d');
-        
+
         DB::transaction(function () use ($today) {
             $this->activateDueBatches($today);
             $this->expirePastBatches($today);
@@ -44,16 +43,16 @@ class LibrarianStatusService
 
             foreach ($librarians as $librarian) {
                 $dutyDate = date('F j, Y', strtotime($librarian->start_date));
-                Notification::create([
-                    'user_id' => $librarian->user_id,
-                    'type' => 'librarian_activated',
-                    'title' => 'Your Librarian Batch is Now Active',
-                    'message' => "Your librarian batch #{$batchNo} is now active. Your duty date is today, {$dutyDate}. You can now perform librarian duties.",
-                    'data' => [
+                app(NotificationService::class)->notify(
+                    $librarian->user,
+                    'librarian_activated',
+                    'Your Librarian Batch is Now Active',
+                    "Your librarian batch #{$batchNo} is now active. Your duty date is today, {$dutyDate}. You can now perform librarian duties.",
+                    [
                         'batch_no' => $batchNo,
                         'start_date' => $librarian->start_date,
-                    ],
-                ]);
+                    ]
+                );
             }
         }
     }
@@ -73,10 +72,10 @@ class LibrarianStatusService
                     $q->whereNotNull('end_date')
                         ->where('end_date', '<', $today);
                 })
-                ->orWhere(function ($q) use ($today) {
-                    $q->whereNull('end_date')
-                        ->where('start_date', '<', $today);
-                });
+                    ->orWhere(function ($q) use ($today) {
+                        $q->whereNull('end_date')
+                            ->where('start_date', '<', $today);
+                    });
             })
             ->get()
             ->groupBy('batch_no');

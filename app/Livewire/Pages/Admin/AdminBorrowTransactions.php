@@ -10,6 +10,7 @@ use App\Models\Notification;
 use App\Models\User;
 use App\Rules\NoHtmlTags;
 use App\Rules\SafeText;
+use App\Services\NotificationService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -586,20 +587,20 @@ class AdminBorrowTransactions extends AdminComponent
             $paper = AcademicPaper::find($this->pendingBorrowData['paper_id']);
             $expiresAt = $transaction->expires_at;
 
-            Notification::create([
-                'user_id' => $this->pendingBorrowData['user_id'],
-                'type' => 'paper_borrowed',
-                'title' => 'Academic Paper Borrowed Successfully',
-                'message' => "You have successfully borrowed \"{$paper->title}\". Please return it by ".$expiresAt->format('M d, Y h:i A').'.',
-                'data' => [
+            app(NotificationService::class)->notify(
+                User::find($this->pendingBorrowData['user_id']),
+                'paper_borrowed',
+                'Academic Paper Borrowed Successfully',
+                "You have successfully borrowed \"{$paper->title}\". Please return it by ".$expiresAt->format('M d, Y h:i A').'.',
+                [
                     'transaction_id' => $transaction->id,
                     'paper_id' => $paper->id,
                     'paper_title' => $paper->title,
                     'inventory_id' => $inventory->id,
                     'copy_number' => $inventory->copy_number,
                     'expires_at' => $expiresAt->toIso8601String(),
-                ],
-            ]);
+                ]
+            );
 
             \DB::commit();
 
