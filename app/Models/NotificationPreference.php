@@ -21,6 +21,20 @@ class NotificationPreference extends Model
     ];
 
     /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'email' => 'boolean',
+            'push' => 'boolean',
+            'in_app' => 'boolean',
+        ];
+    }
+
+    /**
      * Get the user that owns the notification preference.
      */
     public function user(): BelongsTo
