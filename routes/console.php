@@ -108,3 +108,6 @@ Schedule::command('librarian:update-roles')->hourly();
 // Check for unassigned librarian duty days and send alerts (runs daily at 9:00 AM)
 // Checks 3 days in advance for the upcoming week
 Schedule::command('librarian:check-assignments')->dailyAt('09:00');
+
+// Send daily reminders for borrow transactions (due soon and overdue)
+Schedule::command('library:send-reminders')->dailyAt('08:00');
