@@ -310,10 +310,41 @@ class BorrowTransaction extends Model
         return $this->status === 'started' && ! $this->isExpired();
     }
 
-    // Check if transaction is overdue (started but past expiration)
+    /**
+     * Check if transaction is overdue (started but past expiration)
+     */
     public function isOverdue(): bool
     {
         return in_array($this->status, ['started', 'overdue'], true) && $this->isExpired();
+    }
+
+    /**
+     * Accessor for is_overdue attribute.
+     */
+    public function getIsOverdueAttribute(): bool
+    {
+        return $this->isOverdue();
+    }
+
+    /**
+     * Accessor for days_remaining attribute.
+     * Returns negative value if overdue.
+     */
+    public function getDaysRemainingAttribute(): int
+    {
+        if (! $this->expires_at) {
+            return 0;
+        }
+
+        if ($this->status === 'completed') {
+            return 0; // Not applicable for completed transactions
+        }
+
+        $now = now()->startOfDay();
+        $expires = $this->expires_at->copy()->startOfDay();
+        
+        $diff = $now->diffInDays($expires, false);
+        return (int) $diff;
     }
 
     /**

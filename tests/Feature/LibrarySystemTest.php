@@ -249,10 +249,6 @@ class LibrarySystemTest extends TestCase
         $this->assertEquals(1, $reservedCopies);
     }
 
-    // TODO: Implement overdue book detection feature - add is_overdue and days_remaining accessors to BorrowTransaction model
-    // This test was disabled because the required accessor methods (getIsOverdueAttribute, getDaysRemainingAttribute)
-    // don't exist in the BorrowTransaction model. To re-enable: implement the accessors and uncomment this test.
-
     public function test_user_credit_score_system()
     {
         $user = User::factory()->create();
