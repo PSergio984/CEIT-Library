@@ -76,19 +76,8 @@ class AttendanceService
                 return self::VALIDATION_INVALID;
             }
 
-            // 1. Validate timestamp freshness (±60s clock drift allowed, 30s expiration target)
-            $serverTime = time();
-            $qrTime = $data['timestamp'];
-            $timeDiff = $serverTime - $qrTime;
-
-            if (abs($timeDiff) > 60) {
-                Log::warning('QR code rejected: Timestamp skew too high', [
-                    'user_id' => $data['user_id'],
-                    'time_diff' => $timeDiff,
-                ]);
-
-                return self::VALIDATION_INVALID;
-            }
+            // 1. Timestamp validation (Removed for Offline Accessibility - Phase 7)
+            // We intentionally ignore the timestamp difference to allow downloaded/screenshot QR codes to work offline.
 
             // 2. Nonce Replay Prevention (One-time use check)
             $nonceKey = 'qr_nonce:'.$data['nonce'];

@@ -58,14 +58,8 @@ class BorrowService
                 }
             }
 
-            // 2. Validate timestamp freshness (v7)
-            if (isset($data['timestamp'])) {
-                $timeDiff = time() - $data['timestamp'];
-                if (abs($timeDiff) > 60) {
-                    Log::warning('Borrow QR code rejected: Timestamp skew too high', ['time_diff' => $timeDiff]);
-                    return ['success' => false, 'message' => 'QR code expired. Please ask the student to generate a new one.'];
-                }
-            }
+            // 2. Timestamp freshness (Removed for Offline Accessibility - Phase 7)
+            // We intentionally ignore the timestamp difference to allow downloaded/screenshot QR codes to work offline.
 
             // 3. Nonce Replay Prevention (v7)
             if (isset($data['nonce'])) {
