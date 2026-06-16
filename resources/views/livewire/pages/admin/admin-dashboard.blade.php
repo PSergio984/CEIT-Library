@@ -1,4 +1,4 @@
-<div class="p-8 bg-base-200 min-h-screen">
+<div class="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
     <div class="mb-8">
         <h1 class="text-3xl font-bold text-base-content">Admin Dashboard</h1>
         <p class="text-base-content/60">Library management overview</p>
@@ -82,26 +82,39 @@
         {{-- Loan Trends (7 Days) --}}
         <x-mary-card title="Loan Trends (Last 7 Days)" class="shadow-lg lg:col-span-2">
             <x-slot:menu>
-                <x-mary-badge :value="now()->format('M Y')" class="badge-primary badge-sm" />
+                <x-mary-badge :value="now()->format('M Y')" class="badge-primary badge-sm whitespace-nowrap shrink-0" />
             </x-slot:menu>
 
-            <div class="h-64 flex items-end justify-between gap-2 px-2">
-                @php $maxCount = max($this->loanTrends->pluck('count')->toArray()) ?: 1; @endphp
-                @foreach($this->loanTrends as $trend)
-                    <div wire:key="trend-{{ $trend['day'] }}" class="flex-1 flex flex-col items-center group">
-                        <div class="w-full relative flex flex-col items-center">
-                            {{-- Bar --}}
-                            <div class="w-full bg-primary/20 rounded-t-lg transition-all duration-500 group-hover:bg-primary/40 relative" 
-                                style="height: {{ ($trend['count'] / $maxCount) * 180 }}px;">
-                                {{-- Value Label (shows on hover) --}}
-                                <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
-                                    {{ $trend['count'] }}
+            <div class="h-64 flex flex-col items-center justify-center relative">
+                @php 
+                    $hasTrendsData = $this->loanTrends->contains(fn($t) => $t['count'] > 0);
+                    $maxCount = max($this->loanTrends->pluck('count')->toArray()) ?: 1; 
+                @endphp
+                
+                @if(!$hasTrendsData)
+                    <div class="absolute inset-0 flex flex-col items-center justify-center text-base-content/40 z-10">
+                        <x-mary-icon name="o-presentation-chart-bar" class="w-12 h-12 mb-2"/>
+                        <p class="text-xs font-semibold">No borrowing activity in the last 7 days</p>
+                    </div>
+                @endif
+                
+                <div class="w-full h-full flex items-end justify-between gap-2 px-2 {{ !$hasTrendsData ? 'opacity-10' : '' }}">
+                    @foreach($this->loanTrends as $trend)
+                        <div wire:key="trend-{{ $trend['day'] }}" class="flex-1 flex flex-col items-center group">
+                            <div class="w-full relative flex flex-col items-center">
+                                {{-- Bar --}}
+                                <div class="w-full bg-primary/20 rounded-t-lg transition-all duration-500 group-hover:bg-primary/40 relative" 
+                                    style="height: {{ ($trend['count'] / $maxCount) * 180 }}px;">
+                                    {{-- Value Label (shows on hover) --}}
+                                    <div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity">
+                                        {{ $trend['count'] }}
+                                    </div>
                                 </div>
                             </div>
+                            <span class="text-[10px] font-bold mt-2 text-base-content/60 uppercase tracking-wider">{{ $trend['day'] }}</span>
                         </div>
-                        <span class="text-[10px] font-bold mt-2 text-base-content/60 uppercase tracking-wider">{{ $trend['day'] }}</span>
-                    </div>
-                @endforeach
+                    @endforeach
+                </div>
             </div>
         </x-mary-card>
 

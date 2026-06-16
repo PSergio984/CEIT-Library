@@ -1,4 +1,4 @@
-<div class="p-6">
+<div class="p-4 sm:p-6">
     <div class="mb-6">
         <x-mary-header title="Attendance Logs" subtitle="All library attendance records" separator>
             <x-slot:actions>

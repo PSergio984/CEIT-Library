@@ -6,7 +6,7 @@
     }
 @endphp
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
     {{-- Load QR libraries first --}}
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>

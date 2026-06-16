@@ -164,7 +164,7 @@
 
 
                     <div class="overflow-y-auto flex-1 rounded-lg">
-                        <table class="table table-zebra w-full">
+                        <table class="table table-zebra w-full hidden sm:table">
                             <thead class="sticky top-0 bg-base-200 z-10">
                                 <tr class="text-base-content text-sm border-b border-base-300">
                                     <th class="text-left py-2 px-2 w-8">#</th>
@@ -238,6 +238,71 @@
                                 @endforelse
                             </tbody>
                         </table>
+
+                        {{-- Mobile Card View --}}
+                        <div class="block sm:hidden space-y-4">
+                            @forelse($allBatches as $index => $batch)
+                                <div wire:key="mobile-batch-{{ $batch['batch_no'] }}" 
+                                    class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="flex items-start justify-between mb-3">
+                                        <div>
+                                            <div class="flex items-center gap-2 mb-1.5">
+                                                <span class="font-mono font-bold text-primary text-sm">{{ $batch['batch_no'] }}</span>
+                                                <span class="text-xs text-base-content/40 font-semibold">#{{ $index + 1 }}</span>
+                                            </div>
+                                            <div class="text-xs">
+                                                @if ($batch['date_range'] !== 'N/A')
+                                                    <span class="text-success font-medium">{{ $batch['date_range'] }}</span>
+                                                @else
+                                                    <span class="text-base-content/40 italic">Date not set</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-1 rounded-full text-[10px] font-semibold
+                                                {{ $batch['status'] === 'active'
+                                                    ? 'bg-green-500/20 text-green-400'
+                                                    : ($batch['status'] === 'inactive'
+                                                        ? 'bg-yellow-500/20 text-yellow-400'
+                                                        : 'bg-red-500/20 text-red-400') }}">
+                                                {{ ucfirst($batch['status']) }}
+                                            </span>
+                                            
+                                            <button wire:click.prevent="openEditModal('{{ $batch['batch_no'] }}')"
+                                                class="text-primary hover:text-primary-focus p-1.5 rounded-lg hover:bg-base-200 transition"
+                                                title="Edit">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="space-y-2 text-xs pt-2 border-t border-base-300">
+                                        <div>
+                                            <span class="text-base-content/50">Created by:</span>
+                                            <span class="font-medium text-base-content/85">{{ $batch['created_by'] }}</span>
+                                        </div>
+                                        @if ($batch['shift_notes'])
+                                            <div>
+                                                <span class="text-base-content/50">Notes:</span>
+                                                <p class="mt-0.5 text-base-content/70 italic line-clamp-2">{{ $batch['shift_notes'] }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @empty
+                                <div class="text-center py-8 bg-base-100 rounded-lg border border-base-300">
+                                    <svg class="w-12 h-12 mx-auto text-base-content/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    </svg>
+                                    <p class="text-sm text-base-content/60">No batches found</p>
+                                </div>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             </div>
@@ -331,7 +396,7 @@
                                     class="max-h-64 overflow-y-auto space-y-2 border border-base-300 bg-base-100 rounded-lg p-3">
                                     <template x-for="student in sortedStudents" :key="student.id">
                                         <label
-                                            class="flex items-center space-x-2 cursor-pointer hover:bg-base-200 p-2 rounded-lg transition duration-150"
+                                            class="flex items-start space-x-2 cursor-pointer hover:bg-base-200 p-2 rounded-lg transition duration-150"
                                             x-bind:class="{
                                                 'opacity-50 cursor-not-allowed': selected.length >= 5 && !selected
                                                     .includes(String(student.id)),
@@ -340,9 +405,13 @@
                                             }">
                                             <input type="checkbox" x-model="selected" :value="String(student.id)"
                                                 x-bind:disabled="selected.length >= 5 && !selected.includes(String(student.id))"
-                                                class="checkbox checkbox-primary">
-                                            <span class="text-sm text-base-content"
-                                                x-text="student.first_name + ' ' + student.last_name + ' (' + student.email + ')'"></span>
+                                                class="checkbox checkbox-primary mt-1">
+                                            <div class="flex flex-col min-w-0">
+                                                <span class="text-sm text-base-content font-medium break-words"
+                                                    x-text="student.first_name + ' ' + student.last_name"></span>
+                                                <span class="text-xs text-base-content/60 break-all"
+                                                    x-text="student.email"></span>
+                                            </div>
                                         </label>
                                     </template>
 
@@ -449,7 +518,7 @@
                                         class="max-h-64 overflow-y-auto space-y-2 border border-base-300 bg-base-100 rounded-lg p-3">
                                         <template x-for="student in sortedStudents" :key="student.id">
                                             <label
-                                                class="flex items-center justify-between space-x-2 p-2 rounded-lg transition duration-150 cursor-pointer hover:bg-base-200"
+                                                class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-lg transition duration-150 cursor-pointer hover:bg-base-200"
                                                 x-bind:class="{
                                                     'opacity-50 cursor-not-allowed': editSelected.length >= 5 && !
                                                         editSelected.includes(String(student.id)),
@@ -457,29 +526,31 @@
                                                         String(student.id))
                                                 }">
 
-                                                <div class="flex items-center space-x-2 flex-1">
+                                                <div class="flex items-start sm:items-center space-x-2 flex-1 min-w-0">
                                                     <input type="checkbox" x-model="editSelected"
                                                         :value="String(student.id)"
                                                         x-bind:disabled="editSelected.length >= 5 && !editSelected.includes(String(
                                                             student.id))"
-                                                        class="checkbox checkbox-primary cursor-pointer">
+                                                        class="checkbox checkbox-primary cursor-pointer mt-1 sm:mt-0">
 
-                                                    <div class="flex flex-col">
-                                                        <span class="text-sm text-base-content"
+                                                    <div class="flex flex-col min-w-0">
+                                                        <span class="text-sm text-base-content font-medium break-words"
                                                             x-text="student.first_name + ' ' + student.last_name"></span>
-                                                        <span class="text-xs text-base-content/60"
+                                                        <span class="text-xs text-base-content/60 break-all"
                                                             x-text="student.email"></span>
                                                     </div>
                                                 </div>
 
-                                                <span class="badge badge-primary badge-sm whitespace-nowrap"
-                                                    x-show="editSelected.includes(String(student.id))">
-                                                    <span
-                                                        x-show="@js($editingSelectedStudents).includes(String(student.id))">Current
-                                                        Member</span>
-                                                    <span
-                                                        x-show="!@js($editingSelectedStudents).includes(String(student.id))">Selected</span>
-                                                </span>
+                                                <div class="flex justify-end sm:contents">
+                                                    <span class="badge badge-primary badge-sm whitespace-nowrap"
+                                                        x-show="editSelected.includes(String(student.id))">
+                                                        <span
+                                                            x-show="@js($editingSelectedStudents).includes(String(student.id))">Current
+                                                            Member</span>
+                                                        <span
+                                                            x-show="!@js($editingSelectedStudents).includes(String(student.id))">Selected</span>
+                                                    </span>
+                                                </div>
                                             </label>
                                         </template>
 

@@ -27,7 +27,7 @@ class ViolationForm extends Form
                 'string',
                 'min:3',
                 'max:255',
-                'regex:/^[\p{L}\s\-\'\.&,()]+$/u', // Letters, spaces, hyphens, apostrophes, periods, &, commas, parentheses
+                'regex:/^[\p{L}0-9\s\-\'\.&,()]+$/u', // Letters, digits, spaces, hyphens, apostrophes, periods, &, commas, parentheses
                 new NoHtmlTags,
                 new SafeText,
             ],

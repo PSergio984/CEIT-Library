@@ -101,7 +101,90 @@
                         {{ Str::plural('copy', $selectedPaper->logical_copies_count) }}</div>
                 </div>
 
-                <div class="overflow-x-auto rounded-xl border border-base-300 shadow-md">
+                {{-- Mobile Card View --}}
+                <div class="block md:hidden space-y-4">
+                    @foreach($selectedPaper->copies as $copy)
+                        <div wire:key="mobile-copy-{{ $copy->id }}" class="card bg-base-100 border border-base-300 shadow-sm p-4">
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-2">
+                                    <span class="text-xs text-base-content/50 uppercase tracking-wide">Copy ID:</span>
+                                    <span class="font-mono font-bold text-primary">{{ $copy->id }}</span>
+                                </div>
+                                <span class="badge badge-sm {{ $getStatusBadgeClass($copy->status) }} gap-1">
+                                    @if($copy->status === 'Available')
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                    @else
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                    @endif
+                                    {{ $copy->status }}
+                                </span>
+                            </div>
+
+                            <div class="flex justify-end pt-3 border-t border-base-200">
+                                @if($isAdmin)
+                                    {{-- Admin Actions: Delete Copy --}}
+                                    @php
+                                        $isOnlyCopy = $selectedPaper->copies->count() <= 1;
+                                        $canDeleteCopy = $copy->status === 'Available' && !$isOnlyCopy;
+                                    @endphp
+                                    @if($copy->status === 'Available')
+                                        <x-mary-button 
+                                            wire:click="confirmCopyDelete({{ $copy->id }})"
+                                            :disabled="$isOnlyCopy"
+                                            class="btn-sm {{ $isOnlyCopy ? 'btn-ghost' : 'btn-error' }} w-full justify-center gap-2 shadow-sm"
+                                            icon="o-trash"
+                                            label="{{ $isOnlyCopy ? 'Only Copy' : 'Delete Copy' }}"
+                                            spinner
+                                            wire:loading.attr="disabled"
+                                            wire:target="confirmCopyDelete({{ $copy->id }})"
+                                        />
+                                    @else
+                                        <div class="flex items-center justify-center gap-2 text-base-content/60 w-full py-1 text-sm font-semibold">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                            Cannot Delete
+                                        </div>
+                                    @endif
+                                @else
+                                    {{-- Student Actions: Request QR --}}
+                                    @if($copy->status === 'Available')
+                                        <button 
+                                            x-data="{ loading: false }"
+                                            @click="
+                                                loading = true;
+                                                $wire.requestQr({{ $copy->id }}).finally(() => loading = false)
+                                            "
+                                            :disabled="loading"
+                                            class="btn btn-sm btn-success w-full justify-center gap-2 shadow-sm">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4" x-show="!loading">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 013.75 9.375v-4.5zM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 01-1.125-1.125v-4.5zM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0113.5 9.375v-4.5z" />
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 6.75h.75v.75h-.75v-.75zM6.75 16.5h.75v.75h-.75v-.75zM16.5 6.75h.75v.75h-.75v-.75zM13.5 13.5h.75v.75h-.75v-.75zM13.5 19.5h.75v.75h-.75v-.75zM19.5 13.5h.75v.75h-.75v-.75zM19.5 19.5h.75v.75h-.75v-.75zM16.5 16.5h.75v.75h-.75v-.75z" />
+                                            </svg>
+                                            <span x-show="!loading">Request QR</span>
+                                            <span x-show="loading" class="loading loading-spinner loading-sm"></span>
+                                            <span x-show="loading">Requesting...</span>
+                                        </button>
+                                    @else
+                                        <div class="flex items-center justify-center gap-2 text-error w-full py-1 text-sm font-semibold">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                            </svg>
+                                            Not Available
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop Table View --}}
+                <div class="hidden md:block overflow-x-auto rounded-xl border border-base-300 shadow-md">
                     <table class="table w-full text-sm sm:text-base">
                         <thead>
                             <tr class="bg-base-300">

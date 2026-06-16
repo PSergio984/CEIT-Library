@@ -190,10 +190,9 @@
                     <div class="flex justify-end gap-2 pt-2">
                         <button type="button" wire:click="$set('openDrawer', false)" class="btn">Cancel</button>
                         <button type="submit" 
-                            class="btn btn-primary {{ $errors->any() || !$this->isFormValid ? 'btn-disabled opacity-50 cursor-not-allowed' : '' }}" 
+                            class="btn btn-primary" 
                             wire:loading.attr="disabled" 
-                            wire:target="save"
-                            @disabled($errors->any() || !$this->isFormValid)>
+                            wire:target="save">
                             <span wire:loading.remove wire:target="save">
                                 {{ $isEdit ? 'Update' : 'Create' }}
                             </span>

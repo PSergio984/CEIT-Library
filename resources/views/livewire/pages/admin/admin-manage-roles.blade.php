@@ -96,7 +96,7 @@
                     </div>
                 </div>
 
-                <table class="table table-zebra w-full">
+                <table class="table table-zebra w-full hidden sm:table">
                     <thead class="bg-base-200 sticky top-0 z-10">
                         <tr class="text-base-content text-sm border-b border-base-300">
                             <th class="w-8">#</th>
@@ -166,6 +166,59 @@
                         @endforelse
                     </tbody>
                 </table>
+
+                {{-- Mobile Card View --}}
+                <div class="block sm:hidden space-y-4">
+                    @forelse($users as $index => $user)
+                        <div wire:key="mobile-user-{{ $user->id }}"
+                            class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-3 gap-2">
+                                <div class="min-w-0">
+                                    <div class="flex flex-wrap items-center gap-2 mb-1.5">
+                                        <span class="font-semibold text-base-content break-words">{{ $user->first_name }} {{ $user->last_name }}</span>
+                                        @if ($user->id === Auth::id())
+                                            <span class="badge badge-primary badge-sm whitespace-nowrap">You</span>
+                                        @endif
+                                    </div>
+                                    <div class="text-xs text-base-content/60 break-all">{{ $user->email }}</div>
+                                </div>
+                                
+                                <div class="shrink-0">
+                                    <span
+                                        class="px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap
+                                        {{ $user->role->name === 'super_admin' ? 'bg-red-500/20 text-red-400' : '' }}
+                                        {{ $user->role->name === 'admin' ? 'bg-purple-500/20 text-purple-400' : '' }}
+                                        {{ $user->role->name === 'librarian' ? 'bg-blue-500/20 text-blue-400' : '' }}
+                                        {{ $user->role->name === 'student' ? 'bg-green-500/20 text-green-400' : '' }}">
+                                        {{ $user->role->display_name }}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            @if ($user->id !== Auth::id())
+                                <div class="pt-3 border-t border-base-300 flex justify-end">
+                                    <button wire:click="openAssignRoleModal({{ $user->id }})"
+                                        class="btn btn-primary btn-sm gap-1.5"
+                                        title="Change Role">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                        </svg>
+                                        <span class="text-xs">Change Role</span>
+                                    </button>
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="text-center py-8 bg-base-100 rounded-lg border border-base-300">
+                            <svg class="w-12 h-12 mx-auto text-base-content/40 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+                            </svg>
+                            <p class="text-sm text-base-content/60">No users found</p>
+                        </div>
+                    @endforelse
+                </div>
             </div>
 
             <!-- Pagination -->

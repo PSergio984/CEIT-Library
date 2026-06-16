@@ -1,4 +1,4 @@
-<div class="p-6">
+<div class="p-4 sm:p-6">
     <x-mary-header title="Student List" subtitle="Manage all students and their accounts" separator />
 
     <!-- Stats Cards -->

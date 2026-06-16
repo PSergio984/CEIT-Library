@@ -9,7 +9,7 @@
     {{-- Full Page Loading Spinner removed in favor of localized skeletons --}}
 
     {{-- Main Content --}}
-    <div class="p-6">
+    <div class="p-4 sm:p-6">
 
         {{-- Header Actions --}}
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
@@ -267,7 +267,7 @@
 </div>
 
 {{-- Delete Confirmation Modal --}}
-<x-mary-modal id="delete-modal" title="Confirm Deletion" class="backdrop-blur-sm">
+<x-mary-modal wire:model="showDeleteModal" title="Confirm Deletion" class="backdrop-blur-sm">
     <div class="p-4 bg-error/5 rounded-xl border border-error/10 mb-4">
         <p class="text-sm font-medium">Are you sure you want to delete this paper?</p>
         <p class="text-xs opacity-70 mt-2">This action cannot be undone. All associated inventory records will also be
@@ -275,7 +275,7 @@
     </div>
 
     <x-slot:actions>
-        <button @click="$dispatch('close-delete-modal')" class="btn btn-ghost">Cancel</button>
+        <button @click="$wire.showDeleteModal = false" class="btn btn-ghost">Cancel</button>
         <button wire:click="performDelete" class="btn btn-error gap-2" wire:loading.attr="disabled">
             <span wire:loading.remove wire:target="performDelete">Delete Paper</span>
             <span wire:loading wire:target="performDelete" class="loading loading-spinner loading-xs"></span>

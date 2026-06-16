@@ -1,6 +1,6 @@
 <div class="p-4 sm:p-8 bg-base-100 shadow-lg sm:rounded-lg text-base-content" wire:poll.15s>
     {{-- Attendance QR Component --}}
-    <div class="max-w-xl">
+    <div class="max-w-xl mx-auto">
         {{-- Header with Icon --}}
         <div class="mb-4 sm:mb-6">
             <div class="flex items-center gap-3 mb-3">
@@ -23,11 +23,11 @@
             <div class="absolute bottom-2 right-2 w-8 h-8 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
             
             {{-- QR Code with white background and padding --}}
-            <div class="bg-white p-6 rounded-xl shadow-inner">
+            <div class="bg-white p-4 sm:p-6 rounded-xl shadow-inner w-full max-w-[240px] sm:max-w-[320px] aspect-square flex items-center justify-center">
              <img src="{{ $this->qrCodeDataUri }}" 
-                 alt="Student attendance QR code for {{ $user->first_name ?? 'Unknown' }} {{ $user->last_name ?? '' }}. Scan to record attendance at the library."
-                 class="w-64 h-64 sm:w-80 sm:h-80"
-                 style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;"/>
+                  alt="Student attendance QR code for {{ $user->first_name ?? 'Unknown' }} {{ $user->last_name ?? '' }}. Scan to record attendance at the library."
+                  class="w-full h-full object-contain"
+                  style="image-rendering: -moz-crisp-edges; image-rendering: -webkit-crisp-edges; image-rendering: pixelated;"/>
             </div>
             
             {{-- Status badge --}}

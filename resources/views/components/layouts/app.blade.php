@@ -143,7 +143,7 @@
     <x-mary-main full-width class="flex-1 flex flex-col">
         {{-- SIDEBAR --}}
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
-
+            @persist('sidebar')
             {{-- BRAND --}}
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
@@ -166,7 +166,7 @@
 
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" wire:transition>
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
                 <x-mary-menu-item title="Dashboard" tooltip="Dashboard" icon="o-home" link="/dashboard" wire:navigate.hover />
                 <x-mary-menu-item title="Academic Papers" tooltip="Academic Papers" icon="o-book-open" link="/academic-papers" wire:navigate.hover />
                 <x-mary-menu-item title="Rules & Regulations" tooltip="Rules & Regulations" icon="o-clipboard-document-list"
@@ -189,9 +189,7 @@
                 @endcan
 
             </x-mary-menu>
-
-
-
+            @endpersist
         </x-slot:sidebar>
 
         {{-- CONTENT --}}
@@ -244,7 +242,10 @@
             </a>
             
             @can('librarian-or-admin-access')
-            <a href="/test-qr" class="flex flex-col items-center justify-center w-full h-full">
+            <a href="{{ route('admin.attendance', ['scan' => 1]) }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full"
+            >
                 <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
                     <x-mary-icon name="o-qr-code" class="w-7 h-7" />
                 </div>

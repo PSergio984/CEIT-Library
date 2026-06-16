@@ -4,6 +4,7 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Livewire\Forms\ViolationForm;
 use App\Models\Violation;
+use Livewire\Attributes\Computed;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
@@ -114,7 +115,8 @@ class ViolationsTab extends AdminComponent
         $this->sortBy = ['column' => 'name', 'direction' => 'asc'];
     }
 
-    public function getIsFormValidProperty(): bool
+    #[Computed]
+    public function isFormValid(): bool
     {
         $name = trim($this->form->name ?? '');
         $description = trim($this->form->description ?? '');
@@ -122,7 +124,7 @@ class ViolationsTab extends AdminComponent
 
         // Check if fields are filled and valid
         // Name: must be 3-255 chars AND match the regex pattern (letters, spaces, hyphens, apostrophes, periods, &, commas, parentheses)
-        $nameRegex = '/^[\p{L}\s\-\'\.&,()]+$/u';
+        $nameRegex = '/^[\p{L}0-9\s\-\'\.&,()]+$/u';
         $nameValid = ! empty($name)
             && strlen($name) >= 3
             && strlen($name) <= 255
