@@ -1,14 +1,14 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Bug Fixes, Security & UX Improvements
+milestone: v1.2
+milestone_name: Architecture & Analytics
 status: active
-last_updated: "2026-06-15T00:00:00.000Z"
+last_updated: "2026-06-16T00:00:00.000Z"
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 20
+  completed_plans: 20
   percent: 100
 ---
 
@@ -31,6 +31,14 @@ Centralized librarian status logic to eliminate race conditions, implemented ele
 
 ## Phase 6: Stabilization & Automation (COMPLETE)
 Registered the automated overdue transaction check, enabled the new user welcome email flow, and achieved 100% pass rate across all 90 documented test cases on PHP 8.4.
+
+## Milestone v1.2: Architecture & Analytics
+
+### Phase 1: Structural Integrity (COMPLETE)
+Decoupled "fat" Livewire components into `BorrowService` and `AttendanceService`. Consolidated `BorrowTransaction` model events into a unified `booted` method. Modernized inline validation using Livewire 3 `#[Validate]` attributes.
+
+### Phase 2: Advanced Analytics & Reporting (COMPLETE)
+Added high-performance cached "Quick Stats" mini-cards to Admin tables. Implemented advanced PDF export functionality using `barryvdh/laravel-dompdf`. Optimized repeated queries using Cache.
 
 ## Technical Debt & Infrastructure
 - **Docker**: Verified and iteratively fixed the `Dockerfile`. The application is fully containerized and serves Vite-built PWA artifacts correctly.
