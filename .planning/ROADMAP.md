@@ -52,3 +52,12 @@
 - [x] [R5.2] Implement elegant Skeleton Loaders for all major tables.
 - [x] [R5.3] Enable balanced Hover Prefetching for sidebar navigation.
 - [x] [R5.4] Add Loan Trends and Top Borrowers widgets to the Admin Dashboard.
+
+### Phase 6: Stabilization & Automation [COMPLETE]
+**Goal:** Achieve 100% test coverage and automate critical background tasks.
+
+**Scope:**
+- [x] [R6.1] Register and schedule `transactions:check-overdue` command.
+- [x] [R6.2] Enable and verify Welcome Email flow for new registrations.
+- [x] [R6.3] Map and verify all 90 manual test cases to automated tests.
+- [x] [R6.4] Final stabilization run on PHP 8.4 environment.

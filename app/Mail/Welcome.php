@@ -14,7 +14,7 @@ class Welcome extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct()
+    public function __construct(public \App\Models\User $user)
     {
         // Delay the welcome email by 5 seconds to avoid rate limiting
         $this->delay(now()->addSeconds(30));

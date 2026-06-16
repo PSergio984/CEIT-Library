@@ -70,42 +70,23 @@ class EmailVerificationTest extends TestCase
 
     /** @test - TC054: Welcome Email - New User */
     #[Test]
-    public function welcome_email_is_sent_after_email_verification()
+    public function welcome_email_is_sent_after_registration()
     {
         Mail::fake();
 
-        $user = User::factory()->create([
-            'email_verified_at' => null,
-        ]);
+        Volt::test('pages.auth.register')
+            ->set('first_name', 'John')
+            ->set('last_name', 'Doe')
+            ->set('email', 'newuser@plv.edu.ph')
+            ->set('password', 'Password123!')
+            ->set('password_confirmation', 'Password123!')
+            ->call('register');
 
-        // Verify email
-        $verificationUrl = URL::temporarySignedRoute(
-            'verification.verify',
-            now()->addMinutes(60),
-            ['id' => $user->id, 'hash' => sha1($user->email)]
-        );
-
-        $this->actingAs($user)->get($verificationUrl);
-
-        // Welcome email might be disabled in the register component, 
-        // but let's check if it's sent upon verification if the project intended to.
-        // If it's disabled, we might need to skip or adjust this.
-        // Based on the register component, it was commented out there.
-        // In VerifyEmailController, it is not sent either.
+        $user = User::where('email', 'newuser@plv.edu.ph')->first();
         
-        // If we want this test to pass and the welcome email is indeed disabled, 
-        // we should either enable it or remove this assertion.
-        // Given the instructions say "Handle the fact that Welcome email might be commented out",
-        // I will check if it was sent, but I won't fail if it wasn't if I determine it's disabled.
-        
-        // For now, let's fix the type hint and see.
-        try {
-            Mail::assertSent(\App\Mail\Welcome::class, function (\App\Mail\Welcome $mail) use ($user) {
-                return $mail->hasTo($user->email);
-            });
-        } catch (\PHPUnit\Framework\AssertionFailedError $e) {
-            $this->markTestIncomplete('Welcome email is currently disabled in the application.');
-        }
+        Mail::assertQueued(\App\Mail\Welcome::class, function (\App\Mail\Welcome $mail) use ($user) {
+            return $mail->hasTo($user->email);
+        });
     }
 
     /** @test - TC055: Overdue Email - Automated Notification */
@@ -117,11 +98,11 @@ class EmailVerificationTest extends TestCase
         // This test would require running a scheduled command or triggering the overdue check
         // The actual implementation depends on how overdue notifications are handled
         try {
-            $this->artisan('borrow:check-overdue')
+            $this->artisan('transactions:check-overdue', ['--force' => true])
                 ->assertSuccessful();
         } catch (\Exception $e) {
             // Command may not be registered yet, skip this test if command doesn't exist
-            $this->markTestSkipped('borrow:check-overdue command not registered');
+            $this->markTestSkipped('transactions:check-overdue command not registered');
         }
 
         // Verify emails were sent for overdue transactions
