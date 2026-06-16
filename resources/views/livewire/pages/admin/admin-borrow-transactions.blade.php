@@ -13,11 +13,21 @@
 
     <x-mary-header title="Borrow Transactions" subtitle="all borrow transactions" separator>
         <x-slot:actions>
+            <x-mary-button wire:click="exportPdf" class="btn-outline" icon="o-document-arrow-down" spinner>
+                Export PDF
+            </x-mary-button>
             <x-mary-button wire:click="openQrModal" class="btn-primary" icon="o-qr-code">
                 Scan QR Code
             </x-mary-button>
         </x-slot:actions>
     </x-mary-header>
+
+    {{-- Quick Stats --}}
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <x-mary-stat title="Active Borrows" value="{{ $this->quickStats['active'] }}" icon="o-book-open" class="bg-base-200" />
+        <x-mary-stat title="Overdue Borrows" value="{{ $this->quickStats['overdue'] }}" icon="o-exclamation-triangle" class="bg-error/20 text-error" />
+        <x-mary-stat title="Today's Borrows" value="{{ $this->quickStats['today'] }}" icon="o-calendar-days" class="bg-base-200" />
+    </div>
 
     <div class="bg-base-200 p-4 rounded-lg mb-6">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

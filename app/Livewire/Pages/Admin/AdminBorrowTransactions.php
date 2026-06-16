@@ -81,6 +81,32 @@ class AdminBorrowTransactions extends AdminComponent
     // Sort configuration for MaryUI
     public array $sortBy = ['column' => 'time_in', 'direction' => 'desc'];
 
+    public function exportPdf()
+    {
+        $this->authorize('manage-borrow-logs');
+
+        $transactions = $this->getTransactionsQuery()
+            ->orderBy($this->sortBy['column'] ?? 'time_in', $this->sortBy['direction'] ?? 'desc')
+            ->get();
+
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.borrow-transactions', [
+            'transactions' => $transactions,
+            'filters' => [
+                'search' => $this->search,
+                'paperType' => $this->paperTypeFilter,
+                'status' => $this->statusFilter,
+                'date' => $this->selectedDate,
+            ],
+            'generatedAt' => now()->format('M d, Y h:i A')
+        ])->setPaper('a4', 'landscape');
+
+        $filename = 'borrow-transactions-' . now()->format('Y-m-d') . '.pdf';
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, $filename);
+    }
+
     // Check if user can edit transactions (admin only)
     public function getCanEditProperty(): bool
     {
@@ -170,9 +196,22 @@ class AdminBorrowTransactions extends AdminComponent
             });
     }
 
+    #[\Livewire\Attributes\Computed]
     public function getPaperTypesProperty()
     {
-        return AcademicPaper::distinct()->pluck('paper_type')->filter();
+        return Cache::remember('academic_paper_types', 3600, function () {
+            return AcademicPaper::distinct()->pluck('paper_type')->filter();
+        });
+    }
+
+    #[\Livewire\Attributes\Computed]
+    public function quickStats()
+    {
+        return [
+            'active' => BorrowTransaction::where('status', 'started')->count(),
+            'overdue' => BorrowTransaction::where('status', 'overdue')->count(),
+            'today' => BorrowTransaction::whereDate('time_in', today())->count(),
+        ];
     }
 
     // Edit modal methods

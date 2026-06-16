@@ -61,3 +61,21 @@
 - [x] [R6.2] Enable and verify Welcome Email flow for new registrations.
 - [x] [R6.3] Map and verify all 90 manual test cases to automated tests.
 - [x] [R6.4] Final stabilization run on PHP 8.4 environment.
+
+## Milestone: Architecture & Analytics (v1.2)
+
+### Phase 1: Structural Integrity [COMPLETE]
+**Goal:** Decouple "fat" Livewire components and consolidate model behavior.
+
+**Scope:**
+- [x] [R1.1] Extract `BorrowService` and `AttendanceService` to handle core logic and QR decryption.
+- [x] [R1.2] Consolidate `BorrowTransaction` model events into a unified `booted` method.
+- [x] [R1.3] Modernize inline validation in components using Livewire 3 `#[Validate]` attributes.
+
+### Phase 2: Advanced Analytics & Reporting [COMPLETE]
+**Goal:** Expand dashboard utility and optimize query performance.
+
+**Scope:**
+- [x] [R2.1] Add high-performance cached "Quick Stats" mini-cards to Admin tables.
+- [x] [R2.2] Implement advanced PDF export functionality using `barryvdh/laravel-dompdf`.
+- [x] [R2.3] Optimize repeated distinctive queries (e.g., paper types) using Cache.
