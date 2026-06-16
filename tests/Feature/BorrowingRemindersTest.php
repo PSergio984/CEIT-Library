@@ -70,5 +70,9 @@ class BorrowingRemindersTest extends TestCase
             'type' => 'reminders',
             'title' => 'OVERDUE NOTICE',
         ]);
+
+        $transaction->refresh();
+        $this->assertNotNull($transaction->overdue_notified_at);
+        $this->assertTrue($transaction->overdue_notified_at->greaterThan(Carbon::now()->subDays(1)));
     }
 }

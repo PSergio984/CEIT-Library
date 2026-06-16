@@ -5,15 +5,14 @@ namespace App\Livewire\Pages\Admin;
 use App\Livewire\Forms\BorrowTransactionForm;
 use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
-use App\Models\Inventory;
-use App\Models\Notification;
 use App\Models\User;
 use App\Rules\NoHtmlTags;
 use App\Rules\SafeText;
 use App\Services\BorrowService;
-use App\Services\NotificationService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
+use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
@@ -89,7 +88,7 @@ class AdminBorrowTransactions extends AdminComponent
             ->orderBy($this->sortBy['column'] ?? 'time_in', $this->sortBy['direction'] ?? 'desc')
             ->get();
 
-        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.borrow-transactions', [
+        $pdf = Pdf::loadView('pdf.borrow-transactions', [
             'transactions' => $transactions,
             'filters' => [
                 'search' => $this->search,
@@ -97,10 +96,10 @@ class AdminBorrowTransactions extends AdminComponent
                 'status' => $this->statusFilter,
                 'date' => $this->selectedDate,
             ],
-            'generatedAt' => now()->format('M d, Y h:i A')
+            'generatedAt' => now()->format('M d, Y h:i A'),
         ])->setPaper('a4', 'landscape');
 
-        $filename = 'borrow-transactions-' . now()->format('Y-m-d') . '.pdf';
+        $filename = 'borrow-transactions-'.now()->format('Y-m-d').'.pdf';
 
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->stream();
@@ -196,7 +195,7 @@ class AdminBorrowTransactions extends AdminComponent
             });
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function getPaperTypesProperty()
     {
         return Cache::remember('academic_paper_types', 3600, function () {
@@ -204,13 +203,23 @@ class AdminBorrowTransactions extends AdminComponent
         });
     }
 
-    #[\Livewire\Attributes\Computed]
+    #[Computed]
     public function quickStats()
     {
+        $today = today()->toDateString();
+
+        $stats = BorrowTransaction::query()
+            ->selectRaw("
+                SUM(CASE WHEN status = 'started' THEN 1 ELSE 0 END) as active,
+                SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue,
+                SUM(CASE WHEN DATE(time_in) = ? THEN 1 ELSE 0 END) as today_count
+            ", [$today])
+            ->first();
+
         return [
-            'active' => BorrowTransaction::where('status', 'started')->count(),
-            'overdue' => BorrowTransaction::where('status', 'overdue')->count(),
-            'today' => BorrowTransaction::whereDate('time_in', today())->count(),
+            'active' => (int) ($stats->active ?? 0),
+            'overdue' => (int) ($stats->overdue ?? 0),
+            'today' => (int) ($stats->today_count ?? 0),
         ];
     }
 

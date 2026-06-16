@@ -101,8 +101,7 @@ class BorrowTransaction extends Model
 
                     if ($borrowDurationMinutes < 30) {
                         // Borrow duration too short - no credit score, but still notify about return
-                        // Borrow duration too short - no credit score, but still notify about return
-                        app(NotificationService::class)->notify(
+                        rescue(fn () => app(NotificationService::class)->notify(
                             $transaction->user,
                             'paper_returned',
                             'Book Returned Successfully!',
@@ -115,7 +114,7 @@ class BorrowTransaction extends Model
                                 'score_awarded' => 0,
                                 'reason' => 'duration_too_short',
                             ]
-                        );
+                        ));
 
                         return;
                     }
@@ -128,7 +127,7 @@ class BorrowTransaction extends Model
 
                     if ($todayBorrowRewards >= 3) {
                         // Daily limit reached - no credit score, but still notify about return
-                        app(NotificationService::class)->notify(
+                        rescue(fn () => app(NotificationService::class)->notify(
                             $transaction->user,
                             'paper_returned',
                             'Book Returned Successfully!',
@@ -142,7 +141,7 @@ class BorrowTransaction extends Model
                                 'reason' => 'daily_limit_reached',
                                 'daily_count' => $todayBorrowRewards,
                             ]
-                        );
+                        ));
 
                         return;
                     }
@@ -163,7 +162,7 @@ class BorrowTransaction extends Model
                         ]);
 
                         // Create notification for on-time return with credit score increase
-                        app(NotificationService::class)->notify(
+                        rescue(fn () => app(NotificationService::class)->notify(
                             $transaction->user,
                             'paper_returned',
                             'Book Returned Successfully!',
@@ -175,11 +174,11 @@ class BorrowTransaction extends Model
                                 'duration_minutes' => $borrowDurationMinutes,
                                 'score_awarded' => 10,
                             ]
-                        );
+                        ));
                     }
                 } else {
                     // Late return notification (no credit score)
-                    app(NotificationService::class)->notify(
+                    rescue(fn () => app(NotificationService::class)->notify(
                         $transaction->user,
                         'paper_returned_late',
                         'Book Returned (Late)',
@@ -190,7 +189,7 @@ class BorrowTransaction extends Model
                             'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
                             'was_overdue' => true,
                         ]
-                    );
+                    ));
                 }
             }
 
@@ -200,7 +199,7 @@ class BorrowTransaction extends Model
 
             if ($wasStarted && $isNowOverdue && ! $transaction->overdue_notified_at) {
                 // Create overdue notification
-                app(NotificationService::class)->notify(
+                rescue(fn () => app(NotificationService::class)->notify(
                     $transaction->user,
                     'paper_overdue',
                     'Overdue Book Alert!',
@@ -211,7 +210,7 @@ class BorrowTransaction extends Model
                         'due_date' => $transaction->expires_at->format('M d, Y h:i A'),
                         'overdue_duration' => $transaction->overdue_duration,
                     ]
-                );
+                ));
 
                 // Mark that we've sent the overdue notification
                 $transaction->overdue_notified_at = now();
@@ -342,8 +341,9 @@ class BorrowTransaction extends Model
 
         $now = now()->startOfDay();
         $expires = $this->expires_at->copy()->startOfDay();
-        
+
         $diff = $now->diffInDays($expires, false);
+
         return (int) $diff;
     }
 
@@ -423,5 +423,4 @@ class BorrowTransaction extends Model
             ->where('status', 'started')
             ->first();
     }
-
 }

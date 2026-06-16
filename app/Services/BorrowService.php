@@ -6,7 +6,6 @@ use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\User;
-use App\Services\NotificationService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +29,7 @@ class BorrowService
             // ENFORCE encryption
             if (! $data || ! isset($data['encrypted'])) {
                 Log::warning('Unencrypted or invalid QR format detected');
+
                 return ['success' => false, 'message' => 'Invalid QR code format! Only official encrypted QR codes are accepted.'];
             }
 
@@ -37,6 +37,7 @@ class BorrowService
 
             if (! $decryptedData) {
                 Log::error('Failed to decrypt QR data');
+
                 return ['success' => false, 'message' => 'Invalid or corrupted QR code!'];
             }
 
@@ -44,34 +45,39 @@ class BorrowService
 
             // --- REPLAY ATTACK PROTECTION ---
 
-            // 1. Verify HMAC signature if hash is present (v7)
-            if (isset($data['hash'])) {
-                $secret = config('app.qr_hmac_secret');
-                $dataForCanonical = $data;
-                unset($dataForCanonical['hash']);
-                $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
-                $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+            if (! is_array($data) || ! isset($data['hash'], $data['nonce'], $data['timestamp'])) {
+                Log::warning('Borrow QR code missing required security fields (hash, nonce, or timestamp)');
 
-                if (! hash_equals($expectedHash, $data['hash'])) {
-                    Log::warning('Borrow QR code hash mismatch - possible tampering');
-                    return ['success' => false, 'message' => 'Security verification failed. This QR code may have been tampered with.'];
-                }
+                return ['success' => false, 'message' => 'Security verification failed. Missing required security fields.'];
+            }
+
+            // 1. Verify HMAC signature (unconditional)
+            $secret = config('app.qr_hmac_secret');
+            $dataForCanonical = $data;
+            unset($dataForCanonical['hash']);
+            $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
+            $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+
+            if (! hash_equals($expectedHash, $data['hash'])) {
+                Log::warning('Borrow QR code hash mismatch - possible tampering');
+
+                return ['success' => false, 'message' => 'Security verification failed. This QR code may have been tampered with.'];
             }
 
             // 2. Timestamp freshness (Removed for Offline Accessibility - Phase 7)
             // We intentionally ignore the timestamp difference to allow downloaded/screenshot QR codes to work offline.
 
-            // 3. Nonce Replay Prevention (v7)
-            if (isset($data['nonce'])) {
-                $nonceKey = 'qr_nonce:'.$data['nonce'];
-                if (! Cache::add($nonceKey, true, 150)) {
-                    Log::warning('Borrow QR code rejected: Replay attack detected (nonce reuse)');
-                    return ['success' => false, 'message' => 'This QR code has already been used.'];
-                }
+            // 3. Nonce Replay Prevention (unconditional)
+            $nonceKey = 'qr_nonce:'.$data['nonce'];
+            if (! Cache::add($nonceKey, true, 150)) {
+                Log::warning('Borrow QR code rejected: Replay attack detected (nonce reuse)');
+
+                return ['success' => false, 'message' => 'This QR code has already been used.'];
             }
 
             if (! $data || ! isset($data['p'])) {
                 Log::error('Invalid QR format - missing p key');
+
                 return ['success' => false, 'message' => 'Invalid QR code format!'];
             }
 
@@ -103,6 +109,7 @@ class BorrowService
 
         } catch (\Exception $e) {
             Log::error('QR Processing Exception:', ['message' => $e->getMessage()]);
+
             return ['success' => false, 'message' => 'Error processing QR code: '.$e->getMessage()];
         }
     }
@@ -124,10 +131,6 @@ class BorrowService
 
             DB::beginTransaction();
             try {
-                if ($activeTransaction->status === 'started' && $activeTransaction->isOverdue()) {
-                    $activeTransaction->status = 'overdue';
-                }
-
                 $activeTransaction->update([
                     'time_out' => now(),
                     'status' => 'completed',
@@ -140,10 +143,11 @@ class BorrowService
                 return [
                     'success' => true,
                     'action' => 'returned',
-                    'message' => "Book returned successfully! Copy #{$inventory->copy_number} is now available."
+                    'message' => "Book returned successfully! Copy #{$inventory->copy_number} is now available.",
                 ];
             } catch (\Exception $e) {
                 DB::rollBack();
+
                 return ['success' => false, 'message' => 'Failed to return book: '.$e->getMessage()];
             }
         }
@@ -181,7 +185,7 @@ class BorrowService
                 'department' => $paper->department,
                 'requested_by' => $borrowData['requested_by'] ?? null,
                 'expires_at' => $borrowData['exp'] ?? null,
-            ]
+            ],
         ];
     }
 
@@ -192,6 +196,16 @@ class BorrowService
     {
         try {
             DB::beginTransaction();
+
+            $inventory = Inventory::lockForUpdate()->find($pendingData['inventory_id']);
+
+            if (! $inventory || $inventory->status !== 'Available') {
+                DB::rollBack();
+
+                return ['success' => false, 'message' => 'This copy is no longer available!'];
+            }
+
+            $inventory->update(['status' => 'Unavailable']);
 
             $timeIn = now();
             $transaction = BorrowTransaction::create([
@@ -206,41 +220,37 @@ class BorrowService
                 'notes' => $notes ?: null,
             ]);
 
-            $inventory = Inventory::lockForUpdate()->find($pendingData['inventory_id']);
-
-            if (! $inventory || $inventory->status !== 'Available') {
-                DB::rollBack();
-                return ['success' => false, 'message' => 'This copy is no longer available!'];
-            }
-
-            $inventory->update(['status' => 'Unavailable']);
-
             $paper = AcademicPaper::find($pendingData['paper_id']);
-            
-            app(NotificationService::class)->notify(
-                User::find($pendingData['user_id']),
-                'paper_borrowed',
-                'Academic Paper Borrowed Successfully',
-                "You have successfully borrowed \"{$paper->title}\". Please return it by ".$transaction->expires_at->format('M d, Y h:i A').'.',
-                [
-                    'transaction_id' => $transaction->id,
-                    'paper_id' => $paper->id,
-                    'paper_title' => $paper->title,
-                    'inventory_id' => $inventory->id,
-                    'copy_number' => $inventory->copy_number,
-                    'expires_at' => $transaction->expires_at->toIso8601String(),
-                ]
-            );
 
             DB::commit();
 
+            try {
+                app(NotificationService::class)->notify(
+                    User::find($pendingData['user_id']),
+                    'paper_borrowed',
+                    'Academic Paper Borrowed Successfully',
+                    "You have successfully borrowed \"{$paper->title}\". Please return it by ".$transaction->expires_at->format('M d, Y h:i A').'.',
+                    [
+                        'transaction_id' => $transaction->id,
+                        'paper_id' => $paper->id,
+                        'paper_title' => $paper->title,
+                        'inventory_id' => $inventory->id,
+                        'copy_number' => $inventory->copy_number,
+                        'expires_at' => $transaction->expires_at->toIso8601String(),
+                    ]
+                );
+            } catch (\Throwable $e) {
+                Log::error('Failed to send borrow notification: '.$e->getMessage());
+            }
+
             return [
                 'success' => true,
-                'message' => "Borrow transaction created successfully! Copy #{$inventory->copy_number} is now unavailable."
+                'message' => "Borrow transaction created successfully! Copy #{$inventory->copy_number} is now unavailable.",
             ];
         } catch (\Exception $e) {
             DB::rollBack();
             Log::error('Borrow Confirmation Error: '.$e->getMessage());
+
             return ['success' => false, 'message' => 'Failed to create borrow transaction: '.$e->getMessage()];
         }
     }

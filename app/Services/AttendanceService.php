@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Attendance;
 use App\Models\User;
-use App\Services\NotificationService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Carbon\Carbon;
 use Illuminate\Contracts\Encryption\DecryptException;
@@ -79,17 +78,6 @@ class AttendanceService
             // 1. Timestamp validation (Removed for Offline Accessibility - Phase 7)
             // We intentionally ignore the timestamp difference to allow downloaded/screenshot QR codes to work offline.
 
-            // 2. Nonce Replay Prevention (One-time use check)
-            $nonceKey = 'qr_nonce:'.$data['nonce'];
-            if (! Cache::add($nonceKey, true, 150)) {
-                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
-                    'user_id' => $data['user_id'],
-                    'nonce' => $data['nonce'],
-                ]);
-
-                return self::VALIDATION_INVALID;
-            }
-
             $user = User::find($data['user_id']);
             if (! $user) {
                 Log::warning('User not found during QR scan', ['user_id' => $data['user_id']]);
@@ -104,6 +92,17 @@ class AttendanceService
             if ($recentScans >= 60) {
                 Log::warning('Rate limit exceeded for user', [
                     'user_id' => $data['user_id'],
+                ]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // 2. Nonce Replay Prevention (One-time use check)
+            $nonceKey = 'qr_nonce:'.$data['nonce'];
+            if (! Cache::add($nonceKey, true, 150)) {
+                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
+                    'user_id' => $data['user_id'],
+                    'nonce' => $data['nonce'],
                 ]);
 
                 return self::VALIDATION_INVALID;
@@ -170,7 +169,9 @@ class AttendanceService
         if ($activeSession) {
             // User is checking out (time out) - wrap in transaction
             try {
-                return DB::transaction(function () use ($activeSession, $user) {
+                $minutes = 0;
+                $durationText = '';
+                $result = DB::transaction(function () use ($activeSession, $user, &$minutes, &$durationText) {
                     $activeSession->time_out = Carbon::now();
                     $activeSession->status = 'completed';
                     $activeSession->calculateDuration();
@@ -180,7 +181,17 @@ class AttendanceService
                     $minutes = (int) $activeSession->duration_minutes;
                     $durationText = $this->formatDuration($minutes);
 
-                    // Create check-out notification for the user
+                    return [
+                        'success' => true,
+                        'message' => "Goodbye, {$user->first_name}! You stayed for {$durationText}.",
+                        'title' => 'Check-out Successful',
+                        'attendance' => $activeSession,
+                        'action' => 'checkout',
+                    ];
+                });
+
+                // Create check-out notification for the user
+                try {
                     app(NotificationService::class)->notify(
                         $user,
                         'attendance_checkout',
@@ -194,15 +205,11 @@ class AttendanceService
                             'duration_text' => $durationText,
                         ]
                     );
+                } catch (\Throwable $e) {
+                    Log::error('Checkout notification failed: '.$e->getMessage());
+                }
 
-                    return [
-                        'success' => true,
-                        'message' => "Goodbye, {$user->first_name}! You stayed for {$durationText}.",
-                        'title' => 'Check-out Successful',
-                        'attendance' => $activeSession,
-                        'action' => 'checkout',
-                    ];
-                });
+                return $result;
             } catch (\Exception $e) {
                 Log::error('Check-out transaction failed', [
                     'user_id' => $activeSession->user_id,
@@ -219,7 +226,8 @@ class AttendanceService
         } else {
             // User is checking in (time in) - wrap in transaction
             try {
-                return DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user) {
+                $attendance = null;
+                $result = DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user, &$attendance) {
                     $attendance = Attendance::create([
                         'user_id' => $userId,
                         'role_id' => $user->role_id,
@@ -229,7 +237,17 @@ class AttendanceService
                         'scanned_by_admin_id' => $scannedByAdminId,
                     ]);
 
-                    // Create check-in notification for the user
+                    return [
+                        'success' => true,
+                        'message' => "Welcome, {$user->first_name}! Enjoy your time in the library.",
+                        'title' => 'Check-in Successful',
+                        'attendance' => $attendance,
+                        'action' => 'checkin',
+                    ];
+                });
+
+                // Create check-in notification for the user
+                try {
                     app(NotificationService::class)->notify(
                         $user,
                         'attendance_checkin',
@@ -240,15 +258,11 @@ class AttendanceService
                             'time_in' => $attendance->time_in->format('M d, Y h:i A'),
                         ]
                     );
+                } catch (\Throwable $e) {
+                    Log::error('Checkin notification failed: '.$e->getMessage());
+                }
 
-                    return [
-                        'success' => true,
-                        'message' => "Welcome, {$user->first_name}! Enjoy your time in the library.",
-                        'title' => 'Check-in Successful',
-                        'attendance' => $attendance,
-                        'action' => 'checkin',
-                    ];
-                });
+                return $result;
             } catch (\Exception $e) {
                 Log::error('Check-in transaction failed', [
                     'user_id' => $userId,

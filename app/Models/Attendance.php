@@ -78,7 +78,7 @@ class Attendance extends Model
                         $user = $attendance->user;
                         if ($user) {
                             $durationDisplay = (int) $attendance->duration_minutes;
-                            app(NotificationService::class)->notify(
+                            rescue(fn () => app(NotificationService::class)->notify(
                                 $user,
                                 'attendance_checkout',
                                 'Checked Out Successfully!',
@@ -90,7 +90,7 @@ class Attendance extends Model
                                     'reason' => 'daily_limit_reached',
                                     'daily_count' => $todayAttendanceRewards,
                                 ]
-                            );
+                            ));
                         }
 
                         return;
@@ -116,7 +116,7 @@ class Attendance extends Model
                         if ($user) {
                             // Ensure duration is formatted as integer for display
                             $durationDisplay = (int) $attendance->duration_minutes;
-                            app(NotificationService::class)->notify(
+                            rescue(fn () => app(NotificationService::class)->notify(
                                 $user,
                                 'credit_score_increase',
                                 'Credit Score Increased!',
@@ -129,7 +129,7 @@ class Attendance extends Model
                                     'credit_score' => $user->credit_score,
                                     'earned_at' => now()->toDateTimeString(),
                                 ]
-                            );
+                            ));
                         }
                     }
                 }

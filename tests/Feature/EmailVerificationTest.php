@@ -2,15 +2,17 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
-use App\Models\User;
+use App\Mail\Welcome;
 use App\Models\Role;
+use App\Models\User;
+use App\Notifications\CustomResetPassword;
+use App\Notifications\CustomVerifyEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\URL;
 use Livewire\Volt\Volt;
+use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\Console\Exception\CommandNotFoundException;
 use Tests\TestCase;
 
 class EmailVerificationTest extends TestCase
@@ -64,7 +66,7 @@ class EmailVerificationTest extends TestCase
         // Verify verification notification was sent
         Notification::assertSentTo(
             $user,
-            \App\Notifications\CustomVerifyEmail::class
+            CustomVerifyEmail::class
         );
     }
 
@@ -83,8 +85,9 @@ class EmailVerificationTest extends TestCase
             ->call('register');
 
         $user = User::where('email', 'newuser@plv.edu.ph')->first();
-        
-        Mail::assertQueued(\App\Mail\Welcome::class, function (\App\Mail\Welcome $mail) use ($user) {
+        $this->assertNotNull($user, 'User was not created during registration.');
+
+        Mail::assertQueued(Welcome::class, function (Welcome $mail) use ($user) {
             return $mail->hasTo($user->email);
         });
     }
@@ -100,7 +103,7 @@ class EmailVerificationTest extends TestCase
         try {
             $this->artisan('transactions:check-overdue', ['--force' => true])
                 ->assertSuccessful();
-        } catch (\Exception $e) {
+        } catch (CommandNotFoundException $e) {
             // Command may not be registered yet, skip this test if command doesn't exist
             $this->markTestSkipped('transactions:check-overdue command not registered');
         }
@@ -125,7 +128,7 @@ class EmailVerificationTest extends TestCase
         // Verify reset notification was sent
         Notification::assertSentTo(
             $user,
-            \App\Notifications\CustomResetPassword::class
+            CustomResetPassword::class
         );
     }
 }

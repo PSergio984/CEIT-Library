@@ -9,6 +9,7 @@ use App\Models\Inventory;
 use App\Models\Librarian;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
@@ -70,24 +71,36 @@ class AdminDashboard extends AdminComponent
     }
 
     #[Computed]
-    public function loanTrends(): \Illuminate\Support\Collection
+    public function loanTrends(): Collection
     {
+        $startDate = now()->subDays(6)->startOfDay();
+        $endDate = now()->endOfDay();
+
+        $counts = BorrowTransaction::query()
+            ->selectRaw('DATE(created_at) as date_group, COUNT(*) as count')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date_group')
+            ->pluck('count', 'date_group');
+
         $trends = collect();
         for ($i = 6; $i >= 0; $i--) {
             $date = now()->subDays($i)->format('Y-m-d');
-            $count = BorrowTransaction::whereDate('created_at', $date)->count();
+            $dayName = now()->subDays($i)->format('D');
+            $count = $counts->get($date) ?? 0;
+
             $trends->push([
-                'day' => now()->subDays($i)->format('D'),
-                'count' => $count
+                'day' => $dayName,
+                'count' => (int) $count,
             ]);
         }
+
         return $trends;
     }
 
     #[Computed]
     public function recentBorrowedPapers()
     {
-        return BorrowTransaction::with(['user', 'inventory.academicPaper.authors'])
+        return BorrowTransaction::with(['user', 'inventory.academicPaper.authors', 'academicPaper'])
             ->where('status', 'started')
             ->whereDate('time_in', today())
             ->latest()

@@ -18,6 +18,6 @@ class GenericNotification extends Mailable
     public function build()
     {
         return $this->subject($this->title)
-            ->html($this->content);
+            ->text($this->content);
     }
 }

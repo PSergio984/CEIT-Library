@@ -2,13 +2,12 @@
 
 namespace App\Services;
 
+use App\Jobs\SendPushNotificationJob;
 use App\Mail\GenericNotification;
 use App\Models\Notification;
-use App\Models\PushSubscription;
 use App\Models\User;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
-use Minishlink\WebPush\Subscription;
-use Minishlink\WebPush\WebPush;
 
 class NotificationService
 {
@@ -28,59 +27,20 @@ class NotificationService
 
         // 3. Email
         if ($prefs?->email) {
-            Mail::to($user->email)->send(new GenericNotification($title, $message));
+            try {
+                Mail::to($user->email)->queue(new GenericNotification($title, $message));
+            } catch (\Throwable $e) {
+                Log::error('Failed to queue email notification: '.$e->getMessage());
+            }
         }
 
         // 4. Push
         if ($prefs?->push) {
-            $this->sendPush($user, $notification);
-        }
-    }
-
-    protected function sendPush(User $user, Notification $notification)
-    {
-        $subscriptions = PushSubscription::where('user_id', $user->id)->get();
-
-        if ($subscriptions->isEmpty()) {
-            return;
-        }
-
-        $auth = [
-            'VAPID' => [
-                'subject' => config('webpush.vapid.subject'),
-                'publicKey' => config('webpush.vapid.public_key'),
-                'privateKey' => config('webpush.vapid.private_key'),
-            ],
-        ];
-
-        try {
-            $webPush = new WebPush($auth);
-
-            foreach ($subscriptions as $sub) {
-                $webPush->queueNotification(
-                    Subscription::create([
-                        'endpoint' => $sub->endpoint,
-                        'publicKey' => $sub->public_key,
-                        'authToken' => $sub->auth_token,
-                        'contentEncoding' => $sub->content_encoding ?: 'aes128gcm',
-                    ]),
-                    json_encode([
-                        'title' => $notification->title,
-                        'body' => $notification->message,
-                        'url' => $notification->data['url'] ?? '/notifications',
-                    ])
-                );
+            try {
+                SendPushNotificationJob::dispatch($user, $notification);
+            } catch (\Throwable $e) {
+                Log::error('Failed to dispatch push notification job: '.$e->getMessage());
             }
-
-            foreach ($webPush->flush() as $report) {
-                if (! $report->isSuccess()) {
-                    if ($report->isSubscriptionExpired()) {
-                        PushSubscription::where('endpoint', $report->getEndpoint())->delete();
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            logger()->error('Web Push notification failed: '.$e->getMessage());
         }
     }
 }

@@ -222,11 +222,23 @@
     {{-- BOTTOM NAVIGATION (Mobile only) --}}
     <div id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-base-100 border-t border-base-300 h-16 shadow-2xl">
         <div class="flex justify-around items-center h-full">
-            <a href="/dashboard" wire:navigate.hover class="flex flex-col items-center justify-center w-full h-full {{ request()->is('dashboard*') || request()->is('student/dashboard*') ? 'text-primary' : 'text-base-content/70' }}">
+            <a href="{{ route('dashboard') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('dashboard', 'student.dashboard')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
                 <x-mary-icon name="o-home" class="w-6 h-6" />
                 <span class="text-[10px] mt-1 font-medium">Home</span>
             </a>
-            <a href="/academic-papers" wire:navigate.hover class="flex flex-col items-center justify-center w-full h-full {{ request()->is('academic-papers*') ? 'text-primary' : 'text-base-content/70' }}">
+            <a href="{{ route('academic-paper.index') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('academic-paper.index')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
                 <x-mary-icon name="o-book-open" class="w-6 h-6" />
                 <span class="text-[10px] mt-1 font-medium">Papers</span>
             </a>
@@ -240,7 +252,13 @@
             </a>
             @endcan
 
-            <a href="/notifications" wire:navigate.hover class="flex flex-col items-center justify-center w-full h-full {{ request()->is('notifications*') ? 'text-primary' : 'text-base-content/70' }}">
+            <a href="{{ route('notifications') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('notifications')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
                 <div class="relative">
                     <x-mary-icon name="o-bell" class="w-6 h-6" />
                     @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)

@@ -55,20 +55,24 @@ class SendBorrowingReminders extends Command
         }
 
         foreach ($transactions as $transaction) {
-            $service->notify(
-                $transaction->user,
-                'reminders',
-                'Return Reminder',
-                "Your borrowed material \"{$transaction->academicPaper->title}\" is due in 3 days. Please return it by ".$transaction->expires_at->format('M d, Y h:i A').' to avoid penalties.',
-                [
-                    'transaction_id' => $transaction->id,
-                    'paper_title' => $transaction->academicPaper->title,
-                    'expires_at' => $transaction->expires_at->format('M d, Y h:i A'),
-                    'url' => '/student/dashboard',
-                ]
-            );
+            try {
+                $service->notify(
+                    $transaction->user,
+                    'reminders',
+                    'Return Reminder',
+                    "Your borrowed material \"{$transaction->academicPaper->title}\" is due in 3 days. Please return it by ".$transaction->expires_at->format('M d, Y h:i A').' to avoid penalties.',
+                    [
+                        'transaction_id' => $transaction->id,
+                        'paper_title' => $transaction->academicPaper->title,
+                        'expires_at' => $transaction->expires_at->format('M d, Y h:i A'),
+                        'url' => '/student/dashboard',
+                    ]
+                );
 
-            $transaction->update(['reminder_notified_at' => now()]);
+                $transaction->update(['reminder_notified_at' => now()]);
+            } catch (\Throwable $e) {
+                \Log::error("Failed to send due-soon reminder for transaction {$transaction->id}: ".$e->getMessage());
+            }
         }
 
         $this->info('Sent '.$transactions->count().' due-soon reminders.');
@@ -95,20 +99,24 @@ class SendBorrowingReminders extends Command
         }
 
         foreach ($transactions as $transaction) {
-            $service->notify(
-                $transaction->user,
-                'reminders',
-                'OVERDUE NOTICE',
-                "Your borrowed material \"{$transaction->academicPaper->title}\" is OVERDUE. Please return it immediately to avoid further penalties.",
-                [
-                    'transaction_id' => $transaction->id,
-                    'paper_title' => $transaction->academicPaper->title,
-                    'due_date' => $transaction->expires_at->format('M d, Y h:i A'),
-                    'url' => '/student/dashboard',
-                ]
-            );
+            try {
+                $service->notify(
+                    $transaction->user,
+                    'reminders',
+                    'OVERDUE NOTICE',
+                    "Your borrowed material \"{$transaction->academicPaper->title}\" is OVERDUE. Please return it immediately to avoid further penalties.",
+                    [
+                        'transaction_id' => $transaction->id,
+                        'paper_title' => $transaction->academicPaper->title,
+                        'due_date' => $transaction->expires_at->format('M d, Y h:i A'),
+                        'url' => '/student/dashboard',
+                    ]
+                );
 
-            $transaction->update(['overdue_notified_at' => now()]);
+                $transaction->update(['overdue_notified_at' => now()]);
+            } catch (\Throwable $e) {
+                \Log::error("Failed to send overdue reminder for transaction {$transaction->id}: ".$e->getMessage());
+            }
         }
 
         $this->info('Sent '.$transactions->count().' overdue follow-up reminders.');

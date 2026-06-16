@@ -90,7 +90,7 @@
         <div wire:loading.remove 
             wire:target="search, paperTypeFilter, statusFilter, selectedDate, clearFilters, gotoPage, nextPage, previousPage">
             @foreach ($this->transactions as $transaction)
-                <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm">
+                <div wire:key="transaction-{{ $transaction['id'] }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm">
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1">
                             <h3 class="font-semibold text-base">{{ $transaction['user_name'] }}</h3>

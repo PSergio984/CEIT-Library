@@ -88,7 +88,7 @@
             <div class="h-64 flex items-end justify-between gap-2 px-2">
                 @php $maxCount = max($this->loanTrends->pluck('count')->toArray()) ?: 1; @endphp
                 @foreach($this->loanTrends as $trend)
-                    <div class="flex-1 flex flex-col items-center group">
+                    <div wire:key="trend-{{ $trend['day'] }}" class="flex-1 flex flex-col items-center group">
                         <div class="w-full relative flex flex-col items-center">
                             {{-- Bar --}}
                             <div class="w-full bg-primary/20 rounded-t-lg transition-all duration-500 group-hover:bg-primary/40 relative" 
@@ -113,7 +113,7 @@
 
             <div class="space-y-4">
                 @forelse($this->topBorrowers as $index => $user)
-                    <div class="flex items-center gap-3 p-2 bg-base-100/50 rounded-xl hover:bg-base-100 transition-colors duration-200">
+                    <div wire:key="borrower-{{ $user->id }}" class="flex items-center gap-3 p-2 bg-base-100/50 rounded-xl hover:bg-base-100 transition-colors duration-200">
                         <div class="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs">
                             {{ $index + 1 }}
                         </div>
@@ -168,7 +168,7 @@
 
             <div class="space-y-3">
                 @forelse($this->recentBorrowedPapers as $borrow)
-                    <div class="flex items-center gap-4 p-3 bg-base-100/50 rounded-xl hover:bg-base-100 transition-colors duration-200">
+                    <div wire:key="recent-{{ $borrow->id }}" class="flex items-center gap-4 p-3 bg-base-100/50 rounded-xl hover:bg-base-100 transition-colors duration-200">
                         <div class="flex-1 min-w-0">
                             <div class="font-bold text-sm truncate">{{ $borrow->inventory->academicPaper->title }}</div>
                             <div class="text-[10px] text-base-content/60 mt-0.5">

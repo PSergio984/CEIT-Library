@@ -79,7 +79,11 @@
             @forelse($transactions as $transaction)
                 <tr>
                     <td>{{ $transaction->id }}</td>
-                    <td>{{ $transaction->user?->first_name }} {{ $transaction->user?->last_name }}</td>
+                    <td>
+                        {{ $transaction->user && trim($transaction->user->first_name . ' ' . $transaction->user->last_name) !== '' 
+                            ? trim($transaction->user->first_name . ' ' . $transaction->user->last_name) 
+                            : 'N/A' }}
+                    </td>
                     <td>{{ $transaction->inventory?->academicPaper?->title ?? 'N/A' }}</td>
                     <td>{{ $transaction->inventory?->academicPaper?->paper_type ?? 'N/A' }}</td>
                     <td>{{ $transaction->time_in ? $transaction->time_in->format('Y-m-d H:i') : 'N/A' }}</td>

@@ -3,7 +3,6 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\Librarian;
-use App\Models\Notification;
 use App\Models\Role;
 use App\Models\User;
 use App\Services\LibrarianStatusService;
@@ -362,7 +361,7 @@ class AdminAssignLibrarians extends AdminComponent
 
                 // Create notification for the assigned student
                 app(NotificationService::class)->notify(
-                    User::find($userId),
+                    User::findOrFail($userId),
                     'librarian_assigned',
                     'You have been assigned as a Librarian',
                     "You have been assigned to librarian batch #{$this->newBatchNo}. You will be notified when your batch becomes active.",
@@ -490,7 +489,7 @@ class AdminAssignLibrarians extends AdminComponent
                         }
 
                         app(NotificationService::class)->notify(
-                            User::find($userId),
+                            User::findOrFail($userId),
                             'librarian_assigned',
                             'You have been assigned as a Librarian',
                             $message,
@@ -526,7 +525,7 @@ class AdminAssignLibrarians extends AdminComponent
                             : "Your duty date for librarian batch #{$this->editingBatchNo} has been scheduled for {$dutyDate}.";
 
                         app(NotificationService::class)->notify(
-                            User::find($userId),
+                            User::findOrFail($userId),
                             'librarian_assigned',
                             'Librarian Duty Date Updated',
                             $notificationMessage,
