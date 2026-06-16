@@ -2,8 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Traits\CreatesQrCanonicalMessage;
-use App\Traits\ProcessesAttendanceQr;
+use App\Services\AttendanceService;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Livewire\Component;
@@ -11,7 +10,7 @@ use Mary\Traits\Toast;
 
 class QrScanner extends Component
 {
-    use CreatesQrCanonicalMessage, ProcessesAttendanceQr, Toast;
+    use Toast;
 
     private const VALIDATION_INVALID = 'invalid';
 
@@ -38,7 +37,7 @@ class QrScanner extends Component
         $this->dispatch('scanner-stopped');
     }
 
-    public function handleScan(string $data)
+    public function handleScan(string $data, AttendanceService $attendanceService)
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -59,7 +58,7 @@ class QrScanner extends Component
             }
 
             // Decrypt and validate the attendance data
-            $decryptedData = $this->decryptAndValidateAttendanceData($data);
+            $decryptedData = $attendanceService->decryptAndValidateAttendanceData($data);
 
             if ($decryptedData === self::VALIDATION_INVALID) {
                 $this->hasError = true;
@@ -70,7 +69,7 @@ class QrScanner extends Component
             }
 
             // Process the attendance
-            $result = $this->processAttendance($decryptedData);
+            $result = $attendanceService->processAttendance($decryptedData);
 
             if ($result['success']) {
                 Log::info('Attendance recorded successfully', [
@@ -120,7 +119,7 @@ class QrScanner extends Component
         $this->warning($message, $title);
     }
 
-    public function handleFileUploadScan(string $data)
+    public function handleFileUploadScan(string $data, AttendanceService $attendanceService)
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -147,7 +146,7 @@ class QrScanner extends Component
             }
 
             // Decrypt and validate the attendance data
-            $decryptedData = $this->decryptAndValidateAttendanceData($data);
+            $decryptedData = $attendanceService->decryptAndValidateAttendanceData($data);
 
             if ($decryptedData === self::VALIDATION_INVALID) {
                 $this->hasError = true;
@@ -157,7 +156,7 @@ class QrScanner extends Component
             }
 
             // Process the attendance
-            $result = $this->processAttendance($decryptedData);
+            $result = $attendanceService->processAttendance($decryptedData);
 
             if ($result['success']) {
                 Log::info('Attendance recorded successfully (file upload)', [
@@ -199,3 +198,4 @@ class QrScanner extends Component
         return view('livewire.qr-scanner');
     }
 }
+

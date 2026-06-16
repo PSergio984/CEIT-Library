@@ -78,6 +78,13 @@ class BorrowTransaction extends Model
 
     protected static function booted()
     {
+        // Generate unique session token for QR code when creating
+        static::creating(function ($transaction) {
+            if (! $transaction->session_token) {
+                $transaction->session_token = static::generateSessionToken();
+            }
+        });
+
         // When borrow transaction status transitions to completed, check eligibility and create ScoreIncrement
         static::updated(function ($transaction) {
             // Only award points if status just transitioned to completed (not already completed)
@@ -386,15 +393,4 @@ class BorrowTransaction extends Model
             ->first();
     }
 
-    // Boot method to handle token generation
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($session) {
-            if (! $session->session_token) {
-                $session->session_token = static::generateSessionToken();
-            }
-        });
-    }
 }
