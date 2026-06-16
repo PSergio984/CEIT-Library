@@ -6,10 +6,10 @@ status: active
 last_updated: "2026-06-16T00:00:00.000Z"
 progress:
   total_phases: 9
-  completed_phases: 8
-  total_plans: 20
-  completed_plans: 20
-  percent: 88
+  completed_phases: 9
+  total_plans: 21
+  completed_plans: 21
+  percent: 100
 ---
 
 # Project State: CEIT-Library
@@ -39,6 +39,11 @@ Decoupled "fat" Livewire components into `BorrowService` and `AttendanceService`
 
 ### Phase 2: Advanced Analytics & Reporting (COMPLETE)
 Added high-performance cached "Quick Stats" mini-cards to Admin tables. Implemented advanced PDF export functionality using `barryvdh/laravel-dompdf`. Optimized repeated queries using Cache.
+
+## Milestone v1.3: Security & Privacy Hardening
+
+### Phase 7: Logging and QR Resiliency (COMPLETE)
+Removed strict 60-second expiration checks from QR logic to allow offline screenshot use while maintaining nonce-based replay protection. Implemented a Global Log Sanitizer (`PiiSanitizerProcessor`) to automatically redact emails and raw QR payloads before writing to `laravel.log`.
 
 ## Technical Debt & Infrastructure
 - **Docker**: Verified and iteratively fixed the `Dockerfile`. The application is fully containerized and serves Vite-built PWA artifacts correctly.

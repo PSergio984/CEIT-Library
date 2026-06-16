@@ -82,10 +82,10 @@
 
 ## Milestone: Security & Privacy Hardening (v1.3)
 
-### Phase 7: Logging and QR Resiliency
+### Phase 7: Logging and QR Resiliency [COMPLETE]
 **Goal:** Implement offline-first QR codes and prevent PII leakage in logs.
 
 **Scope:**
-- [ ] [R7.1] Remove strict 60-second timestamp validation from QR logic to allow offline screenshot use.
-- [ ] [R7.2] Maintain single-use integrity by keeping short-lived nonce caching.
-- [ ] [R7.3] Implement Global Log Sanitization via Monolog Processor to redact PII and raw payloads.
+- [x] [R7.1] Remove strict 60-second timestamp validation from QR logic to allow offline screenshot use.
+- [x] [R7.2] Maintain single-use integrity by keeping short-lived nonce caching.
+- [x] [R7.3] Implement Global Log Sanitization via Monolog Processor to redact PII and raw payloads.
