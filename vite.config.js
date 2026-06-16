@@ -15,7 +15,7 @@ export default defineConfig({
             srcDir: 'resources/js',
             filename: 'sw.js',
             registerType: 'autoUpdate',
-            injectRegister: 'auto',
+            injectRegister: null,
             manifest: {
                 name: 'PLV CEIT Library',
                 short_name: 'CEIT Lib',
@@ -35,25 +35,6 @@ export default defineConfig({
                         src: 'images/ceit-logo.png',
                         sizes: '512x512',
                         type: 'image/png'
-                    }
-                ]
-            },
-            workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-                runtimeCaching: [
-                    {
-                        urlPattern: /^https:\/\/fonts\.bunny\.net\/.*/i,
-                        handler: 'CacheFirst',
-                        options: {
-                            cacheName: 'google-fonts-cache',
-                            expiration: {
-                                maxEntries: 10,
-                                maxAgeSeconds: 60 * 60 * 24 * 365 // <== 365 days
-                            },
-                            cacheableResponse: {
-                                statuses: [0, 200]
-                            }
-                        }
                     }
                 ]
             }

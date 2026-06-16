@@ -70,7 +70,7 @@ class AdminDashboard extends AdminComponent
     }
 
     #[Computed]
-    public function loanTrends()
+    public function loanTrends(): \Illuminate\Support\Collection
     {
         $trends = collect();
         for ($i = 6; $i >= 0; $i--) {

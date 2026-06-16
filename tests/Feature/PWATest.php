@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Role;
-use App\Models\User;
 use App\Livewire\QrScanner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

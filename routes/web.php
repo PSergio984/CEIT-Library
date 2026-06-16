@@ -69,7 +69,13 @@ Route::get('/sw.js', function () {
 
 Route::get('/manifest.webmanifest', function () {
     $path = public_path('build/manifest.webmanifest');
-    if (!file_exists($path)) {
+    if (! file_exists($path)) {
+        if (app()->environment(['local', 'testing'])) {
+            return response('/* Service worker not built yet. Run `npm run build`. */', 200, [
+                'Content-Type' => 'application/javascript',
+                'Service-Worker-Allowed' => '/',
+            ]);
+        }
         abort(404);
     }
     return response()->file($path, [

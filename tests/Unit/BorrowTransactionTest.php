@@ -233,6 +233,7 @@ class BorrowTransactionTest extends TestCase
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // Expired 5 days ago
             'session_token' => $this->generateSessionToken(),
+            'status' => 'started',
         ]);
 
         // Check if the accessor exists
@@ -371,6 +372,7 @@ class BorrowTransactionTest extends TestCase
             'time_in' => Carbon::now()->subDays(20),
             'expires_at' => Carbon::now()->subDays(5), // 5 days overdue
             'session_token' => $this->generateSessionToken(),
+            'status' => 'started',
         ]);
 
         // Check if the accessor exists

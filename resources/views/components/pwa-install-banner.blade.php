@@ -8,8 +8,12 @@
                 e.preventDefault();
                 // Stash the event so it can be triggered later.
                 this.deferredPrompt = e;
-                // Update UI notify the user they can install the PWA
-                this.show = true;
+                
+                // Only show if user hasn't dismissed it
+                if (!localStorage.getItem('pwa-prompt-dismissed')) {
+                    this.show = true;
+                }
+                
                 console.log('PWA Install prompt deferred');
             });
 
@@ -33,6 +37,10 @@
             // We've used the prompt, and can't use it again, throw it away
             this.deferredPrompt = null;
             this.show = false;
+        },
+        dismiss() {
+            this.show = false;
+            localStorage.setItem('pwa-prompt-dismissed', 'true');
         }
     }"
     x-show="show"
@@ -57,7 +65,7 @@
                 <h3 class="font-bold text-lg leading-tight">Install CEIT Lib</h3>
                 <p class="text-sm text-base-content/70 mt-1">Get the best experience by installing our app on your home screen.</p>
             </div>
-            <button @click="show = false" class="btn btn-sm btn-circle btn-ghost -mr-2 -mt-2">
+            <button @click="dismiss()" class="btn btn-sm btn-circle btn-ghost -mr-2 -mt-2">
                 <x-mary-icon name="o-x-mark" class="w-4 h-4" />
             </button>
         </div>
@@ -67,7 +75,7 @@
                 <x-mary-icon name="o-arrow-down-tray" class="w-4 h-4" />
                 Install Now
             </button>
-            <button @click="show = false" class="btn btn-ghost flex-1">Maybe Later</button>
+            <button @click="dismiss()" class="btn btn-ghost flex-1">Maybe Later</button>
         </div>
     </div>
 </div>
