@@ -6,7 +6,7 @@
     }
 @endphp
 
-<div class="p-6">
+<div class="p-4 sm:p-6">
     <x-mary-header title="Manage Advisers, Deans & Authors" 
         subtitle="Manage research advisers, technical advisers, deans, and authors for academic papers" 
         separator />

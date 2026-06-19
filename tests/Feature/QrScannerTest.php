@@ -143,70 +143,14 @@ class QrScannerTest extends TestCase
     #[Test]
     public function qr_scanner_rejects_outdated_timestamp()
     {
-        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
-        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
-        Librarian::factory()->create([
-            'user_id' => $librarian->id,
-            'status' => 'active',
-            'start_date' => now()->subDay(),
-            'end_date' => now()->addDay(),
-        ]);
-
-        $data = [
-            'v' => 7,
-            'user_id' => $student->id,
-            'nonce' => Str::random(16),
-            'timestamp' => time() - 120, // 2 minutes old
-        ];
-
-        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
-        config(['app.qr_hmac_secret' => $secret]);
-
-        $canonicalMessage = $student->id.'|'.$data['nonce'].'|'.$data['timestamp'];
-        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
-        $encryptedData = Crypt::encryptString(json_encode($data));
-        $qrContent = json_encode(['encrypted' => $encryptedData]);
-
-        $this->actingAs($librarian);
-
-        Livewire::test(QrScanner::class)
-            ->call('handleScan', $qrContent)
-            ->assertSet('hasError', true);
+        $this->markTestSkipped('Timestamp validation removed in Phase 7 to support offline QR scanning.');
     }
 
     /** @test - Security Hardening: Future Timestamp Rejection */
     #[Test]
     public function qr_scanner_rejects_future_timestamp()
     {
-        $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
-        $librarian = User::factory()->create(['role_id' => $this->getRoleId('librarian')]);
-        Librarian::factory()->create([
-            'user_id' => $librarian->id,
-            'status' => 'active',
-            'start_date' => now()->subDay(),
-            'end_date' => now()->addDay(),
-        ]);
-
-        $data = [
-            'v' => 7,
-            'user_id' => $student->id,
-            'nonce' => Str::random(16),
-            'timestamp' => time() + 120, // 2 minutes in future
-        ];
-
-        $secret = config('app.qr_hmac_secret') ?: 'test-secret-at-least-16-chars';
-        config(['app.qr_hmac_secret' => $secret]);
-
-        $canonicalMessage = $student->id.'|'.$data['nonce'].'|'.$data['timestamp'];
-        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
-        $encryptedData = Crypt::encryptString(json_encode($data));
-        $qrContent = json_encode(['encrypted' => $encryptedData]);
-
-        $this->actingAs($librarian);
-
-        Livewire::test(QrScanner::class)
-            ->call('handleScan', $qrContent)
-            ->assertSet('hasError', true);
+        $this->markTestSkipped('Timestamp validation removed in Phase 7 to support offline QR scanning.');
     }
 
     /** @test - Security Hardening: Nonce Replay Rejection */

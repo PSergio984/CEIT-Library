@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -63,6 +64,7 @@ class BorrowTransaction extends Model
         'duration_minutes',
         'overdue_notified_at',
         'warning_notified_at',
+        'reminder_notified_at',
     ];
 
     protected $casts = [
@@ -71,10 +73,18 @@ class BorrowTransaction extends Model
         'expires_at' => 'datetime',
         'overdue_notified_at' => 'datetime',
         'warning_notified_at' => 'datetime',
+        'reminder_notified_at' => 'datetime',
     ];
 
     protected static function booted()
     {
+        // Generate unique session token for QR code when creating
+        static::creating(function ($transaction) {
+            if (! $transaction->session_token) {
+                $transaction->session_token = static::generateSessionToken();
+            }
+        });
+
         // When borrow transaction status transitions to completed, check eligibility and create ScoreIncrement
         static::updated(function ($transaction) {
             // Only award points if status just transitioned to completed (not already completed)
@@ -91,20 +101,20 @@ class BorrowTransaction extends Model
 
                     if ($borrowDurationMinutes < 30) {
                         // Borrow duration too short - no credit score, but still notify about return
-                        Notification::create([
-                            'user_id' => $transaction->user_id,
-                            'type' => 'paper_returned',
-                            'title' => 'Book Returned Successfully!',
-                            'message' => "You successfully returned \"{$transaction->academicPaper->title}\" on time! (Borrowed for {$borrowDurationMinutes} min - minimum 30 min required for credit score bonus)",
-                            'data' => [
+                        rescue(fn () => app(NotificationService::class)->notify(
+                            $transaction->user,
+                            'paper_returned',
+                            'Book Returned Successfully!',
+                            "You successfully returned \"{$transaction->academicPaper->title}\" on time! (Borrowed for {$borrowDurationMinutes} min - minimum 30 min required for credit score bonus)",
+                            [
                                 'transaction_id' => $transaction->id,
                                 'paper_title' => $transaction->academicPaper->title,
                                 'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
                                 'duration_minutes' => $borrowDurationMinutes,
                                 'score_awarded' => 0,
                                 'reason' => 'duration_too_short',
-                            ],
-                        ]);
+                            ]
+                        ));
 
                         return;
                     }
@@ -117,12 +127,12 @@ class BorrowTransaction extends Model
 
                     if ($todayBorrowRewards >= 3) {
                         // Daily limit reached - no credit score, but still notify about return
-                        Notification::create([
-                            'user_id' => $transaction->user_id,
-                            'type' => 'paper_returned',
-                            'title' => 'Book Returned Successfully!',
-                            'message' => "You successfully returned \"{$transaction->academicPaper->title}\" on time! (Daily credit limit reached - max 3 rewards per day)",
-                            'data' => [
+                        rescue(fn () => app(NotificationService::class)->notify(
+                            $transaction->user,
+                            'paper_returned',
+                            'Book Returned Successfully!',
+                            "You successfully returned \"{$transaction->academicPaper->title}\" on time! (Daily credit limit reached - max 3 rewards per day)",
+                            [
                                 'transaction_id' => $transaction->id,
                                 'paper_title' => $transaction->academicPaper->title,
                                 'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
@@ -130,8 +140,8 @@ class BorrowTransaction extends Model
                                 'score_awarded' => 0,
                                 'reason' => 'daily_limit_reached',
                                 'daily_count' => $todayBorrowRewards,
-                            ],
-                        ]);
+                            ]
+                        ));
 
                         return;
                     }
@@ -152,34 +162,34 @@ class BorrowTransaction extends Model
                         ]);
 
                         // Create notification for on-time return with credit score increase
-                        Notification::create([
-                            'user_id' => $transaction->user_id,
-                            'type' => 'paper_returned',
-                            'title' => 'Book Returned Successfully!',
-                            'message' => "You successfully returned \"{$transaction->academicPaper->title}\" on time! +10 credit score awarded.",
-                            'data' => [
+                        rescue(fn () => app(NotificationService::class)->notify(
+                            $transaction->user,
+                            'paper_returned',
+                            'Book Returned Successfully!',
+                            "You successfully returned \"{$transaction->academicPaper->title}\" on time! +10 credit score awarded.",
+                            [
                                 'transaction_id' => $transaction->id,
                                 'paper_title' => $transaction->academicPaper->title,
                                 'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
                                 'duration_minutes' => $borrowDurationMinutes,
                                 'score_awarded' => 10,
-                            ],
-                        ]);
+                            ]
+                        ));
                     }
                 } else {
                     // Late return notification (no credit score)
-                    Notification::create([
-                        'user_id' => $transaction->user_id,
-                        'type' => 'paper_returned_late',
-                        'title' => 'Book Returned (Late)',
-                        'message' => "You returned \"{$transaction->academicPaper->title}\" late. No credit score awarded.",
-                        'data' => [
+                    rescue(fn () => app(NotificationService::class)->notify(
+                        $transaction->user,
+                        'paper_returned_late',
+                        'Book Returned (Late)',
+                        "You returned \"{$transaction->academicPaper->title}\" late. No credit score awarded.",
+                        [
                             'transaction_id' => $transaction->id,
                             'paper_title' => $transaction->academicPaper->title,
                             'returned_at' => $transaction->time_out->format('M d, Y h:i A'),
                             'was_overdue' => true,
-                        ],
-                    ]);
+                        ]
+                    ));
                 }
             }
 
@@ -189,18 +199,18 @@ class BorrowTransaction extends Model
 
             if ($wasStarted && $isNowOverdue && ! $transaction->overdue_notified_at) {
                 // Create overdue notification
-                Notification::create([
-                    'user_id' => $transaction->user_id,
-                    'type' => 'paper_overdue',
-                    'title' => 'Overdue Book Alert!',
-                    'message' => "Your borrowed book \"{$transaction->academicPaper->title}\" is now overdue! Please return it as soon as possible.",
-                    'data' => [
+                rescue(fn () => app(NotificationService::class)->notify(
+                    $transaction->user,
+                    'paper_overdue',
+                    'Overdue Book Alert!',
+                    "Your borrowed book \"{$transaction->academicPaper->title}\" is now overdue! Please return it as soon as possible.",
+                    [
                         'transaction_id' => $transaction->id,
                         'paper_title' => $transaction->academicPaper->title,
                         'due_date' => $transaction->expires_at->format('M d, Y h:i A'),
                         'overdue_duration' => $transaction->overdue_duration,
-                    ],
-                ]);
+                    ]
+                ));
 
                 // Mark that we've sent the overdue notification
                 $transaction->overdue_notified_at = now();
@@ -299,10 +309,42 @@ class BorrowTransaction extends Model
         return $this->status === 'started' && ! $this->isExpired();
     }
 
-    // Check if transaction is overdue (started but past expiration)
+    /**
+     * Check if transaction is overdue (started but past expiration)
+     */
     public function isOverdue(): bool
     {
         return in_array($this->status, ['started', 'overdue'], true) && $this->isExpired();
+    }
+
+    /**
+     * Accessor for is_overdue attribute.
+     */
+    public function getIsOverdueAttribute(): bool
+    {
+        return $this->isOverdue();
+    }
+
+    /**
+     * Accessor for days_remaining attribute.
+     * Returns negative value if overdue.
+     */
+    public function getDaysRemainingAttribute(): int
+    {
+        if (! $this->expires_at) {
+            return 0;
+        }
+
+        if ($this->status === 'completed') {
+            return 0; // Not applicable for completed transactions
+        }
+
+        $now = now()->startOfDay();
+        $expires = $this->expires_at->copy()->startOfDay();
+
+        $diff = $now->diffInDays($expires, false);
+
+        return (int) $diff;
     }
 
     /**
@@ -380,17 +422,5 @@ class BorrowTransaction extends Model
             ->where('academic_paper_id', $academicPaperId)
             ->where('status', 'started')
             ->first();
-    }
-
-    // Boot method to handle token generation
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($session) {
-            if (! $session->session_token) {
-                $session->session_token = static::generateSessionToken();
-            }
-        });
     }
 }

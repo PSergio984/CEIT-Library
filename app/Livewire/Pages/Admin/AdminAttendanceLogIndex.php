@@ -22,6 +22,9 @@ class AdminAttendanceLogIndex extends AdminComponent
     public function mount()
     {
         $this->authorizeAccess();
+        if (request()->query('scan') === '1') {
+            $this->showQrModal = true;
+        }
     }
 
     public $perPage = 20;

@@ -54,6 +54,38 @@ Route::get('/sitemap.xml', function () {
     return response($xml, 200, ['Content-Type' => 'application/xml']);
 });
 
+// PWA Routes
+Route::get('/sw.js', function () {
+    $path = public_path('build/sw.js');
+    if (! file_exists($path)) {
+        // Fallback for local development if sw.js is not in build yet
+        return response('')->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/javascript',
+        'Service-Worker-Allowed' => '/',
+        'Cache-Control' => 'no-cache, no-store, must-revalidate',
+    ]);
+});
+
+Route::get('/manifest.webmanifest', function () {
+    $path = public_path('build/manifest.webmanifest');
+    if (! file_exists($path)) {
+        if (app()->environment(['local', 'testing'])) {
+            return response('/* Service worker not built yet. Run `npm run build`. */', 200, [
+                'Content-Type' => 'application/javascript',
+                'Service-Worker-Allowed' => '/',
+            ]);
+        }
+        abort(404);
+    }
+
+    return response()->file($path, [
+        'Content-Type' => 'application/manifest+json',
+    ]);
+});
+
 // Test route for QR code system (only available in local or testing environment)
 if (config('app.env') === 'local' || config('app.env') === 'testing') {
     Route::middleware(['auth', 'verified', 'librarian.or.admin'])->group(function () {

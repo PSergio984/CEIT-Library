@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -25,7 +26,7 @@ use Tests\TestCase;
  */
 class BorrowSecurityTest extends TestCase
 {
-    use RefreshDatabase;
+    use \App\Traits\CreatesQrCanonicalMessage, RefreshDatabase;
 
     protected function getRoleId(string $roleName): int
     {
@@ -43,8 +44,19 @@ class BorrowSecurityTest extends TestCase
      */
     protected function createQrPayload(array $borrowData): string
     {
-        $payload = ['p' => $borrowData];
-        $encrypted = Crypt::encryptString(json_encode($payload));
+        $secret = config('app.qr_hmac_secret') ?: 'base64:uqQ+aYJ/fJ7Zg9YJ0vK1rNfWl3bB5Z2D3m4n5o6p7q8=';
+        $data = [
+            'v' => 7,
+            'user_id' => $borrowData['requested_by'] ?? 1,
+            'p' => $borrowData,
+            'nonce' => Str::random(16),
+            'timestamp' => time(),
+        ];
+
+        $canonicalMessage = $this->createCanonicalMessage($data);
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
+
+        $encrypted = Crypt::encryptString(json_encode($data));
 
         return json_encode(['encrypted' => $encrypted]);
     }

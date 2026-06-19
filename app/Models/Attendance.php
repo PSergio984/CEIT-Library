@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -77,19 +78,19 @@ class Attendance extends Model
                         $user = $attendance->user;
                         if ($user) {
                             $durationDisplay = (int) $attendance->duration_minutes;
-                            Notification::create([
-                                'user_id' => $attendance->user_id,
-                                'type' => 'attendance_checkout',
-                                'title' => 'Checked Out Successfully!',
-                                'message' => "You stayed in the library for {$durationDisplay} minutes. (Daily credit limit reached - max 3 rewards per day)",
-                                'data' => [
+                            rescue(fn () => app(NotificationService::class)->notify(
+                                $user,
+                                'attendance_checkout',
+                                'Checked Out Successfully!',
+                                "You stayed in the library for {$durationDisplay} minutes. (Daily credit limit reached - max 3 rewards per day)",
+                                [
                                     'attendance_id' => $attendance->id,
                                     'duration_minutes' => $attendance->duration_minutes,
                                     'score_awarded' => 0,
                                     'reason' => 'daily_limit_reached',
                                     'daily_count' => $todayAttendanceRewards,
-                                ],
-                            ]);
+                                ]
+                            ));
                         }
 
                         return;
@@ -115,20 +116,20 @@ class Attendance extends Model
                         if ($user) {
                             // Ensure duration is formatted as integer for display
                             $durationDisplay = (int) $attendance->duration_minutes;
-                            Notification::create([
-                                'user_id' => $attendance->user_id,
-                                'type' => 'credit_score_increase',
-                                'title' => 'Credit Score Increased!',
-                                'message' => "Great job! You earned +5 credit points for staying in the library for {$durationDisplay} minutes. Your current credit score is {$user->credit_score}/100.",
-                                'data' => [
+                            rescue(fn () => app(NotificationService::class)->notify(
+                                $user,
+                                'credit_score_increase',
+                                'Credit Score Increased!',
+                                "Great job! You earned +5 credit points for staying in the library for {$durationDisplay} minutes. Your current credit score is {$user->credit_score}/100.",
+                                [
                                     'score_increment_id' => $scoreIncrement->id,
                                     'score_value' => 5,
                                     'duration_minutes' => $attendance->duration_minutes,
                                     'attendance_id' => $attendance->id,
                                     'credit_score' => $user->credit_score,
                                     'earned_at' => now()->toDateTimeString(),
-                                ],
-                            ]);
+                                ]
+                            ));
                         }
                     }
                 }

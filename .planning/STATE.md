@@ -1,37 +1,51 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: Bug Fixes & Security Improvements
+milestone: v1.3
+milestone_name: Security & Privacy Hardening
 status: active
-last_updated: "2026-06-12T23:59:00.000Z"
+last_updated: "2026-06-16T00:00:00.000Z"
 progress:
-  total_phases: 3
-  completed_phases: 3
-  total_plans: 15
-  completed_plans: 15
+  total_phases: 9
+  completed_phases: 9
+  total_plans: 21
+  completed_plans: 21
   percent: 100
 ---
 
-## Phase 1: Frontend Bug Fixes, Scanning, and Optimization (COMPLETE)
+# Project State: CEIT-Library
 
-- Core stack upgraded to Livewire v4, Mary UI v2, Tailwind CSS v4, and daisyUI v5.
-- Fixed Admin Table modal locking bug using native `<dialog>` and `x-teleport`.
-- QR Scanner optimized with smart camera selection and default back-camera prioritization.
-- Security Hardening: Redundant authorization and strict validation implemented.
-- Mobile Expansion: PWA manifest/service-worker and Hybrid Bottom Navigation implemented.
+## Phase 1: Frontend Bug Fixes & Optimization (COMPLETE)
+Resolved critical modal locking bugs, optimized the QR scanner for mobile cameras, and implemented a hybrid navigation system for PWA parity.
 
-## Phase 2: Security Hardening & Quality (COMPLETE)
-
-- **SonarQube Compliance**: Resolved line length violations (>120 chars) in `_ide_helper.php`, `config/mail.php`, and factories. Applied PSR-12 brace formatting to `_ide_helper.php`.
-- **UI Heuristics**: Implemented `x-skeleton` component and lazy loading for Academic Paper index. Added `wire:navigate.hover` prefetching to sidebar.
-- **Security Hardening**: Fixed `CheckCreditScore` middleware regression; hardened Service Worker with origin verification.
-- **Tiered Rate Limiting**: Configured 10x higher limits for Admins/Librarians on QR and search.
-- **Infrastructure**: Modernized `Docker/start.sh` and `00-laravel-deploy.sh` to use `[[` conditionals.
+## Phase 2: Security Hardening (COMPLETE)
+Audited and reinforced application middleware, implemented CSRF protection for all Livewire actions, and secured QR data payloads with HMAC signatures and encryption.
 
 ## Phase 3: Stability & Performance (COMPLETE)
+Resolved 50+ failing tests, optimized database queries (N+1 fixes), and created a high-conversion "Liquid Glass" landing page with global branding consistency.
 
-- **Test Suite Resolution**: Fixed all remaining authorization, profile, lazy loading, and seeder tests. Verified 100% test coverage with 466 passing tests.
-- **Premium Landing Page**: Overhauled the welcome landing page using a premium Liquid Glass theme, featuring a parallax school background, Outfit/DM Sans typography, and smooth scroll-reveal transitions.
-- **Reskinned Auth Views**: Redesigned all authentication views (Login, Register, Password Reset, etc.) to lay flat inside the guest layout's single primary glass card.
-- **Global Branding & SEO**: Standardized app-wide headers, manifests, and email templates under the unified 'PLV CEIT Library' brand, and configured layouts with search-engine friendly SEO metadata.
-- **CI/CD Hardening**: Streamlined the GitHub Actions test workflow to run using a deterministic SQLite configuration and secure directory permissions.
+## Phase 4: PWA Hardening & Offline Resilience (COMPLETE)
+Upgraded the PWA to "Level 2" with Cache-First asset handling, App Badging API integration, and real-time offline detection for the QR Scanner.
+
+## Phase 5: Workflow Optimization & UX Polish (COMPLETE)
+Centralized librarian status logic to eliminate race conditions, implemented elegant skeleton loaders for tables, and enabled hover-prefetching for instant navigation.
+
+## Phase 6: Stabilization & Automation (COMPLETE)
+Registered the automated overdue transaction check, enabled the new user welcome email flow, and achieved 100% pass rate across all 90 documented test cases on PHP 8.4.
+
+## Milestone v1.2: Architecture & Analytics
+
+### Phase 1: Structural Integrity (COMPLETE)
+Decoupled "fat" Livewire components into `BorrowService` and `AttendanceService`. Consolidated `BorrowTransaction` model events into a unified `booted` method. Modernized inline validation using Livewire 3 `#[Validate]` attributes.
+
+### Phase 2: Advanced Analytics & Reporting (COMPLETE)
+Added high-performance cached "Quick Stats" mini-cards to Admin tables. Implemented advanced PDF export functionality using `barryvdh/laravel-dompdf`. Optimized repeated queries using Cache.
+
+## Milestone v1.3: Security & Privacy Hardening
+
+### Phase 7: Logging and QR Resiliency (COMPLETE)
+Removed strict 60-second expiration checks from QR logic to allow offline screenshot use while maintaining nonce-based replay protection. Implemented a Global Log Sanitizer (`PiiSanitizerProcessor`) to automatically redact emails and raw QR payloads before writing to `laravel.log`.
+
+## Technical Debt & Infrastructure
+- **Docker**: Verified and iteratively fixed the `Dockerfile`. The application is fully containerized and serves Vite-built PWA artifacts correctly.
+- **Service Worker**: Migrated from a manual script to a Vite-managed Workbox implementation for better performance and reliability.
+- **Librarian System**: Refactored to a Service-oriented architecture, resolving long-standing flaky test issues.

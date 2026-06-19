@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Notification;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Console\Command;
 
 class SendPushNotification extends Command
@@ -50,15 +50,13 @@ class SendPushNotification extends Command
             $this->warn('This user has not registered any push subscriptions. The notification will be saved but no push message will be delivered.');
         }
 
-        Notification::create([
-            'user_id' => $user->id,
-            'type' => 'manual_push',
-            'title' => $title,
-            'message' => $message,
-            'data' => [
-                'url' => $url,
-            ],
-        ]);
+        app(NotificationService::class)->notify(
+            $user,
+            'manual_push',
+            $title,
+            $message,
+            ['url' => $url]
+        );
 
         $this->info('Notification sent and saved successfully!');
 

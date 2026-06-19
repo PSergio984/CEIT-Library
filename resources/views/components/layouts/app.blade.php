@@ -21,10 +21,17 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     
     <!-- PWA & Push Notifications -->
-    <link rel="manifest" href="/manifest.json">
+    <link rel="manifest" href="/manifest.webmanifest">
     <meta name="theme-color" content="#0046ad">
     <link rel="apple-touch-icon" href="{{ Vite::asset('resources/images/ceit-logo.png') }}">
     <script>
+        // Clear App Badge on page load if supported
+        if ('clearAppBadge' in navigator) {
+            navigator.clearAppBadge().catch(error => {
+                console.error('Error clearing app badge:', error);
+            });
+        }
+
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
@@ -98,22 +105,6 @@
             }
         }
 
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later.
-            window.deferredPrompt = e;
-            // Update UI notify the user they can install the PWA
-            window.dispatchEvent(new CustomEvent('pwa-install-available'));
-        });
-
-        window.addEventListener('appinstalled', (e) => {
-            // Hide the app-provided install promotion
-            window.deferredPrompt = null;
-            window.dispatchEvent(new CustomEvent('pwa-install-hidden'));
-            console.log('PWA was installed');
-        });
-
         function urlBase64ToUint8Array(base64String) {
             const padding = '='.repeat((4 - base64String.length % 4) % 4);
             const base64 = (base64String + padding)
@@ -152,7 +143,7 @@
     <x-mary-main full-width class="flex-1 flex flex-col">
         {{-- SIDEBAR --}}
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
-
+            @persist('sidebar')
             {{-- BRAND --}}
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
@@ -175,7 +166,7 @@
 
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" wire:transition>
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
                 <x-mary-menu-item title="Dashboard" tooltip="Dashboard" icon="o-home" link="/dashboard" wire:navigate.hover />
                 <x-mary-menu-item title="Academic Papers" tooltip="Academic Papers" icon="o-book-open" link="/academic-papers" wire:navigate.hover />
                 <x-mary-menu-item title="Rules & Regulations" tooltip="Rules & Regulations" icon="o-clipboard-document-list"
@@ -198,9 +189,7 @@
                 @endcan
 
             </x-mary-menu>
-
-
-
+            @endpersist
         </x-slot:sidebar>
 
         {{-- CONTENT --}}
@@ -231,17 +220,32 @@
     {{-- BOTTOM NAVIGATION (Mobile only) --}}
     <div id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-base-100 border-t border-base-300 h-16 shadow-2xl">
         <div class="flex justify-around items-center h-full">
-            <a href="/dashboard" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('dashboard*') || request()->is('student/dashboard*') ? 'text-primary' : 'text-base-content/70' }}">
+            <a href="{{ route('dashboard') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('dashboard', 'student.dashboard')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
                 <x-mary-icon name="o-home" class="w-6 h-6" />
                 <span class="text-[10px] mt-1 font-medium">Home</span>
             </a>
-            <a href="/academic-papers" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('academic-papers*') ? 'text-primary' : 'text-base-content/70' }}">
+            <a href="{{ route('academic-paper.index') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('academic-paper.index')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
                 <x-mary-icon name="o-book-open" class="w-6 h-6" />
                 <span class="text-[10px] mt-1 font-medium">Papers</span>
             </a>
             
             @can('librarian-or-admin-access')
-            <a href="/test-qr" class="flex flex-col items-center justify-center w-full h-full">
+            <a href="{{ route('admin.attendance', ['scan' => 1]) }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full"
+            >
                 <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
                     <x-mary-icon name="o-qr-code" class="w-7 h-7" />
                 </div>
@@ -249,7 +253,13 @@
             </a>
             @endcan
 
-            <a href="/notifications" class="flex flex-col items-center justify-center w-full h-full {{ request()->is('notifications*') ? 'text-primary' : 'text-base-content/70' }}">
+            <a href="{{ route('notifications') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('notifications')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
                 <div class="relative">
                     <x-mary-icon name="o-bell" class="w-6 h-6" />
                     @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
@@ -267,5 +277,8 @@
 
     {{-- Toast --}}
     <x-mary-toast />
+
+    {{-- PWA Install Banner --}}
+    <x-pwa-install-banner />
 </body>
 </html>

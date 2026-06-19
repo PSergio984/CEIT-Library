@@ -57,8 +57,8 @@
             </div>
             
             @foreach ($this->rules() as $rule)
-                <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow" wire:key="rule-card-{{ $rule->id }}">
-                    <div class="flex items-start justify-between mb-3">
+                <div class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow min-w-0 break-words" wire:key="rule-card-{{ $rule->id }}">
+                    <div class="flex items-start justify-between mb-3 gap-2">
                         <div class="flex-1">
                             @if($rule->ruleHeader)
                                 <span class="badge badge-ghost mb-2">{{ $rule->ruleHeader->title }}</span>
@@ -72,13 +72,13 @@
                         @if($rule->content === null)
                             <div class="italic text-sm text-base-content/70">No content</div>
                         @else
-                            <p class="text-sm text-base-content/80 line-clamp-3">
+                            <p class="text-sm text-base-content/80 line-clamp-3 break-words">
                                 {{ $rule->content }}
                             </p>
                         @endif
                     </div>
 
-                    <div class="flex items-center justify-between pt-3 border-t border-base-300">
+                    <div class="flex flex-wrap items-center justify-between pt-3 border-t border-base-300 gap-2">
                         <span class="text-xs text-base-content/50">
                             {{ $rule->updated_at ? $rule->updated_at->format('M d, Y H:i A') : '—' }}
                         </span>
@@ -90,7 +90,7 @@
                                 wire:target="openEditDrawer({{ $rule->id }})">
                                 <span wire:loading.remove wire:target="openEditDrawer({{ $rule->id }})">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
                                     </svg>
                                 </span>
                                 <span wire:loading wire:target="openEditDrawer({{ $rule->id }})" class="loading loading-spinner loading-xs"></span>

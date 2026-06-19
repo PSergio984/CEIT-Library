@@ -40,7 +40,7 @@
     <x-mary-main full-width>
         {{-- SIDEBAR --}}
         <x-slot:sidebar drawer="main-drawer" collapsible class="bg-base-100 lg:bg-inherit">
-
+            @persist('admin-sidebar')
             {{-- BRAND --}}
             <div class="flex items-center justify-center py-4">
                 <div class="flex items-center">
@@ -116,22 +116,89 @@
                 <x-mary-menu-item title="View as Student" icon="o-eye" link="{{ route('dashboard') }}" wire:navigate.hover />
 
             </x-mary-menu>
-
+            @endpersist
         </x-slot:sidebar>
 
         {{-- CONTENT --}}
         <x-slot:content>
-            {{-- Desktop Navigation --}}
-            <div class="hidden lg:block">
-                <livewire:layout.navigation />
-            </div>
+            <div class="flex flex-col min-h-screen pb-16 lg:pb-0">
+                {{-- Desktop Navigation --}}
+                <div class="hidden lg:block">
+                    <livewire:layout.navigation />
+                </div>
 
-            {{-- The `$slot` goes here --}}
-            <div class="flex-1 bg-base-100">
-                {{ $slot }}
+                {{-- The `$slot` goes here --}}
+                <div class="flex-1 bg-base-100">
+                    {{ $slot }}
+                </div>
             </div>
         </x-slot:content>
     </x-mary-main>
+
+    {{-- BOTTOM NAVIGATION (Mobile only) --}}
+    <div id="mobile-nav" class="lg:hidden fixed bottom-0 left-0 right-0 z-[9999] bg-base-100 border-t border-base-300 h-16 shadow-2xl">
+        <div class="flex justify-around items-center h-full">
+            <a href="{{ route('admin.dashboard') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('admin.dashboard')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
+                <x-mary-icon name="o-home" class="w-6 h-6" />
+                <span class="text-[10px] mt-1 font-medium">Home</span>
+            </a>
+            
+            @can('view-academic-papers')
+            <a href="{{ route('admin.academic-paper.index') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('admin.academic-paper.index', 'admin.academic-paper.show', 'admin.academic-paper.create', 'admin.academic-paper.edit')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
+                <x-mary-icon name="o-book-open" class="w-6 h-6" />
+                <span class="text-[10px] mt-1 font-medium">Papers</span>
+            </a>
+            @endcan
+            
+            @can('view-attendance-logs')
+            <a href="{{ route('admin.attendance', ['scan' => 1]) }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('admin.attendance', 'admin.attendance-logs')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
+                <div class="bg-primary text-primary-content p-3 rounded-full -mt-8 shadow-lg border-4 border-base-100">
+                    <x-mary-icon name="o-qr-code" class="w-7 h-7" />
+                </div>
+                <span class="text-[10px] mt-1 font-bold text-primary">Scan</span>
+            </a>
+            @endcan
+
+            <a href="{{ route('admin.notifications') }}"
+                wire:navigate.hover
+                class="flex flex-col items-center justify-center w-full h-full
+                    {{ request()->routeIs('admin.notifications')
+                        ? 'text-primary'
+                        : 'text-base-content/70' }}"
+            >
+                <div class="relative">
+                    <x-mary-icon name="o-bell" class="w-6 h-6" />
+                    @if(auth()->check() && auth()->user()->unreadNotifications()->count() > 0)
+                        <span class="badge badge-primary badge-xs absolute -top-1 -right-1"></span>
+                    @endif
+                </div>
+                <span class="text-[10px] mt-1 font-medium">Alerts</span>
+            </a>
+            
+            <label for="main-drawer" class="flex flex-col items-center justify-center w-full h-full text-base-content/70 cursor-pointer">
+                <x-mary-icon name="o-ellipsis-horizontal" class="w-6 h-6" />
+                <span class="text-[10px] mt-1 font-medium">More</span>
+            </label>
+        </div>
+    </div>
 
     {{-- Toast --}}
     <x-mary-toast />

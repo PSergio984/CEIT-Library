@@ -47,9 +47,36 @@
                 </div>
             </div>
 
-            <!-- Copies Table -->
+            <!-- Copies Section -->
             @if($academicPaper->logical_copies_count > 0)
-                <div class="overflow-x-auto">
+                {{-- Mobile Card View --}}
+                <div class="block sm:hidden space-y-3">
+                    @foreach($academicPaper->copies as $copy)
+                        @php $userBorrowedThis = isset($this->userActiveBorrows[$copy->id]); @endphp
+                        <div wire:key="mobile-copy-{{ $copy->id }}" class="flex items-center justify-between p-3 bg-base-200 rounded-lg border border-base-300">
+                            <div class="flex items-center gap-3">
+                                <span class="text-sm font-semibold text-base-content/60">Copy #{{ $copy->id }}</span>
+                                @if($userBorrowedThis)
+                                    <span class="badge badge-info badge-sm">You Borrowed</span>
+                                @else
+                                    <span class="badge badge-sm {{ $copy->status === 'Available' ? 'badge-success' : ($copy->status === 'Borrowed' ? 'badge-warning' : 'badge-error') }}">{{ $copy->status }}</span>
+                                @endif
+                            </div>
+                            <div>
+                                @if($copy->status === 'Available')
+                                    <x-mary-button icon="o-qr-code" class="btn-sm btn-success" wire:click="requestQr({{ $copy->id }})" title="Get Borrow QR Code" />
+                                @elseif($userBorrowedThis)
+                                    <x-mary-button icon="o-qr-code" class="btn-sm btn-info" wire:click="showReturnQr({{ $copy->id }})" title="Get Return QR Code">Return</x-mary-button>
+                                @else
+                                    <span class="text-base-content/50 text-xs">Unavailable</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+
+                {{-- Desktop Table View --}}
+                <div class="hidden sm:block overflow-x-auto">
                     <table class="table table-sm w-full border-collapse border border-base-300 rounded-lg overflow-hidden shadow-sm">
                         <thead>
                         <tr class="bg-base-200">
@@ -60,39 +87,21 @@
                         </thead>
                         <tbody>
                         @foreach($academicPaper->copies as $copy)
-                            @php
-                                $userBorrowedThis = isset($this->userActiveBorrows[$copy->id]);
-                            @endphp
+                            @php $userBorrowedThis = isset($this->userActiveBorrows[$copy->id]); @endphp
                             <tr wire:key="copy-{{ $copy->id }}" class="hover:bg-base-100 transition-colors duration-150 border-b border-base-200 last:border-b-0">
                                 <td class="px-4 py-3 text-base-content font-medium">{{ $copy->id }}</td>
                                 <td class="px-4 py-3">
                                     @if($userBorrowedThis)
                                         <span class="badge badge-info px-4 py-1">You Borrowed</span>
                                     @else
-                                        <span
-                                            class="badge px-4 py-1 {{ $copy->status === 'Available' ? 'badge-success' : ($copy->status === 'Borrowed' ? 'badge-warning' : 'badge-error') }}">
-                                            {{ $copy->status }}
-                                        </span>
+                                        <span class="badge px-4 py-1 {{ $copy->status === 'Available' ? 'badge-success' : ($copy->status === 'Borrowed' ? 'badge-warning' : 'badge-error') }}">{{ $copy->status }}</span>
                                     @endif
                                 </td>
                                 <td class="px-4 py-3">
                                     @if($copy->status === 'Available')
-                                        <x-mary-button
-                                            icon="o-qr-code"
-                                            class="btn-sm btn-success"
-                                            wire:click="requestQr({{ $copy->id }})"
-                                            title="Get Borrow QR Code"
-                                        >
-                                        </x-mary-button>
+                                        <x-mary-button icon="o-qr-code" class="btn-sm btn-success" wire:click="requestQr({{ $copy->id }})" title="Get Borrow QR Code" />
                                     @elseif($userBorrowedThis)
-                                        <x-mary-button
-                                            icon="o-qr-code"
-                                            class="btn-sm btn-info"
-                                            wire:click="showReturnQr({{ $copy->id }})"
-                                            title="Get Return QR Code"
-                                        >
-                                            Return QR
-                                        </x-mary-button>
+                                        <x-mary-button icon="o-qr-code" class="btn-sm btn-info" wire:click="showReturnQr({{ $copy->id }})" title="Get Return QR Code">Return QR</x-mary-button>
                                     @else
                                         <span class="text-base-content/50 text-sm">Borrowed by others</span>
                                     @endif

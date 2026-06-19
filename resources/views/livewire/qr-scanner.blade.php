@@ -14,7 +14,13 @@
                 scanMode: null,
                 cameras: [],
                 currentCameraId: null,
+                isOffline: !navigator.onLine,
+                init() {
+                    window.addEventListener('online', () => this.isOffline = false);
+                    window.addEventListener('offline', () => this.isOffline = true);
+                },
                 async selectMode(mode) {
+                    if (this.isOffline) return;
                     this.scanMode = mode;
                     console.log('Scan mode selected:', mode);
                     if (mode === 'camera') {
@@ -90,8 +96,17 @@
 
                 {{-- Mode Selection --}}
                 <div x-show="scanMode === null" class="space-y-4">
+                    {{-- Offline Warning --}}
+                    <div x-show="isOffline" class="alert alert-error mb-4 shadow-lg animate-pulse" x-transition>
+                        <x-mary-icon name="o-no-symbol" class="w-6 h-6 flex-shrink-0" />
+                        <div class="flex-1">
+                            <h3 class="font-bold">System Offline</h3>
+                            <div class="text-xs">Internet connection is required to scan and process attendance.</div>
+                        </div>
+                    </div>
+
                     {{-- Info Banner --}}
-                    <div class="alert alert-info mb-4">
+                    <div x-show="!isOffline" class="alert alert-info mb-4">
                         <x-mary-icon name="o-information-circle" class="w-5 h-5 flex-shrink-0" />
                         <div class="text-sm">
                             Upload an image containing the QR code or use your camera to scan directly.
@@ -100,7 +115,9 @@
 
                     {{-- Camera Option --}}
                     <button @click="selectMode('camera')"
-                        class="w-full btn btn-lg btn-primary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform">
+                        :disabled="isOffline"
+                        class="w-full btn btn-lg btn-primary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform"
+                        :class="isOffline ? 'opacity-50 cursor-not-allowed' : ''">
                         <div class="bg-primary-content/20 p-3 rounded-lg flex-shrink-0">
                             <x-mary-icon name="o-camera" class="w-6 h-6" />
                         </div>
@@ -120,7 +137,9 @@
 
                     {{-- File Upload Option --}}
                     <button @click="selectMode('file')"
-                        class="w-full btn btn-lg btn-outline btn-secondary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform">
+                        :disabled="isOffline"
+                        class="w-full btn btn-lg btn-outline btn-secondary gap-4 h-auto py-5 hover:scale-[1.02] transition-transform"
+                        :class="isOffline ? 'opacity-50 cursor-not-allowed' : ''">
                         <div class="bg-secondary-content/20 p-3 rounded-lg flex-shrink-0">
                             <x-mary-icon name="o-photo" class="w-6 h-6" />
                         </div>
@@ -133,7 +152,20 @@
                 </div>
 
                 {{-- Camera Scanner Mode --}}
-                <div x-show="scanMode === 'camera'" x-transition>
+                <div x-show="scanMode === 'camera'" x-transition class="relative">
+                    {{-- Offline Overlay for Active Scanner --}}
+                    <div x-show="isOffline" 
+                        class="absolute inset-0 z-[20] bg-black/80 rounded-xl flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300">
+                        <div class="bg-error/20 p-4 rounded-full mb-4">
+                            <x-mary-icon name="o-signal-slash" class="w-12 h-12 text-error" />
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Connection Lost</h3>
+                        <p class="text-sm text-white/70 max-w-xs">Attendance cannot be processed while offline. Reconnect to resume scanning.</p>
+                        <button @click="reset()" class="btn btn-sm btn-ghost text-white mt-4 border-white/20">
+                            Close Scanner
+                        </button>
+                    </div>
+
                     <button @click="reset()" class="btn btn-sm btn-ghost mb-4">
                         <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
                         Back to selection
@@ -230,7 +262,20 @@
                 </div>
 
                 {{-- File Upload Mode --}}
-                <div x-show="scanMode === 'file'" x-transition>
+                <div x-show="scanMode === 'file'" x-transition class="relative">
+                    {{-- Offline Overlay for File Upload --}}
+                    <div x-show="isOffline" 
+                        class="absolute inset-0 z-[20] bg-black/80 rounded-xl flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300">
+                        <div class="bg-error/20 p-4 rounded-full mb-4">
+                            <x-mary-icon name="o-signal-slash" class="w-12 h-12 text-error" />
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Connection Lost</h3>
+                        <p class="text-sm text-white/70 max-w-xs">Attendance cannot be processed while offline. Reconnect to resume scanning.</p>
+                        <button @click="reset()" class="btn btn-sm btn-ghost text-white mt-4 border-white/20">
+                            Close Scanner
+                        </button>
+                    </div>
+
                     <button @click="reset()" class="btn btn-sm btn-ghost mb-4">
                         <x-mary-icon name="o-arrow-left" class="w-4 h-4" />
                         Back to selection

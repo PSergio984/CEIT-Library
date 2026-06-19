@@ -11,13 +11,20 @@ export default defineConfig({
         }),
         tailwindcss(),
         VitePWA({
+            strategies: 'injectManifest',
+            srcDir: 'resources/js',
+            filename: 'sw.js',
             registerType: 'autoUpdate',
-            injectRegister: 'auto',
+            injectRegister: null,
             manifest: {
-                name: 'CEIT Library',
+                name: 'PLV CEIT Library',
                 short_name: 'CEIT Lib',
-                description: 'CEIT Library Management System',
+                description: 'PLV eLib - CEIT Library Management System',
                 theme_color: '#0046ad',
+                background_color: '#ffffff',
+                display: 'standalone',
+                orientation: 'portrait',
+                start_url: '/',
                 icons: [
                     {
                         src: 'images/ceit-logo.png',

@@ -5,6 +5,7 @@ namespace App\Traits;
 use App\Models\Attendance;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\NotificationService;
 use Carbon\Carbon;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Auth;
@@ -194,19 +195,19 @@ trait ProcessesAttendanceQr
                     $durationText = $this->formatDuration($minutes);
 
                     // Create check-out notification for the user
-                    Notification::create([
-                        'user_id' => $user->id,
-                        'type' => 'attendance_checkout',
-                        'title' => 'Library Check-out Successful',
-                        'message' => "You checked out of the library. Total time: {$durationText}. Thank you for visiting!",
-                        'data' => [
+                    app(NotificationService::class)->notify(
+                        $user,
+                        'attendance_checkout',
+                        'Library Check-out Successful',
+                        "You checked out of the library. Total time: {$durationText}. Thank you for visiting!",
+                        [
                             'attendance_id' => $activeSession->id,
                             'time_in' => $activeSession->time_in->format('M d, Y h:i A'),
                             'time_out' => $activeSession->time_out->format('M d, Y h:i A'),
                             'duration_minutes' => $minutes,
                             'duration_text' => $durationText,
-                        ],
-                    ]);
+                        ]
+                    );
 
                     return [
                         'success' => true,
@@ -243,16 +244,16 @@ trait ProcessesAttendanceQr
                     ]);
 
                     // Create check-in notification for the user
-                    Notification::create([
-                        'user_id' => $user->id,
-                        'type' => 'attendance_checkin',
-                        'title' => 'Library Check-in Successful',
-                        'message' => "Welcome to the library! You checked in at {$attendance->time_in->format('h:i A')}. Enjoy your time!",
-                        'data' => [
+                    app(NotificationService::class)->notify(
+                        $user,
+                        'attendance_checkin',
+                        'Library Check-in Successful',
+                        "Welcome to the library! You checked in at {$attendance->time_in->format('h:i A')}. Enjoy your time!",
+                        [
                             'attendance_id' => $attendance->id,
                             'time_in' => $attendance->time_in->format('M d, Y h:i A'),
-                        ],
-                    ]);
+                        ]
+                    );
 
                     return [
                         'success' => true,

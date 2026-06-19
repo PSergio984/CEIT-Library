@@ -170,6 +170,8 @@ class AdminAcademicPaperIndex extends AdminComponent
     #[Locked]
     public ?int $deleteId = null;
 
+    public bool $showDeleteModal = false;
+
     public bool $formDrawer = false;
 
     public bool $isEditing = false;
@@ -527,7 +529,7 @@ class AdminAcademicPaperIndex extends AdminComponent
                     'Deletion Not Allowed'
                 );
                 $this->deleteId = null;
-                $this->dispatch('close-delete-modal');
+                $this->showDeleteModal = false;
 
                 return;
             }
@@ -546,15 +548,13 @@ class AdminAcademicPaperIndex extends AdminComponent
 
             // Reset state
             $this->deleteId = null;
+            $this->showDeleteModal = false;
 
             // Reset pagination to first page
             $this->resetPage('academic-papers-index');
 
             // Show success message
             $this->success('Academic paper deleted successfully');
-
-            // Dispatch event to close modal (only on success)
-            $this->dispatch('close-delete-modal');
         } catch (\Exception $e) {
             // On error, show message but don't close modal
             $this->error('Failed to delete academic paper: '.$e->getMessage());
@@ -1105,7 +1105,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         Gate::authorize('manage-academic-papers');
 
         $this->deleteId = $paperId;
-        $this->dispatch('delete-modal');
+        $this->showDeleteModal = true;
     }
 
     /**

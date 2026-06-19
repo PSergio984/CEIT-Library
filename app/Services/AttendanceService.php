@@ -1,0 +1,301 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Attendance;
+use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
+use Carbon\Carbon;
+use Illuminate\Contracts\Encryption\DecryptException;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+
+class AttendanceService
+{
+    use CreatesQrCanonicalMessage;
+
+    private const VALIDATION_INVALID = 'invalid';
+
+    /**
+     * Decrypt and validate the attendance QR code data
+     */
+    public function decryptAndValidateAttendanceData(string $qrData): array|string
+    {
+        try {
+            // Basic validation
+            $qrData = trim($qrData);
+            if (empty($qrData)) {
+                return self::VALIDATION_INVALID;
+            }
+
+            // Standardize format: Attendance QR now uses {"encrypted": "..."} just like Borrow QR
+            $json = json_decode($qrData, true);
+            if (! $json || ! isset($json['encrypted'])) {
+                Log::warning('Attendance QR code missing encrypted wrapper');
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // Decrypt the data
+            $decryptedJson = Crypt::decryptString($json['encrypted']);
+            $data = json_decode($decryptedJson, true);
+
+            // Validate HMAC secret
+            $secret = config('app.qr_hmac_secret');
+            if (! is_string($secret) || strlen($secret) < 16) {
+                Log::error('QR HMAC secret missing or insecure');
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // Validate JSON structure (v7 required: user_id, hash, nonce, timestamp)
+            if (! is_array($data) || ! isset($data['user_id'], $data['hash'], $data['nonce'], $data['timestamp'])) {
+                Log::warning('Invalid QR code structure: Missing required fields', [
+                    'data_keys' => array_keys($data ?? []),
+                    'v' => $data['v'] ?? 'unknown',
+                ]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // Verify hash for tamper protection covering entire payload
+            $dataForCanonical = $data;
+            unset($dataForCanonical['hash']);
+            $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
+            $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
+
+            if (! hash_equals($expectedHash, $data['hash'])) {
+                Log::warning('QR code hash mismatch - possible tampering detected', [
+                    'user_id' => $data['user_id'],
+                ]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // 1. Timestamp validation (Removed for Offline Accessibility - Phase 7)
+            // We intentionally ignore the timestamp difference to allow downloaded/screenshot QR codes to work offline.
+
+            $user = User::find($data['user_id']);
+            if (! $user) {
+                Log::warning('User not found during QR scan', ['user_id' => $data['user_id']]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // Check rate limiting per user
+            $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
+            $recentScans = Cache::get($rateLimitKey, 0);
+
+            if ($recentScans >= 60) {
+                Log::warning('Rate limit exceeded for user', [
+                    'user_id' => $data['user_id'],
+                ]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // 2. Nonce Replay Prevention (One-time use check)
+            $nonceKey = 'qr_nonce:'.$data['nonce'];
+            if (! Cache::add($nonceKey, true, 150)) {
+                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
+                    'user_id' => $data['user_id'],
+                    'nonce' => $data['nonce'],
+                ]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            Cache::put($rateLimitKey, $recentScans + 1, 60);
+
+            Log::info('QR code validated successfully (v7)', [
+                'user_id' => $user->id,
+            ]);
+
+            return [
+                'user_id' => $data['user_id'],
+                'user' => $user,
+            ];
+        } catch (DecryptException $e) {
+            Log::warning('QR code decryption failed', ['error' => $e->getMessage()]);
+
+            return self::VALIDATION_INVALID;
+        } catch (\Exception $e) {
+            Log::error('Unexpected error during QR validation', ['error' => $e->getMessage()]);
+
+            return self::VALIDATION_INVALID;
+        }
+    }
+
+    /**
+     * Process the attendance based on scanned QR data
+     */
+    public function processAttendance(array $data): array
+    {
+        $userId = $data['user_id'];
+        $user = $data['user'];
+
+        // Get the current user who is scanning
+        $currentUser = Auth::user();
+
+        // Get the librarian ID if current user has an active librarian duty
+        $scannedBy = $currentUser?->getActiveLibrarianDuty()?->id;
+
+        // If no librarian duty but user has admin access, store admin user ID
+        $scannedByAdminId = null;
+        if (! $scannedBy && $currentUser?->hasAdminAccess()) {
+            $scannedByAdminId = $currentUser->id;
+        }
+
+        // Authorization Check: Ensure the scanner is authorized (librarian on duty or admin)
+        if (! $scannedBy && ! $scannedByAdminId) {
+            Log::warning('Unauthorized attendance scan attempt', [
+                'user_id' => $currentUser?->id,
+                'target_user_id' => $userId,
+            ]);
+
+            return [
+                'success' => false,
+                'message' => 'You are not authorized to process attendance scans.',
+                'title' => 'Authorization Failed',
+            ];
+        }
+
+        // Check if user has an active session
+        $activeSession = Attendance::getActiveSession($userId);
+
+        if ($activeSession) {
+            // User is checking out (time out) - wrap in transaction
+            try {
+                $minutes = 0;
+                $durationText = '';
+                $result = DB::transaction(function () use ($activeSession, $user, &$minutes, &$durationText) {
+                    $activeSession->time_out = Carbon::now();
+                    $activeSession->status = 'completed';
+                    $activeSession->calculateDuration();
+                    $activeSession->save();
+
+                    // Format duration message properly
+                    $minutes = (int) $activeSession->duration_minutes;
+                    $durationText = $this->formatDuration($minutes);
+
+                    return [
+                        'success' => true,
+                        'message' => "Goodbye, {$user->first_name}! You stayed for {$durationText}.",
+                        'title' => 'Check-out Successful',
+                        'attendance' => $activeSession,
+                        'action' => 'checkout',
+                    ];
+                });
+
+                // Create check-out notification for the user
+                try {
+                    app(NotificationService::class)->notify(
+                        $user,
+                        'attendance_checkout',
+                        'Library Check-out Successful',
+                        "You checked out of the library. Total time: {$durationText}. Thank you for visiting!",
+                        [
+                            'attendance_id' => $activeSession->id,
+                            'time_in' => $activeSession->time_in->format('M d, Y h:i A'),
+                            'time_out' => $activeSession->time_out->format('M d, Y h:i A'),
+                            'duration_minutes' => $minutes,
+                            'duration_text' => $durationText,
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    Log::error('Checkout notification failed: '.$e->getMessage());
+                }
+
+                return $result;
+            } catch (\Exception $e) {
+                Log::error('Check-out transaction failed', [
+                    'user_id' => $activeSession->user_id,
+                    'attendance_id' => $activeSession->id,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => 'An error occurred while checking out. Please try again later.',
+                    'title' => 'Check-out Failed',
+                ];
+            }
+        } else {
+            // User is checking in (time in) - wrap in transaction
+            try {
+                $attendance = null;
+                $result = DB::transaction(function () use ($userId, $scannedBy, $scannedByAdminId, $user, &$attendance) {
+                    $attendance = Attendance::create([
+                        'user_id' => $userId,
+                        'role_id' => $user->role_id,
+                        'time_in' => Carbon::now(),
+                        'status' => 'active',
+                        'scanned_by' => $scannedBy,
+                        'scanned_by_admin_id' => $scannedByAdminId,
+                    ]);
+
+                    return [
+                        'success' => true,
+                        'message' => "Welcome, {$user->first_name}! Enjoy your time in the library.",
+                        'title' => 'Check-in Successful',
+                        'attendance' => $attendance,
+                        'action' => 'checkin',
+                    ];
+                });
+
+                // Create check-in notification for the user
+                try {
+                    app(NotificationService::class)->notify(
+                        $user,
+                        'attendance_checkin',
+                        'Library Check-in Successful',
+                        "Welcome to the library! You checked in at {$attendance->time_in->format('h:i A')}. Enjoy your time!",
+                        [
+                            'attendance_id' => $attendance->id,
+                            'time_in' => $attendance->time_in->format('M d, Y h:i A'),
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    Log::error('Checkin notification failed: '.$e->getMessage());
+                }
+
+                return $result;
+            } catch (\Exception $e) {
+                Log::error('Check-in transaction failed', [
+                    'user_id' => $userId,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return [
+                    'success' => false,
+                    'message' => 'An error occurred while checking in. Please try again later.',
+                    'title' => 'Check-in Failed',
+                ];
+            }
+        }
+    }
+
+    /**
+     * Format duration in a human-readable way
+     */
+    public function formatDuration(int $minutes): string
+    {
+        if ($minutes < 1) {
+            return 'less than 1 minute';
+        } elseif ($minutes < 60) {
+            return $minutes.' '.($minutes === 1 ? 'minute' : 'minutes');
+        } else {
+            $hours = (int) floor($minutes / 60);
+            $remainingMinutes = $minutes % 60;
+            $hoursText = $hours.' '.($hours === 1 ? 'hour' : 'hours');
+            if ($remainingMinutes > 0) {
+                return $hoursText.' and '.$remainingMinutes.' '.($remainingMinutes === 1 ? 'minute' : 'minutes');
+            }
+
+            return $hoursText;
+        }
+    }
+}

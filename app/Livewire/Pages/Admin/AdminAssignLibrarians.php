@@ -3,9 +3,10 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\Librarian;
-use App\Models\Notification;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\LibrarianStatusService;
+use App\Services\NotificationService;
 use Auth;
 use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -62,7 +63,7 @@ class AdminAssignLibrarians extends AdminComponent
         $this->authorize('manage-librarian-batches');
 
         // Automatically update batch statuses based on current date
-        $this->updateBatchStatuses();
+        app(LibrarianStatusService::class)->syncAllBatches();
     }
 
     /**
@@ -359,16 +360,16 @@ class AdminAssignLibrarians extends AdminComponent
                 ]);
 
                 // Create notification for the assigned student
-                Notification::create([
-                    'user_id' => $userId,
-                    'type' => 'librarian_assigned',
-                    'title' => 'You have been assigned as a Librarian',
-                    'message' => "You have been assigned to librarian batch #{$this->newBatchNo}. You will be notified when your batch becomes active.",
-                    'data' => [
+                app(NotificationService::class)->notify(
+                    User::findOrFail($userId),
+                    'librarian_assigned',
+                    'You have been assigned as a Librarian',
+                    "You have been assigned to librarian batch #{$this->newBatchNo}. You will be notified when your batch becomes active.",
+                    [
                         'batch_no' => $this->newBatchNo,
                         'assigned_by' => Auth::id(),
-                    ],
-                ]);
+                    ]
+                );
             }
         });
 
@@ -399,7 +400,7 @@ class AdminAssignLibrarians extends AdminComponent
         $this->showEditModal = true;
     }
 
-    public function saveBatchAssignment()
+    public function saveBatchAssignment(LibrarianStatusService $service)
     {
         // Ensure only super admins can modify batch assignments
         $this->authorize('manage-librarian-batches');
@@ -424,7 +425,7 @@ class AdminAssignLibrarians extends AdminComponent
         ]);
 
         try {
-            DB::transaction(function () {
+            DB::transaction(function () use ($service) {
                 $currentBatch = Librarian::where('batch_no', $this->editingBatchNo)->first();
                 $currentBatchDate = $currentBatch ? $currentBatch->start_date : null;
 
@@ -487,44 +488,29 @@ class AdminAssignLibrarians extends AdminComponent
                             $message = "You have been assigned to librarian batch #{$this->editingBatchNo}. You will be notified when your duty date is scheduled.";
                         }
 
-                        Notification::create([
-                            'user_id' => $userId,
-                            'type' => 'librarian_assigned',
-                            'title' => 'You have been assigned as a Librarian',
-                            'message' => $message,
-                            'data' => [
+                        app(NotificationService::class)->notify(
+                            User::findOrFail($userId),
+                            'librarian_assigned',
+                            'You have been assigned as a Librarian',
+                            $message,
+                            [
                                 'batch_no' => $this->editingBatchNo,
                                 'assigned_by' => Auth::id(),
                                 'start_date' => $this->editingDateStart,
-                            ],
-                        ]);
+                            ]
+                        );
                     }
                 }
 
-                // Determine status based on date
-                $status = 'inactive';
-                if ($this->editingDateStart) {
-                    $today = date('Y-m-d');
-                    if ($this->editingDateStart == $today) {
-                        $status = 'active';
-                    } elseif ($this->editingDateStart < $today) {
-                        $status = 'expired';
-                    }
-                }
-
-                // Check if duty date is being assigned/changed for existing members
-                $isDateChanging = $this->isDateChanging;
-                $previousDate = $currentBatch ? $currentBatch->start_date : null;
-
-                // Update batch details
-                Librarian::where('batch_no', $this->editingBatchNo)->update([
+                // Update batch details via service (handles status and role sync)
+                $service->updateBatch($this->editingBatchNo, [
                     'start_date' => $this->editingDateStart,
                     'end_date' => null,
                     'shift_notes' => $this->editingShiftNotes,
-                    'status' => $status,
                 ]);
 
                 // Notify existing members if duty date is being assigned or changed
+                $previousDate = $currentBatch ? $currentBatch->start_date : null;
                 if ($isDateChanging && $this->editingDateStart && $currentStudents->isNotEmpty()) {
                     $dutyDate = date('F j, Y', strtotime($this->editingDateStart));
 
@@ -538,26 +524,19 @@ class AdminAssignLibrarians extends AdminComponent
                             ? "Your duty date for librarian batch #{$this->editingBatchNo} has been updated to {$dutyDate}."
                             : "Your duty date for librarian batch #{$this->editingBatchNo} has been scheduled for {$dutyDate}.";
 
-                        Notification::create([
-                            'user_id' => $userId,
-                            'type' => 'librarian_assigned',
-                            'title' => 'Librarian Duty Date Updated',
-                            'message' => $notificationMessage,
-                            'data' => [
+                        app(NotificationService::class)->notify(
+                            User::findOrFail($userId),
+                            'librarian_assigned',
+                            'Librarian Duty Date Updated',
+                            $notificationMessage,
+                            [
                                 'batch_no' => $this->editingBatchNo,
                                 'start_date' => $this->editingDateStart,
                                 'previous_date' => $previousDate,
                                 'updated_by' => Auth::id(),
-                            ],
-                        ]);
+                            ]
+                        );
                     }
-                }
-
-                // If date is today, assign librarian role to all students in this batch
-                if ($this->editingDateStart && $this->editingDateStart === date('Y-m-d')) {
-                    $librarianRoleId = Role::where('name', 'librarian')->value('id') ?? 2;
-                    User::whereIn('id', $this->editingSelectedStudents)
-                        ->update(['role_id' => $librarianRoleId]);
                 }
             });
         } catch (\Exception $e) {
@@ -569,81 +548,6 @@ class AdminAssignLibrarians extends AdminComponent
         $this->success('Batch assignment and members updated successfully! ');
         $this->showEditModal = false;
         $this->reset(['editingBatchNo', 'editingDateStart', 'editingShiftNotes', 'editingSelectedStudents']);
-    }
-
-    /**
-     * Update all batch statuses based on current date
-     */
-    public function updateBatchStatuses()
-    {
-        $today = date('Y-m-d');
-
-        DB::transaction(function () use ($today) {
-            // Get student and librarian role IDs
-            $studentRoleId = Role::where('name', 'student')->value('id') ?? 1;
-            $librarianRoleId = Role::where('name', 'librarian')->value('id') ?? 2;
-
-            // Update INACTIVE batches to ACTIVE if their start date is today
-            $inactiveBatches = Librarian::where('status', 'inactive')
-                ->whereNotNull('start_date')
-                ->where('start_date', '<=', $today)
-                ->get()
-                ->groupBy('batch_no');
-
-            foreach ($inactiveBatches as $batchNo => $librarians) {
-                // Update batch status to active
-                Librarian::where('batch_no', $batchNo)->update(['status' => 'active']);
-
-                // Change user roles to librarian
-                $userIds = $librarians->pluck('user_id');
-                User::whereIn('id', $userIds)->update(['role_id' => $librarianRoleId]);
-
-                // Send notification to each librarian that their batch is now active
-                foreach ($librarians as $librarian) {
-                    $dutyDate = date('F j, Y', strtotime($librarian->start_date));
-                    Notification::create([
-                        'user_id' => $librarian->user_id,
-                        'type' => 'librarian_activated',
-                        'title' => 'Your Librarian Batch is Now Active',
-                        'message' => "Your librarian batch #{$batchNo} is now active. Your duty date is today, {$dutyDate}. You can now perform librarian duties.",
-                        'data' => [
-                            'batch_no' => $batchNo,
-                            'start_date' => $librarian->start_date,
-                            'end_date' => $librarian->end_date,
-                        ],
-                    ]);
-                }
-            }
-
-            // Update ACTIVE batches to EXPIRED if their end date has passed OR if it's past their start date
-            // (assuming batches are for one day only if no end_date is set)
-            $activeBatches = Librarian::where('status', 'active')
-                ->whereNotNull('start_date')
-                ->where(function ($query) use ($today) {
-                    // Either has end_date in the past, or start_date is before today (one-day duty)
-                    $query->where(function ($q) use ($today) {
-                        $q->whereNotNull('end_date')
-                            ->where('end_date', '<', $today);
-                    })
-                        ->orWhere(function ($q) use ($today) {
-                            $q->whereNull('end_date')
-                                ->where('start_date', '<', $today);
-                        });
-                })
-                ->get()
-                ->groupBy('batch_no');
-
-            foreach ($activeBatches as $batchNo => $librarians) {
-                // Update batch status to expired
-                Librarian::where('batch_no', $batchNo)->update(['status' => 'expired']);
-
-                // Change user roles back to student
-                $userIds = $librarians->pluck('user_id');
-                User::whereIn('id', $userIds)
-                    ->where('role_id', $librarianRoleId)
-                    ->update(['role_id' => $studentRoleId]);
-            }
-        });
     }
 
     public function render()

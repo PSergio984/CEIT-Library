@@ -3,10 +3,10 @@
 namespace App\Livewire\Pages\Admin;
 
 use App\Models\Attendance;
-use App\Models\Notification;
 use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -146,12 +146,12 @@ class ActiveUsersTab extends AdminComponent
             $violation = Violation::find($this->selectedViolationId);
 
             // Create notification for the student
-            Notification::create([
-                'user_id' => $this->selectedUserForViolation,
-                'type' => 'violation',
-                'title' => 'Violation Recorded',
-                'message' => "A violation has been recorded: {$violation->name}. Penalty: -{$violation->penalty_score} points. Your current credit score is {$user->credit_score}/100.",
-                'data' => [
+            app(NotificationService::class)->notify(
+                $user,
+                'violation',
+                'Violation Recorded',
+                "A violation has been recorded: {$violation->name}. Penalty: -{$violation->penalty_score} points. Your current credit score is {$user->credit_score}/100.",
+                [
                     'violation_id' => $violation->id,
                     'violation_name' => $violation->name,
                     'penalty_score' => $violation->penalty_score,
@@ -159,8 +159,8 @@ class ActiveUsersTab extends AdminComponent
                     'remarks' => $this->violationRemarks,
                     'recorded_by' => Auth::id(),
                     'recorded_at' => now()->toDateTimeString(),
-                ],
-            ]);
+                ]
+            );
 
             // refresh table and reset pagination after change
             $this->dispatch('refreshViolationTransactionsTab');
@@ -212,12 +212,12 @@ class ActiveUsersTab extends AdminComponent
                 $user = User::find($attendance->user_id);
 
                 // Create notification for the student
-                Notification::create([
-                    'user_id' => $attendance->user_id,
-                    'type' => 'violation',
-                    'title' => 'Violation Recorded: Forgot to Time Out',
-                    'message' => "You forgot to time out from the library. Penalty: -{$violation->penalty_score} points. Your current credit score is {$user->credit_score}/100.",
-                    'data' => [
+                app(NotificationService::class)->notify(
+                    $user,
+                    'violation',
+                    'Violation Recorded: Forgot to Time Out',
+                    "You forgot to time out from the library. Penalty: -{$violation->penalty_score} points. Your current credit score is {$user->credit_score}/100.",
+                    [
                         'violation_id' => $violation->id,
                         'violation_name' => $violation->name,
                         'penalty_score' => $violation->penalty_score,
@@ -225,8 +225,8 @@ class ActiveUsersTab extends AdminComponent
                         'remarks' => 'Declared by admin: forgot to time out',
                         'recorded_by' => Auth::id(),
                         'recorded_at' => now()->toDateTimeString(),
-                    ],
-                ]);
+                    ]
+                );
             });
 
             $this->dispatch('refreshViolationTransactionsTab');
