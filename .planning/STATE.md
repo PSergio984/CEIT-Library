@@ -55,6 +55,36 @@ Added high-performance cached "Quick Stats" mini-cards to Admin tables. Implemen
 
 Removed strict 60-second expiration checks from QR logic to allow offline screenshot use while maintaining nonce-based replay protection. Implemented a Global Log Sanitizer (`PiiSanitizerProcessor`) to automatically redact emails and raw QR payloads before writing to `laravel.log`.
 
+## Milestone v2.0: AI Assistant
+
+### Phase 8: Hybrid Search Foundation (NOT STARTED)
+
+Walking skeleton: `ai:export-corpus` exports the catalog + policy corpus, the FastAPI sidecar serves hybrid BM25+semantic search (RRF fusion), and event-driven + scheduled sync keeps the index fresh.
+
+### Phase 9: RAG Chat & Policy Q&A (NOT STARTED)
+
+One-shot `/chat` with numbered citations and grounding rules, policy Q&A over the rulebook corpus, and the Livewire chat widget with streamed responses and persisted history.
+
+### Phase 10: Live Availability & Similar-Book Recommendations (NOT STARTED)
+
+Live copy availability resolved from Inventory/BorrowTransaction (never LLM-generated) on search results and citations, plus "books similar to X" recommendations.
+
+### Phase 11: Academic Papers & Agentic Search (NOT STARTED)
+
+Academic paper corpus with paper-specific chunking and topic/author/year/adviser search, plus an agentic function-calling search loop for multi-hop questions.
+
+### Phase 12: Role-Aware Access & Librarian Tools (NOT STARTED)
+
+Role-aware assistant access and answer depth via existing Gates, with PII-safe copy-level operational answers for librarians.
+
+### Phase 13: Evaluation Stack (NOT STARTED)
+
+Golden datasets per corpus, precision/recall/F1@k retrieval metrics, LLM-as-judge answer scoring, and user feedback feeding the eval pipeline.
+
+### Phase 14: Monitoring, Hardening & Reproducible Deployment (NOT STARTED)
+
+Prometheus + Grafana metrics and dashboards, rate limits and cost guards, PII sanitization at the Livewire boundary, and reproducible docker compose deployment.
+
 ## Technical Debt & Infrastructure
 
 - **Docker**: Verified and iteratively fixed the `Dockerfile`. The application is fully containerized and serves Vite-built PWA artifacts correctly.
@@ -63,7 +93,7 @@ Removed strict 60-second expiration checks from QR logic to allow offline screen
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 8 — Hybrid Search Foundation (next up)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-08-13 — Milestone v2.0 started
+Status: Planning (roadmap defined for Phases 8-14)
+Last activity: 2026-08-13 — Milestone v2.0 roadmap created

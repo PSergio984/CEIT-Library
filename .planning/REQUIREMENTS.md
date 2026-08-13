@@ -64,32 +64,32 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEARCH-01 | — | Pending |
-| SEARCH-02 | — | Pending |
-| SEARCH-03 | — | Pending |
-| SEARCH-04 | — | Pending |
-| SEARCH-05 | — | Pending |
-| SEARCH-06 | — | Pending |
-| SEARCH-07 | — | Pending |
-| CHAT-01 | — | Pending |
-| CHAT-02 | — | Pending |
-| CHAT-03 | — | Pending |
-| CHAT-04 | — | Pending |
-| CHAT-05 | — | Pending |
-| CHAT-06 | — | Pending |
-| EVAL-01 | — | Pending |
-| EVAL-02 | — | Pending |
-| EVAL-03 | — | Pending |
-| EVAL-04 | — | Pending |
-| OPS-01 | — | Pending |
-| OPS-02 | — | Pending |
-| OPS-03 | — | Pending |
-| OPS-04 | — | Pending |
+| SEARCH-01 | Phase 8: Hybrid Search Foundation | Pending |
+| SEARCH-02 | Phase 10: Live Availability & Similar-Book Recommendations | Pending |
+| SEARCH-03 | Phase 9: RAG Chat & Policy Q&A | Pending |
+| SEARCH-04 | Phase 9: RAG Chat & Policy Q&A | Pending |
+| SEARCH-05 | Phase 11: Academic Papers & Agentic Search | Pending |
+| SEARCH-06 | Phase 10: Live Availability & Similar-Book Recommendations | Pending |
+| SEARCH-07 | Phase 8: Hybrid Search Foundation | Pending |
+| CHAT-01 | Phase 9: RAG Chat & Policy Q&A | Pending |
+| CHAT-02 | Phase 9: RAG Chat & Policy Q&A | Pending |
+| CHAT-03 | Phase 12: Role-Aware Access & Librarian Tools | Pending |
+| CHAT-04 | Phase 9: RAG Chat & Policy Q&A | Pending |
+| CHAT-05 | Phase 11: Academic Papers & Agentic Search | Pending |
+| CHAT-06 | Phase 12: Role-Aware Access & Librarian Tools | Pending |
+| EVAL-01 | Phase 13: Evaluation Stack | Pending |
+| EVAL-02 | Phase 13: Evaluation Stack | Pending |
+| EVAL-03 | Phase 13: Evaluation Stack | Pending |
+| EVAL-04 | Phase 13: Evaluation Stack | Pending |
+| OPS-01 | Phase 14: Monitoring, Hardening & Reproducible Deployment | Pending |
+| OPS-02 | Phase 14: Monitoring, Hardening & Reproducible Deployment | Pending |
+| OPS-03 | Phase 14: Monitoring, Hardening & Reproducible Deployment | Pending |
+| OPS-04 | Phase 14: Monitoring, Hardening & Reproducible Deployment | Pending |
 
 **Coverage:**
 - v1 requirements: 21 total
-- Mapped to phases: 0
-- Unmapped: 21 ⚠️ (roadmap creation will map)
+- Mapped to phases: 21
+- Unmapped: 0 ✅ (full traceability)
 
 ---
 *Requirements defined: 2026-08-13*
