@@ -152,7 +152,7 @@ CEIT-Library has shipped three milestones — frontend modernization and securit
 | 1. Structural Integrity | v1.2 | — | Complete | — |
 | 2. Advanced Analytics & Reporting | v1.2 | — | Complete | — |
 | 7. Logging and QR Resiliency | v1.3 | — | Complete | — |
-| 8. Hybrid Search Foundation | v2.0 | 4/6 | In Progress|  |
+| 8. Hybrid Search Foundation | v2.0 | 5/6 | In Progress|  |
 | 9. RAG Chat & Policy Q&A | v2.0 | 0/TBD | Not started | - |
 | 10. Live Availability & Recommendations | v2.0 | 0/TBD | Not started | - |
 | 11. Academic Papers & Agentic Search | v2.0 | 0/TBD | Not started | - |
