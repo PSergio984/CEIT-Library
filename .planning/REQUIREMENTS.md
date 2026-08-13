@@ -9,7 +9,7 @@ Requirements for milestone v2.0. Each maps to roadmap phases.
 
 ### Search
 
-- [ ] **SEARCH-01**: User can search the library catalog with natural-language queries (hybrid BM25 + semantic, RRF fusion)
+- [x] **SEARCH-01**: User can search the library catalog with natural-language queries (hybrid BM25 + semantic, RRF fusion)
 - [ ] **SEARCH-02**: Search results show live availability status (copies available/total) sourced from Inventory/BorrowTransaction, never from the LLM
 - [ ] **SEARCH-03**: Chat answers include numbered [N] citations linked to real retrieved catalog records
 - [ ] **SEARCH-04**: Assistant answers "I don't have enough information" instead of guessing when retrieval finds nothing (grounding rules)
@@ -64,7 +64,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SEARCH-01 | Phase 8: Hybrid Search Foundation | Pending |
+| SEARCH-01 | Phase 8: Hybrid Search Foundation | Complete |
 | SEARCH-02 | Phase 10: Live Availability & Similar-Book Recommendations | Pending |
 | SEARCH-03 | Phase 9: RAG Chat & Policy Q&A | Pending |
 | SEARCH-04 | Phase 9: RAG Chat & Policy Q&A | Pending |
