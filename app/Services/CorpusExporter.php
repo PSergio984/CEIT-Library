@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AcademicPaper;
 use App\Models\RuleHeader;
+use App\Models\RuleRegulation;
 use Illuminate\Support\Facades\File;
 
 class CorpusExporter
@@ -58,9 +59,12 @@ class CorpusExporter
     {
         $documents = [];
 
-        $headers = RuleHeader::with(['ruleRegulations' => function ($query) {
-            $query->orderBy('id');
-        }])->orderBy('id')->get();
+        // NOTE: RuleHeader::ruleRegulations() applies orderBy('order') but the
+        // rule_regulations table has no `order` column (latent model bug — R10).
+        // Load regulations with an independent query ordered by id instead.
+        $regulationsByHeader = RuleRegulation::orderBy('id')->get()->groupBy('rule_header_id');
+
+        $headers = RuleHeader::orderBy('id')->get();
 
         foreach ($headers as $header) {
             $headerTitle = $this->sanitize($header->title, 500);
@@ -79,7 +83,7 @@ class CorpusExporter
                 ],
             ];
 
-            foreach ($header->ruleRegulations as $regulation) {
+            foreach ($regulationsByHeader->get($header->id, collect()) as $regulation) {
                 $content = $this->sanitize($regulation->content, 20000);
 
                 $documents[] = [
