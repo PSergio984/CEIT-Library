@@ -223,6 +223,11 @@ class AcademicPaperIndex extends Component
     public function updatedStatusFilter(): void
     {
         $this->resetPage('academic-papers-index');
+
+        // The sidecar cannot filter by availability (it is resolved live),
+        // so exit hybrid mode and let the SQL path apply the status filter.
+        $this->hybridResults = null;
+        $this->aiSearchFailed = false;
     }
 
     public function updatedYearFilter(): void

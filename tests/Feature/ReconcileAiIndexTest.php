@@ -116,4 +116,76 @@ class ReconcileAiIndexTest extends TestCase
 
         $this->artisan('ai:reconcile-index')->assertExitCode(1);
     }
+
+    #[Test]
+    public function index_at_26_hours_and_59_minutes_old_is_stale(): void
+    {
+        Bus::fake();
+
+        Model::withoutEvents(function () {
+            AcademicPaper::factory()->create(['catalog_code' => 'CEIT-RC-05-01', 'title' => 'Boundary Paper A']);
+            AcademicPaper::factory()->create(['catalog_code' => 'CEIT-RC-05-02', 'title' => 'Boundary Paper B']);
+            $header = RuleHeader::factory()->create();
+            RuleRegulation::factory()->count(3)->create(['rule_header_id' => $header->id]);
+        });
+
+        Http::fake([
+            'http://127.0.0.1:8310/health' => Http::response($this->healthFixture([
+                'index' => [
+                    'by_corpus' => ['catalog' => 2, 'policy' => 4],
+                    'source_generated_at' => now()->subHours(26)->subMinutes(59)->toIso8601String(),
+                ],
+            ]), 200),
+        ]);
+
+        $this->artisan('ai:reconcile-index')->assertExitCode(1);
+    }
+
+    #[Test]
+    public function malformed_source_generated_at_triggers_mismatch(): void
+    {
+        Bus::fake();
+
+        Model::withoutEvents(function () {
+            AcademicPaper::factory()->create(['catalog_code' => 'CEIT-RC-06-01', 'title' => 'Malformed Paper A']);
+            AcademicPaper::factory()->create(['catalog_code' => 'CEIT-RC-06-02', 'title' => 'Malformed Paper B']);
+            $header = RuleHeader::factory()->create();
+            RuleRegulation::factory()->count(3)->create(['rule_header_id' => $header->id]);
+        });
+
+        Http::fake([
+            'http://127.0.0.1:8310/health' => Http::response($this->healthFixture([
+                'index' => [
+                    'by_corpus' => ['catalog' => 2, 'policy' => 4],
+                    'source_generated_at' => 'not-a-valid-timestamp',
+                ],
+            ]), 200),
+        ]);
+
+        $this->artisan('ai:reconcile-index')->assertExitCode(1);
+    }
+
+    #[Test]
+    public function future_dated_source_generated_at_triggers_mismatch(): void
+    {
+        Bus::fake();
+
+        Model::withoutEvents(function () {
+            AcademicPaper::factory()->create(['catalog_code' => 'CEIT-RC-07-01', 'title' => 'Future Paper A']);
+            AcademicPaper::factory()->create(['catalog_code' => 'CEIT-RC-07-02', 'title' => 'Future Paper B']);
+            $header = RuleHeader::factory()->create();
+            RuleRegulation::factory()->count(3)->create(['rule_header_id' => $header->id]);
+        });
+
+        Http::fake([
+            'http://127.0.0.1:8310/health' => Http::response($this->healthFixture([
+                'index' => [
+                    'by_corpus' => ['catalog' => 2, 'policy' => 4],
+                    'source_generated_at' => now()->addHours(3)->toIso8601String(),
+                ],
+            ]), 200),
+        ]);
+
+        $this->artisan('ai:reconcile-index')->assertExitCode(1);
+    }
 }

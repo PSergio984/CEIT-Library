@@ -15,6 +15,12 @@ use Illuminate\Support\Facades\Log;
 class ReconcileAiIndex extends Command
 {
     /**
+     * An index is fresh only when its source_generated_at stamp is within
+     * this many hours of now (see 08-06 Task 3).
+     */
+    private const FRESH_WINDOW_HOURS = 26;
+
+    /**
      * The name and signature of the console command.
      *
      * @var string
@@ -56,12 +62,17 @@ class ReconcileAiIndex extends Command
         $actualPolicy = $byCorpus['policy'] ?? 0;
 
         $sourceGeneratedAt = $index['source_generated_at'] ?? null;
-        $stale = false;
-        if ($sourceGeneratedAt) {
-            $age = Carbon::parse($sourceGeneratedAt)->diffInHours(now());
-            $stale = $age > 26;
-        } else {
-            $stale = true;
+        $stale = true;
+        if ($sourceGeneratedAt !== null) {
+            try {
+                $generatedAt = Carbon::parse($sourceGeneratedAt);
+                $stale = ! $generatedAt->between(now()->subHours(self::FRESH_WINDOW_HOURS), now());
+            } catch (\Throwable) {
+                Log::warning('AI index timestamp unparseable; treating index as stale', [
+                    'source_generated_at' => $sourceGeneratedAt,
+                ]);
+                $stale = true;
+            }
         }
 
         $inSync = $expectedCatalog === $actualCatalog
