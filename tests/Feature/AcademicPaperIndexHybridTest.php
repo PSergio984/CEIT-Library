@@ -200,11 +200,31 @@ class AcademicPaperIndexHybridTest extends TestCase
             ->assertSet('hybridResults', function ($results) {
                 return is_array($results) && count($results) === 2;
             })
+            ->set('search', '')
             ->set('statusFilter', 'Unavailable')
             ->assertSet('hybridResults', null)
             ->assertSet('aiSearchFailed', false)
             ->assertDontSee('AI search unavailable')
-            ->assertDontSee('Analysis of Groundwater Depletion')
-            ->assertDontSee('Design of a Smart Flood Monitoring System');
+            ->assertSee('Design of a Smart Flood Monitoring System')
+            ->assertDontSee('Analysis of Groundwater Depletion');
+    }
+
+    #[Test]
+    public function it_stays_out_of_hybrid_mode_while_a_status_filter_is_active(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/*' => Http::response($this->fixtureSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('statusFilter', 'Unavailable')
+            ->set('search', 'water pump')
+            ->assertSet('hybridResults', null)
+            ->assertSet('aiSearchFailed', false);
+
+        Http::assertNothingSent();
     }
 }

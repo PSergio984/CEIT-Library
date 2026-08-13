@@ -71,7 +71,6 @@ class ReconcileAiIndex extends Command
                 Log::warning('AI index timestamp unparseable; treating index as stale', [
                     'source_generated_at' => $sourceGeneratedAt,
                 ]);
-                $stale = true;
             }
         }
 

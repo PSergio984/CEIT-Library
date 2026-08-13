@@ -226,8 +226,7 @@ class AcademicPaperIndex extends Component
 
         // The sidecar cannot filter by availability (it is resolved live),
         // so exit hybrid mode and let the SQL path apply the status filter.
-        $this->hybridResults = null;
-        $this->aiSearchFailed = false;
+        $this->exitHybridMode();
     }
 
     public function updatedYearFilter(): void
@@ -280,9 +279,8 @@ class AcademicPaperIndex extends Component
      */
     public function runHybridSearch(): void
     {
-        if (strlen(trim($this->search)) < 3) {
-            $this->hybridResults = null;
-            $this->aiSearchFailed = false;
+        if (strlen(trim($this->search)) < 3 || $this->statusFilter !== '') {
+            $this->exitHybridMode();
 
             return;
         }
@@ -331,6 +329,16 @@ class AcademicPaperIndex extends Component
             ->values()
             ->all();
 
+        $this->aiSearchFailed = false;
+    }
+
+    /**
+     * Leave hybrid mode: clear sidecar results and the failure flag so the
+     * SQL path renders instead.
+     */
+    private function exitHybridMode(): void
+    {
+        $this->hybridResults = null;
         $this->aiSearchFailed = false;
     }
 
