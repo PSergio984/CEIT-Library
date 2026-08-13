@@ -23,7 +23,7 @@ class CorpusExporter
                 $technicalAdviser = $paper->technicalAdviser ? $this->sanitize($paper->technicalAdviser->name, 200) : null;
                 $dean = $paper->dean ? $this->sanitize($paper->dean->name, 200) : null;
 
-                $segments = [$title.'. ', $title.'. '];
+                $segments = [$title.'.', $title.'.'];
                 $segments[] = 'authors: '.implode('; ', $authors);
                 $segments[] = 'research_adviser: '.($researchAdviser ?? '');
                 $segments[] = 'technical_adviser: '.($technicalAdviser ?? '');
