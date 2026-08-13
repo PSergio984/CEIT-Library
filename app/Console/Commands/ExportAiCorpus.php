@@ -28,7 +28,13 @@ class ExportAiCorpus extends Command
     {
         $corpus = $this->option('corpus');
 
-        if (! in_array($corpus, ['all', 'catalog', 'policy'], true)) {
+        $corpora = [
+            'all' => ['catalog', 'policies'],
+            'catalog' => ['catalog'],
+            'policy' => ['policies'],
+        ];
+
+        if (! isset($corpora[$corpus])) {
             $this->error("Invalid --corpus value '{$corpus}'. Expected one of: all, catalog, policy.");
 
             return 1;
@@ -36,11 +42,7 @@ class ExportAiCorpus extends Command
 
         $path = config('services.ai_sidecar.corpus_path', storage_path('app/ai-corpus'));
 
-        $which = match ($corpus) {
-            'all' => ['catalog', 'policies'],
-            'catalog' => ['catalog'],
-            'policy' => ['policies'],
-        };
+        $which = $corpora[$corpus];
 
         $counts = (new CorpusExporter)->exportToDisk($path, $which);
 

@@ -72,10 +72,7 @@ class AiService
         }
 
         if ($response->failed()) {
-            // Retry-exhausted connection failures surface as a failed response
-            // with status 0 — label them as connection, not http_0.
-            $reason = $response->status() === 0 ? 'connection' : 'http_'.$response->status();
-            $this->logFailure($path, $reason);
+            $this->logFailure($path, 'http_'.$response->status());
             throw new AiServiceUnavailableException('AI sidecar is unavailable (HTTP '.$response->status().').');
         }
     }

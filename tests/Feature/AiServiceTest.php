@@ -95,6 +95,8 @@ class AiServiceTest extends TestCase
     #[Test]
     public function it_logs_sanitized_warning_on_failure(): void
     {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
         Http::fake([
             'http://127.0.0.1:8310/*' => Http::response([], 500),
         ]);
