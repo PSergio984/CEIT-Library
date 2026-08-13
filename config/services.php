@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'ai_sidecar' => [
+        'base_url' => env('SIDECAR_URL', 'http://127.0.0.1:8310'),
+        'token' => env('SIDECAR_TOKEN'),
+        'corpus_path' => env('AI_CORPUS_PATH', storage_path('app/ai-corpus')),
+    ],
+
 ];
