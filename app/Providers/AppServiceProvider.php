@@ -154,7 +154,7 @@ class AppServiceProvider extends ServiceProvider
             return $user->isSuperAdmin();
         });
 
-        if (env('APP_ENV') == 'production') {
+        if (app()->environment('production')) {
             $this->app['request']->server->set('HTTPS', true);
         }
     }

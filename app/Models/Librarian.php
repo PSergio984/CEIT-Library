@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $id
  * @property int $user_id
  * @property string $status
- * @property \Illuminate\Support\Carbon $expires_at
+ * @property \Illuminate\Support\Carbon|null $expires_at
  * @property int|null $created_by
  * @property \Illuminate\Support\Carbon|null $last_login_at
  * @property string|null $shift_notes
