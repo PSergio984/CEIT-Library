@@ -15,7 +15,7 @@ Requirements for milestone v2.0. Each maps to roadmap phases.
 - [ ] **SEARCH-04**: Assistant answers "I don't have enough information" instead of guessing when retrieval finds nothing (grounding rules)
 - [ ] **SEARCH-05**: User can search academic papers by topic, author, year, or adviser
 - [ ] **SEARCH-06**: User can ask for "books similar to X" and get recommendation results
-- [ ] **SEARCH-07**: Catalog, paper, and policy data sync from the Laravel database into the search index automatically (export + rebuild)
+- [x] **SEARCH-07**: Catalog, paper, and policy data sync from the Laravel database into the search index automatically (export + rebuild)
 
 ### Chat
 
@@ -70,7 +70,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEARCH-04 | Phase 9: RAG Chat & Policy Q&A | Pending |
 | SEARCH-05 | Phase 11: Academic Papers & Agentic Search | Pending |
 | SEARCH-06 | Phase 10: Live Availability & Similar-Book Recommendations | Pending |
-| SEARCH-07 | Phase 8: Hybrid Search Foundation | Pending |
+| SEARCH-07 | Phase 8: Hybrid Search Foundation | Complete |
 | CHAT-01 | Phase 9: RAG Chat & Policy Q&A | Pending |
 | CHAT-02 | Phase 9: RAG Chat & Policy Q&A | Pending |
 | CHAT-03 | Phase 12: Role-Aware Access & Librarian Tools | Pending |
