@@ -114,32 +114,28 @@ class CorpusExporter
         $counts = [];
 
         if (in_array('catalog', $which, true)) {
-            $catalog = $this->exportCatalog();
-            $payload = [
-                'source' => 'academic_papers',
-                'schema_version' => 1,
-                'generated_at' => now()->utc()->toIso8601String(),
-                'count' => count($catalog),
-                'documents' => $catalog,
-            ];
-            File::put($path.'/catalog.json', json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-            $counts['catalog'] = count($catalog);
+            $counts['catalog'] = $this->writeEnvelope($path, 'catalog.json', 'academic_papers', $this->exportCatalog());
         }
 
         if (in_array('policies', $which, true)) {
-            $policies = $this->exportPolicies();
-            $payload = [
-                'source' => 'rulebook',
-                'schema_version' => 1,
-                'generated_at' => now()->utc()->toIso8601String(),
-                'count' => count($policies),
-                'documents' => $policies,
-            ];
-            File::put($path.'/policies.json', json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-            $counts['policies'] = count($policies);
+            $counts['policies'] = $this->writeEnvelope($path, 'policies.json', 'rulebook', $this->exportPolicies());
         }
 
         return $counts;
+    }
+
+    private function writeEnvelope(string $path, string $filename, string $source, array $documents): int
+    {
+        $payload = [
+            'source' => $source,
+            'schema_version' => 1,
+            'generated_at' => now()->utc()->toIso8601String(),
+            'count' => count($documents),
+            'documents' => $documents,
+        ];
+        File::put($path.'/'.$filename, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        return count($documents);
     }
 
     private function sanitize(?string $value, int $maxLen): string

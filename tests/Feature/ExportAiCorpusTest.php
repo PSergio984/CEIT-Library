@@ -180,4 +180,16 @@ class ExportAiCorpusTest extends TestCase
         $this->assertFileExists(storage_path('app/ai-corpus/catalog.json'));
         $this->assertFileDoesNotExist(storage_path('app/ai-corpus/policies.json'));
     }
+
+    #[Test]
+    public function it_exports_policies_with_the_policy_corpus_flag(): void
+    {
+        $header = RuleHeader::factory()->create(['title' => 'General Information', 'order' => 1]);
+        RuleRegulation::factory()->create(['rule_header_id' => $header->id]);
+
+        $this->artisan('ai:export-corpus', ['--corpus' => 'policy'])->assertExitCode(0);
+
+        $this->assertFileExists(storage_path('app/ai-corpus/policies.json'));
+        $this->assertFileDoesNotExist(storage_path('app/ai-corpus/catalog.json'));
+    }
 }

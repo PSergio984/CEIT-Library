@@ -7,6 +7,7 @@ use App\Exceptions\AiServiceUnavailableException;
 use App\Services\AiService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -52,7 +53,7 @@ class AiServiceTest extends TestCase
         $this->assertSame(1, $results['total']);
         $this->assertSame('paper-77', $results['results'][0]['id']);
         $this->assertSame('CEIT-CE-15-014', $results['results'][0]['metadata']['catalog_code']);
-        $this->assertSame('v1', $results['results'][0]['contract_version'] ?? $results['contract_version'] ?? null);
+        $this->assertSame('v1', $results['contract_version']);
     }
 
     #[Test]
@@ -89,6 +90,30 @@ class AiServiceTest extends TestCase
         $this->expectException(AiServiceUnavailableException::class);
 
         (new AiService)->search('water pump');
+    }
+
+    #[Test]
+    public function it_logs_sanitized_warning_on_failure(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:8310/*' => Http::response([], 500),
+        ]);
+
+        Log::shouldReceive('warning')
+            ->once()
+            ->with('AI sidecar request failed', \Mockery::on(function ($context) {
+                $encoded = json_encode($context);
+
+                return str_contains($encoded, '/search')
+                    && ! str_contains($encoded, 'water pump')
+                    && ! str_contains($encoded, 'test-token');
+            }));
+
+        try {
+            (new AiService)->search('water pump');
+        } catch (AiServiceUnavailableException) {
+            // expected
+        }
     }
 
     #[Test]

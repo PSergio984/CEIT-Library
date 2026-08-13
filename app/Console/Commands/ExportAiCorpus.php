@@ -24,7 +24,7 @@ class ExportAiCorpus extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $corpus = $this->option('corpus');
 
@@ -36,7 +36,11 @@ class ExportAiCorpus extends Command
 
         $path = config('services.ai_sidecar.corpus_path', storage_path('app/ai-corpus'));
 
-        $which = $corpus === 'all' ? ['catalog', 'policies'] : [$corpus];
+        $which = match ($corpus) {
+            'all' => ['catalog', 'policies'],
+            'policy' => ['policies'],
+            default => ['catalog'],
+        };
 
         $counts = (new CorpusExporter)->exportToDisk($path, $which);
 
