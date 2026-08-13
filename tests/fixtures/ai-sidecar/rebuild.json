@@ -1,0 +1,8 @@
+{
+  "status": "rebuilt",
+  "contract_version": "v1",
+  "documents": 153,
+  "by_corpus": { "catalog": 112, "policy": 41 },
+  "took_ms": 4210,
+  "source_generated_at": "2026-08-13T02:00:00Z"
+}
