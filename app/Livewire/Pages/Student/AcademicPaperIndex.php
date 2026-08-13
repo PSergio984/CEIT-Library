@@ -2,8 +2,11 @@
 
 namespace App\Livewire\Pages\Student;
 
+use App\Exceptions\AiServiceAuthException;
+use App\Exceptions\AiServiceUnavailableException;
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
+use App\Services\AiService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Livewire\Attributes\Computed;
@@ -50,6 +53,11 @@ class AcademicPaperIndex extends Component
 
     #[Validate('string|max:20|nullable')]
     public string $yearToFilter = '';
+
+    // Hybrid search state (sidecar-ordered results + fallback flag)
+    public ?array $hybridResults = null;
+
+    public bool $aiSearchFailed = false;
 
     // Store IDs only (modals controlled by Alpine.js)
     public ?int $selectedPaperId = null;
@@ -209,6 +217,7 @@ class AcademicPaperIndex extends Component
     public function updatedSearch(): void
     {
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
     }
 
     public function updatedStatusFilter(): void
@@ -219,26 +228,31 @@ class AcademicPaperIndex extends Component
     public function updatedYearFilter(): void
     {
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
     }
 
     public function updatedDepartmentFilter(): void
     {
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
     }
 
     public function updatedPaperTypeFilter(): void
     {
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
     }
 
     public function updatedYearFromFilter(): void
     {
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
     }
 
     public function updatedYearToFilter(): void
     {
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
     }
 
     // Clear all filters and reset to default state
@@ -252,6 +266,67 @@ class AcademicPaperIndex extends Component
             'yearToFilter',
         ]);
         $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
+    }
+
+    /**
+     * Run hybrid search against the AI sidecar for the current query +
+     * filter state. Falls back silently to the local SQL search on failure.
+     */
+    public function runHybridSearch(): void
+    {
+        if (strlen(trim($this->search)) < 3) {
+            $this->hybridResults = null;
+            $this->aiSearchFailed = false;
+
+            return;
+        }
+
+        $filters = [
+            'paper_type' => $this->paperTypeFilter ?: null,
+            'department' => $this->departmentFilter ?: null,
+            'publication_year' => $this->yearFilter ?: null,
+            'year_from' => $this->yearFromFilter ?: null,
+            'year_to' => $this->yearToFilter ?: null,
+        ];
+
+        try {
+            $results = (new AiService)->search($this->search, $filters, 'catalog', 10);
+        } catch (AiServiceUnavailableException|AiServiceAuthException) {
+            $this->hybridResults = null;
+            $this->aiSearchFailed = true;
+
+            return;
+        }
+
+        $ids = collect($results['results'] ?? [])
+            ->map(fn ($result) => (int) str_replace('paper-', '', $result['id']))
+            ->filter()
+            ->all();
+
+        $papers = AcademicPaper::with(['authors:id,name', 'copies:id,academic_paper_id,status'])
+            ->withCount([
+                'copies as available_copies' => function ($query) {
+                    $query->where('status', 'Available');
+                },
+            ])
+            ->findMany($ids);
+
+        $byId = $papers->keyBy('id');
+
+        // Preserve the sidecar rank order (findMany returns DB order).
+        $this->hybridResults = collect($ids)
+            ->map(fn ($id) => $byId->get($id))
+            ->filter()
+            ->map(function ($paper) {
+                $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable';
+
+                return $paper;
+            })
+            ->values()
+            ->all();
+
+        $this->aiSearchFailed = false;
     }
 
     public function showPaperDetails(int $paperId): void

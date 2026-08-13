@@ -34,6 +34,16 @@
             :availableDepartments="$this->availableDepartments"
         />
 
+        {{-- AI search fallback notice --}}
+        @if($aiSearchFailed)
+            <div class="alert alert-warning text-sm mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <span>AI search unavailable — showing basic results</span>
+            </div>
+        @endif
+
         {{-- Results Summary and Per-Page Control removed: using MaryUI table's built-in paginator --}}
 
         {{-- Mobile/Tablet Card View (for screens smaller than 1280px) --}}
@@ -47,7 +57,78 @@
                     <p class="text-base-content font-medium text-sm">Updating results...</p>
                 </div>
             </div>
-            
+
+            @if (! is_null($this->hybridResults))
+                {{-- Hybrid search results (sidecar-ordered) --}}
+                @forelse ($this->hybridResults as $paper)
+                    <div wire:key="hybrid-mobile-{{ $paper->id }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                        <div class="flex items-start justify-between mb-3">
+                            <div class="flex-1">
+                                <div class="flex flex-wrap items-center gap-2 mb-2">
+                                    <span class="badge badge-sm {{ $paper->status === 'Available' ? 'badge-success' : 'badge-error' }}">
+                                        {{ $paper->status }}
+                                    </span>
+                                    <span class="badge badge-sm badge-outline">{{ $paper->catalog_code }}</span>
+                                </div>
+                                <h3 class="font-semibold text-sm sm:text-base line-clamp-2 break-words">{{ $paper->title }}</h3>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3 text-xs sm:text-sm mt-3">
+                            <div>
+                                <p class="text-base-content/50 font-medium mb-1">Department</p>
+                                <p class="font-medium break-words">{{ $paper->department }}</p>
+                            </div>
+                            <div>
+                                <p class="text-base-content/50 font-medium mb-1">Year</p>
+                                <p class="font-medium">{{ $paper->publication_year }}</p>
+                            </div>
+                            <div>
+                                <p class="text-base-content/50 font-medium mb-1">Type</p>
+                                <p class="font-medium break-words">{{ $paper->paper_type }}</p>
+                            </div>
+                            <div>
+                                <p class="text-base-content/50 font-medium mb-1">Copies</p>
+                                <p class="font-medium">{{ $paper->available_copies }} available</p>
+                            </div>
+                        </div>
+
+                        <div class="flex gap-2 mt-4 pt-3 border-t border-base-300">
+                            @if($this->canBorrow)
+                                <x-mary-button 
+                                    wire:click="showPaperDetails({{ $paper->id }})"
+                                    class="btn-sm btn-primary gap-2 flex-1"
+                                    icon="o-eye"
+                                    label="View Details"
+                                    spinner
+                                    wire:loading.attr="disabled"
+                                    wire:target="showPaperDetails({{ $paper->id }})"
+                                />
+                            @else
+                                <div class="flex flex-col gap-2 w-full">
+                                    <button disabled class="btn btn-sm btn-error gap-2 flex-1 cursor-not-allowed">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                        </svg>
+                                        <span class="text-xs">Can't Borrow - Low Credit Score</span>
+                                    </button>
+                                    <div class="text-xs text-error text-center">
+                                        Your credit score is {{ Auth::user()->credit_score }}. Minimum required: 1
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                @empty
+                    <x-empty-state
+                        icon="o-document-magnifying-glass"
+                        title="No Academic Papers Found"
+                        message="No papers match your current search."
+                        :show-action="false"
+                        size="sm"
+                    />
+                @endforelse
+            @else
             @forelse ($this->academicPapers as $paper)
                 <div wire:key="mobile-paper-{{ $paper->id }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                     <div class="flex items-start justify-between mb-3">
@@ -128,11 +209,12 @@
                 @endif
             @endforelse
 
-            {{-- Mobile/Tablet Pagination (left-aligned) --}}
+            {{-- Mobile/Tablet Pagination (left-aligned) — SQL path only --}}
             @if($this->academicPapers->hasPages())
                 <div class="mt-6 flex justify-start">
                     {{ $this->academicPapers->links() }}
                 </div>
+            @endif
             @endif
         </div>
 
@@ -147,6 +229,81 @@
                     <p class="text-base-content font-medium">Updating results...</p>
                 </div>
             </div>
+            @if (! is_null($this->hybridResults))
+                {{-- Hybrid search results (sidecar-ordered) — card grid on desktop --}}
+                <div class="grid grid-cols-2 gap-4">
+                    @forelse ($this->hybridResults as $paper)
+                        <div wire:key="hybrid-desktop-{{ $paper->id }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
+                            <div class="flex items-start justify-between mb-3">
+                                <div class="flex-1">
+                                    <div class="flex flex-wrap items-center gap-2 mb-2">
+                                        <span class="badge badge-sm {{ $paper->status === 'Available' ? 'badge-success' : 'badge-error' }}">
+                                            {{ $paper->status }}
+                                        </span>
+                                        <span class="badge badge-sm badge-outline">{{ $paper->catalog_code }}</span>
+                                    </div>
+                                    <h3 class="font-semibold text-sm sm:text-base line-clamp-2 break-words">{{ $paper->title }}</h3>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3 text-xs sm:text-sm mt-3">
+                                <div>
+                                    <p class="text-base-content/50 font-medium mb-1">Department</p>
+                                    <p class="font-medium break-words">{{ $paper->department }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-base-content/50 font-medium mb-1">Year</p>
+                                    <p class="font-medium">{{ $paper->publication_year }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-base-content/50 font-medium mb-1">Type</p>
+                                    <p class="font-medium break-words">{{ $paper->paper_type }}</p>
+                                </div>
+                                <div>
+                                    <p class="text-base-content/50 font-medium mb-1">Copies</p>
+                                    <p class="font-medium">{{ $paper->available_copies }} available</p>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-2 mt-4 pt-3 border-t border-base-300">
+                                @if($this->canBorrow)
+                                    <x-mary-button 
+                                        wire:click="showPaperDetails({{ $paper->id }})"
+                                        class="btn-sm btn-primary gap-2 flex-1"
+                                        icon="o-eye"
+                                        label="View Details"
+                                        spinner
+                                        wire:loading.attr="disabled"
+                                        wire:target="showPaperDetails({{ $paper->id }})"
+                                    />
+                                @else
+                                    <div class="flex flex-col gap-2 w-full">
+                                        <button disabled class="btn btn-sm btn-error gap-2 flex-1 cursor-not-allowed">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                            </svg>
+                                            <span class="text-xs">Can't Borrow - Low Credit Score</span>
+                                        </button>
+                                        <div class="text-xs text-error text-center">
+                                            Your credit score is {{ Auth::user()->credit_score }}. Minimum required: 1
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-2">
+                            <x-empty-state
+                                icon="o-document-magnifying-glass"
+                                title="No Academic Papers Found"
+                                message="No papers match your current search."
+                                :show-action="false"
+                                size="default"
+                            />
+                        </div>
+                    @endforelse
+                </div>
+            @else
             <div class="overflow-x-visible">
                 <x-mary-table :headers="$headers" :rows="$this->academicPapers" with-pagination :sort-by="$sortBy"
                     per-page="perPage" :per-page-values="[5, 10, 25, 50]" 
@@ -214,6 +371,7 @@
                         @endscope
                 </x-mary-table>
             </div>
+            @endif
         </div>
 
     </div>{{-- Close p-6 div --}}
