@@ -2,6 +2,16 @@
 
 namespace App\Providers;
 
+use App\Models\AcademicPaper;
+use App\Models\Author;
+use App\Models\Dean;
+use App\Models\ResearchAdviser;
+use App\Models\RuleHeader;
+use App\Models\RuleRegulation;
+use App\Models\TechnicalAdviser;
+use App\Observers\AcademicPaperObserver;
+use App\Observers\PeopleNameObserver;
+use App\Observers\RulebookObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +34,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // AI sidecar index sync observers — catalog/policy edits queue a
+        // debounced rebuild; deletions queue an immediate rebuild (D-10/D-11).
+        AcademicPaper::observe(AcademicPaperObserver::class);
+        Author::observe(PeopleNameObserver::class);
+        ResearchAdviser::observe(PeopleNameObserver::class);
+        TechnicalAdviser::observe(PeopleNameObserver::class);
+        Dean::observe(PeopleNameObserver::class);
+        RuleHeader::observe(RulebookObserver::class);
+        RuleRegulation::observe(RulebookObserver::class);
+
         // Define Rate Limiters
         RateLimiter::for('login', function (Request $request) {
             return Limit::perMinute(5)->by(Str::transliterate(Str::lower($request->email)).'|'.$request->ip());

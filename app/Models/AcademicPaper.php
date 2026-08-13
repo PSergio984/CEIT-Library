@@ -123,7 +123,9 @@ class AcademicPaper extends Model
     // Many-to-many relationship with authors
     public function authors()
     {
-        return $this->belongsToMany(Author::class, 'academic_paper_authors')->withTimestamps();
+        return $this->belongsToMany(Author::class, 'academic_paper_authors')
+            ->withTimestamps()
+            ->using(AcademicPaperAuthor::class);
     }
 
     /**
@@ -316,5 +318,4 @@ class AcademicPaper extends Model
             return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
         }
     }
-
 }
