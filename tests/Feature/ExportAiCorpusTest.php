@@ -192,4 +192,15 @@ class ExportAiCorpusTest extends TestCase
         $this->assertFileExists(storage_path('app/ai-corpus/policies.json'));
         $this->assertFileDoesNotExist(storage_path('app/ai-corpus/catalog.json'));
     }
+
+    #[Test]
+    public function it_rejects_invalid_corpus_values_without_writing_files(): void
+    {
+        $this->seedPaper();
+
+        $this->artisan('ai:export-corpus', ['--corpus' => 'bogus'])->assertExitCode(1);
+
+        $this->assertFileDoesNotExist(storage_path('app/ai-corpus/catalog.json'));
+        $this->assertFileDoesNotExist(storage_path('app/ai-corpus/policies.json'));
+    }
 }

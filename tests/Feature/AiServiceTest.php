@@ -102,16 +102,63 @@ class AiServiceTest extends TestCase
         Log::shouldReceive('warning')
             ->once()
             ->with('AI sidecar request failed', \Mockery::on(function ($context) {
-                $encoded = json_encode($context);
-
-                return str_contains($encoded, '/search')
-                    && ! str_contains($encoded, 'water pump')
-                    && ! str_contains($encoded, 'test-token');
+                return is_array($context)
+                    && array_keys($context) === ['endpoint', 'reason']
+                    && $context['endpoint'] === '/search'
+                    && $context['reason'] === 'http_500'
+                    && ! str_contains(json_encode($context), 'water pump')
+                    && ! str_contains(json_encode($context), 'test-token');
             }));
 
         try {
             (new AiService)->search('water pump');
         } catch (AiServiceUnavailableException) {
+            // expected
+        }
+    }
+
+    #[Test]
+    public function it_logs_connection_reason_on_connection_failure(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:8310/*' => fn () => throw new ConnectionException('Connection refused'),
+        ]);
+
+        Log::shouldReceive('warning')
+            ->once()
+            ->with('AI sidecar request failed', \Mockery::on(function ($context) {
+                return is_array($context)
+                    && array_keys($context) === ['endpoint', 'reason']
+                    && $context['endpoint'] === '/search'
+                    && $context['reason'] === 'connection';
+            }));
+
+        try {
+            (new AiService)->search('water pump');
+        } catch (AiServiceUnavailableException) {
+            // expected
+        }
+    }
+
+    #[Test]
+    public function it_logs_auth_reason_on_401(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:8310/*' => Http::response([], 401),
+        ]);
+
+        Log::shouldReceive('warning')
+            ->once()
+            ->with('AI sidecar request failed', \Mockery::on(function ($context) {
+                return is_array($context)
+                    && array_keys($context) === ['endpoint', 'reason']
+                    && $context['endpoint'] === '/search'
+                    && $context['reason'] === 'auth';
+            }));
+
+        try {
+            (new AiService)->search('water pump');
+        } catch (AiServiceAuthException) {
             // expected
         }
     }

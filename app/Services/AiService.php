@@ -71,8 +71,11 @@ class AiService
             throw new AiServiceAuthException('Sidecar authentication failed: invalid SIDECAR_TOKEN.');
         }
 
-        if ($response->failed() || $response->status() >= 500) {
-            $this->logFailure($path, 'http_'.$response->status());
+        if ($response->failed()) {
+            // Retry-exhausted connection failures surface as a failed response
+            // with status 0 — label them as connection, not http_0.
+            $reason = $response->status() === 0 ? 'connection' : 'http_'.$response->status();
+            $this->logFailure($path, $reason);
             throw new AiServiceUnavailableException('AI sidecar is unavailable (HTTP '.$response->status().').');
         }
     }

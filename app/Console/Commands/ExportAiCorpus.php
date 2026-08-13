@@ -38,8 +38,8 @@ class ExportAiCorpus extends Command
 
         $which = match ($corpus) {
             'all' => ['catalog', 'policies'],
+            'catalog' => ['catalog'],
             'policy' => ['policies'],
-            default => ['catalog'],
         };
 
         $counts = (new CorpusExporter)->exportToDisk($path, $which);
