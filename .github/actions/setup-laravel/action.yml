@@ -1,0 +1,38 @@
+name: Setup Laravel
+
+description: Checkout, set up PHP 8.4, and install composer dependencies with caching.
+
+inputs:
+  coverage:
+    description: Enable xdebug for test coverage (true/false)
+    required: false
+    default: 'false'
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up PHP 8.4
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.4'
+        extensions: mb, dom, curl, libxml, sqlite3, pdo_sqlite${{ inputs.coverage == 'true' && ', xdebug' || '' }}
+        coverage: ${{ inputs.coverage }}
+
+    - name: Get Composer Cache Directory
+      id: composer-cache
+      shell: bash
+      run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+    - name: Cache Composer Dependencies
+      uses: actions/cache@v4
+      with:
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-composer-
+
+    - name: Install Dependencies
+      shell: bash
+      run: composer install -q --no-ansi --no-interaction --no-progress --prefer-dist

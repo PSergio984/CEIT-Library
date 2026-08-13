@@ -1,0 +1,33 @@
+language: en
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches: [ "main" ]
+  path_instructions:
+    - path: "database/migrations/**"
+      instructions: |
+        Migrations must be reversible (implement both up and down), avoid
+        destructive changes without rollback, and use SQLite-safe types where
+        the schema also runs on SQLite in tests.
+    - path: "routes/**"
+      instructions: |
+        Verify every route is wrapped in the correct auth middleware and that
+        admin-only routes are not reachable by students or librarians.
+    - path: "app/Http/**"
+      instructions: |
+        Verify authorization on every controller action (authorize/policies),
+        that user_id scoping is applied to all DB queries, and no mass-assignment
+        or injection issues.
+    - path: "app/Models/**"
+      instructions: |
+        Verify fillable/guarded lists, casts, and that relations referenced in
+        queries actually exist.
+    - path: "app/Services/**"
+      instructions: |
+        Verify security-sensitive logic (QR canonical messages, HMAC signing,
+        push notification VAPID) does not leak secrets and input is validated.
+chat:
+  auto_reply: true

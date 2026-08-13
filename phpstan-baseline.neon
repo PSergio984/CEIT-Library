@@ -1,0 +1,733 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Relation ''role'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/CheckLibrarianAssignments.php
+
+		-
+			message: '#^Elseif condition is always false\.$#'
+			identifier: elseif.alwaysFalse
+			count: 1
+			path: app/Console/Commands/CheckOverdueTransactions.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Console/Commands/CheckOverdueTransactions.php
+
+		-
+			message: '#^Relation ''inventory'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/CheckOverdueTransactions.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Console/Commands/SendBorrowingReminders.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Console/Commands/SendBorrowingReminders.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/SendDeadlineWarnings.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Console/Commands/SendDeadlineWarnings.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/SendPushNotification.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/QrCodeDownloadController.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\Inventory model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/QrCodeDownloadController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>email" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/QrCodeDownloadController.php
+
+		-
+			message: '#^Relation ''authors'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Forms/AcademicPaperForm.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Attendance model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/ActiveUsersTab.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAcademicPaperIndex\:\:\$selectedPaper\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Comparison operation "\>" between int\<1, max\> and 0 is always true\.$#'
+			identifier: greater.alwaysTrue
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Support\\Collection\<int, array\<string, mixed\>\> and Illuminate\\Support\\Collection will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Parameter \#1 \$value of function collect contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\Inventory model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''authors'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 5
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''copies'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 7
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''dean'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''researchAdviser'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''technicalAdviser'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between '''' and '''' will always evaluate to false\.$#'
+			identifier: notIdentical.alwaysFalse
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between non\-empty\-string and '''' will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Strict comparison using \=\=\= between '''' and '''' will always evaluate to true\.$#'
+			identifier: identical.alwaysTrue
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Variable \$advisers on left side of \?\? is never defined\.$#'
+			identifier: nullCoalesce.variable
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAcademicPaperIndex.php
+
+		-
+			message: '#^Cannot access property \$name on array\<mixed\>\|object\.$#'
+			identifier: property.nonObject
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAdvisersDeans.php
+
+		-
+			message: '#^Property App\\Livewire\\Pages\\Admin\\AdminAdvisersDeans\:\:\$name \(string\) on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.property
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAdvisersDeans.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$allBatches\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$assignedBatches\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$availableBatches\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$availableStudents\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$conflictingBatch\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$groupedLibrarians\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$isDateChanging\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminAssignLibrarians\:\:\$studentBatchAssignments\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Parameter \#1 \$string of function substr expects string, int\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Relation ''createdBy'' is not found in App\\Models\\Librarian model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Librarian model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminAssignLibrarians.php
+
+		-
+			message: '#^Relation ''scannedByAdmin'' is not found in App\\Models\\Attendance model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAttendanceLogIndex.php
+
+		-
+			message: '#^Relation ''scannedByLibrarian'' is not found in App\\Models\\Attendance model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAttendanceLogIndex.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Attendance model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminAttendanceLogIndex.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAttendanceLogIndex.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminAttendanceLogIndex.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Livewire/Pages/Admin/AdminAttendanceLogIndex.php
+
+		-
+			message: '#^Relation ''inventory'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Pages/Admin/AdminBorrowTransactions.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminBorrowTransactions.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminBorrowTransactions.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminBorrowTransactions.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>paper_type" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminBorrowTransactions.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminBorrowTransactions.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AcademicPaper\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminDashboard.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\AcademicPaper\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminDashboard.php
+
+		-
+			message: '#^Relation ''inventory'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminDashboard.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminManageRoles\:\:\$roles\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminManageRoles.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Admin\\AdminManageRoles\:\:\$users\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminManageRoles.php
+
+		-
+			message: '#^Parameter \#1 \$user of method App\\Services\\NotificationService\:\:notify\(\) expects App\\Models\\User, Illuminate\\Contracts\\Auth\\Authenticatable\|null given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminManageRoles.php
+
+		-
+			message: '#^Relation ''role'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminManageRoles.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminUserList.php
+
+		-
+			message: '#^Relation ''borrowTransactions'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/AdminUserList.php
+
+		-
+			message: '#^Relation ''role'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Admin/AdminUserList.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Admin/ViolationTransactionsTab.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\ViolationTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/ViolationTransactionsTab.php
+
+		-
+			message: '#^Relation ''violation'' is not found in App\\Models\\ViolationTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Admin/ViolationTransactionsTab.php
+
+		-
+			message: '#^Call to function is_numeric\(\) with int will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Livewire/Pages/Admin/ViolationsTab.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Student\\AcademicPaperIndex\:\:\$selectedCopy\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Student\\AcademicPaperIndex\:\:\$selectedPaper\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AcademicPaper\:\:\$available_copies\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\AcademicPaper\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable\:\:\$credit_score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Contracts\\Auth\\Authenticatable\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Attribute class App\\Livewire\\Pages\\Student\\Layout does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\Inventory model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''authors'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''copies'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''dean'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''researchAdviser'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Relation ''technicalAdviser'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
+			message: '#^Attribute class App\\Livewire\\Pages\\Student\\Layout does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/CreditScoreHistory.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Livewire/Pages/Student/CreditScoreHistory.php
+
+		-
+			message: '#^Relation ''violation'' is not found in App\\Models\\ViolationTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/CreditScoreHistory.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>credit_score" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Livewire/Pages/Student/CreditScoreHistory.php
+
+		-
+			message: '#^Attribute class App\\Livewire\\Pages\\Student\\Layout does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/ShowAcademicPaper.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Livewire/Pages/Student/ShowAcademicPaper.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\Inventory model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/ShowAcademicPaper.php
+
+		-
+			message: '#^Relation ''inventory'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/ShowAcademicPaper.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Livewire/Pages/Student/StudentDashboard.php
+
+		-
+			message: '#^Relation ''copies'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Livewire/Pages/Student/StudentDashboard.php
+
+		-
+			message: '#^Relation ''inventory'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Livewire/Pages/Student/StudentDashboard.php
+
+		-
+			message: '#^Relation ''violation'' is not found in App\\Models\\ViolationTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Livewire/Pages/Student/StudentDashboard.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Livewire/Pages/Student/StudentDashboard.php
+
+		-
+			message: '#^Attribute class App\\Livewire\\Pages\\Student\\Layout does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/StudentNotifications.php
+
+		-
+			message: '#^Attribute class App\\Livewire\\Pages\\Student\\Layout does not exist\.$#'
+			identifier: attribute.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/Transaction.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Builder\<Illuminate\\Database\\Eloquent\\Model\>\:\:search\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/Transaction.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Livewire/Pages/Student/Transaction.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 2
+			path: app/Livewire/Pages/Student/Transaction.php
+
+		-
+			message: '#^Relation ''inventory'' is not found in App\\Models\\BorrowTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 6
+			path: app/Livewire/Pages/Student/Transaction.php
+
+		-
+			message: '#^Variable \$data on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.variable
+			count: 2
+			path: app/Livewire/QrScanner.php
+
+		-
+			message: '#^Parameter \#1 \$string of function str_pad expects string, int given\.$#'
+			identifier: argument.type
+			count: 2
+			path: app/Models/AcademicPaper.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Attendance\:\:\$scannedByAdmin\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Attendance.php
+
+		-
+			message: '#^Property App\\Models\\Attendance\:\:\$time_out \(Illuminate\\Support\\Carbon\|null\) does not accept Carbon\\Carbon\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/Attendance.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Models/Attendance.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Support\\Carbon and Carbon\\Carbon will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 2
+			path: app/Models/BorrowTransaction.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 4
+			path: app/Models/BorrowTransaction.php
+
+		-
+			message: '#^Property App\\Models\\BorrowTransaction\:\:\$duration_minutes \(int\|null\) does not accept float\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/BorrowTransaction.php
+
+		-
+			message: '#^Property App\\Models\\BorrowTransaction\:\:\$time_in \(Illuminate\\Support\\Carbon\|null\) does not accept Carbon\\Carbon\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/BorrowTransaction.php
+
+		-
+			message: '#^Property App\\Models\\BorrowTransaction\:\:\$time_out \(Illuminate\\Support\\Carbon\|null\) does not accept Carbon\\Carbon\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Models/BorrowTransaction.php
+
+		-
+			message: '#^Result of \|\| is always false\.$#'
+			identifier: booleanOr.alwaysFalse
+			count: 2
+			path: app/Models/BorrowTransaction.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\NotificationPreference\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/NotificationPreference.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Models/User.php
+
+		-
+			message: '#^Relation ''violation'' is not found in App\\Models\\ViolationTransaction model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Models/ViolationTransaction.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Notifications/BorrowTransactionOverdue.php
+
+		-
+			message: '#^PHPDoc tag @param has invalid value \(\\Closure\(string \$message, \?string \$attribute \= null\)\: void  \$fail\)\: Unexpected token "\(", expected variable at offset 66 on line 4$#'
+			identifier: phpDoc.parseError
+			count: 1
+			path: app/Rules/NoHtmlTags.php
+
+		-
+			message: '#^Call to function is_array\(\) with non\-empty\-array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: app/Services/BorrowService.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Services/BorrowService.php
+
+		-
+			message: '#^Relation ''academicPaper'' is not found in App\\Models\\Inventory model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/BorrowService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Librarian model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Services/LibrarianStatusService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$push\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/NotificationService.php

@@ -1,0 +1,55 @@
+name: SonarCloud quality gate
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+
+permissions:
+  contents: read
+
+jobs:
+  sonarcloud:
+    name: SonarCloud Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up PHP 8.4
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mb, dom, curl, libxml, sqlite3, pdo_sqlite, xdebug
+          coverage: xdebug
+      - name: Copy .env
+        run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+      - name: Install dependencies
+        run: composer install -q --no-ansi --no-interaction --no-progress --prefer-dist
+      - name: Test with coverage
+        env:
+          APP_ENV: testing
+          DB_CONNECTION: sqlite
+          DB_DATABASE: ':memory:'
+          CACHE_STORE: array
+          QUEUE_CONNECTION: sync
+          SESSION_DRIVER: array
+          MAIL_MAILER: array
+          QR_HMAC_SECRET: testing-hmac-secret-at-least-16-chars
+          PULSE_ENABLED: false
+          TELESCOPE_ENABLED: false
+          NIGHTWATCH_ENABLED: false
+        run: |
+          php artisan key:generate --no-interaction
+          php artisan test --coverage-clover coverage.xml
+      - name: SonarCloud Scan
+        # sonarcloud-github-action is archived; the maintained replacement is
+        # sonarqube-scan-action (pinned to the v8.2.1 commit).
+        uses: SonarSource/sonarqube-scan-action@22918119ff8e1ca75a623e15c8296b6ea4fbe28f # v8.2.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}

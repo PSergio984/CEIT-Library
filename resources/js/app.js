@@ -2,10 +2,11 @@ import "./bootstrap";
 import { Html5Qrcode } from "html5-qrcode";
 import jsQR from "jsqr";
 
-// Import images for Vite processing
-import.meta.glob([
-    '../images/**',
-]);
+// Import images for Vite processing.
+// Vite 8 (Rolldown) drops glob imports that are never consumed, which removes
+// resources/images/* from the manifest and breaks Vite::asset() lookups (e.g.
+// ceit-logo.png). Eager + ?url keeps every image in the manifest.
+import.meta.glob('../images/**', { eager: true, query: '?url', import: 'default' });
 
 // Make Html5Qrcode available globally
 window.Html5Qrcode = Html5Qrcode;
