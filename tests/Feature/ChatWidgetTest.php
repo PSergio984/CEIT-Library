@@ -21,6 +21,16 @@ class ChatWidgetTest extends TestCase
         return file_get_contents(base_path('tests/fixtures/ai-sidecar/'.$name));
     }
 
+    private function emptySearchResponse(): array
+    {
+        return [
+            'query' => 'borrowing rules',
+            'total' => 0,
+            'took_ms' => 1,
+            'results' => [],
+        ];
+    }
+
     #[Test]
     public function it_mounts_with_conversation_list_default(): void
     {
@@ -33,6 +43,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -54,6 +65,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -79,6 +91,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -103,6 +116,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -122,6 +136,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::sequence()
                 ->push([], 500)
                 ->push($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
@@ -154,6 +169,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -173,6 +189,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -195,6 +212,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
@@ -217,6 +235,7 @@ class ChatWidgetTest extends TestCase
         config(['services.ai_sidecar.token' => 'test-token']);
         Http::preventStrayRequests();
         Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
             'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 

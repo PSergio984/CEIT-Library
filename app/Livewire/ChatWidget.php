@@ -151,6 +151,7 @@ class ChatWidget extends Component
         ];
 
         $accumulated = '';
+        $citations = $this->companionCitations($question);
 
         try {
             $svc = new AiService;
@@ -163,12 +164,13 @@ class ChatWidget extends Component
 
             $idx = array_key_last($this->messages);
             $this->messages[$idx]['content'] = $accumulated;
+            $this->messages[$idx]['citations'] = $citations;
 
             Message::create([
                 'conversation_id' => $this->activeConversationId,
                 'role' => 'assistant',
                 'content' => $accumulated,
-                'citations' => null,
+                'citations' => $citations,
             ]);
 
             $this->refreshConversations();
@@ -182,6 +184,45 @@ class ChatWidget extends Component
         } finally {
             $this->streaming = false;
         }
+    }
+
+    /**
+     * Companion /search bound to the chat call's retrieval parameters —
+     * same query, corpus null (both), and top_k 5 — so the citation rows
+     * mirror the exact numbered set the model worked from (D-20). The
+     * response envelope is dereferenced to its `results` list; empty or
+     * failed retrieval yields null (no chips/sources) and never
+     * short-circuits the chat call — the sidecar is the single refusal
+     * authority (D-23).
+     *
+     * @return array<int, array{n: int, id: string, corpus: string, title: string, url: ?string, catalog_code: ?string}>|null
+     */
+    private function companionCitations(string $question): ?array
+    {
+        try {
+            $results = (new AiService)->search($question, [], null, 5)['results'];
+        } catch (AiServiceUnavailableException|AiServiceAuthException) {
+            return null;
+        }
+
+        if ($results === []) {
+            return null;
+        }
+
+        $payload = [];
+
+        foreach ($results as $i => $result) {
+            $payload[] = [
+                'n' => $i + 1,
+                'id' => $result['id'],
+                'corpus' => $result['corpus'],
+                'title' => $result['title'],
+                'url' => $result['metadata']['url'] ?? null,
+                'catalog_code' => $result['metadata']['catalog_code'] ?? null,
+            ];
+        }
+
+        return $payload;
     }
 
     private function refreshConversations(): void
