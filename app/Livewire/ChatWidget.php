@@ -59,6 +59,36 @@ class ChatWidget extends Component
         $this->streamQuestion($question);
     }
 
+    public function retry(): void
+    {
+        if ($this->streaming) {
+            return;
+        }
+
+        $lastUser = null;
+        $lastUserIdx = null;
+        foreach (array_reverse($this->messages, true) as $idx => $message) {
+            if ($message['role'] === 'user') {
+                $lastUser = $message['content'];
+                $lastUserIdx = $idx;
+                break;
+            }
+        }
+
+        if ($lastUser === null) {
+            return;
+        }
+
+        // Drop a trailing failed assistant bubble so the turn is replaced,
+        // not duplicated.
+        $last = array_key_last($this->messages);
+        if ($last !== null && $last > $lastUserIdx && ! empty($this->messages[$last]['failed'])) {
+            unset($this->messages[$last]);
+        }
+
+        $this->streamQuestion($lastUser);
+    }
+
     private function streamQuestion(string $question): void
     {
         if ($this->activeConversationId === null) {
