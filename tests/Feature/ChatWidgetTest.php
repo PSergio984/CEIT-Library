@@ -270,8 +270,12 @@ class ChatWidgetTest extends TestCase
 
         // Same query, corpus null (both), and top_k 5 on both calls —
         // identical k=60 RRF ordering is what binds the [N] markers (D-20).
+        // The exact key set is the ADR 0004 closed contract — no
+        // availability field may ever reach the sidecar (D-06/D-07 #1).
         Http::assertSent(function ($request) {
             return str_contains($request->url(), '/search')
+                && array_keys($request->data()) === ['query', 'filters', 'corpus', 'limit', 'k']
+                && ! array_key_exists('available', $request->data())
                 && $request['query'] === 'water pump'
                 && $request['corpus'] === null
                 && $request['limit'] === 5
@@ -280,6 +284,8 @@ class ChatWidgetTest extends TestCase
 
         Http::assertSent(function ($request) {
             return str_contains($request->url(), '/chat/stream')
+                && array_keys($request->data()) === ['query', 'mode', 'top_k']
+                && ! array_key_exists('available', $request->data())
                 && $request['query'] === 'water pump'
                 && $request['top_k'] === 5
                 && ! array_key_exists('corpus', $request->data());
