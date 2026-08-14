@@ -31,3 +31,6 @@ Thumbs.db
 **/caddy
 frankenphp
 frankenphp-worker.php
+
+# graphify knowledge graph output
+/graphify-out/
