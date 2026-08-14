@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Exceptions\AiServiceAuthException;
+use App\Exceptions\AiServiceProviderException;
 use App\Exceptions\AiServiceUnavailableException;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
@@ -62,6 +63,46 @@ class AiService
         $this->throwUnlessOk($response, '/chat/stream');
 
         return $response;
+    }
+
+    /**
+     * SSE line parser over the streamed response body. Yields `data: `
+     * payloads in order, terminates on `data: [DONE]`, and throws the typed
+     * AiServiceProviderException when an `event: error` line carries a JSON
+     * error payload — the error data line is never yielded as content.
+     */
+    public function chatStreamEvents(Response $response): \Generator
+    {
+        while (! feof($response->resource())) {
+            $line = fgets($response->resource());
+
+            if ($line === false) {
+                break;
+            }
+
+            $line = rtrim($line, "\r\n");
+
+            if (str_starts_with($line, 'data: ')) {
+                $payload = substr($line, 6);
+
+                if ($payload === '[DONE]') {
+                    return;
+                }
+
+                yield $payload;
+
+                continue;
+            }
+
+            if ($line === 'event: error') {
+                $dataLine = fgets($response->resource());
+
+                if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
+                    $decoded = json_decode(trim(substr($dataLine, 6)), true);
+                    throw new AiServiceProviderException($decoded['message'] ?? 'The AI provider is temporarily unavailable.');
+                }
+            }
+        }
     }
 
     /**
