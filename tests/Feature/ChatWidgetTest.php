@@ -548,7 +548,7 @@ class ChatWidgetTest extends TestCase
     }
 
     #[Test]
-    public function it_omits_suffix_when_paper_has_no_inventory_rows(): void
+    public function it_renders_red_zero_cue_when_cited_paper_has_no_inventory_rows(): void
     {
         $user = User::factory()->create();
         $this->seedCatalogPaper77();
@@ -567,7 +567,8 @@ class ChatWidgetTest extends TestCase
             ->set('draft', 'water pump')
             ->call('send')
             ->assertSee('CEIT-CE-15-014')
-            ->assertDontSee('0/0');
+            ->assertSee('0/0')
+            ->assertSeeHtml('<span class="text-error font-medium">0/0</span>');
     }
 
     #[Test]

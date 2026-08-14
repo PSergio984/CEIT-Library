@@ -276,6 +276,8 @@ class ChatWidget extends Component
      * catalog_code so the chips partial can look up the suffix directly.
      * Render-time enrichment only: nothing here is written back into
      * $this->messages or the persisted ai_messages.citations payload.
+     * Papers with zero inventory rows are absent from forPapers()'s result,
+     * so they fall back to a 0/0 entry to keep the red cue on the chip.
      *
      * @return array<string, array{available: int, total: int, checked_at: Carbon}>
      */
@@ -307,7 +309,11 @@ class ChatWidget extends Component
                 $id = (int) str_replace('paper-', '', $citation['id']);
 
                 if (! isset($hydrated[$id])) {
-                    return [];
+                    return [$citation['catalog_code'] => [
+                        'available' => 0,
+                        'total' => 0,
+                        'checked_at' => now(),
+                    ]];
                 }
 
                 return [$citation['catalog_code'] => $hydrated[$id]];
