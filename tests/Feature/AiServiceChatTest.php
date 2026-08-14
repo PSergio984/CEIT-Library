@@ -199,4 +199,12 @@ class AiServiceChatTest extends TestCase
 
         iterator_to_array((new AiService)->chatStreamEvents($response));
     }
+
+    #[Test]
+    public function each_typed_exception_exposes_its_error_taxonomy_code(): void
+    {
+        $this->assertSame('auth_failed', (new AiServiceAuthException)->errorCode());
+        $this->assertSame('unavailable', (new AiServiceUnavailableException)->errorCode());
+        $this->assertSame('provider_error', (new AiServiceProviderException)->errorCode());
+    }
 }

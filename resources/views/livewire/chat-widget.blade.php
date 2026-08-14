@@ -68,12 +68,13 @@
                  streamed chunks to `[wire:stream="ans"]` live, but only if
                  the element already exists in the DOM — a conditionally
                  rendered target silently drops every chunk. This slot is
-                 always mounted; it is 0-height when idle, fills with the
-                 typing dots then the answer while streaming, and is wiped
-                 by the final re-render. --}}
+                 always mounted; the `:empty` variants collapse it to
+                 zero height and invisible while idle (a live CSS state, so
+                 it snaps open the moment the first chunk lands), and the
+                 final re-render wipes it. --}}
             <div class="flex justify-start">
                 <div class="bg-base-200 text-base-content rounded-2xl rounded-bl-sm px-4 max-w-[85%]">
-                    <div wire:stream="ans" class="text-sm whitespace-pre-line py-2"></div>
+                    <div wire:stream="ans" class="text-sm whitespace-pre-line py-2 empty:py-0 empty:invisible"></div>
                 </div>
             </div>
 

@@ -6,6 +6,8 @@ Request: `{"query": str (required), "mode": "citations"|"question"|"rag" (defaul
 
 Response: SSE — `data: <chunk>` lines per token, `data: [DONE]` terminator (ADR 0002 framing). Mid-stream provider failure emits `event: error` carrying JSON `{"code": "provider_error", "message": <safe generic text>}` — never the raw exception or class name; details go to server logs only.
 
+> **Correction (2026-08-14, code review W-1):** chunk payloads are JSON-encoded on the wire — `data: {"c": "<delta>"}` — because raw text framing silently loses newlines (paragraph breaks) inside LLM deltas. The `[DONE]` terminator and the `event: error` line are unchanged; the Laravel parser decodes the envelope and passes raw text through for compatibility. The wire key `c` is a named constant on both sides (`AiService::SSE_CHUNK_KEY`, sidecar `CHUNK_KEY`).
+
 Auth: the existing global `X-Sidecar-Token` middleware gates `/chat/stream` like every endpoint (token provisioned in the "Provision the chat provider key and tokens" ticket). The 401 body's error code changes from `invalid_request` to `auth_failed` — auth is not a validation error.
 
 Error taxonomy, three codes total: 401 `auth_failed` (operator action: token mismatch), 422 `invalid_request` (validation — including a new server-side check that `corpus` is `catalog`, `policy`, or absent), stream `provider_error` (upstream failure mid-stream; distinguishing rate-limit vs 5xx vs LLM-key auth is deferred to Phase 14 with metrics/rate limits).

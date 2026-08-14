@@ -67,6 +67,12 @@ class AiService
     }
 
     /**
+     * Wire key for the JSON-encoded SSE chunk envelope (`{"c": "<delta>"}`)
+     * — the sidecar's counterpart constant lives in `app/rag.py`.
+     */
+    private const SSE_CHUNK_KEY = 'c';
+
+    /**
      * SSE line parser over the streamed response body. Yields chunk payloads
      * in order, terminates on `data: [DONE]`, and throws the typed
      * AiServiceProviderException when an `event: error` line carries a JSON
@@ -81,7 +87,6 @@ class AiService
     public function chatStreamEvents(Response $response): \Generator
     {
         $stream = $response->resource();
-        $done = false;
 
         while (! feof($stream)) {
             $line = fgets($stream);
@@ -96,14 +101,12 @@ class AiService
                 $payload = substr($line, 6);
 
                 if ($payload === '[DONE]') {
-                    $done = true;
-
                     return;
                 }
 
                 $decoded = json_decode($payload, true);
-                if (is_array($decoded) && isset($decoded['c'])) {
-                    $payload = (string) $decoded['c'];
+                if (is_array($decoded) && isset($decoded[self::SSE_CHUNK_KEY])) {
+                    $payload = (string) $decoded[self::SSE_CHUNK_KEY];
                 }
 
                 yield $payload;
@@ -123,9 +126,9 @@ class AiService
             }
         }
 
-        if (! $done) {
-            throw new AiServiceProviderException('The AI provider stream ended unexpectedly.');
-        }
+        // Every exit from the loop is either `[DONE]` (returned above) or a
+        // thrown error — reaching here means the stream was truncated.
+        throw new AiServiceProviderException('The AI provider stream ended unexpectedly.');
     }
 
     /**

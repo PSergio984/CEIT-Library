@@ -49,7 +49,7 @@ class ChatWidget extends Component
 
     public function openConversation(int $id): void
     {
-        $conversation = Conversation::where('user_id', auth()->id())->whereKey($id)->first();
+        $conversation = $this->ownedConversation($id);
 
         if (! $conversation) {
             return;
@@ -127,15 +127,11 @@ class ChatWidget extends Component
     {
         // W-4: `activeConversationId` is client-hydratable — re-verify
         // ownership before persisting, or fall back to a fresh conversation.
-        if ($this->activeConversationId !== null) {
-            $owned = Conversation::where('user_id', auth()->id())
-                ->whereKey($this->activeConversationId)
-                ->exists();
-
-            if (! $owned) {
-                $this->activeConversationId = null;
-                $this->messages = [];
-            }
+        if ($this->activeConversationId !== null && $this->ownedConversation($this->activeConversationId) === null) {
+            $this->activeConversationId = null;
+            // Keep the current turn's user bubble; drop stale bubbles from
+            // the display so they cannot be mistaken for this conversation.
+            $this->messages = [['role' => 'user', 'content' => $question]];
         }
 
         if ($this->activeConversationId === null) {
@@ -156,13 +152,6 @@ class ChatWidget extends Component
         }
 
         $this->streaming = true;
-        $this->messages[] = [
-            'role' => 'assistant',
-            'content' => '',
-            'citations' => null,
-            'failed' => false,
-            'error' => null,
-        ];
 
         $accumulated = '';
         $citations = $this->companionCitations($question);
@@ -185,9 +174,16 @@ class ChatWidget extends Component
                 $this->stream($chunk, false, 'ans');
             }
 
-            $idx = array_key_last($this->messages);
-            $this->messages[$idx]['content'] = $accumulated;
-            $this->messages[$idx]['citations'] = $citations;
+            // The assistant row lands only once the answer is complete —
+            // during streaming the persistent slot is the bubble, so no
+            // empty row ever coexists with it.
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => $accumulated,
+                'citations' => $citations,
+                'failed' => false,
+                'error' => null,
+            ];
 
             Message::create([
                 'conversation_id' => $this->activeConversationId,
@@ -198,19 +194,30 @@ class ChatWidget extends Component
 
             $this->refreshConversations();
         } catch (AiServiceProviderException|AiServiceUnavailableException|AiServiceAuthException|ConnectionException $e) {
-            $idx = array_key_last($this->messages);
-            $this->messages[$idx]['failed'] = true;
-            $this->messages[$idx]['error'] = [
-                'code' => match (true) {
-                    $e instanceof AiServiceAuthException => 'auth_failed',
-                    $e instanceof AiServiceUnavailableException => 'unavailable',
-                    default => 'provider_error',
-                },
-                'message' => $e->getMessage(),
+            $this->messages[] = [
+                'role' => 'assistant',
+                'content' => $accumulated,
+                'citations' => null,
+                'failed' => true,
+                'error' => [
+                    // ConnectionException is a transport-level failure, not
+                    // a typed AiService exception — it has no errorCode().
+                    'code' => $e instanceof ConnectionException ? 'provider_error' : $e->errorCode(),
+                    'message' => $e->getMessage(),
+                ],
             ];
         } finally {
             $this->streaming = false;
         }
+    }
+
+    /**
+     * Auth-scoped conversation fetch (D-15): only the current user's own
+     * conversations are ever resolved, on both the read and write paths.
+     */
+    private function ownedConversation(int $id): ?Conversation
+    {
+        return Conversation::where('user_id', auth()->id())->whereKey($id)->first();
     }
 
     /**
