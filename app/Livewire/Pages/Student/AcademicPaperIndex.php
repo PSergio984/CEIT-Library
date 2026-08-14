@@ -70,7 +70,7 @@ class AcademicPaperIndex extends Component
 
     public ?string $recommendedTitle = null;
 
-    private array $recommendationsSnapshot = [];
+    public array $recommendationsSnapshot = [];
 
     // Store IDs only (modals controlled by Alpine.js)
     public ?int $selectedPaperId = null;
