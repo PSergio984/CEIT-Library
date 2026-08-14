@@ -21,6 +21,8 @@ class AcademicPaperIndexHybridTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected bool $disableLivewireLazyLoading = true;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -226,5 +228,68 @@ class AcademicPaperIndexHybridTest extends TestCase
             ->assertSet('aiSearchFailed', false);
 
         Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function it_renders_hydrated_availability_on_hybrid_cards(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 1, 'status' => 'Available']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 2, 'status' => 'Available']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 3, 'status' => 'Unavailable']);
+        Inventory::factory()->create(['academic_paper_id' => 78, 'copy_number' => 1, 'status' => 'Unavailable']);
+        Inventory::factory()->create(['academic_paper_id' => 78, 'copy_number' => 2, 'status' => 'Unavailable']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('search', 'water pump')
+            ->call('runHybridSearch')
+            ->assertSee('2 of 3 available')
+            ->assertSee('0 of 2 available')
+            ->assertSee('Checked just now');
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/search')
+                && ! array_key_exists('available', $request->data())
+                && ! array_key_exists('total', $request->data());
+        });
+    }
+
+    #[Test]
+    public function it_renders_hydrated_availability_on_sql_cards(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 1, 'status' => 'Available']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 2, 'status' => 'Available']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 3, 'status' => 'Unavailable']);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->assertSee('2 of 3 available')
+            ->assertSee('Checked just now');
+
+        Http::assertNothingSent();
+    }
+
+    #[Test]
+    public function it_renders_zero_of_zero_for_papers_without_inventory_rows(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('search', 'water pump')
+            ->call('runHybridSearch')
+            ->assertSee('0 of 0 available');
     }
 }

@@ -89,7 +89,7 @@
                             </div>
                             <div>
                                 <p class="text-base-content/50 font-medium mb-1">Copies</p>
-                                <p class="font-medium">{{ ($availability[$paper->id]['available'] ?? 0) }} of {{ ($availability[$paper->id]['total'] ?? 0) }} available</p>
+                                <p class="font-medium">{{ ($this->availability[$paper->id]['available'] ?? 0) }} of {{ ($this->availability[$paper->id]['total'] ?? 0) }} available</p>
                                 <p class="text-xs text-base-content/50">Checked just now</p>
                             </div>
                         </div>
@@ -159,7 +159,7 @@
                         </div>
                         <div>
                             <p class="text-base-content/50 font-medium mb-1">Copies</p>
-                            <p class="font-medium">{{ ($availability[$paper->id]['available'] ?? 0) }} of {{ ($availability[$paper->id]['total'] ?? 0) }} available</p>
+                            <p class="font-medium">{{ ($this->availability[$paper->id]['available'] ?? 0) }} of {{ ($this->availability[$paper->id]['total'] ?? 0) }} available</p>
                         <p class="text-xs text-base-content/50">Checked just now</p>
                         </div>
                     </div>
@@ -263,7 +263,7 @@
                                 </div>
                                 <div>
                                     <p class="text-base-content/50 font-medium mb-1">Copies</p>
-                                    <p class="font-medium">{{ ($availability[$paper->id]['available'] ?? 0) }} of {{ ($availability[$paper->id]['total'] ?? 0) }} available</p>
+                                    <p class="font-medium">{{ ($this->availability[$paper->id]['available'] ?? 0) }} of {{ ($this->availability[$paper->id]['total'] ?? 0) }} available</p>
                                 <p class="text-xs text-base-content/50">Checked just now</p>
                                 </div>
                             </div>
