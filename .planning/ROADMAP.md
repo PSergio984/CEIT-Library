@@ -154,7 +154,7 @@ CEIT-Library has shipped three milestones — frontend modernization and securit
 | 7. Logging and QR Resiliency | v1.3 | — | Complete | — |
 | 8. Hybrid Search Foundation | v2.0 | 6/6 | Complete    | 2026-08-13 |
 | 9. RAG Chat & Policy Q&A | v2.0 | 5/5 | Complete   | 2026-08-14 |
-| 10. Live Availability & Recommendations | v2.0 | 3/5 | In Progress|  |
+| 10. Live Availability & Recommendations | v2.0 | 5/5 | Complete   | 2026-08-14 |
 | 11. Academic Papers & Agentic Search | v2.0 | 0/TBD | Not started | - |
 | 12. Role-Aware Access & Librarian Tools | v2.0 | 0/TBD | Not started | - |
 | 13. Evaluation Stack | v2.0 | 0/TBD | Not started | - |
