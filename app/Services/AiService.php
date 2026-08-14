@@ -73,8 +73,10 @@ class AiService
      */
     public function chatStreamEvents(Response $response): \Generator
     {
-        while (! feof($response->resource())) {
-            $line = fgets($response->resource());
+        $stream = $response->resource();
+
+        while (! feof($stream)) {
+            $line = fgets($stream);
 
             if ($line === false) {
                 break;
@@ -95,7 +97,7 @@ class AiService
             }
 
             if ($line === 'event: error') {
-                $dataLine = fgets($response->resource());
+                $dataLine = fgets($stream);
 
                 if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
                     $decoded = json_decode(trim(substr($dataLine, 6)), true);
