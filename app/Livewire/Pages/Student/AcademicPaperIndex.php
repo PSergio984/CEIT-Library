@@ -8,6 +8,7 @@ use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use App\Services\AiService;
 use App\Services\AvailabilityService;
+use App\Services\SimilarPapersService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Livewire\Attributes\Computed;
@@ -59,6 +60,17 @@ class AcademicPaperIndex extends Component
     public ?array $hybridResults = null;
 
     public bool $aiSearchFailed = false;
+
+    // Recommendations mode state (seed paper + sidecar-ordered results)
+    public ?int $recommendedFor = null;
+
+    public ?array $recommendations = null;
+
+    public bool $recommendationsUnavailable = false;
+
+    public ?string $recommendedTitle = null;
+
+    private array $recommendationsSnapshot = [];
 
     // Store IDs only (modals controlled by Alpine.js)
     public ?int $selectedPaperId = null;
@@ -341,6 +353,66 @@ class AcademicPaperIndex extends Component
     {
         $this->hybridResults = null;
         $this->aiSearchFailed = false;
+    }
+
+    public function showSimilar(int $paperId): void
+    {
+        $this->recommendationsSnapshot = [
+            'search' => $this->search,
+            'statusFilter' => $this->statusFilter,
+            'yearFilter' => $this->yearFilter,
+            'departmentFilter' => $this->departmentFilter,
+            'paperTypeFilter' => $this->paperTypeFilter,
+            'yearFromFilter' => $this->yearFromFilter,
+            'yearToFilter' => $this->yearToFilter,
+            'hybridResults' => $this->hybridResults,
+            'aiSearchFailed' => $this->aiSearchFailed,
+            'page' => $this->getPage('academic-papers-index'),
+            'sortBy' => $this->sortBy,
+        ];
+
+        $paper = AcademicPaper::find($paperId);
+        if (! $paper) {
+            return;
+        }
+
+        $this->recommendedFor = $paperId;
+        $this->recommendedTitle = $paper->title;
+
+        $service = new SimilarPapersService;
+        $this->recommendations = $service->for($paper, 10)->all();
+        $this->recommendationsUnavailable = $service->unavailable;
+
+        if ($this->recommendationsUnavailable) {
+            $this->recommendations = [];
+        }
+    }
+
+    public function backToResults(): void
+    {
+        if ($this->recommendedFor === null) {
+            return;
+        }
+
+        $snapshot = $this->recommendationsSnapshot;
+
+        $this->search = $snapshot['search'];
+        $this->statusFilter = $snapshot['statusFilter'];
+        $this->yearFilter = $snapshot['yearFilter'];
+        $this->departmentFilter = $snapshot['departmentFilter'];
+        $this->paperTypeFilter = $snapshot['paperTypeFilter'];
+        $this->yearFromFilter = $snapshot['yearFromFilter'];
+        $this->yearToFilter = $snapshot['yearToFilter'];
+        $this->hybridResults = $snapshot['hybridResults'];
+        $this->aiSearchFailed = $snapshot['aiSearchFailed'];
+        $this->setPage($snapshot['page'], 'academic-papers-index');
+        $this->sortBy = $snapshot['sortBy'];
+
+        $this->recommendedFor = null;
+        $this->recommendations = null;
+        $this->recommendationsUnavailable = false;
+        $this->recommendedTitle = null;
+        $this->recommendationsSnapshot = [];
     }
 
     public function showPaperDetails(int $paperId): void
