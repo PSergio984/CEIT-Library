@@ -6,6 +6,8 @@ use App\Exceptions\AiServiceException;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\AiService;
+use App\Services\AvailabilityService;
+use Livewire\Attributes\Computed;
 use Livewire\Component;
 
 class ChatWidget extends Component
@@ -264,6 +266,51 @@ class ChatWidget extends Component
         $this->conversations = Conversation::where('user_id', auth()->id())
             ->orderByDesc('updated_at')
             ->get()
+            ->all();
+    }
+
+    /**
+     * Live copy availability for every catalog citation across all messages —
+     * one grouped forPapers() call per render, keyed by the persisted
+     * catalog_code so the chips partial can look up the suffix directly.
+     * Render-time enrichment only: nothing here is written back into
+     * $this->messages or the persisted ai_messages.citations payload.
+     *
+     * @return array<string, array{available: int, total: int, checked_at: \Illuminate\Support\Carbon}>
+     */
+    #[Computed]
+    public function availabilityMap(): array
+    {
+        $catalogCitations = collect($this->messages)
+            ->pluck('citations')
+            ->flatten(1)
+            ->filter(fn ($citation) => is_array($citation) && ($citation['corpus'] ?? null) === 'catalog')
+            ->values();
+
+        $ids = $catalogCitations
+            ->map(fn ($citation) => (int) str_replace('paper-', '', $citation['id']))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        if (empty($ids)) {
+            return [];
+        }
+
+        $hydrated = (new AvailabilityService)->forPapers($ids);
+
+        return $catalogCitations
+            ->filter(fn ($citation) => ! empty($citation['catalog_code']))
+            ->mapWithKeys(function ($citation) use ($hydrated) {
+                $id = (int) str_replace('paper-', '', $citation['id']);
+
+                if (! isset($hydrated[$id])) {
+                    return [];
+                }
+
+                return [$citation['catalog_code'] => $hydrated[$id]];
+            })
             ->all();
     }
 
