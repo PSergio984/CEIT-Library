@@ -38,6 +38,33 @@ class AiService
     }
 
     /**
+     * Streamed chat endpoint: POST /chat/stream with the ADR 0004 payload,
+     * no retries (a retry would re-issue the POST and duplicate LLM
+     * generation), throwUnlessOk before touching the body, and the raw
+     * streamed Response back to the caller.
+     */
+    public function chatStream(string $query, ?string $mode = 'citations', ?string $corpus = null, int $topK = 5): Response
+    {
+        $body = ['query' => $query, 'mode' => $mode, 'top_k' => $topK];
+
+        if ($corpus !== null) {
+            $body['corpus'] = $corpus;
+        }
+
+        try {
+            $request = $this->request('POST', '/chat/stream', $body, timeout: 120, retries: 0, stream: true);
+            $response = $request->post('/chat/stream', $body);
+        } catch (ConnectionException $e) {
+            $this->logFailure('/chat/stream', 'connection');
+            throw new AiServiceUnavailableException('AI sidecar is unavailable (connection failed).', 0, $e);
+        }
+
+        $this->throwUnlessOk($response, '/chat/stream');
+
+        return $response;
+    }
+
+    /**
      * Single HTTP gateway to the sidecar: token header, loopback base URL,
      * bounded timeouts, and typed failure mapping. Sanitized failure logging
      * only — never logs tokens, queries, or response bodies.
