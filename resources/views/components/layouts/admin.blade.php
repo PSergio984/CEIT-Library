@@ -200,6 +200,11 @@
         </div>
     </div>
 
+    {{-- Chat Widget --}}
+    @auth
+        <livewire:chat-widget />
+    @endauth
+
     {{-- Toast --}}
     <x-mary-toast />
 
