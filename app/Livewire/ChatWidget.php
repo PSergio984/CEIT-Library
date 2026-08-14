@@ -2,13 +2,10 @@
 
 namespace App\Livewire;
 
-use App\Exceptions\AiServiceAuthException;
-use App\Exceptions\AiServiceProviderException;
-use App\Exceptions\AiServiceUnavailableException;
+use App\Exceptions\AiServiceException;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\AiService;
-use Illuminate\Http\Client\ConnectionException;
 use Livewire\Component;
 
 class ChatWidget extends Component
@@ -55,13 +52,11 @@ class ChatWidget extends Component
             return;
         }
 
-        $this->messages = $conversation->messages->map(fn (Message $message) => [
-            'role' => $message->role,
-            'content' => $message->content,
-            'citations' => $message->citations,
-            'failed' => false,
-            'error' => null,
-        ])->all();
+        $this->messages = $conversation->messages
+            ->map(fn (Message $message) => $message->role === 'user'
+                ? $this->userBubble($message->content)
+                : $this->assistantBubble($message->content, $message->citations))
+            ->all();
 
         $this->activeConversationId = $conversation->id;
         $this->view = 'chat';
@@ -82,7 +77,7 @@ class ChatWidget extends Component
             return;
         }
 
-        $this->messages[] = ['role' => 'user', 'content' => $question];
+        $this->messages[] = $this->userBubble($question);
         $this->draft = '';
 
         $this->streamQuestion($question);
@@ -131,7 +126,7 @@ class ChatWidget extends Component
             $this->activeConversationId = null;
             // Keep the current turn's user bubble; drop stale bubbles from
             // the display so they cannot be mistaken for this conversation.
-            $this->messages = [['role' => 'user', 'content' => $question]];
+            $this->messages = [$this->userBubble($question)];
         }
 
         if ($this->activeConversationId === null) {
@@ -177,13 +172,7 @@ class ChatWidget extends Component
             // The assistant row lands only once the answer is complete —
             // during streaming the persistent slot is the bubble, so no
             // empty row ever coexists with it.
-            $this->messages[] = [
-                'role' => 'assistant',
-                'content' => $accumulated,
-                'citations' => $citations,
-                'failed' => false,
-                'error' => null,
-            ];
+            $this->messages[] = $this->assistantBubble($accumulated, $citations);
 
             Message::create([
                 'conversation_id' => $this->activeConversationId,
@@ -193,19 +182,13 @@ class ChatWidget extends Component
             ]);
 
             $this->refreshConversations();
-        } catch (AiServiceProviderException|AiServiceUnavailableException|AiServiceAuthException|ConnectionException $e) {
-            $this->messages[] = [
-                'role' => 'assistant',
-                'content' => $accumulated,
-                'citations' => null,
-                'failed' => true,
-                'error' => [
-                    // ConnectionException is a transport-level failure, not
-                    // a typed AiService exception — it has no errorCode().
-                    'code' => $e instanceof ConnectionException ? 'provider_error' : $e->errorCode(),
-                    'message' => $e->getMessage(),
-                ],
-            ];
+        } catch (AiServiceException $e) {
+            $this->messages[] = $this->assistantBubble(
+                $accumulated,
+                null,
+                failed: true,
+                error: ['code' => $e->errorCode(), 'message' => $e->getMessage()],
+            );
         } finally {
             $this->streaming = false;
         }
@@ -218,6 +201,23 @@ class ChatWidget extends Component
     private function ownedConversation(int $id): ?Conversation
     {
         return Conversation::where('user_id', auth()->id())->whereKey($id)->first();
+    }
+
+    /**
+     * Display shape for a user message. Every bubble carries the same
+     * five keys so the Livewire state stays uniform.
+     */
+    private function userBubble(string $content): array
+    {
+        return ['role' => 'user', 'content' => $content, 'citations' => null, 'failed' => false, 'error' => null];
+    }
+
+    /**
+     * Display shape for an assistant message.
+     */
+    private function assistantBubble(string $content, ?array $citations = null, bool $failed = false, ?array $error = null): array
+    {
+        return ['role' => 'assistant', 'content' => $content, 'citations' => $citations, 'failed' => $failed, 'error' => $error];
     }
 
     /**
@@ -235,7 +235,7 @@ class ChatWidget extends Component
     {
         try {
             $results = (new AiService)->search($question, [], null, 5)['results'];
-        } catch (AiServiceUnavailableException|AiServiceAuthException) {
+        } catch (AiServiceException) {
             return null;
         }
 

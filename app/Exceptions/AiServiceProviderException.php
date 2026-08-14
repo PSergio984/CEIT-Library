@@ -2,9 +2,7 @@
 
 namespace App\Exceptions;
 
-use RuntimeException;
-
-class AiServiceProviderException extends RuntimeException
+class AiServiceProviderException extends AiServiceException
 {
     /**
      * Error taxonomy code surfaced to the widget (ADR 0004: stream

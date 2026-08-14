@@ -18,6 +18,12 @@ class AiService
      */
     public const RRF_CANDIDATES = 60;
 
+    /**
+     * Wire key for the JSON-encoded SSE chunk envelope (`{"c": "<delta>"}`)
+     * — the sidecar's counterpart constant lives in `app/rag.py`.
+     */
+    private const SSE_CHUNK_KEY = 'c';
+
     public function search(string $query, array $filters = [], ?string $corpus = 'catalog', int $limit = 10): array
     {
         return $this->send('POST', '/search', [
@@ -67,12 +73,6 @@ class AiService
     }
 
     /**
-     * Wire key for the JSON-encoded SSE chunk envelope (`{"c": "<delta>"}`)
-     * — the sidecar's counterpart constant lives in `app/rag.py`.
-     */
-    private const SSE_CHUNK_KEY = 'c';
-
-    /**
      * SSE line parser over the streamed response body. Yields chunk payloads
      * in order, terminates on `data: [DONE]`, and throws the typed
      * AiServiceProviderException when an `event: error` line carries a JSON
@@ -88,42 +88,50 @@ class AiService
     {
         $stream = $response->resource();
 
-        while (! feof($stream)) {
-            $line = fgets($stream);
+        try {
+            while (! feof($stream)) {
+                $line = fgets($stream);
 
-            if ($line === false) {
-                break;
-            }
-
-            $line = rtrim($line, "\r\n");
-
-            if (str_starts_with($line, 'data: ')) {
-                $payload = substr($line, 6);
-
-                if ($payload === '[DONE]') {
-                    return;
+                if ($line === false) {
+                    break;
                 }
 
-                $decoded = json_decode($payload, true);
-                if (is_array($decoded) && isset($decoded[self::SSE_CHUNK_KEY])) {
-                    $payload = (string) $decoded[self::SSE_CHUNK_KEY];
+                $line = rtrim($line, "\r\n");
+
+                if (str_starts_with($line, 'data: ')) {
+                    $payload = substr($line, 6);
+
+                    if ($payload === '[DONE]') {
+                        return;
+                    }
+
+                    $decoded = json_decode($payload, true);
+                    if (is_array($decoded) && isset($decoded[self::SSE_CHUNK_KEY])) {
+                        $payload = (string) $decoded[self::SSE_CHUNK_KEY];
+                    }
+
+                    yield $payload;
+
+                    continue;
                 }
 
-                yield $payload;
+                if ($line === 'event: error') {
+                    $dataLine = fgets($stream);
 
-                continue;
-            }
+                    if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
+                        $decoded = json_decode(trim(substr($dataLine, 6)), true);
+                        throw new AiServiceProviderException($decoded['message'] ?? 'The AI provider is temporarily unavailable.');
+                    }
 
-            if ($line === 'event: error') {
-                $dataLine = fgets($stream);
-
-                if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
-                    $decoded = json_decode(trim(substr($dataLine, 6)), true);
-                    throw new AiServiceProviderException($decoded['message'] ?? 'The AI provider is temporarily unavailable.');
+                    throw new AiServiceProviderException('The AI provider returned a malformed error event.');
                 }
-
-                throw new AiServiceProviderException('The AI provider returned a malformed error event.');
             }
+        } catch (ConnectionException $e) {
+            // Mid-stream transport drop — same truncation contract as EOF,
+            // mapped here so callers catch only the typed AiService
+            // exceptions (the connect-phase ConnectionException is already
+            // wrapped by chatStream()).
+            throw new AiServiceProviderException('The AI provider stream ended unexpectedly.', 0, $e);
         }
 
         // Every exit from the loop is either `[DONE]` (returned above) or a

@@ -2,9 +2,7 @@
 
 namespace App\Exceptions;
 
-use RuntimeException;
-
-class AiServiceUnavailableException extends RuntimeException
+class AiServiceUnavailableException extends AiServiceException
 {
     /**
      * Error taxonomy code surfaced to the widget (sidecar unreachable).
