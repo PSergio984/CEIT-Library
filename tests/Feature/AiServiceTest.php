@@ -37,7 +37,32 @@ class AiServiceTest extends TestCase
                 && $request['filters'] === ['department' => 'Civil Engineering']
                 && $request['corpus'] === 'catalog'
                 && $request['limit'] === 10
-                && $request['k'] === 60;
+                && $request['k'] === 60
+                && array_keys($request->data()) === ['query', 'filters', 'corpus', 'limit', 'k']
+                && ! array_key_exists('available', $request->data())
+                && ! array_key_exists('total', $request->data())
+                && ! array_key_exists('checked_at', $request->data());
+        });
+    }
+
+    #[Test]
+    public function it_sends_exactly_the_adr_0004_search_keys(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+        ]);
+
+        (new AiService)->search('water pump', [], 'catalog', 10);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/search')
+                && array_keys($request->data()) === ['query', 'filters', 'corpus', 'limit', 'k']
+                && ! array_key_exists('available', $request->data())
+                && ! array_key_exists('total', $request->data())
+                && ! array_key_exists('checked_at', $request->data());
         });
     }
 
