@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\AiService;
 use App\Services\AvailabilityService;
+use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
 
@@ -276,7 +277,7 @@ class ChatWidget extends Component
      * Render-time enrichment only: nothing here is written back into
      * $this->messages or the persisted ai_messages.citations payload.
      *
-     * @return array<string, array{available: int, total: int, checked_at: \Illuminate\Support\Carbon}>
+     * @return array<string, array{available: int, total: int, checked_at: Carbon}>
      */
     #[Computed]
     public function availabilityMap(): array

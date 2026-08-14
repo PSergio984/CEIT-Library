@@ -3,10 +3,16 @@
 namespace Tests\Feature;
 
 use App\Livewire\ChatWidget;
+use App\Models\AcademicPaper;
 use App\Models\Conversation;
+use App\Models\Dean;
+use App\Models\Inventory;
 use App\Models\Message;
+use App\Models\ResearchAdviser;
+use App\Models\TechnicalAdviser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\Test;
@@ -29,6 +35,26 @@ class ChatWidgetTest extends TestCase
             'took_ms' => 1,
             'results' => [],
         ];
+    }
+
+    private function seedCatalogPaper77(): void
+    {
+        $researchAdviser = ResearchAdviser::factory()->create(['name' => 'Engr. Jose Rizal']);
+        $technicalAdviser = TechnicalAdviser::factory()->create(['name' => 'Engr. Andres Bonifacio']);
+        $dean = Dean::factory()->create(['name' => 'Dr. Emilio Aguinaldo']);
+
+        $paper = AcademicPaper::create([
+            'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+            'publication_year' => 2015,
+            'paper_type' => 'Thesis',
+            'research_adviser_id' => $researchAdviser->id,
+            'technical_adviser_id' => $technicalAdviser->id,
+            'department' => 'Civil Engineering',
+            'dean_id' => $dean->id,
+        ]);
+
+        // Fixture says paper-77; make the DB match the fixture id exactly.
+        $paper->forceFill(['id' => 77])->save();
     }
 
     #[Test]
@@ -443,5 +469,144 @@ class ChatWidgetTest extends TestCase
 
         $this->assertSame(1, Conversation::where('user_id', $attacker->id)->count(), 'attacker falls back to their own fresh conversation');
         $this->assertSame(1, Message::where('role', 'assistant')->whereHas('conversation', fn ($q) => $q->where('user_id', $attacker->id))->count());
+    }
+
+    #[Test]
+    public function it_renders_availability_suffix_on_catalog_chips(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCatalogPaper77();
+
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 1, 'status' => 'Available']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 2, 'status' => 'Available']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 3, 'status' => 'Unavailable']);
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::sequence()
+                ->push($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream'])
+                ->push($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $inventoryQueries = 0;
+        DB::listen(function ($query) use (&$inventoryQueries) {
+            if (str_contains($query->sql, 'inventories')) {
+                $inventoryQueries++;
+            }
+        });
+
+        $this->actingAs($user);
+
+        // Two assistant turns citing the same paper — the second send's
+        // render batches both citations into ONE grouped AvailabilityService
+        // call instead of per-message queries (D-02).
+        $component = Livewire::test(ChatWidget::class);
+
+        $component->call('newConversation');
+        $component->set('draft', 'water pump');
+        $component->call('send');
+
+        $component->assertSee('2/3');
+        $component->assertSeeHtml('<span class="text-success font-medium">2/3</span>');
+
+        $component->set('draft', 'water pump');
+        $beforeSecondSend = $inventoryQueries;
+        $component->call('send');
+
+        $component->assertSee('2/3');
+
+        $this->assertSame($beforeSecondSend + 1, $inventoryQueries);
+    }
+
+    #[Test]
+    public function it_renders_red_suffix_when_no_copies_available(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCatalogPaper77();
+
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 1, 'status' => 'Unavailable']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 2, 'status' => 'Unavailable']);
+        Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 3, 'status' => 'Unavailable']);
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->assertSee('0/3')
+            ->assertSeeHtml('<span class="text-error font-medium">0/3</span>');
+    }
+
+    #[Test]
+    public function it_omits_suffix_when_paper_has_no_inventory_rows(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCatalogPaper77();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->assertSee('CEIT-CE-15-014')
+            ->assertDontSee('0/0');
+    }
+
+    #[Test]
+    public function it_keeps_policy_chips_without_availability(): void
+    {
+        $user = User::factory()->create();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response([
+                'query' => 'borrowing rules',
+                'total' => 1,
+                'took_ms' => 5,
+                'results' => [[
+                    'id' => 'policy-h2-r1',
+                    'corpus' => 'policy',
+                    'title' => 'II. Borrowing Rules',
+                    'score' => 0.02,
+                    'bm25_rank' => 1,
+                    'semantic_rank' => 1,
+                    'metadata' => [
+                        'header_title' => 'Borrowing Rules',
+                        'url' => null,
+                        'catalog_code' => null,
+                    ],
+                ]],
+            ], 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'borrowing rules')
+            ->call('send')
+            ->assertSee('(rulebook)')
+            ->assertDontSeeHtml('<span class="text-success')
+            ->assertDontSeeHtml('<span class="text-error');
     }
 }
