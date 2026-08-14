@@ -82,6 +82,7 @@ class AcademicPaperIndex extends Component
 
     public function updatingPerPage(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
     }
 
@@ -224,17 +225,20 @@ class AcademicPaperIndex extends Component
 
     public function updatedDept(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
     }
 
     public function updatedSearch(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
     }
 
     public function updatedStatusFilter(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
 
         // The sidecar cannot filter by availability (it is resolved live),
@@ -244,30 +248,35 @@ class AcademicPaperIndex extends Component
 
     public function updatedYearFilter(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
     }
 
     public function updatedDepartmentFilter(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
     }
 
     public function updatedPaperTypeFilter(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
     }
 
     public function updatedYearFromFilter(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
     }
 
     public function updatedYearToFilter(): void
     {
+        $this->exitRecommendationsMode();
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
     }
@@ -275,6 +284,7 @@ class AcademicPaperIndex extends Component
     // Clear all filters and reset to default state
     public function clearFilters(): void
     {
+        $this->exitRecommendationsMode();
         $this->reset([
             'statusFilter',
             'paperTypeFilter',
@@ -353,6 +363,14 @@ class AcademicPaperIndex extends Component
     {
         $this->hybridResults = null;
         $this->aiSearchFailed = false;
+    }
+
+    private function exitRecommendationsMode(): void
+    {
+        $this->recommendedFor = null;
+        $this->recommendations = null;
+        $this->recommendationsUnavailable = false;
+        $this->recommendationsSnapshot = [];
     }
 
     public function showSimilar(int $paperId): void
