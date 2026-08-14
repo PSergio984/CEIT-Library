@@ -221,6 +221,26 @@ class AcademicPaperIndexSimilarTest extends TestCase
     }
 
     #[Test]
+    public function it_renders_similar_loading_overlay_before_entering_mode(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        // The overlay lives OUTSIDE the recommendations-mode guard, so it is
+        // in the DOM before the first Similar click fires (D-16/W-2).
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('search', 'water pump')
+            ->call('runHybridSearch')
+            ->assertSee('Finding similar books...')
+            ->assertSeeHtml('wire:target="showSimilar, backToResults"');
+    }
+
+    #[Test]
     public function it_shows_unavailable_banner_when_sidecar_is_down(): void
     {
         $this->seedPapers();

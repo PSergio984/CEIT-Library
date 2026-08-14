@@ -46,18 +46,18 @@
 
         {{-- Results Summary and Per-Page Control removed: using MaryUI table's built-in paginator --}}
 
-        {{-- Recommendations mode (D-15/D-16/D-17) — replaces the results area in place --}}
-        @if (! is_null($this->recommendedFor))
-            <div class="relative">
-                {{-- Localized loading overlay for the recommendations fetch --}}
-                <div wire:loading.flex wire:target="showSimilar"
-                    class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
-                    <div class="flex flex-col items-center gap-2">
-                        <span class="loading loading-spinner loading-lg text-primary"></span>
-                        <p class="text-base-content font-medium text-sm">Finding similar books...</p>
-                    </div>
+        {{-- Recommendations mode (D-15/D-16/D-17) — replaces the results area in place. The loading overlay lives outside the mode guard so the first Similar click shows it before the block mounts (W-2). --}}
+        <div class="relative">
+            {{-- Localized loading overlay for the recommendations fetch --}}
+            <div wire:loading.flex wire:target="showSimilar, backToResults"
+                class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
+                <div class="flex flex-col items-center gap-2">
+                    <span class="loading loading-spinner loading-lg text-primary"></span>
+                    <p class="text-base-content font-medium text-sm">Finding similar books...</p>
                 </div>
+            </div>
 
+        @if (! is_null($this->recommendedFor))
                 <div class="flex items-center gap-3 mb-4">
                     <button type="button" wire:click="backToResults" class="btn btn-sm btn-outline gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
@@ -232,7 +232,6 @@
                         @endforeach
                     </div>
                 @endif
-            </div>
         @else
         {{-- Mobile/Tablet Card View (for screens smaller than 1280px) --}}
         <div class="block xl:hidden space-y-4 relative">
@@ -601,6 +600,7 @@
             @endif
         </div>
         @endif
+        </div>
     </div>{{-- Close p-6 div --}}
 
     <!-- Alpine.js Modal State Management -->
