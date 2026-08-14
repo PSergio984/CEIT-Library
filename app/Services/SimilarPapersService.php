@@ -38,12 +38,7 @@ class SimilarPapersService
             return collect();
         }
 
-        $papers = AcademicPaper::with(['authors:id,name', 'copies:id,academic_paper_id,status'])
-            ->withCount([
-                'copies as available_copies' => function ($query) {
-                    $query->where('status', 'Available');
-                },
-            ])
+        $papers = AcademicPaper::with(['authors:id,name'])
             ->findMany($ids->all());
 
         $byId = $papers->keyBy('id');
@@ -51,7 +46,6 @@ class SimilarPapersService
         return collect($ids)
             ->map(fn ($id) => $byId->get($id))
             ->filter()
-            ->map(fn ($paper) => tap($paper, fn ($paper) => $paper->status = $paper->available_copies > 0 ? 'Available' : 'Unavailable'))
             ->values();
     }
 }

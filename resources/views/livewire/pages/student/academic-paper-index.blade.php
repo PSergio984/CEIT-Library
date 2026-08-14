@@ -91,8 +91,8 @@
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex-1">
                                         <div class="flex flex-wrap items-center gap-2 mb-2">
-                                            <span class="badge badge-sm {{ $paper->status === 'Available' ? 'badge-success' : 'badge-error' }}">
-                                                {{ $paper->status }}
+                                            <span class="badge badge-sm {{ (($this->availability[$paper->id]['available'] ?? 0) > 0) ? 'badge-success' : 'badge-error' }}">
+                                                {{ (($this->availability[$paper->id]['available'] ?? 0) > 0) ? 'Available' : 'Unavailable' }}
                                             </span>
                                             <span class="badge badge-sm badge-outline">{{ $paper->catalog_code }}</span>
                                         </div>
@@ -165,8 +165,8 @@
                                 <div class="flex items-start justify-between mb-3">
                                     <div class="flex-1">
                                         <div class="flex flex-wrap items-center gap-2 mb-2">
-                                            <span class="badge badge-sm {{ $paper->status === 'Available' ? 'badge-success' : 'badge-error' }}">
-                                                {{ $paper->status }}
+                                            <span class="badge badge-sm {{ (($this->availability[$paper->id]['available'] ?? 0) > 0) ? 'badge-success' : 'badge-error' }}">
+                                                {{ (($this->availability[$paper->id]['available'] ?? 0) > 0) ? 'Available' : 'Unavailable' }}
                                             </span>
                                             <span class="badge badge-sm badge-outline">{{ $paper->catalog_code }}</span>
                                         </div>
