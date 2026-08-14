@@ -7,6 +7,7 @@ use App\Exceptions\AiServiceUnavailableException;
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use App\Services\AiService;
+use App\Services\AvailabilityService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Livewire\Attributes\Computed;
@@ -346,6 +347,18 @@ class AcademicPaperIndex extends Component
     {
         $this->selectedPaperId = $paperId;
         $this->dispatch('open-paper-modal');
+    }
+
+    #[Computed]
+    public function availability(): array
+    {
+        $ids = collect($this->academicPapers->pluck('id'))
+            ->merge(collect($this->hybridResults ?? [])->pluck('id'))
+            ->unique()
+            ->values()
+            ->all();
+
+        return (new AvailabilityService)->forPapers($ids);
     }
 
     #[Computed]
