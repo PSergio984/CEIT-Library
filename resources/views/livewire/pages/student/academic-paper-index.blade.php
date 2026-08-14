@@ -105,6 +105,15 @@
                                     wire:loading.attr="disabled"
                                     wire:target="showPaperDetails({{ $paper->id }})"
                                 />
+                                <x-mary-button 
+                                    wire:click="showSimilar({{ $paper->id }})"
+                                    class="btn-sm btn-outline gap-2"
+                                    icon="o-sparkles"
+                                    label="Similar"
+                                    spinner
+                                    wire:loading.attr="disabled"
+                                    wire:target="showSimilar({{ $paper->id }})"
+                                />
                             @else
                                 <div class="flex flex-col gap-2 w-full">
                                     <button disabled class="btn btn-sm btn-error gap-2 flex-1 cursor-not-allowed">
@@ -174,6 +183,15 @@
                                 spinner
                                 wire:loading.attr="disabled"
                                 wire:target="showPaperDetails({{ $paper->id }})"
+                            />
+                            <x-mary-button 
+                                wire:click="showSimilar({{ $paper->id }})"
+                                class="btn-sm btn-outline gap-2"
+                                icon="o-sparkles"
+                                label="Similar"
+                                spinner
+                                wire:loading.attr="disabled"
+                                wire:target="showSimilar({{ $paper->id }})"
                             />
                         @else
                             <div class="flex flex-col gap-2 w-full">
@@ -279,6 +297,15 @@
                                         wire:loading.attr="disabled"
                                         wire:target="showPaperDetails({{ $paper->id }})"
                                     />
+                                    <x-mary-button 
+                                        wire:click="showSimilar({{ $paper->id }})"
+                                        class="btn-sm btn-outline gap-2"
+                                        icon="o-sparkles"
+                                        label="Similar"
+                                        spinner
+                                        wire:loading.attr="disabled"
+                                        wire:target="showSimilar({{ $paper->id }})"
+                                    />
                                 @else
                                     <div class="flex flex-col gap-2 w-full">
                                         <button disabled class="btn btn-sm btn-error gap-2 flex-1 cursor-not-allowed">
@@ -359,6 +386,15 @@
                                 spinner
                                 wire:loading.attr="disabled"
                                 wire:target="showPaperDetails({{ $row->id }})"
+                            />
+                            <x-mary-button 
+                                wire:click="showSimilar({{ $row->id }})"
+                                class="btn-sm btn-outline gap-2"
+                                icon="o-sparkles"
+                                label="Similar"
+                                spinner
+                                wire:loading.attr="disabled"
+                                wire:target="showSimilar({{ $row->id }})"
                             />
                         @else
                             <div class="flex flex-col gap-1">
