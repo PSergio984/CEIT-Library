@@ -49,7 +49,7 @@
                             <div class="whitespace-pre-line">{{ $m['content'] }}</div>
 
                             @if (! empty($m['citations']))
-                                @include('livewire.chat-widget-citations', ['citations' => $m['citations']])
+                                @include('livewire.chat-widget-citations', ['citations' => $m['citations'], 'availability' => $this->availabilityMap])
                                 @include('livewire.chat-widget-sources', ['citations' => $m['citations']])
                             @endif
 
