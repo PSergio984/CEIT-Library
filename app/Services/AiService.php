@@ -45,11 +45,7 @@ class AiService
     private function send(string $method, string $path, array $body, int $timeout, int $retries): array
     {
         try {
-            $request = Http::withHeaders(['X-Sidecar-Token' => config('services.ai_sidecar.token')])
-                ->baseUrl(config('services.ai_sidecar.base_url'))
-                ->connectTimeout(3)
-                ->timeout($timeout)
-                ->retry($retries, 250, throw: false);
+            $request = $this->request($method, $path, $body, $timeout, $retries);
 
             $response = $method === 'POST'
                 ? $request->post($path, $body)
@@ -62,6 +58,26 @@ class AiService
         $this->throwUnlessOk($response, $path);
 
         return $response->json() ?? [];
+    }
+
+    /**
+     * Shared request builder: token header, loopback base URL, bounded
+     * timeouts, and per-call retry policy. `$stream` opts into an
+     * incremental response body (read via `$response->resource()`).
+     */
+    private function request(string $method, string $path, array $body, int $timeout, int $retries, bool $stream = false): \Illuminate\Http\Client\PendingRequest
+    {
+        $request = Http::withHeaders(['X-Sidecar-Token' => config('services.ai_sidecar.token')])
+            ->baseUrl(config('services.ai_sidecar.base_url'))
+            ->connectTimeout(3)
+            ->timeout($timeout)
+            ->retry($retries, 250, throw: false);
+
+        if ($stream) {
+            $request = $request->withOptions(['stream' => true]);
+        }
+
+        return $request;
     }
 
     private function throwUnlessOk(Response $response, string $path): void
