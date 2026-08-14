@@ -92,7 +92,11 @@ class ChatWidgetTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
-            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+            // One response instance per send — a reused instance hands the
+            // second send an exhausted stream (W-2 truncation throw).
+            'http://127.0.0.1:8310/chat/stream' => Http::sequence()
+                ->push($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream'])
+                ->push($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
         $this->actingAs($user);
@@ -148,7 +152,7 @@ class ChatWidgetTest extends TestCase
             ->set('draft', 'borrowing rules')
             ->call('send')
             ->assertSet('messages.1.failed', true)
-            ->assertSet('messages.1.error.code', 'provider_error')
+            ->assertSet('messages.1.error.code', 'unavailable')
             ->call('retry')
             ->assertSet('messages.1.failed', false)
             ->assertSet('messages.1.content', 'CEIT Library ');
@@ -399,5 +403,39 @@ class ChatWidgetTest extends TestCase
             ->assertDontSee('Sources');
 
         $this->assertSame(null, Message::where('role', 'assistant')->first()->citations);
+    }
+
+    #[Test]
+    public function it_does_not_write_into_another_users_conversation(): void
+    {
+        $victim = User::factory()->create();
+        $attacker = User::factory()->create();
+        $conversation = Conversation::factory()->create([
+            'user_id' => $victim->id,
+            'title' => 'Victim conversation',
+        ]);
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($attacker);
+
+        // Forge a client-hydratable activeConversationId pointing at the
+        // victim's conversation (review W-4: write path must re-verify).
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('activeConversationId', $conversation->id)
+            ->set('draft', 'intrusion attempt')
+            ->call('send')
+            ->assertSet('activeConversationId', Conversation::where('user_id', $attacker->id)->first()->id);
+
+        $this->assertSame(0, Message::where('conversation_id', $conversation->id)->count(), 'attacker messages must not land in the victim conversation');
+
+        $this->assertSame(1, Conversation::where('user_id', $attacker->id)->count(), 'attacker falls back to their own fresh conversation');
+        $this->assertSame(1, Message::where('role', 'assistant')->whereHas('conversation', fn ($q) => $q->where('user_id', $attacker->id))->count());
     }
 }

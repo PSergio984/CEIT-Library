@@ -1,0 +1,5 @@
+data: {"c":"Line one\n"}
+
+data: {"c":"\nLine three"}
+
+data: [DONE]

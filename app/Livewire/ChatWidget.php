@@ -8,6 +8,7 @@ use App\Exceptions\AiServiceUnavailableException;
 use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\AiService;
+use Illuminate\Http\Client\ConnectionException;
 use Livewire\Component;
 
 class ChatWidget extends Component
@@ -124,6 +125,19 @@ class ChatWidget extends Component
 
     private function streamQuestion(string $question, bool $persistUser = true): void
     {
+        // W-4: `activeConversationId` is client-hydratable — re-verify
+        // ownership before persisting, or fall back to a fresh conversation.
+        if ($this->activeConversationId !== null) {
+            $owned = Conversation::where('user_id', auth()->id())
+                ->whereKey($this->activeConversationId)
+                ->exists();
+
+            if (! $owned) {
+                $this->activeConversationId = null;
+                $this->messages = [];
+            }
+        }
+
         if ($this->activeConversationId === null) {
             $conversation = Conversation::create([
                 'user_id' => auth()->id(),
@@ -157,6 +171,15 @@ class ChatWidget extends Component
             $svc = new AiService;
             $response = $svc->chatStream($question, 'citations', null, 5);
 
+            // Typing dots stream first — the persistent stream slot (W-3)
+            // needs the indicator inside the live stream, not in a
+            // conditionally-rendered element.
+            $this->stream(
+                '<span class="inline-flex gap-1 py-1"><span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce"></span><span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce [animation-delay:150ms]"></span><span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce [animation-delay:300ms]"></span></span>',
+                false,
+                'ans'
+            );
+
             foreach ($svc->chatStreamEvents($response) as $chunk) {
                 $accumulated .= $chunk;
                 $this->stream($chunk, false, 'ans');
@@ -174,11 +197,15 @@ class ChatWidget extends Component
             ]);
 
             $this->refreshConversations();
-        } catch (AiServiceProviderException|AiServiceUnavailableException|AiServiceAuthException $e) {
+        } catch (AiServiceProviderException|AiServiceUnavailableException|AiServiceAuthException|ConnectionException $e) {
             $idx = array_key_last($this->messages);
             $this->messages[$idx]['failed'] = true;
             $this->messages[$idx]['error'] = [
-                'code' => 'provider_error',
+                'code' => match (true) {
+                    $e instanceof AiServiceAuthException => 'auth_failed',
+                    $e instanceof AiServiceUnavailableException => 'unavailable',
+                    default => 'provider_error',
+                },
                 'message' => $e->getMessage(),
             ];
         } finally {

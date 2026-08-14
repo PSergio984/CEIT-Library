@@ -6,6 +6,7 @@ use App\Exceptions\AiServiceAuthException;
 use App\Exceptions\AiServiceProviderException;
 use App\Exceptions\AiServiceUnavailableException;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -53,7 +54,7 @@ class AiService
         }
 
         try {
-            $request = $this->request('POST', '/chat/stream', $body, timeout: 120, retries: 0, stream: true);
+            $request = $this->request(timeout: 120, retries: 0, stream: true);
             $response = $request->post('/chat/stream', $body);
         } catch (ConnectionException $e) {
             $this->logFailure('/chat/stream', 'connection');
@@ -66,14 +67,21 @@ class AiService
     }
 
     /**
-     * SSE line parser over the streamed response body. Yields `data: `
-     * payloads in order, terminates on `data: [DONE]`, and throws the typed
+     * SSE line parser over the streamed response body. Yields chunk payloads
+     * in order, terminates on `data: [DONE]`, and throws the typed
      * AiServiceProviderException when an `event: error` line carries a JSON
      * error payload — the error data line is never yielded as content.
+     *
+     * Chunk payloads are JSON-encoded `{"c": "<delta>"}` (sidecar framing)
+     * so deltas containing newlines survive the line-based transport; raw
+     * text payloads are yielded as-is for compatibility. A clean EOF
+     * without `[DONE]` means the provider stream was truncated — thrown,
+     * never silently accepted.
      */
     public function chatStreamEvents(Response $response): \Generator
     {
         $stream = $response->resource();
+        $done = false;
 
         while (! feof($stream)) {
             $line = fgets($stream);
@@ -88,7 +96,14 @@ class AiService
                 $payload = substr($line, 6);
 
                 if ($payload === '[DONE]') {
+                    $done = true;
+
                     return;
+                }
+
+                $decoded = json_decode($payload, true);
+                if (is_array($decoded) && isset($decoded['c'])) {
+                    $payload = (string) $decoded['c'];
                 }
 
                 yield $payload;
@@ -103,7 +118,13 @@ class AiService
                     $decoded = json_decode(trim(substr($dataLine, 6)), true);
                     throw new AiServiceProviderException($decoded['message'] ?? 'The AI provider is temporarily unavailable.');
                 }
+
+                throw new AiServiceProviderException('The AI provider returned a malformed error event.');
             }
+        }
+
+        if (! $done) {
+            throw new AiServiceProviderException('The AI provider stream ended unexpectedly.');
         }
     }
 
@@ -115,7 +136,7 @@ class AiService
     private function send(string $method, string $path, array $body, int $timeout, int $retries): array
     {
         try {
-            $request = $this->request($method, $path, $body, $timeout, $retries);
+            $request = $this->request($timeout, $retries);
 
             $response = $method === 'POST'
                 ? $request->post($path, $body)
@@ -135,7 +156,7 @@ class AiService
      * timeouts, and per-call retry policy. `$stream` opts into an
      * incremental response body (read via `$response->resource()`).
      */
-    private function request(string $method, string $path, array $body, int $timeout, int $retries, bool $stream = false): \Illuminate\Http\Client\PendingRequest
+    private function request(int $timeout, int $retries, bool $stream = false): PendingRequest
     {
         $request = Http::withHeaders(['X-Sidecar-Token' => config('services.ai_sidecar.token')])
             ->baseUrl(config('services.ai_sidecar.base_url'))
@@ -154,7 +175,7 @@ class AiService
     {
         if ($response->status() === 401) {
             $this->logFailure($path, 'auth');
-            throw new AiServiceAuthException('Sidecar authentication failed: invalid SIDECAR_TOKEN.');
+            throw new AiServiceAuthException('The AI assistant is temporarily unavailable.');
         }
 
         if ($response->failed()) {

@@ -142,4 +142,61 @@ class AiServiceChatTest extends TestCase
 
         Http::assertSentCount(1);
     }
+
+    #[Test]
+    public function it_preserves_newlines_inside_streamed_chunks(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream-newlines.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $response = (new AiService)->chatStream('x');
+        $chunks = iterator_to_array((new AiService)->chatStreamEvents($response));
+
+        $this->assertSame(["Line one\n", "\nLine three"], $chunks);
+        $this->assertSame("Line one\n\nLine three", implode('', $chunks));
+    }
+
+    #[Test]
+    public function it_throws_provider_exception_when_stream_ends_without_done(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream-truncated.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $response = (new AiService)->chatStream('x');
+
+        $this->expectException(AiServiceProviderException::class);
+        $this->expectExceptionMessage('The AI provider stream ended unexpectedly.');
+
+        iterator_to_array((new AiService)->chatStreamEvents($response));
+    }
+
+    #[Test]
+    public function it_throws_on_malformed_error_event(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/chat/stream' => Http::response(
+                "event: error\n\n",
+                200,
+                ['Content-Type' => 'text/event-stream']
+            ),
+        ]);
+
+        $response = (new AiService)->chatStream('x');
+
+        $this->expectException(AiServiceProviderException::class);
+        $this->expectExceptionMessage('The AI provider returned a malformed error event.');
+
+        iterator_to_array((new AiService)->chatStreamEvents($response));
+    }
 }

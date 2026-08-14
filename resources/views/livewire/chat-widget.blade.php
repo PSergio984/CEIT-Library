@@ -21,7 +21,13 @@
         </div>
     </div>
 
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+    <div class="flex-1 overflow-y-auto p-4 space-y-4" x-data="{}" x-init="
+        const el = $el;
+        const scroll = () => el.scrollTop = el.scrollHeight;
+        scroll();
+        const obs = new MutationObserver(scroll);
+        obs.observe(el, { childList: true, subtree: true, characterData: true });
+    ">
         @if ($view === 'list')
             @forelse ($conversations as $c)
                 <button type="button" wire:click="openConversation({{ $c->id }})" class="w-full text-left bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2 transition-colors">
@@ -40,11 +46,7 @@
                 @else
                     <div class="flex justify-start">
                         <div class="bg-base-200 text-base-content rounded-2xl rounded-bl-sm px-4 py-2 max-w-[85%] text-sm">
-                            @if ($streaming && $loop->last)
-                                <div wire:stream="ans"></div>
-                            @else
-                                <div class="whitespace-pre-line">{{ $m['content'] }}</div>
-                            @endif
+                            <div class="whitespace-pre-line">{{ $m['content'] }}</div>
 
                             @if (! empty($m['citations']))
                                 @include('livewire.chat-widget-citations', ['citations' => $m['citations']])
@@ -59,17 +61,21 @@
                             @endif
                         </div>
                     </div>
-                    @if ($streaming && $loop->last)
-                        <div class="flex justify-start">
-                            <span class="flex gap-1 bg-base-200 rounded-2xl rounded-bl-sm px-4 py-3">
-                                <span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce [animation-delay:150ms]"></span>
-                                <span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce [animation-delay:300ms]"></span>
-                            </span>
-                        </div>
-                    @endif
                 @endif
             @endforeach
+
+            {{-- Persistent stream slot (review W-3): Livewire 4 appends
+                 streamed chunks to `[wire:stream="ans"]` live, but only if
+                 the element already exists in the DOM — a conditionally
+                 rendered target silently drops every chunk. This slot is
+                 always mounted; it is 0-height when idle, fills with the
+                 typing dots then the answer while streaming, and is wiped
+                 by the final re-render. --}}
+            <div class="flex justify-start">
+                <div class="bg-base-200 text-base-content rounded-2xl rounded-bl-sm px-4 max-w-[85%]">
+                    <div wire:stream="ans" class="text-sm whitespace-pre-line py-2"></div>
+                </div>
+            </div>
 
             @if (empty($messages) && ! $streaming)
                 <div class="text-center py-10 text-sm text-base-content/60">Ask about papers or rules</div>
@@ -78,8 +84,8 @@
     </div>
 
     <form wire:submit="send" class="border-t border-base-200 p-3 flex items-end gap-2 bg-base-100">
-        <textarea wire:model="draft" rows="1" class="textarea textarea-bordered textarea-sm flex-1 resize-none text-sm" placeholder="Ask about rules, papers…" @if ($streaming) disabled @endif></textarea>
-        <button type="submit" class="btn btn-primary btn-circle btn-sm" @if ($streaming) disabled @endif title="Send">
+        <textarea wire:model="draft" rows="1" class="textarea textarea-bordered textarea-sm flex-1 resize-none text-sm" placeholder="Ask about rules, papers…" wire:loading.attr="disabled" wire:target="send,retry" @if ($streaming) disabled @endif></textarea>
+        <button type="submit" class="btn btn-primary btn-circle btn-sm" wire:loading.attr="disabled" wire:target="send,retry" @if ($streaming) disabled @endif title="Send">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
         </button>
     </form>
