@@ -114,10 +114,15 @@ class ChatWidget extends Component
             unset($this->messages[$last]);
         }
 
-        $this->streamQuestion($lastUser);
+        // Re-index so the next bubble lands at a predictable key.
+        $this->messages = array_values($this->messages);
+
+        // The user row from the failed turn is already persisted — retry
+        // only re-streams the assistant answer (D-29, no duplicates).
+        $this->streamQuestion($lastUser, persistUser: false);
     }
 
-    private function streamQuestion(string $question): void
+    private function streamQuestion(string $question, bool $persistUser = true): void
     {
         if ($this->activeConversationId === null) {
             $conversation = Conversation::create([
@@ -128,11 +133,13 @@ class ChatWidget extends Component
             $this->refreshConversations();
         }
 
-        Message::create([
-            'conversation_id' => $this->activeConversationId,
-            'role' => 'user',
-            'content' => $question,
-        ]);
+        if ($persistUser) {
+            Message::create([
+                'conversation_id' => $this->activeConversationId,
+                'role' => 'user',
+                'content' => $question,
+            ]);
+        }
 
         $this->streaming = true;
         $this->messages[] = [
