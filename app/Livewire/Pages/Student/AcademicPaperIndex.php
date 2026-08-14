@@ -444,6 +444,7 @@ class AcademicPaperIndex extends Component
     {
         $ids = collect($this->academicPapers->pluck('id'))
             ->merge(collect($this->hybridResults ?? [])->pluck('id'))
+            ->merge(collect($this->recommendations ?? [])->pluck('id'))
             ->unique()
             ->values()
             ->all();
