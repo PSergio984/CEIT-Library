@@ -10,6 +10,7 @@ use App\Models\TechnicalAdviser;
 use App\Models\User;
 use App\Services\SimilarPapersService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -193,5 +194,41 @@ class SimilarPapersServiceTest extends TestCase
 
         $this->assertTrue($result->isEmpty());
         $this->assertFalse($service->unavailable);
+    }
+
+    #[Test]
+    public function it_fails_closed_when_sidecar_is_down(): void
+    {
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/*' => fn () => throw new ConnectionException('Connection refused'),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertTrue($result->isEmpty());
+        $this->assertTrue($service->unavailable);
+    }
+
+    #[Test]
+    public function it_fails_closed_on_auth_failure(): void
+    {
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/*' => Http::response(['error' => ['code' => 'auth_failed', 'message' => 'missing or invalid X-Sidecar-Token']], 401),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertTrue($result->isEmpty());
+        $this->assertTrue($service->unavailable);
     }
 }
