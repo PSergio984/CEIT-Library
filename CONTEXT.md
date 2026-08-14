@@ -34,3 +34,11 @@ A question answered from the catalog corpus (academic papers), the same corpus h
 **Sidecar**:
 The FastAPI service that owns the search index and (in Phase 9) the chat/RAG endpoint; the Laravel app talks to it over HTTP with a shared token.
 _Avoid_: AI server, backend AI
+
+**Availability**:
+Live copy counts (`available`/`total` per catalog id, plus a fetch-time `checked_at`) hydrated from `inventory` rows at render time by `AvailabilityService` — never from the sidecar or the LLM.
+_Avoid_: Stock, status count from AI
+
+**Similar books**:
+The deterministic recommendation list for a catalog paper, produced by running the paper's title as a `/search` query through `SimilarPapersService` (title-as-query, no metadata filters, self-excluded by id) — a list, never an LLM answer.
+_Avoid_: Recommendations from the AI, "books like this" via chat

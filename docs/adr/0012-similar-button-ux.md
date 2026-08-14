@@ -1,0 +1,15 @@
+# Similar-button UX: replace-with-back recommendations mode on the search page
+
+SEARCH-06's "get recommendation results" surfaces on the student search page (`AcademicPaperIndex`) as a button per result that swaps the list in place — no new route, no separate flow. It invokes the ADR 0011 mechanism, and its cards render through the same markup the search page already uses, hydrated by ADR 0010.
+
+**Placement: a secondary "Similar" button on every result-listing surface.** Card render spots (mobile cards, hybrid list, desktop hybrid grid) put it in the card action row beside "View Details" — View Details keeps `flex-1` primary, Similar is an auto-width secondary button (outline, icon). The desktop SQL table gains it in the existing `actions` column scope beside "View". The paper detail modal is deferred — it is not a search-results surface, and adding the button there later is trivial.
+
+**Click behavior: replace-with-back, in place.** Clicking Similar on X switches the results area into recommendations mode: a header bar reads "Showing similar books to: X" with a "Back to results" button; beneath it the recommendation cards render in the existing card grid (identical markup, availability hydrated per ADR 0010). No URL change, no new route. "Back to results" restores the prior state exactly — search text, filters, hybrid-vs-SQL mode, pagination page.
+
+**States.** Loading uses the page's existing overlay pattern ("Finding similar books..."). Sidecar down renders the alert-warning banner pattern ("Recommendations unavailable right now") with no fallback list, per ADR 0011's fail-closed rule. Empty or self-exclusion-emptied renders the existing `x-empty-state` component ("No similar books found"). All three states keep "Back to results" visible so the user is never trapped in a dead-end mode.
+
+**Mobile: no separate flow.** The button is already in the card action row; the header bar stacks above the card list with a truncated title (`line-clamp-1`), and the back button stays pinned at the top of the list.
+
+**Composition: recommendations mode yields to any user query change.** Entering snapshots the prior results state; exiting restores it verbatim. Editing search or filters while in the mode exits it immediately and runs the normal query — the status filter still force-exits hybrid mode per the existing rule — and the snapshot is abandoned. Clicking Similar on a recommended card replaces the list with that paper's recommendations (same mechanism, recursive is natural). Status badges still render on recommendation cards via the hydrated shape; the status *filter* applies to searches only.
+
+_Considered (rejected):_ a dedicated `/academic-papers/{id}/similar` route (fragments the flow, bookmarkable but heavy); reusing the hybrid search with the title injected into the query box (pollutes the user's query, misapplies filters); a bottom-sheet/pull-up panel on mobile (a second interaction model for the same list); keeping the mode active until explicitly dismissed while filters change underneath (filters appear inert — confusing).
