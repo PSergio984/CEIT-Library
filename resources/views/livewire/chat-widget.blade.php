@@ -22,7 +22,14 @@
 
     <div class="flex-1 overflow-y-auto p-4 space-y-4">
         @if ($view === 'list')
-            <div class="text-center py-10 text-sm text-base-content/60">No conversations yet</div>
+            @forelse ($conversations as $c)
+                <button type="button" wire:click="openConversation({{ $c->id }})" class="w-full text-left bg-base-200 hover:bg-base-300 rounded-xl px-3 py-2 transition-colors">
+                    <div class="text-sm font-medium text-base-content">{{ mb_strimwidth($c->title ?? 'New conversation', 0, 40, '…') }}</div>
+                    <div class="text-xs text-base-content/60 mt-0.5">{{ $c->updated_at->diffForHumans() }}</div>
+                </button>
+            @empty
+                <div class="text-center py-10 text-sm text-base-content/60">No conversations yet</div>
+            @endforelse
         @else
             @foreach ($messages as $m)
                 @if ($m['role'] === 'user')

@@ -46,6 +46,34 @@ class ChatWidget extends Component
         }
     }
 
+    public function openConversation(int $id): void
+    {
+        $conversation = Conversation::where('user_id', auth()->id())->whereKey($id)->first();
+
+        if (! $conversation) {
+            return;
+        }
+
+        $this->messages = $conversation->messages->map(fn (Message $message) => [
+            'role' => $message->role,
+            'content' => $message->content,
+            'citations' => $message->citations,
+            'failed' => false,
+            'error' => null,
+        ])->all();
+
+        $this->activeConversationId = $conversation->id;
+        $this->view = 'chat';
+    }
+
+    public function newConversation(): void
+    {
+        $this->view = 'chat';
+        $this->activeConversationId = null;
+        $this->messages = [];
+        $this->draft = '';
+    }
+
     public function send(): void
     {
         $question = trim($this->draft);
