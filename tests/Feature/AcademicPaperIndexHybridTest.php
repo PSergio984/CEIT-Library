@@ -21,8 +21,6 @@ class AcademicPaperIndexHybridTest extends TestCase
 {
     use RefreshDatabase;
 
-    protected bool $disableLivewireLazyLoading = true;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -271,6 +269,7 @@ class AcademicPaperIndexHybridTest extends TestCase
         Inventory::factory()->create(['academic_paper_id' => 77, 'copy_number' => 3, 'status' => 'Unavailable']);
 
         Livewire::test(AcademicPaperIndex::class)
+            ->set('perPage', 5)
             ->assertSee('2 of 3 available')
             ->assertSee('Checked just now');
 
