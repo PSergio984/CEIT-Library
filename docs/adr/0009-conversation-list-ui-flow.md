@@ -1,0 +1,11 @@
+# Conversation-list UI flow: drawer view-switch, lazy creation, title + relative time
+
+CHAT-02 requires history to persist and remain viewable across sessions, so the widget (ADR 0008) needs a way to reopen past conversations. **The list lives inside the drawer as a view-switch**: the drawer has two views — a conversation list (the default when opened) and the chat view. Tapping a list entry opens that conversation; the existing New button jumps to a fresh chat. No dedicated route or page; everything stays inside the single widget surface, consistent with the verdict and ADR 0007's auth-scoped scope.
+
+**Opening a past conversation loads it into the bound chat view.** A list entry loads that conversation's Messages ordered `(conversation_id, id)` ascending (ADR 0005), rendered as bubbles with citations re-rendered from the `citations` JSON column (ADR 0006 chips + Sources list), auto-scrolled to the newest. The drawer is then bound to that conversation: subsequent questions append to it until New is pressed. The sidecar contract is untouched — history loads for viewability only, never replayed (ADR 0004 single-turn stands).
+
+**Conversations are created lazily on the first message.** New switches to the empty chat view; the `ai_conversations` row is inserted when the first message is sent, with `title` derived from that message (ADR 0005 auto-title, truncated to 120). No empty rows from opened-but-abandoned drawers. The list sorts by `updated_at` descending (ADR 0005 touch()), so a fresh conversation surfaces to the top after its first message.
+
+**List entries show title + relative time.** Each entry renders the auto-title truncated to ~40 chars with an ellipsis (fallback "New conversation" when empty) and a relative `updated_at` timestamp (e.g. "2h ago"). No delete or rename affordances in Phase 9 — hard-delete cascade (ADR 0005) exists for the future, and renaming was never in scope; the empty state shows a short "No conversations yet" hint with New still reachable.
+
+_Considered (rejected):_ a dedicated `/conversations` page (a second surface for a single widget); a read-only history view separate from the active chat (loads the same Messages twice); eager conversation creation on New (empty rows); per-entry delete/rename affordances (no Phase 9 requirement).
