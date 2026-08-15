@@ -84,10 +84,19 @@ class ExportAiCorpusTest extends TestCase
         $this->assertSame('/academic-papers/'.$paper->id, $doc['metadata']['url']);
         $this->assertIsInt($doc['metadata']['publication_year']);
 
-        $this->assertStringStartsWith($paper->title.'. '.$paper->title.'. ', $doc['text']);
-        $this->assertStringContainsString('authors: Juan Dela Cruz', $doc['text']);
+        $this->assertStringStartsWith($paper->title.'. ', $doc['text']);
+        $this->assertStringContainsString('authors: '.implode('; ', ['Juan Dela Cruz', 'Maria Santos']), $doc['text']);
         $this->assertStringContainsString('research_adviser: Engr. Jose Rizal', $doc['text']);
+        $this->assertStringContainsString('technical_adviser: Engr. Andres Bonifacio', $doc['text']);
+        $this->assertStringContainsString('dean: Dr. Emilio Aguinaldo', $doc['text']);
         $this->assertStringContainsString('department: Electrical Engineering', $doc['text']);
+        $this->assertStringContainsString('publication_year: 2025', $doc['text']);
+        $this->assertStringContainsString('paper_type: Thesis', $doc['text']);
+        $this->assertStringContainsString('catalog_code: '.$paper->catalog_code, $doc['text']);
+
+        $this->assertArrayNotHasKey('abstract', $doc['metadata']);
+        $this->assertArrayNotHasKey('summary', $doc['metadata']);
+        $this->assertArrayNotHasKey('keywords', $doc['metadata']);
     }
 
     #[Test]
