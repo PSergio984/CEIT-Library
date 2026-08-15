@@ -140,6 +140,85 @@ class AiService
     }
 
     /**
+     * Typed SSE frame parser over the streamed response body (agentic path).
+     * Shares the read loop and error taxonomy of chatStreamEvents() but
+     * yields typed frames: `['type' => 'activity', 'payload' => [...]]`,
+     * `['type' => 'chunk', 'payload' => <text>]`, and
+     * `['type' => 'citations', 'payload' => [...]]`. `event: activity` and
+     * `event: citations` line-pairs are consumed whole (event line + its
+     * `data: ` line); every other line keeps the exact legacy decode path,
+     * so the parser never leaks raw frame JSON into chunk payloads (pitfall
+     * #1). `[DONE]` terminates and `event: error` throws the typed
+     * AiServiceProviderException — the taxonomy is identical to
+     * chatStreamEvents(), which stays untouched for back-compat.
+     */
+    public function chatStreamFrames(Response $response): \Generator
+    {
+        $stream = $response->resource();
+
+        try {
+            while (! feof($stream)) {
+                $line = fgets($stream);
+
+                if ($line === false) {
+                    break;
+                }
+
+                $line = rtrim($line, "\r\n");
+
+                if (str_starts_with($line, 'data: ')) {
+                    $payload = substr($line, 6);
+
+                    if ($payload === '[DONE]') {
+                        return;
+                    }
+
+                    $decoded = json_decode($payload, true);
+                    if (is_array($decoded) && isset($decoded[self::SSE_CHUNK_KEY])) {
+                        $payload = (string) $decoded[self::SSE_CHUNK_KEY];
+                    }
+
+                    yield ['type' => 'chunk', 'payload' => $payload];
+
+                    continue;
+                }
+
+                if ($line === 'event: activity' || $line === 'event: citations') {
+                    $dataLine = fgets($stream);
+
+                    if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
+                        $payload = json_decode(trim(substr($dataLine, 6)), true);
+                        yield ['type' => $line === 'event: activity' ? 'activity' : 'citations', 'payload' => $payload];
+                    }
+
+                    continue;
+                }
+
+                if ($line === 'event: error') {
+                    $dataLine = fgets($stream);
+
+                    if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
+                        $decoded = json_decode(trim(substr($dataLine, 6)), true);
+                        throw new AiServiceProviderException($decoded['message'] ?? 'The AI provider is temporarily unavailable.');
+                    }
+
+                    throw new AiServiceProviderException('The AI provider returned a malformed error event.');
+                }
+            }
+        } catch (ConnectionException $e) {
+            // Mid-stream transport drop — same truncation contract as EOF,
+            // mapped here so callers catch only the typed AiService
+            // exceptions (the connect-phase ConnectionException is already
+            // wrapped by chatStream()).
+            throw new AiServiceProviderException('The AI provider stream ended unexpectedly.', 0, $e);
+        }
+
+        // Every exit from the loop is either `[DONE]` (returned above) or a
+        // thrown error — reaching here means the stream was truncated.
+        throw new AiServiceProviderException('The AI provider stream ended unexpectedly.');
+    }
+
+    /**
      * Single HTTP gateway to the sidecar: token header, loopback base URL,
      * bounded timeouts, and typed failure mapping. Sanitized failure logging
      * only — never logs tokens, queries, or response bodies.
