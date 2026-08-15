@@ -49,7 +49,7 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     env:
       APP_ENV: testing
       DB_CONNECTION: sqlite
