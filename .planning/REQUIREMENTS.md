@@ -13,7 +13,7 @@ Requirements for milestone v2.0. Each maps to roadmap phases.
 - [x] **SEARCH-02**: Search results show live availability status (copies available/total) sourced from Inventory/BorrowTransaction, never from the LLM
 - [ ] **SEARCH-03**: Chat answers include numbered [N] citations linked to real retrieved catalog records
 - [ ] **SEARCH-04**: Assistant answers "I don't have enough information" instead of guessing when retrieval finds nothing (grounding rules)
-- [ ] **SEARCH-05**: User can search academic papers by topic, author, year, or adviser
+- [x] **SEARCH-05**: User can search academic papers by topic, author, year, or adviser
 - [x] **SEARCH-06**: User can ask for "books similar to X" and get recommendation results
 - [x] **SEARCH-07**: Catalog, paper, and policy data sync from the Laravel database into the search index automatically (export + rebuild)
 
@@ -68,7 +68,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SEARCH-02 | Phase 10: Live Availability & Similar-Book Recommendations | Complete |
 | SEARCH-03 | Phase 9: RAG Chat & Policy Q&A | Pending |
 | SEARCH-04 | Phase 9: RAG Chat & Policy Q&A | Pending |
-| SEARCH-05 | Phase 11: Academic Papers & Agentic Search | Pending |
+| SEARCH-05 | Phase 11: Academic Papers & Agentic Search | Complete |
 | SEARCH-06 | Phase 10: Live Availability & Similar-Book Recommendations | Complete |
 | SEARCH-07 | Phase 8: Hybrid Search Foundation | Complete |
 | CHAT-01 | Phase 9: RAG Chat & Policy Q&A | Pending |
