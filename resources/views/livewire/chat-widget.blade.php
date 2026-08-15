@@ -76,6 +76,17 @@
                  this markup on a single line; any wrapped-formatting edit
                  that leaves whitespace inside the slot resurfaces the idle
                  bubble. --}}
+            {{-- Agentic activity slot (W-3 hazard, same rule as the ans slot
+                 below): a second persistent stream slot for compact loop-step
+                 lines. Kept on a SINGLE line with the :empty collapse so it
+                 stays zero-height and invisible while idle and snaps open on
+                 the first streamed line; the final re-render wipes it. --}}
+            <div class="flex justify-start">
+                <div class="bg-base-200 text-base-content rounded-2xl rounded-bl-sm px-4 max-w-[85%]">
+                    <div wire:stream="activity" class="text-xs py-2 empty:py-0 empty:invisible space-y-1"></div>
+                </div>
+            </div>
+
             <div class="flex justify-start">
                 <div class="bg-base-200 text-base-content rounded-2xl rounded-bl-sm px-4 max-w-[85%]">
                     <div wire:stream="ans" class="text-sm whitespace-pre-line py-2 empty:py-0 empty:invisible"></div>

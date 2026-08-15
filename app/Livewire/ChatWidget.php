@@ -158,18 +158,44 @@ class ChatWidget extends Component
             $svc = new AiService;
             $response = $svc->chatStream($question, 'citations', null, 5);
 
-            // Typing dots stream first — the persistent stream slot (W-3)
+            // Typing dots stream first — the persistent activity slot (W-3)
             // needs the indicator inside the live stream, not in a
-            // conditionally-rendered element.
+            // conditionally-rendered element; it masks the first-call
+            // decision latency on the agentic path (A-4).
             $this->stream(
                 '<span class="inline-flex gap-1 py-1"><span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce"></span><span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce [animation-delay:150ms]"></span><span class="w-1.5 h-1.5 rounded-full bg-base-content/40 animate-bounce [animation-delay:300ms]"></span></span>',
                 false,
-                'ans'
+                'activity'
             );
 
-            foreach ($svc->chatStreamEvents($response) as $chunk) {
-                $accumulated .= $chunk;
-                $this->stream($chunk, false, 'ans');
+            foreach ($svc->chatStreamFrames($response) as $frame) {
+                if ($frame['type'] === 'activity') {
+                    // One compact spinner+copy line per loop step (UI-SPEC
+                    // Agentic Loop Activity Lines) — frame payload is the
+                    // sidecar's static copy table, never raw tool JSON.
+                    $this->stream(
+                        '<div class="flex items-center gap-1.5 py-0.5"><span class="loading loading-spinner loading-xs text-primary"></span><span>'.($frame['payload']['text'] ?? '').'</span></div>',
+                        false,
+                        'activity'
+                    );
+
+                    continue;
+                }
+
+                if ($frame['type'] === 'citations') {
+                    // ADR 0006 shape-checked frame payload wins over the
+                    // companion fallback; malformed/absent frames keep the
+                    // companionCitations() result for both render and
+                    // persistence (T-11-19).
+                    if ($this->validCitationsPayload($frame['payload'])) {
+                        $citations = $frame['payload'];
+                    }
+
+                    continue;
+                }
+
+                $accumulated .= $frame['payload'];
+                $this->stream($frame['payload'], false, 'ans');
             }
 
             // The assistant row lands only once the answer is complete —
@@ -221,6 +247,34 @@ class ChatWidget extends Component
     private function assistantBubble(string $content, ?array $citations = null, bool $failed = false, ?array $error = null): array
     {
         return ['role' => 'assistant', 'content' => $content, 'citations' => $citations, 'failed' => $failed, 'error' => $error];
+    }
+
+    /**
+     * ADR 0006 shape gate for the agentic citations frame payload: a list of
+     * entries each carrying the six contract keys. `array_key_exists` (not
+     * `isset`) so nullable keys (url, catalog_code) still validate. Malformed
+     * payloads are rejected so the caller keeps the companionCitations()
+     * fallback for render + persistence (T-11-19).
+     */
+    private function validCitationsPayload(mixed $payload): bool
+    {
+        if (! is_array($payload)) {
+            return false;
+        }
+
+        foreach ($payload as $entry) {
+            if (! is_array($entry)) {
+                return false;
+            }
+
+            foreach (['n', 'id', 'corpus', 'title', 'url', 'catalog_code'] as $key) {
+                if (! array_key_exists($key, $entry)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**
