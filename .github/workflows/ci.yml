@@ -63,6 +63,7 @@ jobs:
       TELESCOPE_ENABLED: false
       NIGHTWATCH_ENABLED: false
     steps:
+      - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-laravel
         with:
           coverage: 'true'
