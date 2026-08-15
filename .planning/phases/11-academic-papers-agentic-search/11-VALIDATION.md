@@ -38,11 +38,12 @@ created: 2026-08-15
 
 | Task ID | Plan | Wave | Requirement | Threat Ref | Secure Behavior | Test Type | Automated Command | File Exists | Status |
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
-| 11-01-xx | 01 | 1 | SEARCH-05 | T-11-01 | rich doc shape, no corpus tag break | unit | `php artisan test --filter CorpusExporterTest` | ✅ | ⬜ pending |
-| 11-01-xx | 01 | 1 | SEARCH-05 | T-11-01 | new author/adviser filters closed-schema | unit | `pytest tests/test_api.py::test_search_author_filter -x` | ✅ | ⬜ pending |
-| 11-02-xx | 02 | 1 | SEARCH-05 | T-11-01 | paper tab mode + filter passthrough | feature | `php artisan test --filter AcademicPaperIndexPaperTabTest` | ✅ | ⬜ pending |
-| 11-03-xx | 03 | 2 | CHAT-05 | T-11-02 | tool loop cap, fail-closed refusal | unit | `pytest tests/test_agentic_loop.py -x` | ✅ | ⬜ pending |
-| 11-03-xx | 03 | 2 | CHAT-05 | T-11-02 | activity + citations SSE frames | feature | `php artisan test --filter ChatWidgetAgenticTest` | ✅ | ⬜ pending |
+| 11-01-T1/T2 | 01 | 1 | SEARCH-05 | T-11-01 | rich doc shape, no corpus tag break | unit | `php artisan test --filter ExportAiCorpusTest` | ✅ | ⬜ pending |
+| 11-02-T1/T2 | 02 | 1 | SEARCH-05 | T-11-01 | author/adviser filters closed-schema posture | unit | `cd ceit-ai-sidecar; uv run pytest tests/test_filters.py tests/test_api.py -x` | ✅ | ⬜ pending |
+| 11-02-T3 | 02 | 1 | SEARCH-05 | T-11-01 | eval quality gate on rebuilt index | integration | `cd ceit-ai-sidecar; uv run python -m app.eval --corpus catalog` | ✅ | ⬜ pending |
+| 11-04-T2/T3 | 04 | 2 | SEARCH-05 | T-11-01 | paper tab mode + filter passthrough + back-compat | feature | `php artisan test --filter AcademicPaperIndexHybridTest` | ✅ | ⬜ pending |
+| 11-03-T1 | 03 | 2 | CHAT-05 | T-11-02 | tool loop cap, fail-closed refusal, frame ordering | unit | `cd ceit-ai-sidecar; uv run pytest tests/test_agentic_loop.py -x` | ✅ | ⬜ pending |
+| 11-05-T1/T2 | 05 | 3 | CHAT-05 | T-11-02 | activity + citations SSE frames, refusal bubble | feature | `php artisan test --filter 'AiServiceChatTest|ChatWidgetTest'` | ✅ | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -50,11 +51,10 @@ created: 2026-08-15
 
 ## Wave 0 Requirements
 
-- [ ] `ceit-ai-sidecar\tests\test_agentic_loop.py` — stubs for CHAT-05
-- [ ] `tests/Feature/AcademicPaperIndexPaperTabTest.php` — stubs for SEARCH-05
-- [ ] `tests/Feature/ChatWidgetAgenticTest.php` — stubs for CHAT-05 frames
+- [ ] `ceit-ai-sidecar\tests\conftest.py` — rich single-title corpus fixtures (wave-0 agreement with 11-01 exporter shape; both land in wave 1)
+- [ ] `ceit-ai-sidecar\tests\fixtures\chat-stream-agentic.txt` — agentic SSE fixture (created in 11-03/11-05)
 
-*If none: "Existing infrastructure covers all phase requirements."*
+*Existing infrastructure covers all other phase requirements.*
 
 ---
 
