@@ -27,11 +27,19 @@
             <p class="text-sm text-base-content/70">Browse and access Academic Paper documents from the CEIT Library</p>
         </div>
 
+        {{-- Browse / Paper Search tab strip (D-04) — pure prop sets, no reset --}}
+        <div role="tablist" class="tabs tabs-boxed mb-6 bg-base-200 w-max">
+            <a role="tab" class="tab {{ ! $paperTabActive ? 'tab-active' : '' }}" wire:click="$set('paperTabActive', false)">Browse</a>
+            <a role="tab" class="tab {{ $paperTabActive ? 'tab-active' : '' }}" wire:click="$set('paperTabActive', true)">Paper Search</a>
+        </div>
+
         {{-- Search and Filters Component --}}
         <x-academic-paper-filters 
             :availableYears="$this->availableYears"
             :availablePaperTypes="$this->availablePaperTypes"
             :availableDepartments="$this->availableDepartments"
+            :availableAuthors="$this->availableAuthors"
+            :availableAdvisers="$this->availableAdvisers"
         />
 
         {{-- AI search fallback notice --}}
@@ -237,7 +245,7 @@
         <div class="block xl:hidden space-y-4 relative">
             {{-- Localized loading overlay for card updates (filters, pagination, per-page) --}}
             <div wire:loading.flex 
-                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter, clearFilters, gotoPage, nextPage, previousPage"
+                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter, authorFilter, adviserFilter, paperTabActive, clearFilters, gotoPage, nextPage, previousPage"
                 class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
                 <div class="flex flex-col items-center gap-2">
                     <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -247,6 +255,9 @@
 
             @if (! is_null($this->hybridResults))
                 {{-- Hybrid search results (sidecar-ordered) --}}
+                @if ($paperTabActive && $this->hybridResults)
+                    <p class="text-xs text-base-content/60 mb-3">Results ranked by relevance</p>
+                @endif
                 @forelse ($this->hybridResults as $paper)
                     <div wire:key="hybrid-mobile-{{ $paper->id }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
                         <div class="flex items-start justify-between mb-3">
@@ -317,13 +328,23 @@
                         </div>
                     </div>
                 @empty
-                    <x-empty-state
-                        icon="o-document-magnifying-glass"
-                        title="No Academic Papers Found"
-                        message="No papers match your current search."
-                        :show-action="false"
-                        size="sm"
-                    />
+                    @if ($paperTabActive && ! $search && ! $authorFilter && ! $adviserFilter)
+                        <x-empty-state
+                            icon="o-magnifying-glass"
+                            title="Search the paper collection"
+                            message="Type a topic, or choose an author or adviser to find papers."
+                            :show-action="false"
+                            size="sm"
+                        />
+                    @else
+                        <x-empty-state
+                            icon="o-document-magnifying-glass"
+                            title="No Academic Papers Found"
+                            message="No papers match your current search."
+                            :show-action="false"
+                            size="sm"
+                        />
+                    @endif
                 @endforelse
             @else
             @forelse ($this->academicPapers as $paper)
@@ -429,7 +450,7 @@
         <div class="hidden xl:block overflow-hidden relative">
             {{-- Localized loading overlay for table updates (filters, pagination, per-page) --}}
             <div wire:loading.flex 
-                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter, clearFilters, gotoPage, nextPage, previousPage"
+                wire:target="perPage, search, statusFilter, departmentFilter, paperTypeFilter, yearFilter, yearFromFilter, yearToFilter, authorFilter, adviserFilter, paperTabActive, clearFilters, gotoPage, nextPage, previousPage"
                 class="absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10 items-center justify-center rounded-lg">
                 <div class="flex flex-col items-center gap-2">
                     <span class="loading loading-spinner loading-lg text-primary"></span>
@@ -438,6 +459,9 @@
             </div>
             @if (! is_null($this->hybridResults))
                 {{-- Hybrid search results (sidecar-ordered) — card grid on desktop --}}
+                @if ($paperTabActive && $this->hybridResults)
+                    <p class="text-xs text-base-content/60 mb-3">Results ranked by relevance</p>
+                @endif
                 <div class="grid grid-cols-2 gap-4">
                     @forelse ($this->hybridResults as $paper)
                         <div wire:key="hybrid-desktop-{{ $paper->id }}" class="bg-base-100 border border-base-300 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -510,13 +534,23 @@
                         </div>
                     @empty
                         <div class="col-span-2">
-                            <x-empty-state
-                                icon="o-document-magnifying-glass"
-                                title="No Academic Papers Found"
-                                message="No papers match your current search."
-                                :show-action="false"
-                                size="default"
-                            />
+                            @if ($paperTabActive && ! $search && ! $authorFilter && ! $adviserFilter)
+                                <x-empty-state
+                                    icon="o-magnifying-glass"
+                                    title="Search the paper collection"
+                                    message="Type a topic, or choose an author or adviser to find papers."
+                                    :show-action="false"
+                                    size="default"
+                                />
+                            @else
+                                <x-empty-state
+                                    icon="o-document-magnifying-glass"
+                                    title="No Academic Papers Found"
+                                    message="No papers match your current search."
+                                    :show-action="false"
+                                    size="default"
+                                />
+                            @endif
                         </div>
                     @endforelse
                 </div>

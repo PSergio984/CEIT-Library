@@ -2,6 +2,8 @@
     'availableYears',
     'availablePaperTypes',
     'availableDepartments',
+    'availableAuthors' => null,
+    'availableAdvisers' => null,
     'showSearchBar' => true,
 ])
 
@@ -10,16 +12,20 @@
     availableYears: null,
     availablePaperTypes: null,
     availableDepartments: null,
+    availableAuthors: null,
+    availableAdvisers: null,
     
     init() {
         // Synchronously assign props to Alpine state for predictable rendering
         this.availableYears = @js($availableYears->toArray());
         this.availablePaperTypes = @js($availablePaperTypes->toArray());
         this.availableDepartments = @js($availableDepartments->toArray());
+        this.availableAuthors = @js($availableAuthors?->toArray());
+        this.availableAdvisers = @js($availableAdvisers?->toArray());
     },
     
     get hasActiveFilters() {
-        return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter);
+        return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter || $wire.authorFilter || $wire.adviserFilter);
     },
     get validYearsFrom() {
         const toYear = $wire.yearToFilter;
@@ -112,6 +118,24 @@
                 </template>
             </select>
             
+            @if ($wire->paperTabActive ?? false)
+            {{-- Author Filter (paper tab only) --}}
+            <select wire:model.live="authorFilter" class="select select-bordered select-sm sm:select-md w-full">
+                <option value="">All Authors</option>
+                <template x-for="author in availableAuthors" :key="author">
+                    <option :value="author" x-text="author"></option>
+                </template>
+            </select>
+            
+            {{-- Adviser Filter (paper tab only) --}}
+            <select wire:model.live="adviserFilter" class="select select-bordered select-sm sm:select-md w-full">
+                <option value="">All Advisers</option>
+                <template x-for="adviser in availableAdvisers" :key="adviser">
+                    <option :value="adviser" x-text="adviser"></option>
+                </template>
+            </select>
+            @endif
+            
             {{-- Year From Filter --}}
             <select wire:model.live="yearFromFilter" class="select select-bordered select-sm sm:select-md w-full">
                 <option value="" disabled selected>Year From</option>
@@ -143,6 +167,14 @@
             <span x-show="$wire.departmentFilter" x-cloak class="badge badge-sm gap-1">
                 <span>Dept:</span>
                 <span x-text="$wire.departmentFilter"></span>
+            </span>
+            <span x-show="$wire.authorFilter" x-cloak class="badge badge-sm gap-1">
+                <span>Author:</span>
+                <span x-text="$wire.authorFilter"></span>
+            </span>
+            <span x-show="$wire.adviserFilter" x-cloak class="badge badge-sm gap-1">
+                <span>Adviser:</span>
+                <span x-text="$wire.adviserFilter"></span>
             </span>
             <span x-show="$wire.yearFromFilter" x-cloak class="badge badge-sm gap-1">
                 <span>From:</span>
