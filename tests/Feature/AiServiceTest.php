@@ -67,6 +67,25 @@ class AiServiceTest extends TestCase
     }
 
     #[Test]
+    public function it_passes_author_and_adviser_filter_keys_to_the_sidecar(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+        ]);
+
+        (new AiService)->search('solar', ['author' => 'Juan Dela Cruz', 'adviser' => 'Engr. Jose Santos']);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/search')
+                && array_keys($request->data()) === ['query', 'filters', 'corpus', 'limit', 'k']
+                && $request['filters'] === ['author' => 'Juan Dela Cruz', 'adviser' => 'Engr. Jose Santos'];
+        });
+    }
+
+    #[Test]
     public function it_returns_search_results_shape(): void
     {
         Http::fake([
