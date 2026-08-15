@@ -268,7 +268,7 @@ class ChatWidget extends Component
                 return false;
             }
 
-            foreach (['n', 'id', 'corpus', 'title', 'url', 'catalog_code'] as $key) {
+            foreach (AiService::CITATION_KEYS as $key) {
                 if (! array_key_exists($key, $entry)) {
                     return false;
                 }

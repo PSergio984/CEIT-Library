@@ -206,6 +206,53 @@ class AcademicPaperIndexHybridTest extends TestCase
     }
 
     #[Test]
+    public function it_searches_by_author_or_adviser_alone_in_paper_tab(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        // Author-only: no topic, author filter set — the name becomes the
+        // query (Spec review S-4: author/adviser are standalone search axes
+        // per UI-SPEC empty state, ADR 0011 title-as-query precedent).
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('authorFilter', 'Juan Dela Cruz')
+            ->call('runHybridSearch')
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && count($results) === 2;
+            });
+
+        Http::assertSent(function ($request) {
+            return $request['query'] === 'Juan Dela Cruz'
+                && $request['filters']['author'] === 'Juan Dela Cruz'
+                && array_key_exists('adviser', $request['filters']);
+        });
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        // Adviser-only in a second request: fresh component, no topic.
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('adviserFilter', 'Engr. Jose Santos')
+            ->call('runHybridSearch')
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && count($results) === 2;
+            });
+
+        Http::assertSent(function ($request) {
+            return $request['query'] === 'Engr. Jose Santos'
+                && $request['filters']['adviser'] === 'Engr. Jose Santos';
+        });
+    }
+
+    #[Test]
     public function it_exits_paper_tab_hybrid_on_status_filter(): void
     {
         $this->seedPapers();

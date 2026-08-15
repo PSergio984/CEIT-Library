@@ -24,6 +24,13 @@ class AiService
      */
     private const SSE_CHUNK_KEY = 'c';
 
+    /**
+     * ADR 0006 citation payload keys — the sidecar's counterpart constant
+     * lives in `app/rag.py` (CITATION_KEYS). One shared literal per side so
+     * the contract cannot drift inside either codebase.
+     */
+    public const CITATION_KEYS = ['n', 'id', 'corpus', 'title', 'url', 'catalog_code'];
+
     public function search(string $query, array $filters = [], ?string $corpus = 'catalog', int $limit = 10): array
     {
         return $this->send('POST', '/search', [

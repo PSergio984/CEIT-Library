@@ -106,12 +106,13 @@ Accent (`primary`) reserved for: primary CTA buttons (`View Details`, `View`), t
 | Activity line — adviser step | `Searching papers by adviser…` |
 | Activity line — year-range step | `Searching papers from {year}–{year}…` |
 | Activity line — refinement step | `Narrowing results…` |
-| Activity line — corpus step | `Looking in the catalog…` |
+| Activity line — corpus step (policy) | `Searching policy documents…` |
+| Activity line — corpus step (catalog) | `Searching the catalog…` |
 | Empty state (paper tab idle — no topic, no filters) | Title: `Search the paper collection` / Message: `Type a topic, or choose an author or adviser to find papers.` |
 | Empty state (no results, filters/topic set) | `No Academic Papers Found` / `No papers match your current search.` (reuse existing) |
 | Page error (sidecar down) | `AI search unavailable — showing basic results` (reuse existing alert) |
 | Chat loop failure | Existing error bubble: provider message + `Retry` button (unchanged) |
-| Fail-closed refusal (D-08, ADR 0006) | `I don't have enough information to answer that.` — renders as a normal assistant bubble, NOT an error bubble |
+| Fail-closed refusal (D-08, ADR 0006 — string locked verbatim) | `I don't have enough information` — renders as a normal assistant bubble, NOT an error bubble |
 | Chat idle | `Ask about papers or rules` (existing, unchanged) |
 
 Ellipsis character: `…` (U+2026) in activity lines, matching D-12 examples.
@@ -135,7 +136,7 @@ Ellipsis character: `…` (U+2026) in activity lines, matching D-12 examples.
 - New `public bool $paperTabActive = false` prop on `AcademicPaperIndex`; the two tabs are always visible and act as the switcher (no separate "Back" button — unlike similar-books, results stay in place).
 - Entering/leaving the tab must NOT reset browse state: snapshot `search`, all filter props, `hybridResults`, `aiSearchFailed`, page, `sortBy` (mirror `recommendationsSnapshot`, `AcademicPaperIndex.php:378-434`); author/adviser props join the snapshot.
 - Status filter force-exit (D-18 pattern): `updatedStatusFilter()` → `exitHybridMode()` unchanged — in paper tab it drops to the SQL path inside the tab; `updatedAuthorFilter()`/`updatedAdviserFilter()` must NOT exit hybrid mode (they are sidecar filters).
-- Topic box: reuse the existing search input in the filters component; when `$paperTabActive`, placeholder swaps to the paper-tab copy above. The ≥3-char topic gate in `runHybridSearch()` stands (RESEARCH.md A-8); author/adviser filters refine, they do not replace, the topic query. Author/adviser selects live in the same `academic-paper-filters` panel (see below) and apply in both modes — but only route to the sidecar in paper-tab mode (composition matrix, RESEARCH.md).
+- Topic box: reuse the existing search input in the filters component; when `$paperTabActive`, placeholder swaps to the paper-tab copy above. The ≥3-char topic gate in `runHybridSearch()` stands for topic-only searches; author/adviser selections are standalone search axes (see S-4 fix) — with no usable topic, the selected name becomes the query (ADR 0011 name-as-query precedent), and the name filter still narrows the ranking. Author/adviser selects live in the same `academic-paper-filters` panel (see below) and apply in both modes — but only route to the sidecar in paper-tab mode (composition matrix, RESEARCH.md).
 - Results rendering: zero changes — the existing mobile card list / desktop hybrid grid / desktop table paths render hybrid results as today. No new sort control (D-06); the relevance caption replaces any sort affordance.
 - The `wire:loading` targets list must add `paperTabActive, authorFilter, adviserFilter` to the existing "Updating results..." overlay targets so tab switches and author/adviser changes show the localized overlay.
 
@@ -216,7 +217,7 @@ Mounted immediately above the existing `ans` slot, inside the same assistant-sid
 | Page search loading | `wire:target` includes `paperTabActive, authorFilter, adviserFilter` | Existing localized overlay: `absolute inset-0 bg-base-100/80 backdrop-blur-sm z-10` + `loading loading-spinner loading-lg text-primary` + `Updating results...` |
 | Sidecar down (page) | `aiSearchFailed` in paper tab | Existing `alert alert-warning text-sm` — `AI search unavailable — showing basic results` (unchanged) |
 | Sidecar down (chat) | `event: error` mid-loop | Existing amber bubble + `Retry` (unchanged); no partial activity lines remain after re-render |
-| Fail-closed | Loop cap/malformed args, zero docs | Normal assistant bubble: `I don't have enough information to answer that.` — no error styling, no Retry |
+| Fail-closed | Loop cap/malformed args, zero docs | Normal assistant bubble: `I don't have enough information` (ADR 0006 verbatim) — no error styling, no Retry |
 
 ---
 

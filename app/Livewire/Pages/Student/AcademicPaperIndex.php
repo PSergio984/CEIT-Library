@@ -14,6 +14,7 @@ use App\Services\AvailabilityService;
 use App\Services\SimilarPapersService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
@@ -235,7 +236,7 @@ class AcademicPaperIndex extends Component
     }
 
     #[Computed(persist: true, cache: true)]
-    public function availableAuthors()
+    public function availableAuthors(): Collection
     {
         // Lazy-loaded and cached for better initial load performance
         return Author::distinct()
@@ -246,7 +247,7 @@ class AcademicPaperIndex extends Component
     }
 
     #[Computed(persist: true, cache: true)]
-    public function availableAdvisers()
+    public function availableAdvisers(): Collection
     {
         // Lazy-loaded and cached for better initial load performance
         return collect(ResearchAdviser::orderBy('name')->pluck('name'))
@@ -348,10 +349,22 @@ class AcademicPaperIndex extends Component
     /**
      * Run hybrid search against the AI sidecar for the current query +
      * filter state. Falls back silently to the local SQL search on failure.
+     *
+     * The ≥3-char topic gate stands, but in the paper tab an author or
+     * adviser selection is a standalone search axis (UI-SPEC empty state:
+     * "choose an author or adviser to find papers"): with no usable topic,
+     * the selected name becomes the query (title-as-query precedent, ADR
+     * 0011), and the name filter still narrows the ranking (Spec review S-4).
      */
     public function runHybridSearch(): void
     {
-        if (strlen(trim($this->search)) < 3 || $this->statusFilter !== '') {
+        $query = trim($this->search);
+
+        if (strlen($query) < 3 && $this->paperTabActive) {
+            $query = $this->authorFilter ?: $this->adviserFilter;
+        }
+
+        if (strlen((string) $query) < 3 || $this->statusFilter !== '') {
             $this->exitHybridMode();
 
             return;
@@ -371,7 +384,7 @@ class AcademicPaperIndex extends Component
         }
 
         try {
-            $results = (new AiService)->search($this->search, $filters, 'catalog', 10);
+            $results = (new AiService)->search($query, $filters, 'catalog', 10);
         } catch (AiServiceUnavailableException|AiServiceAuthException) {
             $this->hybridResults = null;
             $this->aiSearchFailed = true;

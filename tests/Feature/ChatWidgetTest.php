@@ -786,7 +786,8 @@ class ChatWidgetTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
-            'http://127.0.0.1:8310/chat/stream' => Http::response("data: I don't have enough information to answer that.\n\ndata: [DONE]\n\n", 200, ['Content-Type' => 'text/event-stream']),
+            // ADR 0006 locks the refusal verbatim — short copy, no suffix.
+            'http://127.0.0.1:8310/chat/stream' => Http::response("data: I don't have enough information\n\ndata: [DONE]\n\n", 200, ['Content-Type' => 'text/event-stream']),
         ]);
 
         $this->actingAs($user);
@@ -795,7 +796,7 @@ class ChatWidgetTest extends TestCase
             ->call('newConversation')
             ->set('draft', 'obscure question')
             ->call('send')
-            ->assertSee("I don't have enough information to answer that.")
+            ->assertSee("I don't have enough information")
             ->assertDontSee('Retry')
             ->assertDontSee('alert-warning')
             ->assertDontSee('Sources');
