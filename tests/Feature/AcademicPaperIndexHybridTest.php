@@ -206,6 +206,28 @@ class AcademicPaperIndexHybridTest extends TestCase
     }
 
     #[Test]
+    public function it_sends_verbatim_search_in_browse_mode(): void
+    {
+        // Review nit 3: the S-4 name-as-query fix must not change the
+        // browse-mode wire payload — whitespace-padded queries ship verbatim
+        // outside the paper tab (pre-S-4 behavior).
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->fixtureSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('search', '  water pump  ')
+            ->call('runHybridSearch');
+
+        Http::assertSent(function ($request) {
+            return $request['query'] === '  water pump  ';
+        });
+    }
+
+    #[Test]
     public function it_searches_by_author_or_adviser_alone_in_paper_tab(): void
     {
         $this->seedPapers();

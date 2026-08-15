@@ -361,6 +361,9 @@ class AcademicPaperIndex extends Component
         $query = trim($this->search);
 
         if (strlen($query) < 3 && $this->paperTabActive) {
+            // Review nit 3: the name-as-query fallback is a paper-tab-only
+            // behaviour — browse mode must keep the pre-S-4 verbatim payload,
+            // so the trim above is only applied to the tab-mode query below.
             $query = $this->authorFilter ?: $this->adviserFilter;
         }
 
@@ -368,6 +371,12 @@ class AcademicPaperIndex extends Component
             $this->exitHybridMode();
 
             return;
+        }
+
+        // Browse mode ships the user's search verbatim (byte-identical to
+        // pre-S-4); only the paper tab sends the normalized query.
+        if (! $this->paperTabActive) {
+            $query = $this->search;
         }
 
         $filters = [
