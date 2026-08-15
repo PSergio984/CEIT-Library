@@ -44,6 +44,18 @@ Re-review verdict: all 5 Spec findings FIXED, no new drift, no scope creep; Stan
 
 Post-fix suites: sidecar 72 passed / 1 skipped (ruff clean), Laravel 600 passed / 3 skipped; eval gate: negative pass rate 1.0, top-1 0.9259, F1 0.6112.
 
+## Two-Axis Review Round 2 — Fix Round 2 (2026-08-15)
+
+Re-review found all 5 spec findings RESOLVED + 4 standards nits (judgement calls); all nits fixed (sidecar `5f71f0f`, Laravel `a7d987ad`):
+- **nit 1 fixed** — `effective_corpus` single owner: `activity_line(args, executed_rounds, effective_corpus)` no longer re-derives `args.corpus or corpus`; the loop resolves once and passes it. Test: `test_activity_line_uses_the_effective_corpus_it_is_given`.
+- **nit 2 fixed** — `citation_payload()` explicit key→value dict literal (was `zip(CITATION_KEYS, positional_tuple)`); `_citation_values` deleted; shape locked by `test_citation_payload_keys_match_contract_and_values_are_attributed`; `rag.CITATION_KEYS` + `AiService::CITATION_KEYS` mirrors unchanged.
+- **nit 3 fixed** — browse mode ships verbatim `$this->search` (byte-identical pre-S-4 payload); trim/name-as-query is paper-tab-only. Test: `it_sends_verbatim_search_in_browse_mode`.
+- **nit 4 fixed** — UI-SPEC documents author-over-adviser query precedence + gate-exit when neither set, matching the code.
+
+Round-2 verdict: both axes clean — 0 hard violations, 0 spec drift, 0 scope creep. One mild judgement call: the six citation key names now exist twice (rag.py literal + dict literal) — explicit-over-positional trade-off, test-enforced.
+
+Post-fix suites: sidecar 74 passed / 1 skipped (ruff clean), Laravel 601 passed / 3 skipped; eval gate unchanged: negative pass rate 1.0, top-1 0.9259, F1 0.6112.
+
 Reviewed 2026-08-15. Scope: paper corpus doc shape (CorpusExporter), author/adviser
 filters (sidecar `passes()` + endpoint acceptance), agentic loop (sidecar `agent.py`,
 routed `/chat/stream`), paper tab (AcademicPaperIndex + filters component + blade),
