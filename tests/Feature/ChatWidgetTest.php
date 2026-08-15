@@ -610,4 +610,202 @@ class ChatWidgetTest extends TestCase
             ->assertDontSeeHtml('<span class="text-success')
             ->assertDontSeeHtml('<span class="text-error');
     }
+
+    #[Test]
+    public function it_renders_activity_lines_and_agentic_citations(): void
+    {
+        $user = User::factory()->create();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
+            // One response instance per send — a reused instance hands the
+            // second send an exhausted stream (W-2 truncation throw).
+            'http://127.0.0.1:8310/chat/stream' => Http::sequence()
+                ->push($this->fixture('chat-stream-agentic.txt'), 200, ['Content-Type' => 'text/event-stream'])
+                ->push($this->fixture('chat-stream-agentic.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($user);
+
+        // The streamed frames are echoed into the live SSE body (ob_flush
+        // truncates plain ob_start buffers, so capture through a callback),
+        // not into component state — assert the activity slot actually
+        // received the spinner+copy line.
+        $streamed = '';
+        ob_start(function ($chunk) use (&$streamed) {
+            $streamed .= $chunk;
+
+            return '';
+        });
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'papers by juan dela cruz')
+            ->call('send')
+            ->assertSet('streaming', false)
+            ->assertSet('messages.1.content', 'The papers by Juan Dela Cruz are …');
+        ob_end_clean();
+
+        $this->assertStringContainsString('Searching papers by author', $streamed);
+        $this->assertStringContainsString('loading loading-spinner loading-xs', $streamed);
+        $this->assertStringContainsString('"name":"activity"', $streamed);
+
+        // The frame's citations payload drives the final bubble chip...
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'papers by juan dela cruz')
+            ->call('send')
+            ->assertSeeHtml('href="/academic-papers/77"')
+            ->assertSee('CEIT-CE-15-014')
+            ->assertSee('Sources');
+
+        // ...and the persisted ai_messages.citations column equals the frame
+        // payload exactly (ADR 0006 shape), NOT the empty companion result.
+        $message = Message::where('role', 'assistant')->first();
+
+        $this->assertSame([
+            [
+                'n' => 1,
+                'id' => 'paper-77',
+                'corpus' => 'catalog',
+                'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+                'url' => '/academic-papers/77',
+                'catalog_code' => 'CEIT-CE-15-014',
+            ],
+        ], $message->citations);
+
+        // Availability keys still never reach the sidecar on the agentic path.
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/search')
+                && array_keys($request->data()) === ['query', 'filters', 'corpus', 'limit', 'k']
+                && ! array_key_exists('available', $request->data())
+                && $request['query'] === 'papers by juan dela cruz';
+        });
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/chat/stream')
+                && array_keys($request->data()) === ['query', 'mode', 'top_k']
+                && ! array_key_exists('available', $request->data())
+                && $request['query'] === 'papers by juan dela cruz'
+                && $request['top_k'] === 5
+                && ! array_key_exists('corpus', $request->data());
+        });
+    }
+
+    #[Test]
+    public function it_falls_back_to_companion_citations_without_frame(): void
+    {
+        $user = User::factory()->create();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($user);
+
+        $streamed = '';
+        ob_start(function ($chunk) use (&$streamed) {
+            $streamed .= $chunk;
+
+            return '';
+        });
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->assertSet('streaming', false);
+        ob_end_clean();
+
+        // Back-compat: no agentic activity lines are streamed (chunks land
+        // in the 'ans' slot as today), and the companionCitations() result
+        // drives both the bubble and the persisted citations.
+        $this->assertStringContainsString('"name":"ans"', $streamed);
+        $this->assertStringNotContainsString('loading loading-spinner', $streamed);
+        $this->assertStringNotContainsString('Searching papers', $streamed);
+
+        $message = Message::where('role', 'assistant')->first();
+
+        $this->assertSame([
+            [
+                'n' => 1,
+                'id' => 'paper-77',
+                'corpus' => 'catalog',
+                'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+                'url' => '/academic-papers/77',
+                'catalog_code' => 'CEIT-CE-15-014',
+            ],
+        ], $message->citations);
+    }
+
+    #[Test]
+    public function it_renders_fail_closed_refusal_as_normal_bubble(): void
+    {
+        $user = User::factory()->create();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response("data: I don't have enough information to answer that.\n\ndata: [DONE]\n\n", 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'obscure question')
+            ->call('send')
+            ->assertSee("I don't have enough information to answer that.")
+            ->assertDontSee('Retry')
+            ->assertDontSee('alert-warning')
+            ->assertDontSee('Sources');
+
+        $this->assertSame(null, Message::where('role', 'assistant')->first()->citations);
+    }
+
+    #[Test]
+    public function it_ignores_malformed_citations_frame(): void
+    {
+        $user = User::factory()->create();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response(json_decode($this->fixture('search.json'), true), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response(
+                "event: activity\ndata: {\"text\": \"Searching papers by author\u2026\"}\n\ndata: {\"c\": \"The papers by \"}\nevent: citations\ndata: {\"oops\": true}\n\ndata: [DONE]\n\n",
+                200,
+                ['Content-Type' => 'text/event-stream']
+            ),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->assertSet('streaming', false)
+            ->assertSeeHtml('href="/academic-papers/77"')
+            ->assertSee('CEIT-CE-15-014');
+
+        // Malformed frame (non-array payload) → companionCitations() fallback
+        // for BOTH render and persistence (T-11-19).
+        $message = Message::where('role', 'assistant')->first();
+
+        $this->assertSame([
+            [
+                'n' => 1,
+                'id' => 'paper-77',
+                'corpus' => 'catalog',
+                'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+                'url' => '/academic-papers/77',
+                'catalog_code' => 'CEIT-CE-15-014',
+            ],
+        ], $message->citations);
+    }
 }
