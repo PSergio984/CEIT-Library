@@ -6,6 +6,7 @@ use App\Livewire\QrScanner;
 use App\Models\Attendance;
 use App\Models\Librarian;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -14,7 +15,7 @@ use Tests\TestCase;
 
 class QrScannerFileUploadTest extends TestCase
 {
-    use \App\Traits\CreatesQrCanonicalMessage, RefreshDatabase;
+    use CreatesQrCanonicalMessage, RefreshDatabase;
 
     /**
      * Test that file upload scan with valid QR data successfully records attendance
