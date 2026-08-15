@@ -201,6 +201,86 @@ class AiServiceChatTest extends TestCase
     }
 
     #[Test]
+    public function it_parses_activity_and_citations_frames(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream-agentic.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $response = (new AiService)->chatStream('x');
+        $frames = iterator_to_array((new AiService)->chatStreamFrames($response));
+
+        $this->assertSame('activity', $frames[0]['type']);
+        $this->assertSame('Searching papers by author…', $frames[0]['payload']['text']);
+
+        $this->assertSame('chunk', $frames[1]['type']);
+        $this->assertSame('The papers by ', $frames[1]['payload']);
+
+        $this->assertSame('chunk', $frames[2]['type']);
+        $this->assertSame('Juan Dela Cruz are …', $frames[2]['payload']);
+
+        $this->assertSame('citations', $frames[3]['type']);
+        $this->assertSame('paper-77', $frames[3]['payload'][0]['id']);
+        $this->assertSame(
+            ['n', 'id', 'corpus', 'title', 'url', 'catalog_code'],
+            array_keys($frames[3]['payload'][0])
+        );
+        $this->assertSame('CEIT-CE-15-014', $frames[3]['payload'][0]['catalog_code']);
+
+        $this->assertCount(4, $frames);
+    }
+
+    #[Test]
+    public function it_keeps_chat_stream_events_yielding_raw_chunks(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/chat/stream' => Http::response($this->fixture('chat-stream-agentic.txt'), 200, ['Content-Type' => 'text/event-stream']),
+        ]);
+
+        $response = (new AiService)->chatStream('x');
+        $chunks = iterator_to_array((new AiService)->chatStreamEvents($response));
+
+        // Back-compat lock: the untouched legacy parser never learns the new
+        // frame types — frame payload lines fall through its original decode
+        // path exactly as they always have (pitfall #1), and only the {"c": ...}
+        // envelopes are decoded. Frame lines never surface as typed frames here.
+        $this->assertSame([
+            '{"text": "Searching papers by author\u2026"}',
+            'The papers by ',
+            'Juan Dela Cruz are …',
+            '[{"n":1,"id":"paper-77","corpus":"catalog","title":"Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps","url":"/academic-papers/77","catalog_code":"CEIT-CE-15-014"}]',
+        ], $chunks);
+    }
+
+    #[Test]
+    public function it_preserves_error_taxonomy_on_frame_stream(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/chat/stream' => Http::response(
+                "data: {\"c\": \"Partial \"}\n\nevent: error\ndata: {\"code\": \"provider_error\", \"message\": \"The AI provider is temporarily unavailable. Please try again.\"}\n\ndata: [DONE]\n\n",
+                200,
+                ['Content-Type' => 'text/event-stream']
+            ),
+        ]);
+
+        $response = (new AiService)->chatStream('x');
+
+        $this->expectException(AiServiceProviderException::class);
+        $this->expectExceptionMessage('The AI provider is temporarily unavailable. Please try again.');
+
+        iterator_to_array((new AiService)->chatStreamFrames($response));
+    }
+
+    #[Test]
     public function each_typed_exception_exposes_its_error_taxonomy_code(): void
     {
         $this->assertSame('auth_failed', (new AiServiceAuthException)->errorCode());

@@ -1,0 +1,9 @@
+event: activity
+data: {"text": "Searching papers by author\u2026"}
+
+data: {"c": "The papers by "}
+data: {"c": "Juan Dela Cruz are \u2026"}
+event: citations
+data: [{"n":1,"id":"paper-77","corpus":"catalog","title":"Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps","url":"/academic-papers/77","catalog_code":"CEIT-CE-15-014"}]
+
+data: [DONE]
