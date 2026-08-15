@@ -1,6 +1,6 @@
 ---
 phase: 11
-status: findings
+status: clean
 depth: standard
 files_reviewed: 18
 findings:
@@ -8,9 +8,21 @@ findings:
   warning: 4
   info: 8
   total: 12
+fixed: WR-1, WR-2, WR-3
+resolved_date: 2026-08-15
 ---
 
 # Phase 11 Review — Academic Papers & Agentic Search
+
+## Fix Round (2026-08-15)
+
+WR-1, WR-2, WR-3 fixed post-review (sidecar `b590493`, Laravel `4d4607c9`):
+- **WR-1 fixed** — loop executes ALL parallel tool calls within the round cap (sliced to `MAX_TOOL_ROUNDS - rounds`), only executed calls enter messages (no unmatched `tool_call_id` 400s), assistant tool message sets `content: None` per OpenAI contract. Tests: `test_multiple_tool_calls_execute_all_with_no_unmatched_ids`, `test_parallel_calls_beyond_cap_drop_remainder_without_unmatched_ids`.
+- **WR-2 fixed** — tool-result messages truncate doc text to 600 chars + `…` (`_truncate_docs_for_tool()`, reusing `MAX_DOC_CHARS` from the one-shot path); full docs still feed the final prompt. Test: `test_tool_result_messages_truncate_long_doc_text`.
+- **WR-3 fixed** — activity frame text escaped at the stream render boundary (`e($frame['payload']['text'])`) in ChatWidget. Test: `it_escapes_activity_frame_text`.
+- **WR-4 accepted** — author/adviser badges render inertly in Browse mode (UX-only; payload tests prove browse back-compat byte-identical). Not a defect.
+
+Post-fix suites: sidecar 70 passed / 1 skipped (ruff clean), Laravel 599 passed / 3 skipped; eval gate: negative pass rate 1.0, top-1 0.9259, F1 0.6112.
 
 Reviewed 2026-08-15. Scope: paper corpus doc shape (CorpusExporter), author/adviser
 filters (sidecar `passes()` + endpoint acceptance), agentic loop (sidecar `agent.py`,
