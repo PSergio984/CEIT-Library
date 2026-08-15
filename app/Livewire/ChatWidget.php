@@ -172,9 +172,10 @@ class ChatWidget extends Component
                 if ($frame['type'] === 'activity') {
                     // One compact spinner+copy line per loop step (UI-SPEC
                     // Agentic Loop Activity Lines) — frame payload is the
-                    // sidecar's static copy table, never raw tool JSON.
+                    // sidecar's static copy table, never raw tool JSON;
+                    // e() escapes at the render boundary regardless (WR-3).
                     $this->stream(
-                        '<div class="flex items-center gap-1.5 py-0.5"><span class="loading loading-spinner loading-xs text-primary"></span><span>'.($frame['payload']['text'] ?? '').'</span></div>',
+                        '<div class="flex items-center gap-1.5 py-0.5"><span class="loading loading-spinner loading-xs text-primary"></span><span>'.e($frame['payload']['text'] ?? '').'</span></div>',
                         false,
                         'activity'
                     );

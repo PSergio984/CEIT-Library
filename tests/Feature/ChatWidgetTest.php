@@ -694,6 +694,42 @@ class ChatWidgetTest extends TestCase
     }
 
     #[Test]
+    public function it_escapes_activity_frame_text(): void
+    {
+        $user = User::factory()->create();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->emptySearchResponse(), 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response(
+                "event: activity\ndata: {\"text\": \"<img src=x onerror=alert(1)>\"}\n\ndata: {\"c\": \"hi \"}\n\ndata: [DONE]\n\n",
+                200,
+                ['Content-Type' => 'text/event-stream']
+            ),
+        ]);
+
+        $this->actingAs($user);
+
+        $streamed = '';
+        ob_start(function ($chunk) use (&$streamed) {
+            $streamed .= $chunk;
+
+            return '';
+        });
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->assertSet('streaming', false);
+        ob_end_clean();
+
+        // Escaped at the render boundary — raw markup never reaches the DOM.
+        $this->assertStringContainsString('&lt;img src=x onerror=alert(1)&gt;', $streamed);
+        $this->assertStringNotContainsString('<img src=x onerror=alert(1)>', $streamed);
+    }
+
+    #[Test]
     public function it_falls_back_to_companion_citations_without_frame(): void
     {
         $user = User::factory()->create();
