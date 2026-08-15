@@ -140,6 +140,166 @@ class AcademicPaperIndexHybridTest extends TestCase
     }
 
     #[Test]
+    public function it_searches_with_author_and_adviser_filters_in_tab_mode(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('search', 'solar')
+            ->set('authorFilter', 'Juan Dela Cruz')
+            ->set('adviserFilter', 'Engr. Jose Santos')
+            ->call('runHybridSearch')
+            ->assertSet('aiSearchFailed', false)
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && $results[0]->id === 77;
+            })
+            ->assertSeeInOrder(['Analysis of Groundwater Depletion', 'Design of a Smart Flood Monitoring System'])
+            ->assertSee('0 of 0 available');
+
+        Http::assertSent(function ($request) {
+            return array_keys($request['filters']) === [
+                'paper_type',
+                'department',
+                'publication_year',
+                'year_from',
+                'year_to',
+                'author',
+                'adviser',
+            ] && $request['filters']['author'] === 'Juan Dela Cruz'
+                && $request['filters']['adviser'] === 'Engr. Jose Santos'
+                && $request['corpus'] === 'catalog'
+                && $request['limit'] === 10;
+        });
+    }
+
+    #[Test]
+    public function it_does_not_send_author_adviser_keys_outside_paper_tab(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->fixtureSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('authorFilter', 'Juan Dela Cruz')
+            ->set('adviserFilter', 'Engr. Jose Santos')
+            ->set('search', 'water pump')
+            ->call('runHybridSearch');
+
+        Http::assertSent(function ($request) {
+            return array_keys($request['filters']) === [
+                'paper_type',
+                'department',
+                'publication_year',
+                'year_from',
+                'year_to',
+            ];
+        });
+    }
+
+    #[Test]
+    public function it_exits_paper_tab_hybrid_on_status_filter(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('search', 'water pump')
+            ->call('runHybridSearch')
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && count($results) === 2;
+            })
+            ->set('statusFilter', 'Available')
+            ->assertSet('hybridResults', null)
+            ->assertSet('aiSearchFailed', false);
+    }
+
+    #[Test]
+    public function it_preserves_state_across_tab_switches(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        $test = Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('search', 'water pump')
+            ->set('authorFilter', 'Juan Dela Cruz')
+            ->set('adviserFilter', 'Engr. Jose Santos')
+            ->call('runHybridSearch')
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && count($results) === 2;
+            });
+
+        $requestsBeforeSwitches = count(Http::recorded());
+
+        $test->set('paperTabActive', false)
+            ->set('paperTabActive', true)
+            ->assertSet('search', 'water pump')
+            ->assertSet('authorFilter', 'Juan Dela Cruz')
+            ->assertSet('adviserFilter', 'Engr. Jose Santos')
+            ->assertSet('paperTabActive', true)
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && count($results) === 2;
+            });
+
+        // Tab switches are pure prop sets — zero additional HTTP calls.
+        $this->assertCount($requestsBeforeSwitches, Http::recorded());
+    }
+
+    #[Test]
+    public function it_restores_author_adviser_after_recommendations(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        $test = Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('search', 'water pump')
+            ->set('authorFilter', 'Juan Dela Cruz')
+            ->set('adviserFilter', 'Engr. Jose Santos')
+            ->call('runHybridSearch')
+            ->call('showSimilar', 77)
+            ->assertSet('recommendedFor', 77);
+
+        $requestsBeforeRestore = count(Http::recorded());
+
+        $test->call('backToResults')
+            ->assertSet('authorFilter', 'Juan Dela Cruz')
+            ->assertSet('adviserFilter', 'Engr. Jose Santos')
+            ->assertSet('paperTabActive', true)
+            ->assertSet('recommendedFor', null)
+            ->assertSet('recommendations', null)
+            ->assertSet('recommendationsUnavailable', false)
+            ->assertSet('hybridResults', function ($results) {
+                return is_array($results) && $results[0]->id === 77;
+            });
+
+        // Restore ran no query: the recorded request count is unchanged after Back.
+        $this->assertCount($requestsBeforeRestore, Http::recorded());
+    }
+
+    #[Test]
     public function it_falls_back_to_sql_search_when_sidecar_is_down(): void
     {
         $this->seedPapers();
