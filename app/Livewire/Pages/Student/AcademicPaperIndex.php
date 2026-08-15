@@ -5,7 +5,10 @@ namespace App\Livewire\Pages\Student;
 use App\Exceptions\AiServiceAuthException;
 use App\Exceptions\AiServiceUnavailableException;
 use App\Models\AcademicPaper;
+use App\Models\Author;
 use App\Models\Inventory;
+use App\Models\ResearchAdviser;
+use App\Models\TechnicalAdviser;
 use App\Services\AiService;
 use App\Services\AvailabilityService;
 use App\Services\SimilarPapersService;
@@ -55,6 +58,14 @@ class AcademicPaperIndex extends Component
 
     #[Validate('string|max:20|nullable')]
     public string $yearToFilter = '';
+
+    #[Validate('string|max:100|nullable')]
+    public string $authorFilter = '';
+
+    #[Validate('string|max:100|nullable')]
+    public string $adviserFilter = '';
+
+    public bool $paperTabActive = false;
 
     // Hybrid search state (sidecar-ordered results + fallback flag)
     public ?array $hybridResults = null;
@@ -223,6 +234,28 @@ class AcademicPaperIndex extends Component
             ->values();
     }
 
+    #[Computed(persist: true, cache: true)]
+    public function availableAuthors()
+    {
+        // Lazy-loaded and cached for better initial load performance
+        return Author::distinct()
+            ->orderBy('name')
+            ->pluck('name')
+            ->filter()
+            ->values();
+    }
+
+    #[Computed(persist: true, cache: true)]
+    public function availableAdvisers()
+    {
+        // Lazy-loaded and cached for better initial load performance
+        return collect(ResearchAdviser::orderBy('name')->pluck('name'))
+            ->concat(TechnicalAdviser::orderBy('name')->pluck('name'))
+            ->unique()
+            ->sort()
+            ->values();
+    }
+
     public function updatedDept(): void
     {
         $this->exitRecommendationsMode();
@@ -281,6 +314,20 @@ class AcademicPaperIndex extends Component
         $this->runHybridSearch();
     }
 
+    public function updatedAuthorFilter(): void
+    {
+        $this->exitRecommendationsMode();
+        $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
+    }
+
+    public function updatedAdviserFilter(): void
+    {
+        $this->exitRecommendationsMode();
+        $this->resetPage('academic-papers-index');
+        $this->runHybridSearch();
+    }
+
     // Clear all filters and reset to default state
     public function clearFilters(): void
     {
@@ -291,6 +338,8 @@ class AcademicPaperIndex extends Component
             'departmentFilter',
             'yearFromFilter',
             'yearToFilter',
+            'authorFilter',
+            'adviserFilter',
         ]);
         $this->resetPage('academic-papers-index');
         $this->runHybridSearch();
@@ -315,6 +364,11 @@ class AcademicPaperIndex extends Component
             'year_from' => $this->yearFromFilter ?: null,
             'year_to' => $this->yearToFilter ?: null,
         ];
+
+        if ($this->paperTabActive) {
+            $filters['author'] = $this->authorFilter ?: null;
+            $filters['adviser'] = $this->adviserFilter ?: null;
+        }
 
         try {
             $results = (new AiService)->search($this->search, $filters, 'catalog', 10);
@@ -383,6 +437,9 @@ class AcademicPaperIndex extends Component
             'paperTypeFilter' => $this->paperTypeFilter,
             'yearFromFilter' => $this->yearFromFilter,
             'yearToFilter' => $this->yearToFilter,
+            'authorFilter' => $this->authorFilter,
+            'adviserFilter' => $this->adviserFilter,
+            'paperTabActive' => $this->paperTabActive,
             'hybridResults' => $this->hybridResults,
             'aiSearchFailed' => $this->aiSearchFailed,
             'page' => $this->getPage('academic-papers-index'),
@@ -421,6 +478,9 @@ class AcademicPaperIndex extends Component
         $this->paperTypeFilter = $snapshot['paperTypeFilter'];
         $this->yearFromFilter = $snapshot['yearFromFilter'];
         $this->yearToFilter = $snapshot['yearToFilter'];
+        $this->authorFilter = $snapshot['authorFilter'];
+        $this->adviserFilter = $snapshot['adviserFilter'];
+        $this->paperTabActive = $snapshot['paperTabActive'];
         $this->hybridResults = $snapshot['hybridResults'];
         $this->aiSearchFailed = $snapshot['aiSearchFailed'];
         $this->setPage($snapshot['page'], 'academic-papers-index');
