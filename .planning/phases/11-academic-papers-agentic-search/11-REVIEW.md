@@ -24,6 +24,26 @@ WR-1, WR-2, WR-3 fixed post-review (sidecar `b590493`, Laravel `4d4607c9`):
 
 Post-fix suites: sidecar 70 passed / 1 skipped (ruff clean), Laravel 599 passed / 3 skipped; eval gate: negative pass rate 1.0, top-1 0.9259, F1 0.6112.
 
+## Two-Axis Review — Findings & Fix Round 2 (2026-08-15)
+
+Standards axis: 0 hard violations, 6 judgement calls (worst: duplicated `chatStreamFrames()` generator).
+Spec axis: 5 findings (worst: request `corpus` inert on the agentic path).
+
+All Spec findings fixed (sidecar `d51256c`, Laravel `cc684789`), Standards resolved:
+- **S-1 fixed** — 11-UI-SPEC.md copy table synced to the approved strings: corpus rows now `Searching policy documents…` / `Searching the catalog…` (matching `agent.py` exactly, U+2026 incl.); plan-approved copy locked.
+- **S-2 fixed** — `ChatWidgetTest::it_renders_fail_closed_refusal_as_normal_bubble` now fakes/asserts the ADR 0006 verbatim short string (`I don't have enough information`); UI-SPEC refusal rows updated.
+- **S-3 fixed** — `activity_line()` reordered: filters (author/adviser/year) and corpus copy checked BEFORE the `executed_rounds > 0` refinement fallback, so a filtered refinement keeps its per-filter line. Tests: `test_activity_and_citations_frame_ordering` (two author lines), `test_activity_copy_lines_for_corpus_and_year`.
+- **S-4 fixed** — `runHybridSearch()` name-as-query: in the paper tab, an author/adviser selection with no usable topic becomes the query (ADR 0011 precedent) while the name filter still narrows; browse mode byte-identical, status force-exit unchanged. Test: `it_searches_by_author_or_adviser_alone_in_paper_tab`.
+- **S-5 fixed** — request `corpus` threaded through: `main.py` → `stream_agentic_events(..., corpus=...)` → `effective_corpus = args.corpus or corpus` for `rrf_search` + activity copy; explicit tool corpus wins; absent request corpus = both (unchanged). Tests: `test_request_corpus_is_default_when_tool_omits_it`, `test_request_corpus_does_not_override_explicit_tool_corpus`.
+- **Standards-1 fixed** — `availableAuthors()`/`availableAdvisers()` typed `: Collection`.
+- **Standards-3 fixed** — `chunk_frame()` extracted to `rag.py`, shared by one-shot + agentic paths.
+- **Standards-4 fixed** — `rag.CITATION_KEYS` / `AiService::CITATION_KEYS` shared literals per side; `citation_payload()` + `ChatWidget::validCitationsPayload()` consume them.
+- **Standards-2 accepted** — `chatStreamFrames()` duplication deliberately byte-locked (plan 11-05); left as-is.
+
+Re-review verdict: all 5 Spec findings FIXED, no new drift, no scope creep; Standards: no hard violations in the new commits (two trivial nits: duplicated `effective_corpus` expression, redundant `(string)` cast — both judgement calls, left).
+
+Post-fix suites: sidecar 72 passed / 1 skipped (ruff clean), Laravel 600 passed / 3 skipped; eval gate: negative pass rate 1.0, top-1 0.9259, F1 0.6112.
+
 Reviewed 2026-08-15. Scope: paper corpus doc shape (CorpusExporter), author/adviser
 filters (sidecar `passes()` + endpoint acceptance), agentic loop (sidecar `agent.py`,
 routed `/chat/stream`), paper tab (AcademicPaperIndex + filters component + blade),
