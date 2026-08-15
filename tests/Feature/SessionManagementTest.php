@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Auth;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class SessionManagementTest extends TestCase
@@ -36,7 +36,7 @@ class SessionManagementTest extends TestCase
 
         // Simulate session expiration by clearing session
         $this->app['session']->flush();
-        \Illuminate\Support\Facades\Auth::logout();
+        Auth::logout();
 
         // Attempt to access protected page
         $response = $this->get(route('dashboard'));

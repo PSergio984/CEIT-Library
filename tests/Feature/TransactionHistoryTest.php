@@ -2,12 +2,13 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
+use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
+use App\Models\Inventory;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class TransactionHistoryTest extends TestCase
@@ -34,9 +35,9 @@ class TransactionHistoryTest extends TestCase
 
         // Create some borrow transactions
         $student = User::factory()->create(['role_id' => $this->getRoleId('student')]);
-        
-        $paper = \App\Models\AcademicPaper::factory()->create();
-        $inventory = \App\Models\Inventory::factory()->create(['academic_paper_id' => $paper->id]);
+
+        $paper = AcademicPaper::factory()->create();
+        $inventory = Inventory::factory()->create(['academic_paper_id' => $paper->id]);
 
         BorrowTransaction::factory()->count(5)->create([
             'user_id' => $student->id,

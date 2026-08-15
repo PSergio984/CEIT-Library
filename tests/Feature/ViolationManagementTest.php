@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ViolationManagementTest extends TestCase

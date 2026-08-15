@@ -409,6 +409,12 @@ parameters:
 			path: app/Livewire/Pages/Admin/ViolationsTab.php
 
 		-
+			message: '#^Access to an undefined property App\\Livewire\\Pages\\Student\\AcademicPaperIndex\:\:\$academicPapers\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
+
+		-
 			message: '#^Access to an undefined property App\\Livewire\\Pages\\Student\\AcademicPaperIndex\:\:\$selectedCopy\.$#'
 			identifier: property.notFound
 			count: 1
@@ -416,18 +422,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property App\\Livewire\\Pages\\Student\\AcademicPaperIndex\:\:\$selectedPaper\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\AcademicPaper\:\:\$available_copies\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\AcademicPaper\:\:\$status\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
@@ -459,13 +453,13 @@ parameters:
 		-
 			message: '#^Relation ''authors'' is not found in App\\Models\\AcademicPaper model\.$#'
 			identifier: larastan.relationExistence
-			count: 3
+			count: 4
 			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
 
 		-
 			message: '#^Relation ''copies'' is not found in App\\Models\\AcademicPaper model\.$#'
 			identifier: larastan.relationExistence
-			count: 4
+			count: 5
 			path: app/Livewire/Pages/Student/AcademicPaperIndex.php
 
 		-
@@ -715,6 +709,30 @@ parameters:
 			path: app/Services/BorrowService.php
 
 		-
+			message: '#^Relation ''authors'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/CorpusExporter.php
+
+		-
+			message: '#^Relation ''dean'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/CorpusExporter.php
+
+		-
+			message: '#^Relation ''researchAdviser'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/CorpusExporter.php
+
+		-
+			message: '#^Relation ''technicalAdviser'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/CorpusExporter.php
+
+		-
 			message: '#^Relation ''user'' is not found in App\\Models\\Librarian model\.$#'
 			identifier: larastan.relationExistence
 			count: 2
@@ -731,3 +749,9 @@ parameters:
 			identifier: property.notFound
 			count: 1
 			path: app/Services/NotificationService.php
+
+		-
+			message: '#^Relation ''authors'' is not found in App\\Models\\AcademicPaper model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/SimilarPapersService.php

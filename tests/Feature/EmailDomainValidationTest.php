@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Volt\Volt;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class EmailDomainValidationTest extends TestCase

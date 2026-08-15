@@ -2,7 +2,9 @@
 
 namespace App\Traits;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Str;
 
 trait CreatesQrCanonicalMessage
 {
@@ -83,7 +85,7 @@ trait CreatesQrCanonicalMessage
      */
     protected function createEncryptedQrMessage(array $borrowData): string
     {
-        $user = \Illuminate\Support\Facades\Auth::user();
+        $user = Auth::user();
         $secret = config('app.qr_hmac_secret');
 
         if (! is_string($secret) || strlen($secret) < 16) {
@@ -95,7 +97,7 @@ trait CreatesQrCanonicalMessage
             'v' => 7,
             'user_id' => $user?->id,
             'p' => $borrowData, // Payload (inventory_id, paper_id, etc.)
-            'nonce' => \Illuminate\Support\Str::random(16),
+            'nonce' => Str::random(16),
             'timestamp' => time(),
         ];
 

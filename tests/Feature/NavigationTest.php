@@ -2,11 +2,10 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class NavigationTest extends TestCase
@@ -16,9 +15,9 @@ class NavigationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Ensure roles are seeded
-        if (\App\Models\Role::count() === 0) {
+        if (Role::count() === 0) {
             $this->seed();
         }
     }

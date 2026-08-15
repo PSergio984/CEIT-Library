@@ -14,6 +14,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read AcademicPaper $academicPaper
+ * @property-read int $available
+ * @property-read int $total
  *
  * @method static \Database\Factories\InventoryFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Inventory newModelQuery()

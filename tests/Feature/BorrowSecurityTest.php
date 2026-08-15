@@ -9,6 +9,7 @@ use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\Role;
 use App\Models\User;
+use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
@@ -26,7 +27,7 @@ use Tests\TestCase;
  */
 class BorrowSecurityTest extends TestCase
 {
-    use \App\Traits\CreatesQrCanonicalMessage, RefreshDatabase;
+    use CreatesQrCanonicalMessage, RefreshDatabase;
 
     protected function getRoleId(string $roleName): int
     {

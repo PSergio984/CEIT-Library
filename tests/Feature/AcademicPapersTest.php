@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\AcademicPaper;
 use App\Models\Dean;
 use App\Models\ResearchAdviser;
@@ -11,6 +9,7 @@ use App\Models\Role;
 use App\Models\TechnicalAdviser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AcademicPapersTest extends TestCase

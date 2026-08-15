@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 class QrScannerFileUploadTest extends TestCase
 {
-    use RefreshDatabase, \App\Traits\CreatesQrCanonicalMessage;
+    use \App\Traits\CreatesQrCanonicalMessage, RefreshDatabase;
 
     /**
      * Test that file upload scan with valid QR data successfully records attendance
@@ -191,7 +191,7 @@ class QrScannerFileUploadTest extends TestCase
         $data['hash'] = hash_hmac('sha256', $canonicalMessage, $secret);
 
         $encryptedData = Crypt::encryptString(json_encode($data));
-        
+
         return json_encode(['encrypted' => $encryptedData]);
     }
 }

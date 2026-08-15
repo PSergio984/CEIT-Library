@@ -378,13 +378,13 @@ class LibrarySystemTest extends TestCase
 
     public function test_academic_paper_search_functionality()
     {
-        $uniqueTitle = 'Machine Learning Fundamentals ' . uniqid();
+        $uniqueTitle = 'Machine Learning Fundamentals '.uniqid();
         AcademicPaper::factory()->create(['title' => $uniqueTitle]);
-        AcademicPaper::factory()->create(['title' => 'Advanced Database Systems ' . uniqid()]);
-        AcademicPaper::factory()->create(['title' => 'Web Development Basics ' . uniqid()]);
+        AcademicPaper::factory()->create(['title' => 'Advanced Database Systems '.uniqid()]);
+        AcademicPaper::factory()->create(['title' => 'Web Development Basics '.uniqid()]);
 
         // Search by title
-        $results = AcademicPaper::where('title', 'like', '%' . $uniqueTitle . '%')->get();
+        $results = AcademicPaper::where('title', 'like', '%'.$uniqueTitle.'%')->get();
         $this->assertCount(1, $results);
         $this->assertEquals($uniqueTitle, $results->first()->title);
 

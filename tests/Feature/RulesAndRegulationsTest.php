@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class RulesAndRegulationsTest extends TestCase

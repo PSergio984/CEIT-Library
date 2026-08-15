@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -14,7 +15,7 @@ class Welcome extends Mailable implements ShouldQueue
     /**
      * Create a new message instance.
      */
-    public function __construct(public \App\Models\User $user)
+    public function __construct(public User $user)
     {
         // Delay the welcome email by 5 seconds to avoid rate limiting
         $this->delay(now()->addSeconds(30));

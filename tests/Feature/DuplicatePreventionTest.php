@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\AcademicPaper;
 use App\Models\Author;
@@ -14,6 +12,7 @@ use App\Models\TechnicalAdviser;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class DuplicatePreventionTest extends TestCase

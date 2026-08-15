@@ -2,8 +2,6 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Livewire\Pages\Admin\ActiveUsersTab;
 use App\Models\Attendance;
 use App\Models\Librarian;
@@ -12,6 +10,7 @@ use App\Models\User;
 use App\Models\Violation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class AttendanceManagementTest extends TestCase

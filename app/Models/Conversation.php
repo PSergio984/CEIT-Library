@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use Database\Factories\ConversationFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property-read Collection<int, Message> $messages
+ */
 class Conversation extends Model
 {
     /** @use HasFactory<ConversationFactory> */
@@ -21,7 +25,7 @@ class Conversation extends Model
     /**
      * The attributes that are mass assignable.
      *
-     * @var array<int, string>
+     * @var list<string>
      */
     protected $fillable = [
         'user_id',

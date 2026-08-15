@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Volt\Volt;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class PasswordValidationTest extends TestCase
@@ -31,12 +30,12 @@ class PasswordValidationTest extends TestCase
     public function password_reset_requests_are_rate_limited()
     {
         config(['auth.passwords.users.throttle' => 0]);
-        
+
         $email = 'test@plv.edu.ph';
         $user = User::factory()->create(['email' => $email]);
-        
+
         // Clear any existing rate limiters
-        $key = 'forgot-password|' . strtolower($email) . '|' . request()->ip();
+        $key = 'forgot-password|'.strtolower($email).'|'.request()->ip();
         RateLimiter::clear($key);
 
         $component = Volt::test('pages.auth.forgot-password');
@@ -52,7 +51,7 @@ class PasswordValidationTest extends TestCase
         $component->set('email', $email)
             ->call('sendPasswordResetLink')
             ->assertHasErrors(['email']);
-            
+
         $errorMessage = $component->errors()->get('email')[0];
         $this->assertStringContainsString('Too many password reset attempts', $errorMessage);
     }

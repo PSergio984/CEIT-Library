@@ -15,7 +15,6 @@ use Illuminate\Support\Carbon;
  * @property string $paper_type
  * @property string $research_project_adviser
  * @property string $department
- * @property string $dean
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Author> $authors
@@ -24,6 +23,11 @@ use Illuminate\Support\Carbon;
  * @property-read int|null $copies_count
  * @property-read mixed $available_copies_count
  * @property-read mixed $total_copies_count
+ * @property-read ResearchAdviser|null $researchAdviser
+ * @property-read TechnicalAdviser|null $technicalAdviser
+ * @property-read Dean|null $dean
+ * @property-read mixed $available_copies
+ * @property mixed $status
  *
  * @method static \Illuminate\Database\Eloquent\Builder<static>|AcademicPaper byDepartment($department)
  * @method static \Database\Factories\AcademicPaperFactory factory($count = null, $state = [])

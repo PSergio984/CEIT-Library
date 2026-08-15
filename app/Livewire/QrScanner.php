@@ -198,4 +198,3 @@ class QrScanner extends Component
         return view('livewire.qr-scanner');
     }
 }
-

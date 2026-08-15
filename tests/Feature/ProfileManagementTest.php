@@ -2,13 +2,12 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Livewire\Volt\Volt;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class ProfileManagementTest extends TestCase

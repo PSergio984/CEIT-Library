@@ -65,6 +65,7 @@ class BorrowTransactionForm extends Form
 
         if ($this->status === 'completed' && empty($this->time_out)) {
             $this->addError('time_out', 'Time Out is required when status is completed!');
+
             return;
         }
 

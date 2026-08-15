@@ -105,10 +105,10 @@ class Librarian extends Model
                     $q2->whereNull('start_date')
                         ->orWhere('start_date', '<=', $today);
                 })
-                ->where(function ($q2) use ($today) {
-                    $q2->whereNull('end_date')
-                        ->orWhere('end_date', '>=', $today);
-                });
+                    ->where(function ($q2) use ($today) {
+                        $q2->whereNull('end_date')
+                            ->orWhere('end_date', '>=', $today);
+                    });
             });
     }
 }

@@ -2,8 +2,7 @@
 
 namespace Tests\Feature;
 
-use PHPUnit\Framework\Attributes\Test;
-
+use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\CreateAcademicPaper;
 use App\Models\Author;
 use App\Models\Dean;
@@ -14,6 +13,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Livewire\Volt\Volt;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class FormValidationTest extends TestCase
@@ -461,7 +461,7 @@ class FormValidationTest extends TestCase
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
         $this->actingAs($admin);
 
-        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+        Livewire::test(AdminBorrowTransactions::class)
             ->set('form.notes', '<script>alert("xss")</script>')
             ->call('saveTransaction')
             ->assertHasErrors(['form.notes']);
@@ -474,7 +474,7 @@ class FormValidationTest extends TestCase
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
         $this->actingAs($admin);
 
-        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+        Livewire::test(AdminBorrowTransactions::class)
             ->set('form.notes', "Illegal\0Character")
             ->call('saveTransaction')
             ->assertHasErrors(['form.notes']);
@@ -487,11 +487,11 @@ class FormValidationTest extends TestCase
         $admin = User::factory()->create(['role_id' => $this->getRoleId('admin')]);
         $this->actingAs($admin);
 
-        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+        Livewire::test(AdminBorrowTransactions::class)
             ->set('search', '<b>Bold Search</b>')
             ->assertHasErrors(['search']);
-            
-        Livewire::test(\App\Livewire\Pages\Admin\AdminBorrowTransactions::class)
+
+        Livewire::test(AdminBorrowTransactions::class)
             ->set('search', "Control\x01Char")
             ->assertHasErrors(['search']);
     }

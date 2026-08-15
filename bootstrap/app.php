@@ -4,13 +4,13 @@ use App\Http\Middleware\AdminOnly;
 use App\Http\Middleware\CheckAccountStatus;
 use App\Http\Middleware\CheckCreditScore;
 use App\Http\Middleware\LibrarianOrAdmin;
-use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -32,12 +32,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, Request $request) {
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
             if ($response->getStatusCode() === 403 && ! $request->expectsJson()) {
                 $user = Auth::user();
                 $redirectTo = $user ? route('student.dashboard') : route('login');
 
-                $response = new \Illuminate\Http\RedirectResponse($redirectTo);
+                $response = new RedirectResponse($redirectTo);
                 $response->setSession(app('session.store'));
 
                 return $response->with('mary.toast', [

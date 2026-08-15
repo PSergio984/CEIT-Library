@@ -31,7 +31,7 @@ class PWATest extends TestCase
     public function test_app_layout_contains_pwa_meta_tags()
     {
         $response = $this->get('/');
-        
+
         $response->assertStatus(200);
         $response->assertSee('<link rel="manifest" href="/manifest.webmanifest">', false);
         $response->assertSee('<meta name="theme-color" content="#0046ad">', false);
@@ -42,7 +42,7 @@ class PWATest extends TestCase
     public function test_app_layout_contains_app_badging_logic()
     {
         $response = $this->get('/');
-        
+
         $response->assertSee('navigator.clearAppBadge()', false);
     }
 
@@ -50,7 +50,7 @@ class PWATest extends TestCase
     public function test_app_layout_contains_install_banner_component()
     {
         $response = $this->get('/');
-        
+
         $response->assertSee('Install CEIT Lib', false);
         $response->assertSee('beforeinstallprompt', false);
     }
