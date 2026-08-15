@@ -1,7 +1,8 @@
 ---
 phase: 11
 slug: academic-papers-agentic-search
-status: draft
+status: approved
+reviewed_at: 2026-08-15T00:00:00.000Z
 tool: mary-ui-v2
 preset: not-applicable
 created: 2026-08-15
