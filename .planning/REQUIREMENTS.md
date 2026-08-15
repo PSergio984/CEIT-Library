@@ -23,7 +23,7 @@ Requirements for milestone v2.0. Each maps to roadmap phases.
 - [ ] **CHAT-02**: Chat history persists and remains viewable across sessions
 - [ ] **CHAT-03**: Assistant access and answer depth are role-aware (student vs librarian)
 - [ ] **CHAT-04**: User can ask library policy questions and get answers grounded in the rulebook (RuleHeader/RuleRegulation corpus)
-- [ ] **CHAT-05**: Assistant runs agentic multi-step search (function-calling loop) when one-shot retrieval is insufficient
+- [x] **CHAT-05**: Assistant runs agentic multi-step search (function-calling loop) when one-shot retrieval is insufficient
 - [ ] **CHAT-06**: Librarians can get copy-level operational answers without PII leaks
 
 ### Evaluation
@@ -75,7 +75,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CHAT-02 | Phase 9: RAG Chat & Policy Q&A | Pending |
 | CHAT-03 | Phase 12: Role-Aware Access & Librarian Tools | Pending |
 | CHAT-04 | Phase 9: RAG Chat & Policy Q&A | Pending |
-| CHAT-05 | Phase 11: Academic Papers & Agentic Search | Pending |
+| CHAT-05 | Phase 11: Academic Papers & Agentic Search | Complete |
 | CHAT-06 | Phase 12: Role-Aware Access & Librarian Tools | Pending |
 | EVAL-01 | Phase 13: Evaluation Stack | Pending |
 | EVAL-02 | Phase 13: Evaluation Stack | Pending |
