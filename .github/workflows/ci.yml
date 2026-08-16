@@ -48,8 +48,8 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
   test:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
+    runs-on: ubuntu-larger
+    timeout-minutes: 15
     env:
       APP_ENV: testing
       DB_CONNECTION: sqlite
@@ -65,19 +65,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-laravel
-        with:
-          coverage: 'true'
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
       - name: Generate key
         run: php artisan key:generate --no-interaction
-      - name: Test with PHPUnit (with coverage)
-        run: php artisan test --coverage-clover coverage.xml
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage
-          path: coverage.xml
+      - name: Test with PHPUnit
+        run: php artisan test
 
   sonarcloud:
     name: SonarCloud quality gate
@@ -90,10 +83,6 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
-        with:
-          name: coverage
       - name: SonarCloud Scan
         # sonarcloud-github-action is archived; the maintained replacement is
         # sonarqube-scan-action (pinned to the v8.2.1 commit).
