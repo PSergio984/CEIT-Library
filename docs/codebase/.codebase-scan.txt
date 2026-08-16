@@ -1,5 +1,6 @@
 
 === DIRECTORY TREE (max depth 3, source files only) ===
+.coderabbit.yaml
 .cursor
 .cursor\mcp.json
 .cursor\rules
@@ -12,6 +13,10 @@
 .gemini\settings.json
 .gitattributes
 .github
+.github\actions
+.github\actions\setup-laravel
+.github\actions\setup-laravel\.sonar
+.github\actions\setup-laravel\action.yml
 .github\agents
 .github\agents\diataxis-documentation-expert.agent.md
 .github\agents\prompt-engineer.agent.md
@@ -24,10 +29,14 @@
 .github\prompts
 .github\prompts\boost-prompt.prompt.md
 .github\prompts\breakdown-test.prompt.md
+.github\scripts
+.github\scripts\.sonar
+.github\scripts\sonarqube-install.sh
 .github\workflows
+.github\workflows\.sonar
+.github\workflows\ci.yml
 .github\workflows\codeql.yml
-.github\workflows\laravel.yml
-.github\workflows\qodana_code_quality.yml
+.github\workflows\sonar-secrets.yml
 .gitignore
 .idea
 .idea\.gitignore
@@ -55,6 +64,7 @@
 .nvmrc
 .phpunit.result.cache
 .planning
+.planning\.sonar
 .planning\ARCHITECTURE_OVERVIEW.md
 .planning\codebase
 .planning\codebase\.codebase-scan.txt
@@ -66,140 +76,130 @@
 .planning\codebase\STRUCTURE.md
 .planning\codebase\TESTING.md
 .planning\config.json
+.planning\debug
+.planning\debug\admin-mobile-nav-and-test-qr.md
 .planning\phases
 .planning\phases\01-frontend-bug-fixes-scanning-optimization
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-01-modernization-PLAN.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-02-frontend-fixes-PLAN.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-03-security-audit-PLAN.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-04-expansion-PLAN.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-05-security-audit-CONTEXT.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-05-security-audit-PLAN.md
 .planning\phases\01-frontend-bug-fixes-scanning-optimization\01-CONTEXT.md
 .planning\phases\01-frontend-bug-fixes-scanning-optimization\01-DISCUSSION-LOG.md
-.planning\PROJECT.md
-.planning\ROADMAP.md
-.planning\STATE.md
-.vscode
-.vscode\mcp.json
-_ide_helper.php
-_ide_helper_models.php
-app
-app\Console
-app\Console\Commands
-app\Console\Commands\CheckLibrarianAssignments.php
-app\Console\Commands\CheckOverdueTransactions.php
-app\Console\Commands\MarkOverdueTransactions.php
-app\Console\Commands\SendTestLibrarianAlert.php
-app\Console\Commands\SendTestLibrarianAlertFullWeek.php
-app\Console\Commands\SendTestLibrarianAlertPartial.php
-app\Console\Commands\SendTestLibrarianAlertUrgent.php
-app\Console\Commands\UpdateLibrarianBatchStatuses.php
-app\Console\Commands\UpdateLibrarianRoles.php
-app\Http
-app\Http\Controllers
-app\Http\Controllers\Auth
-app\Http\Controllers\Controller.php
-app\Http\Controllers\QrCodeDownloadController.php
-app\Http\Middleware
-app\Http\Middleware\AdminOnly.php
-app\Http\Middleware\CheckCreditScore.php
-app\Http\Middleware\LibrarianOrAdmin.php
-app\Livewire
-app\Livewire\Actions
-app\Livewire\Actions\Logout.php
-app\Livewire\Admin
-app\Livewire\Forms
-app\Livewire\Forms\AcademicPaperForm.php
-app\Livewire\Forms\LoginForm.php
-app\Livewire\Forms\RuleAndRegulationForm.php
-app\Livewire\Forms\ViolationForm.php
-app\Livewire\Pages
-app\Livewire\Pages\Admin
-app\Livewire\Pages\Student
-app\Livewire\QrScanner.php
-app\Livewire\Student
-app\Livewire\TestQrScanner.php
-app\Mail
-app\Mail\LibrarianAssignmentReminder.php
-app\Mail\Welcome.php
-app\Models
-app\Models\AcademicPaper.php
-app\Models\Attendance.php
-app\Models\Author.php
-app\Models\BorrowTransaction.php
-app\Models\Dean.php
-app\Models\Inventory.php
-app\Models\Librarian.php
-app\Models\Notification.php
-app\Models\ResearchAdviser.php
-app\Models\Role.php
-app\Models\RuleHeader.php
-app\Models\RuleRegulation.php
-app\Models\ScoreIncrement.php
-app\Models\TechnicalAdviser.php
-app\Models\User.php
-app\Models\Violation.php
-app\Models\ViolationTransaction.php
-app\Notifications
-app\Notifications\BorrowTransactionOverdue.php
-app\Notifications\CustomResetPassword.php
-app\Notifications\CustomVerifyEmail.php
-app\Providers
-app\Providers\AppServiceProvider.php
-app\Providers\VoltServiceProvider.php
-app\Rules
-app\Rules\NoHtmlTags.php
-app\Rules\PlvEmailDomain.php
-app\Rules\ProperName.php
-app\Rules\SafeText.php
-app\Traits
-app\Traits\CreatesQrCanonicalMessage.php
-app\View
-app\View\Components
-app\View\Components\AcademicPaperDetailModal.php
-app\View\Components\AppLayout.php
-app\View\Components\GuestLayout.php
-artisan
-assets
-boost.json
-bootstrap
-bootstrap\app.php
-bootstrap\cache
-bootstrap\cache\.gitignore
-bootstrap\cache\packages.php
-bootstrap\cache\services.php
-bootstrap\providers.php
-cl
-composer.json
-composer.lock
-config
-config\app.php
-config\auth.php
-config\cache.php
-config\database.php
-config\departments.php
-config\dompdf.php
-config\filesystems.php
-config\logging.php
-config\mail.php
-config\mary.php
-config\queue.php
-config\seeding.php
-config\services.php
-config\session.php
-config\throttle.php
-curl
-database
-database\.gitignore
-database\database.sqlite
-database\factories
-database\factories\AcademicPaperFactory.php
-database\factories\AttendanceFactory.php
-database\factories\AuthorFactory.php
-database\factories\BorrowTransactionFactory.php
-database\factories\DeanFactory.php
-database\factories\InventoryFactory.php
-database\factories\LibrarianFactory.php
-database\factories\ResearchAdviserFactory.php
-database\factories\RuleHeaderFactory.php
-database\factories\RuleRegulationFactory.php
-database\factories\ScoreIncrementFactory.php
-database\factories\TechnicalAdviserFactory.php
-database\factories\UserFactory.php
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-HUMAN-UAT.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-VALIDATION.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\01-VERIFICATION.md
+.planning\phases\01-frontend-bug-fixes-scanning-optimization\RESEARCH.md
+.planning\phases\02-security-hardening
+.planning\phases\02-security-hardening\02-01-PLAN.md
+.planning\phases\02-security-hardening\02-02-PLAN.md
+.planning\phases\02-security-hardening\02-03-PLAN.md
+.planning\phases\02-security-hardening\02-CONTEXT.md
+.planning\phases\02-security-hardening\02-DISCUSSION-LOG.md
+.planning\phases\02-security-hardening\02-PATTERNS.md
+.planning\phases\02-security-hardening\02-RESEARCH.md
+.planning\phases\02-security-hardening\02-REVIEW.md
+.planning\phases\02-security-hardening\02-VALIDATION.md
+.planning\phases\02-security-hardening\TODO.md
+.planning\phases\03-stability-and-performance
+.planning\phases\03-stability-and-performance\03-01-PLAN.md
+.planning\phases\03-stability-and-performance\03-01-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-02-PLAN.md
+.planning\phases\03-stability-and-performance\03-02-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-03-PLAN.md
+.planning\phases\03-stability-and-performance\03-03-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-04-PLAN.md
+.planning\phases\03-stability-and-performance\03-04-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-05-PLAN.md
+.planning\phases\03-stability-and-performance\03-05-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-06-PLAN.md
+.planning\phases\03-stability-and-performance\03-06-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-07-PLAN.md
+.planning\phases\03-stability-and-performance\03-07-SUMMARY.md
+.planning\phases\03-stability-and-performance\03-CONTEXT.md
+.planning\phases\03-stability-and-performance\03-RESEARCH.md
+.planning\phases\03-stability-and-performance\03-UAT.md
+.planning\phases\03-stability-and-performance\03-VALIDATION.md
+.planning\phases\03-stability-and-performance\HANDOVER.md
+.planning\phases\04-pwa-and-offline-resilience
+.planning\phases\04-pwa-and-offline-resilience\04-01-pwa-hardening-PLAN.md
+.planning\phases\04-pwa-and-offline-resilience\04-CONTEXT.md
+.planning\phases\04-pwa-and-offline-resilience\04-DISCUSSION-LOG.md
+.planning\phases\04-pwa-and-offline-resilience\04-RESEARCH.md
+.planning\phases\04-pwa-and-offline-resilience\04-VERIFICATION.md
+.planning\phases\05-workflow-optimization-and-ux-polish
+.planning\phases\05-workflow-optimization-and-ux-polish\05-01-ux-and-librarian-PLAN.md
+.planning\phases\05-workflow-optimization-and-ux-polish\05-CONTEXT.md
+.planning\phases\05-workflow-optimization-and-ux-polish\05-DISCUSSION-LOG.md
+.planning\phases\05-workflow-optimization-and-ux-polish\05-RESEARCH.md
+.planning\phases\05-workflow-optimization-and-ux-polish\05-VERIFICATION.md
+.planning\phases\07-security-and-privacy-hardening
+.planning\phases\07-security-and-privacy-hardening\07-CONTEXT.md
+.planning\phases\08-hybrid-search-foundation
+.planning\phases\08-hybrid-search-foundation\.sonar
+.planning\phases\08-hybrid-search-foundation\08-01-PLAN.md
+.planning\phases\08-hybrid-search-foundation\08-01-SUMMARY.md
+.planning\phases\08-hybrid-search-foundation\08-02-PLAN.md
+.planning\phases\08-hybrid-search-foundation\08-02-SUMMARY.md
+.planning\phases\08-hybrid-search-foundation\08-03-PLAN.md
+.planning\phases\08-hybrid-search-foundation\08-03-SUMMARY.md
+.planning\phases\08-hybrid-search-foundation\08-04-PLAN.md
+.planning\phases\08-hybrid-search-foundation\08-04-SUMMARY.md
+.planning\phases\08-hybrid-search-foundation\08-05-PLAN.md
+.planning\phases\08-hybrid-search-foundation\08-05-SUMMARY.md
+.planning\phases\08-hybrid-search-foundation\08-06-PLAN.md
+.planning\phases\08-hybrid-search-foundation\08-06-SUMMARY.md
+.planning\phases\08-hybrid-search-foundation\08-CONTEXT.md
+.planning\phases\08-hybrid-search-foundation\08-DISCUSSION-LOG.md
+.planning\phases\08-hybrid-search-foundation\08-golden-mapping.md
+.planning\phases\08-hybrid-search-foundation\08-PATTERNS.md
+.planning\phases\08-hybrid-search-foundation\08-RESEARCH.md
+.planning\phases\08-hybrid-search-foundation\08-VALIDATION.md
+.planning\phases\08-hybrid-search-foundation\08-VERIFICATION.md
+.planning\phases\09-rag-chat-policy-q-a
+.planning\phases\09-rag-chat-policy-q-a\.sonar
+.planning\phases\09-rag-chat-policy-q-a\09-01-sidecar-contract-PLAN.md
+.planning\phases\09-rag-chat-policy-q-a\09-01-SUMMARY.md
+.planning\phases\09-rag-chat-policy-q-a\09-02-aiservice-chat-PLAN.md
+.planning\phases\09-rag-chat-policy-q-a\09-02-SUMMARY.md
+.planning\phases\09-rag-chat-policy-q-a\09-03-conversation-schema-PLAN.md
+.planning\phases\09-rag-chat-policy-q-a\09-03-SUMMARY.md
+.planning\phases\09-rag-chat-policy-q-a\09-04-chat-widget-PLAN.md
+.planning\phases\09-rag-chat-policy-q-a\09-04-SUMMARY.md
+.planning\phases\09-rag-chat-policy-q-a\09-05-citations-grounding-PLAN.md
+.planning\phases\09-rag-chat-policy-q-a\09-05-SUMMARY.md
+.planning\phases\09-rag-chat-policy-q-a\09-CONTEXT.md
+.planning\phases\09-rag-chat-policy-q-a\09-PATTERNS.md
+.planning\phases\09-rag-chat-policy-q-a\09-RESEARCH.md
+.planning\phases\09-rag-chat-policy-q-a\09-REVIEW.md
+.planning\phases\09-rag-chat-policy-q-a\09-VALIDATION.md
+.planning\phases\09-rag-chat-policy-q-a\09-VERIFICATION.md
+.planning\phases\10-live-availability-similar-book-recommendations
+.planning\phases\10-live-availability-similar-book-recommendations\.sonar
+.planning\phases\10-live-availability-similar-book-recommendations\10-01-sidecar-strict-validation-PLAN.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-01-SUMMARY.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-02-availability-hydration-PLAN.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-02-SUMMARY.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-03-similar-papers-service-PLAN.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-03-SUMMARY.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-04-similar-button-recommendations-PLAN.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-04-SUMMARY.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-05-citation-availability-PLAN.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-05-SUMMARY.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-CONTEXT.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-PATTERNS.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-RESEARCH.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-REVIEW.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-VALIDATION.md
+.planning\phases\10-live-availability-similar-book-recommendations\10-VERIFICATION.md
+.planning\phases\11-academic-papers-agentic-search
+.planning\phases\11-academic-papers-agentic-search\.sonar
+.planning\phases\11-academic-papers-agentic-search\11-01-PLAN.md
+.planning\phases\11-academic-papers-agentic-search\11-01-SUMMARY.md
+.planning\phases\11-academic-papers-agentic-search\11-02-PLAN.md
+.planning\phases\11-academic-papers-agentic-search\11-02-SUMMARY.md
 
 === STACK DETECTION (manifest files) ===
 
@@ -212,28 +212,31 @@ database\factories\UserFactory.php
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "barryvdh/laravel-dompdf": "^3.1",
-        "laravel/framework": "^12.0",
-        "laravel/tinker": "^2.10.1",
-        "livewire/livewire": "^3.6",
+        "fakerphp/faker": "^1.23",
+        "laravel/framework": "^13.0",
+        "laravel/octane": "^2.17",
+        "laravel/tinker": "^3.0",
+        "livewire/livewire": "^4.0",
         "livewire/volt": "^1.7",
-        "owenvoke/blade-fontawesome": "^2.9",
-        "robsontenorio/mary": "^2.4",
-        "simplesoftwareio/simple-qrcode": "^4.2",
-        "fakerphp/faker": "^1.23"
+        "minishlink/web-push": "^11.0",
+        "owenvoke/blade-fontawesome": "^3.0",
+        "robsontenorio/mary": "^2.0",
+        "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {
-        "barryvdh/laravel-debugbar": "^3.16",
+        "barryvdh/laravel-debugbar": "^4.0",
         "barryvdh/laravel-ide-helper": "^3.6",
-        "laravel/boost": "^1.8",
+        "larastan/larastan": "^3.10",
+        "laravel/boost": "^2.0",
         "laravel/breeze": "^2.3",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
         "laravel/sail": "^1.41",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.3"
+        "phpunit/phpunit": "^13.0"
     },
     "autoload": {
         "psr-4": {
@@ -281,11 +284,8 @@ database\factories\UserFactory.php
         "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "php-http/discovery": true
 
-[TRUNCATED] Showing first 80 of 88 lines.
+[TRUNCATED] Showing first 80 of 91 lines.
 --- composer.lock ---
 {
     "_readme": [
@@ -293,7 +293,7 @@ database\factories\UserFactory.php
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a2579a0ae03b4544da6c3a0b144bb31b",
+    "content-hash": "091071f5b34c0333eed32fb491add827",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -351,24 +351,24 @@ database\factories\UserFactory.php
         },
         {
             "name": "barryvdh/laravel-dompdf",
-            "version": "v3.1.1",
+            "version": "v3.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/barryvdh/laravel-dompdf.git",
-                "reference": "8e71b99fc53bb8eb77f316c3c452dd74ab7cb25d"
+                "reference": "ee3b72b19ccdf57d0243116ecb2b90261344dedc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/barryvdh/laravel-dompdf/zipball/8e71b99fc53bb8eb77f316c3c452dd74ab7cb25d",
-                "reference": "8e71b99fc53bb8eb77f316c3c452dd74ab7cb25d",
+                "url": "https://api.github.com/repos/barryvdh/laravel-dompdf/zipball/ee3b72b19ccdf57d0243116ecb2b90261344dedc",
+                "reference": "ee3b72b19ccdf57d0243116ecb2b90261344dedc",
                 "shasum": ""
             },
             "require": {
                 "dompdf/dompdf": "^3.0",
-                "illuminate/support": "^9|^10|^11|^12",
+                "illuminate/support": "^9|^10|^11|^12|^13.0",
                 "php": "^8.1"
 
-[TRUNCATED] Showing first 80 of 10310 lines.
+[TRUNCATED] Showing first 80 of 11873 lines.
 --- package-lock.json ---
 {
     "name": "CEIT-Library",
@@ -377,81 +377,81 @@ database\factories\UserFactory.php
     "packages": {
         "": {
             "dependencies": {
+                "@fontsource/outfit": "^5.3.0",
+                "@fontsource/poppins": "^5.3.0",
                 "html5-qrcode": "^2.3.8",
-                "jsqr": "^1.4.0"
+                "jsqr": "^1.4.0",
+                "workbox-cacheable-response": "^7.4.1",
+                "workbox-expiration": "^7.4.1",
+                "workbox-routing": "^7.4.1",
+                "workbox-strategies": "^7.4.1"
             },
             "devDependencies": {
-                "@tailwindcss/vite": "^4.1.14",
-                "autoprefixer": "^10.4.2",
-                "axios": "^1.11.0",
-                "concurrently": "^9.0.1",
-                "daisyui": "^5.1.9",
-                "laravel-vite-plugin": "^2.0.0",
-                "postcss": "^8.4.31",
-                "vite": "^7.0.4"
+                "@tailwindcss/vite": "^4.3.3",
+                "autoprefixer": "^10.5.4",
+                "axios": "^1.19.0",
+                "concurrently": "^10.0.4",
+                "daisyui": "^5.7.16",
+                "fontaine": "^0.8.0",
+                "laravel-vite-plugin": "^3.2.0",
+                "postcss": "^8.5.26",
+                "tailwindcss": "^4.3.3",
+                "vite": "^8.2.1",
+                "vite-plugin-pwa": "^1.3.0"
             }
         },
-        "node_modules/@esbuild/aix-ppc64": {
-            "version": "0.25.10",
-            "resolved": "https://registry.npmjs.org/@esbuild/aix-ppc64/-/aix-ppc64-0.25.10.tgz",
-            "integrity": "sha512-0NFWnA+7l41irNuaSVlLfgNT12caWJVLzp5eAVhZ0z1qpxbockccEt3s+149rE64VUI3Ml2zt8Nv5JVc4QXTsw==",
-            "cpu": [
-                "ppc64"
-            ],
+        "node_modules/@apideck/better-ajv-errors": {
+            "version": "0.3.7",
+            "resolved": "https://registry.npmjs.org/@apideck/better-ajv-errors/-/better-ajv-errors-0.3.7.tgz",
+            "integrity": "sha512-TajUJwGWbDwkCx/CZi7tRE8PVB7simCvKJfHUsSdvps+aTM/PDPP4gkLmKnc+x3CE//y9i/nj74GqdL/hwk7Iw==",
             "dev": true,
             "license": "MIT",
-            "optional": true,
-            "os": [
-                "aix"
-            ],
+            "dependencies": {
+                "jsonpointer": "^5.0.1",
+                "leven": "^3.1.0"
+            },
             "engines": {
-                "node": ">=18"
+                "node": ">=10"
+            },
+            "peerDependencies": {
+                "ajv": ">=8"
             }
         },
-        "node_modules/@esbuild/android-arm": {
-            "version": "0.25.10",
-            "resolved": "https://registry.npmjs.org/@esbuild/android-arm/-/android-arm-0.25.10.tgz",
-            "integrity": "sha512-dQAxF1dW1C3zpeCDc5KqIYuZ1tgAdRXNoZP7vkBIRtKZPYe2xVr/d3SkirklCHudW1B45tGiUlz2pUWDfbDD4w==",
-            "cpu": [
-                "arm"
-            ],
+        "node_modules/@babel/code-frame": {
+            "version": "7.29.7",
+            "resolved": "https://registry.npmjs.org/@babel/code-frame/-/code-frame-7.29.7.tgz",
+            "integrity": "sha512-Aup7aUOfpbAUg2ROOJN6Iw5f9DMBlzu0mIkm/malLQFN/YQgO48wCj0Kxa3sEHJvPVFg7siR+qRInwXd2qhQKw==",
             "dev": true,
             "license": "MIT",
-            "optional": true,
-            "os": [
-                "android"
-            ],
+            "dependencies": {
+                "@babel/helper-validator-identifier": "^7.29.7",
+                "js-tokens": "^4.0.0",
+                "picocolors": "^1.1.1"
+            },
             "engines": {
-                "node": ">=18"
+                "node": ">=6.9.0"
             }
         },
-        "node_modules/@esbuild/android-arm64": {
-            "version": "0.25.10",
-            "resolved": "https://registry.npmjs.org/@esbuild/android-arm64/-/android-arm64-0.25.10.tgz",
-            "integrity": "sha512-LSQa7eDahypv/VO6WKohZGPSJDq5OVOo3UoFR1E4t4Gj1W7zEQMUhI+lo81H+DtB+kP+tDgBp+M4oNCwp6kffg==",
-            "cpu": [
-                "arm64"
-            ],
+        "node_modules/@babel/compat-data": {
+            "version": "7.29.7",
+            "resolved": "https://registry.npmjs.org/@babel/compat-data/-/compat-data-7.29.7.tgz",
+            "integrity": "sha512-locTkQyKvwIEgBzVrn8693ebc97F2U8ZHjbXwDXJ5Fn2TCpNwTlKcaKLkdHop5c/icOFE7qt7Q9JC5hnKNa6Gg==",
             "dev": true,
             "license": "MIT",
-            "optional": true,
-            "os": [
-                "android"
-            ],
             "engines": {
-                "node": ">=18"
+                "node": ">=6.9.0"
             }
         },
-        "node_modules/@esbuild/android-x64": {
-            "version": "0.25.10",
-            "resolved": "https://registry.npmjs.org/@esbuild/android-x64/-/android-x64-0.25.10.tgz",
-            "integrity": "sha512-MiC9CWdPrfhibcXwr39p9ha1x0lZJ9KaVfvzA0Wxwz9ETX4v5CHfF09bx935nHlhi+MxhA63dKRRQLiVgSUtEg==",
-            "cpu": [
-                "x64"
-            ],
+        "node_modules/@babel/core": {
+            "version": "7.29.7",
+            "resolved": "https://registry.npmjs.org/@babel/core/-/core-7.29.7.tgz",
+            "integrity": "sha512-RgHBCvtjbOK2gXSNBNIkNoEc9qoVEtau3hj8gEqKQuL3HZAibKarWFEI3Lfm6EYKkLalOh8eSrj9b+ch9H/VBA==",
             "dev": true,
+            "license": "MIT",
+            "dependencies": {
+                "@babel/code-frame": "^7.29.7",
 
-[TRUNCATED] Showing first 80 of 2699 lines.
+[TRUNCATED] Showing first 80 of 7354 lines.
 --- package.json ---
 {
     "$schema": "https://json.schemastore.org/package.json",
@@ -462,18 +462,27 @@ database\factories\UserFactory.php
         "dev": "vite"
     },
     "devDependencies": {
-        "@tailwindcss/vite": "^4.1.14",
-        "autoprefixer": "^10.4.2",
-        "axios": "^1.11.0",
-        "concurrently": "^9.0.1",
-        "daisyui": "^5.1.9",
-        "laravel-vite-plugin": "^2.0.0",
-        "postcss": "^8.4.31",
-        "vite": "^7.0.4"
+        "@tailwindcss/vite": "^4.3.3",
+        "autoprefixer": "^10.5.4",
+        "axios": "^1.19.0",
+        "concurrently": "^10.0.4",
+        "daisyui": "^5.7.16",
+        "fontaine": "^0.8.0",
+        "laravel-vite-plugin": "^3.2.0",
+        "postcss": "^8.5.26",
+        "tailwindcss": "^4.3.3",
+        "vite": "^8.2.1",
+        "vite-plugin-pwa": "^1.3.0"
     },
     "dependencies": {
+        "@fontsource/outfit": "^5.3.0",
+        "@fontsource/poppins": "^5.3.0",
         "html5-qrcode": "^2.3.8",
-        "jsqr": "^1.4.0"
+        "jsqr": "^1.4.0",
+        "workbox-cacheable-response": "^7.4.1",
+        "workbox-expiration": "^7.4.1",
+        "workbox-routing": "^7.4.1",
+        "workbox-strategies": "^7.4.1"
     }
 }
 
@@ -483,6 +492,7 @@ Found: public/index.php
 
 === LINTING AND FORMATTING CONFIG ===
 Found: .editorconfig
+Found: phpstan.neon
 
 === ENVIRONMENT VARIABLE TEMPLATES ===
 --- .env.example ---
@@ -557,77 +567,84 @@ AWS_USE_PATH_STYLE_ENDPOINT=false
 
 VITE_APP_NAME="${APP_NAME}"
 
+# AI Sidecar (hybrid search)
+SIDECAR_URL=http://127.0.0.1:8310
+SIDECAR_TOKEN=
+AI_CORPUS_PATH=
+
 
 === TODO / FIXME / HACK (production code only, test dirs excluded) ===
-None found.
+graphify-out\.graphify_chunk_02.json:781: "source_file": ".planning/phases/02-security-hardening/TODO.md",
+graphify-out\graph.json:18785: "source_file": ".planning/phases/02-security-hardening/TODO.md",
+graphify-out\manifest.json:1334: "C:\\Users\\admin\\Herd\\CEIT-Library\\.planning\\phases\\02-security-hardening\\TODO.md": {
 
 === GIT RECENT COMMITS (last 20) ===
-6566065 docs(01): capture phase context and project roadmap
-2ca3be7 chore: add project config
-0b622fe docs(planning): add comprehensive architectural overview
-fcc872f docs(codebase): add structured codebase map
-4de0d41 fix: update nginx configuration and PHP-FPM settings in Dockerfile
-69f21e1 fix: remove nginx configuration file copy from Dockerfile
-ef0ad24 fix: correct nginx configuration file path in Dockerfile
-1ee0529 fix: update PHP-FPM configuration to include user and group settings
-ba5aab2 fix: replace COPY with RUN command for PHP-FPM configuration in Dockerfile
-0cd48ce Merge pull request #1 from PSergio984/fix/account-seeder
-85bd14d fix: update environment variable handling for database seeding and improve password validation logic
-5d4968d refactor: streamline super admin seeding logic and improve error handling
-95a1f92 feat: implement database seeder, deployment script, and custom PHP-FPM configuration
-89b9227 feat: implement database seeder with configurable super admin credentials and mock library data
-07daede feat: implement deployment automation and configurable database seeding with idempotent account management
-ca5bfab refactor: enhance database compatibility and improve UI responsiveness with background updates
-9bc23b7 feat: add seeder execution to deployment script for improved database setup
-7a70e31 refactor: reorganize nginx configuration and update Dockerfile for improved clarity
-0c56717 refactor: update deployment script to publish Livewire assets and improve clarity
-dcbc0eb refactor: update supervisord configuration and optimize Dockerfile for clarity and efficiency
+59b2122c ci: fix sonar projectKey casing (PSergio984_CEIT-Library, matches repo name)
+ea1eec65 fix: empty AI_CORPUS_PATH no longer overrides default storage path (broke ai:export-corpus in CI); LibrarianBatchTest skips Sundays (business rule forbids Sunday duty dates)
+ee55ebb7 ci: build frontend assets before tests (fixes Vite manifest 500s in auth/layout tests); test timeout 15->30m
+b13f2cc9 ci: test job back to ubuntu-latest (larger runners queue >10min on free quota)
+90f60248 ci: drop xdebug coverage from test job (35m -> ~3m), use ubuntu-larger runner; SonarCloud scans without coverage
+dabf0bac ci: fix sonar projectKey to match SonarCloud project (PSergio984_ceit-library)
+5f439357 docs(11): commit ADRs 0013/0014 and phase patterns map
+ecc63479 ci: raise test job timeout 20->45min (xdebug coverage on GH runner exceeds 20m)
+0d8ae58a style: pint second-pass fix on QrScannerFileUploadTest imports
+38d92220 chore: keep pre-existing scratch test untracked
+1bc177b0 fix(quality): PHPStan baseline drift + model docblocks, Pint formatting sweep
+4ed5b8cc fix(ci): add checkout to test job
+eace3901 fix(ci): checkout before local setup-laravel action, drop redundant internal checkout
+603cf1c1 docs(11): record round-2 review fix round
+a7d987ad fix(11-04): browse mode ships verbatim search, UI-SPEC locks name precedence
+9012b4fe docs(11): record two-axis review fix round
+cc684789 fix(11-04/11-05): author/adviser standalone search, ADR 0006 refusal copy, shared citation keys, UI-SPEC sync
+4e8d4c88 docs(phase-11): complete phase execution
+c978fe02 docs(11): verification report
+2ba88958 docs(11): update review status after fix round
 
 === HIGH-CHURN FILES (last 90 days, top 20) ===
-  11 Dockerfile
-   6 scripts/00-laravel-deploy.sh
-   4 .env.example
-   4 database/seeders/DatabaseSeeder.php
-   3 Docker/nginx.conf
-   3 database/seeders/accountSeeder.php
-   2 Docker/www.conf
-   2 config/seeding.php
-   2 tests/Feature/SuperAdminSeedConfigTest.php
-   1 .planning/PROJECT.md
-   1 .planning/ROADMAP.md
-   1 .planning/phases/01-frontend-bug-fixes-scanning-optimization/01-CONTEXT.md
-   1 .planning/phases/01-frontend-bug-fixes-scanning-optimization/01-DISCUSSION-LOG.md
-   1 .planning/config.json
-   1 .planning/ARCHITECTURE_OVERVIEW.md
-   1 .planning/codebase/ARCHITECTURE.md
-   1 .planning/codebase/CONCERNS.md
-   1 .planning/codebase/CONVENTIONS.md
-   1 .planning/codebase/INTEGRATIONS.md
-   1 .planning/codebase/STACK.md
+  41 .planning/STATE.md
+  33 .planning/ROADMAP.md
+  17 resources/views/components/layouts/app.blade.php
+  17 graphify-out/GRAPH_REPORT.md
+  17 graphify-out/graph.json
+  17 resources/views/welcome.blade.php
+  16 app/Livewire/Pages/Student/AcademicPaperIndex.php
+  16 graphify-out/manifest.json
+  15 app/Livewire/ChatWidget.php
+  13 app/Services/AiService.php
+  12 routes/web.php
+  11 resources/views/livewire/pages/student/academic-paper-index.blade.php
+  10 tests/Feature/ChatWidgetTest.php
+   9 app/Providers/AppServiceProvider.php
+   8 .github/workflows/ci.yml
+   8 tests/Feature/AcademicPaperIndexHybridTest.php
+   8 resources/views/livewire/chat-widget.blade.php
+   8 .github/workflows/laravel.yml
+   7 app/Livewire/QrScanner.php
+   7 .planning/REQUIREMENTS.md
 
 === MONOREPO SIGNALS ===
 No monorepo signals detected.
 
 === CODE METRICS ===
-Total files scanned: 1143
-Total lines of code: 109493
+Total files scanned: 17067
+Total lines of code: 1521072
 
 Files by language:
-  PHP: 708
-  Other: 431
-  JavaScript: 4
+  Other: 14204
+  PHP: 2858
+  JavaScript: 5
 
 Top 10 largest files:
-storage\logs\browser.log: 42874.1KB
-storage\logs\laravel.log: 22025.4KB
+storage\logs\browser.log: 46295.4KB
+storage\logs\laravel.log: 33316.7KB
 graphify-out\.graphify_incremental.json: 3022.1KB
-graphify-out\graph.json: 2858.1KB
-graphify-out\manifest.json: 2694.0KB
-graphify-out\cache\ast\e1b2704881c54431b11ef8a5efb3cb0aa6a477d9bdb49dc10c9ddbc6be87c53e.json: 1155.7KB
-storage\app\private\livewire-tmp\DexmHbQxq7MOJCtgqI10RbAUkodkPj-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
-storage\app\private\livewire-tmp\g4EOGrVyHlkRb05LkCBLv75GEYDlIF-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
-storage\app\private\livewire-tmp\NbSpjMdjRUCc6KLQ2dLEuzf2X7OhtO-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
-storage\app\private\livewire-tmp\vzm3LWcDFre0zXUX011iDiWMX2sNAl-metaYXNkZmFzZGZhc2RmLnBuZw==-.png: 1129.0KB
+graphify-out\cache\ast\4a981f9948c0963b015428e3faf4f5e1fed41474039f73d10d479be8d00abc16.json: 2553.1KB
+graphify-out\graph.json: 2246.2KB
+graphify-out\graph.html: 2084.2KB
+storage\framework\cache\phpstan\resultCache.php: 1531.9KB
+storage\framework\cache\phpstan\cache\PHPStan\af\e9\afe96fcfd645727348054fc316d814543c49a8eadfab9c1d5f6e8b0771cab94f.php: 1529.9KB
+storage\framework\cache\phpstan\cache\PHPStan\22\fa\22fa8911642ec944651b50ea2162028a030ade6dc0ecbeb48cb8bb436367d0e4.php: 1390.0KB
+storage\framework\cache\phpstan\cache\PHPStan\ce\c2\cec2cdadd617637f36cbcb207a36a0d43431976cfe6e040d5ee510bdf619c0fc.php: 1388.2KB
 
 === CI/CD PIPELINES ===
 CI/CD: GitHub Actions
@@ -636,7 +653,7 @@ CI/CD: GitHub Actions
 Container: Docker found
 
 === SECURITY & COMPLIANCE ===
-No security configs detected.
+Security: snyk
 
 === PERFORMANCE & TESTING ===
 No performance testing configs detected.

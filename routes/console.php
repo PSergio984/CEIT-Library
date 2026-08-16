@@ -115,6 +115,8 @@ Schedule::command('library:send-reminders')->dailyAt('08:00');
 // AI sidecar index freshness (SEARCH-07):
 // hourly export at :05, then index sync at :10 (after the export lands)
 Schedule::command('ai:export-corpus')->hourlyAt(5);
+// cloud deployment: push the fresh export to the sidecar (FastAPI Cloud)
+Schedule::command('ai:push-corpus')->hourlyAt(7);
 Schedule::command('ai:sync-index')->hourlyAt(10);
 // nightly reconciliation confirms the index matches the DB (02:00, after the 00:30 batch)
 Schedule::command('ai:reconcile-index')->dailyAt('02:00');
