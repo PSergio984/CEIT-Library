@@ -48,7 +48,7 @@ jobs:
         run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
   test:
-    runs-on: ubuntu-larger
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
       APP_ENV: testing
