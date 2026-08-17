@@ -4,6 +4,7 @@
     'availableDepartments',
     'availableAuthors' => null,
     'availableAdvisers' => null,
+    'showPaperTabFilters' => false,
     'showSearchBar' => true,
 ])
 
@@ -25,7 +26,11 @@
     },
     
     get hasActiveFilters() {
-        return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter || $wire.authorFilter || $wire.adviserFilter);
+        return !!($wire.statusFilter || $wire.paperTypeFilter || $wire.departmentFilter || $wire.yearFromFilter || $wire.yearToFilter
+            @if ($showPaperTabFilters)
+                || $wire.authorFilter || $wire.adviserFilter
+            @endif
+        );
     },
     get validYearsFrom() {
         const toYear = $wire.yearToFilter;
@@ -118,7 +123,7 @@
                 </template>
             </select>
             
-            @if ($wire->paperTabActive ?? false)
+            @if ($showPaperTabFilters && ($wire->paperTabActive ?? false))
             {{-- Author Filter (paper tab only) --}}
             <select wire:model.live="authorFilter" class="select select-bordered select-sm sm:select-md w-full">
                 <option value="">All Authors</option>
@@ -168,14 +173,16 @@
                 <span>Dept:</span>
                 <span x-text="$wire.departmentFilter"></span>
             </span>
-            <span x-show="$wire.authorFilter" x-cloak class="badge badge-sm gap-1">
-                <span>Author:</span>
-                <span x-text="$wire.authorFilter"></span>
-            </span>
-            <span x-show="$wire.adviserFilter" x-cloak class="badge badge-sm gap-1">
-                <span>Adviser:</span>
-                <span x-text="$wire.adviserFilter"></span>
-            </span>
+            @if ($showPaperTabFilters)
+                <span x-show="$wire.authorFilter" x-cloak class="badge badge-sm gap-1">
+                    <span>Author:</span>
+                    <span x-text="$wire.authorFilter"></span>
+                </span>
+                <span x-show="$wire.adviserFilter" x-cloak class="badge badge-sm gap-1">
+                    <span>Adviser:</span>
+                    <span x-text="$wire.adviserFilter"></span>
+                </span>
+            @endif
             <span x-show="$wire.yearFromFilter" x-cloak class="badge badge-sm gap-1">
                 <span>From:</span>
                 <span x-text="$wire.yearFromFilter"></span>

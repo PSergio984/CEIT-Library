@@ -59,7 +59,9 @@ class FiltersTest extends TestCase
         Livewire::test(AdminAcademicPaperIndex::class)
             ->assertStatus(200)
             ->assertSeeHtml('Department')
-            ->assertSeeHtml('Search');
+            ->assertSeeHtml('Search')
+            ->assertDontSeeHtml('wire:model.live="authorFilter"')
+            ->assertDontSeeHtml('wire:model.live="adviserFilter"');
 
         // Check Borrow Logs page
         Livewire::test(AdminBorrowTransactions::class)

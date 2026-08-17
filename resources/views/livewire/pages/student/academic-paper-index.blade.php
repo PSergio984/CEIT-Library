@@ -40,6 +40,7 @@
             :availableDepartments="$this->availableDepartments"
             :availableAuthors="$this->availableAuthors"
             :availableAdvisers="$this->availableAdvisers"
+            :showPaperTabFilters="true"
         />
 
         {{-- AI search fallback notice --}}
