@@ -67,6 +67,9 @@ class AiService
         }
 
         try {
+            // The HTTP stream allows 120 seconds; keep PHP alive long enough
+            // to receive it and persist the completed assistant message.
+            set_time_limit(150);
             $request = $this->request(timeout: 120, retries: 0, stream: true);
             $response = $request->post('/chat/stream', $body);
         } catch (ConnectionException $e) {

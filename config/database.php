@@ -97,6 +97,12 @@ return [
             'prefix_indexes' => true,
             'search_path' => 'public',
             'sslmode' => env('DB_SSLMODE', 'prefer'),
+            // Supabase's transaction pooler can reuse server-side prepared
+            // statement names across backend connections; emulated prepares
+            // keep PDO statements scoped to the current request instead.
+            'options' => [
+                PDO::ATTR_EMULATE_PREPARES => env('DB_EMULATE_PREPARES', true),
+            ],
         ],
 
         'sqlsrv' => [
