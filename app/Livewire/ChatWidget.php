@@ -202,7 +202,11 @@ class ChatWidget extends Component
             // The assistant row lands only once the answer is complete —
             // during streaming the persistent slot is the bubble, so no
             // empty row ever coexists with it.
-            $this->messages[] = $this->assistantBubble($accumulated, $citations);
+            $this->messages[] = $this->assistantBubble(
+                $accumulated,
+                $citations,
+                resultIds: collect($citations)->pluck('id')->values()->all(),
+            );
 
             Message::create([
                 'conversation_id' => $this->activeConversationId,
@@ -234,20 +238,65 @@ class ChatWidget extends Component
     }
 
     /**
-     * Display shape for a user message. Every bubble carries the same
-     * five keys so the Livewire state stays uniform.
+     * Display shape for a user message. Every bubble carries the same keys
+     * so the Livewire state stays uniform.
      */
     private function userBubble(string $content): array
     {
-        return ['role' => 'user', 'content' => $content, 'citations' => null, 'failed' => false, 'error' => null];
+        return ['role' => 'user', 'content' => $content, 'citations' => null, 'failed' => false, 'error' => null, 'rating' => null, 'result_ids' => []];
     }
 
     /**
-     * Display shape for an assistant message.
+     * Display shape for an assistant message. `result_ids` carries the
+     * retrieved document ids the answer was grounded on (for /feedback).
      */
-    private function assistantBubble(string $content, ?array $citations = null, bool $failed = false, ?array $error = null): array
+    private function assistantBubble(string $content, ?array $citations = null, bool $failed = false, ?array $error = null, array $resultIds = []): array
     {
-        return ['role' => 'assistant', 'content' => $content, 'citations' => $citations, 'failed' => $failed, 'error' => $error];
+        return ['role' => 'assistant', 'content' => $content, 'citations' => $citations, 'failed' => $failed, 'error' => $error, 'rating' => null, 'result_ids' => $resultIds];
+    }
+
+    /**
+     * Thumbs up/down on an assistant answer, forwarded to the sidecar's
+     * /feedback endpoint (query + answer + retrieved doc ids). Best-effort:
+     * a sidecar failure never breaks the chat — the bubble still reflects
+     * the user's rating, and the miss is logged by AiService.
+     */
+    public function rate(int $index, string $rating): void
+    {
+        if ($rating !== 'up' && $rating !== 'down') {
+            return;
+        }
+
+        if ($this->streaming || ! isset($this->messages[$index]) || $this->messages[$index]['role'] !== 'assistant') {
+            return;
+        }
+
+        $message = $this->messages[$index];
+
+        if (! empty($message['failed'])) {
+            return;
+        }
+
+        $question = null;
+        for ($i = $index - 1; $i >= 0; $i--) {
+            if (($this->messages[$i]['role'] ?? null) === 'user') {
+                $question = $this->messages[$i]['content'];
+                break;
+            }
+        }
+
+        if ($question === null) {
+            return;
+        }
+
+        $resultIds = $message['result_ids'] ?? [];
+        if ($resultIds === [] && ! empty($message['citations'])) {
+            $resultIds = collect($message['citations'])->pluck('id')->values()->all();
+        }
+
+        (new AiService)->feedback($question, $rating, $message['content'], $resultIds);
+
+        $this->messages[$index]['rating'] = $rating;
     }
 
     /**

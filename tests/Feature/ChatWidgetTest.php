@@ -845,4 +845,101 @@ class ChatWidgetTest extends TestCase
             ],
         ], $message->citations);
     }
+
+    #[Test]
+    public function it_records_a_thumbs_up_against_the_sidecar(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCatalogPaper77();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response([
+                'query' => 'water pump',
+                'total' => 1,
+                'results' => [[
+                    'id' => 'paper-77',
+                    'corpus' => 'catalog',
+                    'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+                    'score' => 0.01,
+                    'bm25_rank' => 1,
+                    'semantic_rank' => 1,
+                    'pinned' => false,
+                    'metadata' => [
+                        'url' => '/academic-papers/77',
+                        'catalog_code' => 'CEIT-CE-15-014',
+                    ],
+                ]],
+            ], 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response(
+                "data: {\"c\": \"Analysis of Groundwater Depletion\"}\ndata: [DONE]\n",
+                200,
+                ['Content-Type' => 'text/event-stream']
+            ),
+            'http://127.0.0.1:8310/feedback' => Http::response(['status' => 'recorded', 'rating' => 'up'], 200),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->assertSet('streaming', false)
+            ->call('rate', 1, 'up')
+            ->assertSet('messages.1.rating', 'up');
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/feedback')
+                && $request['query'] === 'water pump'
+                && $request['rating'] === 'up'
+                && $request['answer'] === 'Analysis of Groundwater Depletion'
+                && $request['result_ids'] === ['paper-77'];
+        });
+    }
+
+    #[Test]
+    public function it_marks_the_rating_even_when_the_sidecar_is_down(): void
+    {
+        $user = User::factory()->create();
+        $this->seedCatalogPaper77();
+
+        config(['services.ai_sidecar.token' => 'test-token']);
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response([
+                'query' => 'water pump',
+                'total' => 1,
+                'results' => [[
+                    'id' => 'paper-77',
+                    'corpus' => 'catalog',
+                    'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+                    'score' => 0.01,
+                    'bm25_rank' => 1,
+                    'semantic_rank' => 1,
+                    'pinned' => false,
+                    'metadata' => [
+                        'url' => '/academic-papers/77',
+                        'catalog_code' => 'CEIT-CE-15-014',
+                    ],
+                ]],
+            ], 200),
+            'http://127.0.0.1:8310/chat/stream' => Http::response(
+                "data: {\"c\": \"Analysis of Groundwater Depletion\"}\ndata: [DONE]\n",
+                200,
+                ['Content-Type' => 'text/event-stream']
+            ),
+            'http://127.0.0.1:8310/feedback' => Http::response([], 500),
+        ]);
+
+        $this->actingAs($user);
+
+        Livewire::test(ChatWidget::class)
+            ->call('newConversation')
+            ->set('draft', 'water pump')
+            ->call('send')
+            ->call('rate', 1, 'down')
+            ->assertSet('messages.1.rating', 'down');
+    }
 }

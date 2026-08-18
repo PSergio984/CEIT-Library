@@ -251,4 +251,42 @@ class AiServiceTest extends TestCase
         $this->assertSame('v1', $health['contract_version']);
         $this->assertSame(153, $health['index']['documents']);
     }
+
+    #[Test]
+    public function it_posts_feedback_with_the_exact_sidecar_payload(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/feedback' => Http::response(['status' => 'recorded', 'rating' => 'up'], 200),
+        ]);
+
+        $ok = (new AiService)->feedback('what is CEIT-IT-23-01?', 'up', 'It is a paper about…', ['paper-1', 'paper-2']);
+
+        $this->assertTrue($ok);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/feedback')
+                && $request->method() === 'POST'
+                && $request->hasHeader('X-Sidecar-Token', 'test-token')
+                && array_keys($request->data()) === ['query', 'rating', 'answer', 'result_ids']
+                && $request['query'] === 'what is CEIT-IT-23-01?'
+                && $request['rating'] === 'up'
+                && $request['answer'] === 'It is a paper about…'
+                && $request['result_ids'] === ['paper-1', 'paper-2'];
+        });
+    }
+
+    #[Test]
+    public function it_swallows_feedback_failures(): void
+    {
+        Http::fake([
+            'http://127.0.0.1:8310/feedback' => Http::response([], 500),
+        ]);
+
+        $ok = (new AiService)->feedback('some query', 'down');
+
+        $this->assertFalse($ok);
+    }
 }

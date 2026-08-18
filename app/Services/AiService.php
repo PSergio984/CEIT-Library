@@ -55,6 +55,31 @@ class AiService
     }
 
     /**
+     * Record a thumbs up/down against the sidecar's /feedback endpoint.
+     *
+     * Payload mirrors the sidecar contract exactly (query, rating, answer,
+     * result_ids — no extra keys, the sidecar rejects unknown fields).
+     * Feedback is a best-effort signal: any failure is logged and swallowed
+     * so rating can never break the chat UI.
+     */
+    public function feedback(string $query, string $rating, ?string $answer = null, array $resultIds = []): bool
+    {
+        try {
+            $this->send('POST', '/feedback', [
+                'query' => $query,
+                'rating' => $rating,
+                'answer' => $answer,
+                'result_ids' => $resultIds,
+            ], timeout: 5, retries: 1);
+
+            return true;
+        } catch (\Throwable $e) {
+            $this->logFailure('/feedback', 'best_effort');
+            return false;
+        }
+    }
+
+    /**
      * Streamed chat endpoint: POST /chat/stream with the ADR 0004 payload,
      * no retries (a retry would re-issue the POST and duplicate LLM
      * generation), throwUnlessOk before touching the body, and the raw

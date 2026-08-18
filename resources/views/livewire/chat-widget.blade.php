@@ -38,7 +38,7 @@
                 <div class="text-center py-10 text-sm text-base-content/60">No conversations yet</div>
             @endforelse
         @else
-            @foreach ($messages as $m)
+            @foreach ($messages as $i => $m)
                 @if ($m['role'] === 'user')
                     <div class="flex justify-end">
                         <div class="bg-primary text-primary-content rounded-2xl rounded-br-sm px-4 py-2 max-w-[80%] text-sm whitespace-pre-line">{{ $m['content'] }}</div>
@@ -57,6 +57,22 @@
                                 <div class="mt-2 rounded-lg bg-amber-50 border border-amber-300 px-3 py-2 text-xs text-amber-800 flex items-center justify-between gap-2">
                                     <span>{{ $m['error']['message'] }}</span>
                                     <button type="button" wire:click="retry" class="btn btn-xs btn-warning">Retry</button>
+                                </div>
+                            @endif
+
+                            @if (empty($m['failed']) && ! $streaming)
+                                <div class="mt-2 flex items-center gap-1" wire:key="rating-{{ $i }}">
+                                    @if ($m['rating'] === null)
+                                        <button type="button" wire:click="rate({{ $i }}, 'up')" class="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-success" title="Helpful answer">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.745 1.282h3.126c1.16 0 2.1.94 2.1 2.1 0 .677-.31 1.28-.796 1.66-.482.377-.758 1.003-.677 1.621.095.715.335 1.395.695 2.01.218.37.341.795.341 1.23 0 1.264-.998 2.287-2.243 2.287h-3.237a2.47 2.47 0 0 0-1.98.99l-.766 1.022a2.24 2.24 0 0 1-1.723.882H9.98a1.125 1.125 0 0 1-1.052-1.504c.392-1.063.607-2.09.618-3.096.005-.634-.172-1.267-.528-1.754a1.5 1.5 0 0 0-1.255-.73H6.633a2.25 2.25 0 0 1-2.25-2.25 2.25 2.25 0 0 1 2.25-2.25Z" /></svg>
+                                        </button>
+                                        <button type="button" wire:click="rate({{ $i }}, 'down')" class="btn btn-ghost btn-xs btn-circle text-base-content/50 hover:text-error" title="Not helpful">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4"><path stroke-linecap="round" stroke-linejoin="round" d="M7.498 15.25H4.372c-1.026 0-1.905-.865-1.905-1.888 0-.284.062-.564.179-.826.279-.623.508-1.287.508-2.006 0-.599-.24-1.15-.628-1.555.003-.01.006-.021.01-.032.283-.61.446-1.29.446-2.006a3.456 3.456 0 0 0-1.08-2.45 4.016 4.016 0 0 1-.92-1.14c-.284-.63-.253-1.36.077-1.96.33-.6.931-.972 1.601-.972h2.421c.691 0 1.35.277 1.832.764A4.443 4.443 0 0 1 10.5 4.75h6.247c.907 0 1.643.715 1.687 1.62.026.483.037.967-.08 1.45-.086.327-.118.663-.097.997.02.288.075.57.165.836.216.642.647 1.187 1.194 1.576.25.179.512.34.764.512.357.243.575.645.575 1.07 0 .404-.155.79-.43 1.09a1.506 1.506 0 0 1-.386.29 1.503 1.503 0 0 0-.688 1.084c-.067.442-.27.847-.568 1.16l-.015.016a2.254 2.254 0 0 0-.439 2.032l.343 1.026a1.501 1.501 0 0 1-1.42 1.94H14.25a2.25 2.25 0 0 1-2.148-1.572l-.391-1.23a3 3 0 0 0-2.223-2.005Z" /></svg>
+                                        </button>
+                                    @else
+                                        <span class="text-xs {{ $m['rating'] === 'up' ? 'text-success' : 'text-error' }}">{{ $m['rating'] === 'up' ? 'Helpful' : 'Not helpful' }}</span>
+                                        <button type="button" wire:click="rate({{ $i }}, {{ $m['rating'] === 'up' ? "'down'" : "'up'" }})" class="btn btn-ghost btn-xs text-base-content/40" title="Change rating">Change</button>
+                                    @endif
                                 </div>
                             @endif
                         </div>
