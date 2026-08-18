@@ -114,6 +114,24 @@ php artisan schedule:work
 
 The app runs at http://localhost:8000.
 
+### Or run it with Docker (front door + database)
+
+```bash
+# this repo: app (nginx+php-fpm) + local PostgreSQL 16, seeds the demo account
+docker compose up --build
+# open http://localhost:8080  (if taken: APP_PORT=8081 docker compose up -d)
+
+# sidecar repo: search/chat service + Prometheus + Grafana
+cd ../ceit-ai-sidecar
+docker compose up --build
+```
+
+The containerized app reaches the sidecar through
+`http://host.docker.internal:8310` by default (set `SIDECAR_BASE_URL` /
+`SIDECAR_TOKEN` in this repo's `.env` to override). The login page's
+**"Log in with demo student"** button signs in with the seeded
+`student@plv.edu.ph` account.
+
 ### Cloud deployment (sidecar on FastAPI Cloud)
 
 The sidecar can run on FastAPI Cloud instead of loopback:
@@ -136,7 +154,7 @@ Automated suites exist in both repos:
 php artisan test                # 604 tests: auth, borrowing, QR, Livewire, AI chat
 
 # Sidecar (pytest)
-uv run pytest                   # 85 tests: ranking, filters, API, agentic loop
+uv run pytest                   # 144 tests, 1 skipped: ranking, filters, API, agentic loop
 uv run ruff check .
 ```
 
@@ -149,24 +167,35 @@ migrations, tests, SonarCloud, CodeQL, and a secrets scan on every push.
 
 Golden-set evaluation in the sidecar (`app/eval.py`) against
 [`data/golden_dataset.json`](https://github.com/PSergio984/ceit-ai-sidecar/blob/main/data/golden_dataset.json)
-— 27 cases (catalog-only, including negative "should return nothing"
-cases). Current results (k=5):
+— 27 cases regenerated from the bundled 1,338-doc corpus (catalog codes,
+exact/paraphrase titles, authors, departments, years, plus 5 negative
+"should return nothing" cases). Current results (k=5):
 
-- Precision@5: **0.46**
-- Recall@5: **0.80**
-- F1@5: **0.45**
-- Top-1 rate: **95%**
-- Negative pass rate: **100%** (all 5 out-of-domain queries correctly
-  return nothing)
+| Approach | P@5   | R@5   | F1@5  | Top-1 | Neg-pass |
+|----------|-------|-------|-------|-------|----------|
+| **hybrid** (production retrieval) | 0.4545 | 0.7239 | 0.3913 | **0.8182** | **1.0** |
+| bm25     | 0.5455 | 0.7517 | 0.4321 | 0.7273 | 1.0 |
+| semantic | 0.1091 | 0.3780 | 0.1414 | 0.2727 | 1.0 |
+| hybrid + blend re-rank (shipped /search) | 0.4545 | 0.7239 | 0.3913 | **0.8636** | 1.0 |
 
-By category:
+**Winner rule (documented, stable):** for a library assistant the primary
+quality gates are **top-1 rate** (the right document surfaces first — critical
+for code/title lookups) and **negative-pass rate** (no irrelevant results);
+F1@k breaks ties. Under that rule **hybrid wins**: the code pin nails top-1 on
+all four catalog-code cases, and no negative ever leaks. Two fixes made the
+shipped pipeline honest on the 1,338-doc corpus: the query tokenizer now keeps
+digits (years and catalog codes reach FTS5), and `MIN_SEMANTIC_SIMILARITY`
+was raised 0.25 → 0.5 so the semantic channel only fires where embeddings
+discriminate.
+
+By category (shipped pipeline: hybrid + blend re-rank):
 
 | Category | n | P@5 | Top-1 |
 |----------|---|-----|-------|
 | catalog_code (exact CEIT codes) | 4 | 0.20 | 1.00 |
-| exact_title | 8 | 0.20 | 1.00 |
-| paraphrase | 6 | 0.93 | 1.00 |
-| people (paper by author) | 4 | 0.55 | 0.75 |
+| exact_title | 8 | 0.20 | 0.75 |
+| paraphrase | 6 | 0.67 | 0.83 |
+| people (papers by author) | 4 | 0.90 | 1.00 |
 
 Run it yourself:
 
@@ -174,13 +203,23 @@ Run it yourself:
 cd ceit-ai-sidecar
 uv run python -m app.eval            # human-readable report
 uv run python -m app.eval --json     # machine-readable report
+uv run python -m app.eval --with-rerank   # also score the shipped pipeline
 ```
 
 ### RAG flow evaluation
 
-LLM-as-judge answer scoring (RELEVANT / PARTLY_RELEVANT /
-NON_RELEVANT) is planned for Phase 13 of the roadmap — the golden
-retrieval sets and negative cases already exist.
+LLM-as-judge answer scoring (`app/judge.py`, same `RagService` path the app
+uses) on 40 questions regenerated for the bundled corpus. Current recorded run
+(10-question sample, `meta-llama/llama-3.3-70b-instruct`, top_k=5):
+
+- **RELEVANT** 9 · **PARTLY_RELEVANT** 1 · **NON_RELEVANT** 0
+- Relevant rate: **0.90** · Partly-or-better rate: **1.00**
+
+```bash
+cd ceit-ai-sidecar
+uv run python -m app.judge                     # all 40 questions
+uv run python -m app.judge --sample 10 --seed 42   # a 10-question sample
+```
 
 ## Architecture
 
@@ -252,11 +291,15 @@ refusal ("I don't have enough information") with zero LLM calls.
 ## Monitoring
 
 - Sidecar: `GET /health` (index coverage + staleness) and `GET /metrics`
-  (hand-rolled counters: searches, rebuilds, average latency, indexed
-  documents).
+  (Prometheus counters: searches, chat retrievals, rebuilds, latency,
+  feedback up/down, indexed documents).
+- `POST /feedback` — the chat widget's thumbs up/down forwards the query,
+  answer, and retrieved doc ids; the sidecar appends a JSONL line and feeds
+  the feedback counters.
+- **Prometheus + Grafana** — the sidecar's `docker compose up --build`
+  provisions both and a "CEIT AI Sidecar" dashboard (6 charts: retrieval
+  traffic, latency p95/average, feedback, indexed docs, rebuilds).
 - CI quality: SonarCloud gate, CodeQL, SonarQube secrets scan.
-- Prometheus + Grafana dashboards (usage, latency, cost) are Phase 14 of
-  the roadmap.
 
 ## Decisions and trade-offs
 
@@ -334,12 +377,13 @@ gitignored and never committed.
 
 - The LLM answer quality depends on OpenRouter availability; provider
   failures surface as a user-safe error event in the chat.
-- LLM-as-judge answer evaluation and user feedback capture are Phase 13
-  (retrieval evaluation exists today).
+- Feedback capture is manual (thumbs up/down in the chat) — there is no
+  end-to-end answer-quality loop beyond the recorded judge runs yet.
 - No rate limits or cost guards on the LLM path yet (Phase 14).
 - Whole-document embeddings cap prompt context at 600 characters per
   document.
-- No Prometheus/Grafana dashboards yet (Phase 14) — only `/health` and
-  `/metrics` counters.
+- The bundled policy corpus is a synthetic placeholder (Faker-Latin
+  regulation text), so policy Q&A is exercised end-to-end in the app but
+  is not part of the judged evaluation (catalog-only question set).
 - The app database is Supabase PostgreSQL; SQLite is used only for CI and
   the test suite.
