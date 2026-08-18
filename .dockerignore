@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+vendor/
+node_modules/
+storage/logs/*
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/app/ai-corpus/*
+tests/
+.git/
+.github/
+docker-compose.yml
+*.diff
+*.xlsx

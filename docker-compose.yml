@@ -1,0 +1,72 @@
+# CEIT Library Laravel app + PostgreSQL — the front door of the AI assistant.
+#
+# Run together with the sidecar stack (ceit-ai-sidecar: docker compose up):
+# the app reaches the sidecar through host.docker.internal:8310 by default
+# (override SIDECAR_URL/SIDECAR_TOKEN in your .env).
+#
+#   docker compose up --build
+#   open http://localhost:8080  (if the port is taken: APP_PORT=8081 docker compose up -d)
+#   demo login button on the login page (seeded student account)
+#
+# On first boot the app runs `migrate --seed` (creates the demo student
+# account the login page's "Log in with demo student" button uses); later
+# boots only migrate. The database is a local PostgreSQL 16 volume.
+
+services:
+  app:
+    build: .
+    ports:
+      - "${APP_PORT:-8080}:80"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: ${APP_URL:-http://localhost}
+      APP_KEY: ${APP_KEY:-}
+      DB_CONNECTION: pgsql
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_DATABASE: ceit_library
+      DB_USERNAME: ceit
+      DB_PASSWORD: ceit
+      # SIDECAR_BASE_URL (not SIDECAR_URL) so the app's own .env can never
+      # shadow the container default. Point it at the sidecar host.
+      SIDECAR_URL: ${SIDECAR_BASE_URL:-http://host.docker.internal:8310}
+      SIDECAR_TOKEN: ${SIDECAR_TOKEN:-change-me}
+    volumes:
+      - app_storage:/var/www/html/storage
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "if [ -z \"$${APP_KEY}\" ]; then
+             KEYFILE=/var/www/html/storage/app/.app_key;
+             if [ ! -f $$KEYFILE ]; then
+               php artisan key:generate --show > $$KEYFILE;
+             fi;
+             export APP_KEY=$$(cat $$KEYFILE);
+             fi;
+             if [ ! -f /var/www/html/storage/.seeded ]; then
+               php artisan migrate --seed --force &&
+               touch /var/www/html/storage/.seeded;
+             fi;
+             /bin/bash /var/www/html/Docker/start.sh"
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ceit_library
+      POSTGRES_USER: ceit
+      POSTGRES_PASSWORD: ceit
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ceit -d ceit_library"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  app_storage:
+  pgdata:
