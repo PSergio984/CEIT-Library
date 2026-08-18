@@ -34,6 +34,19 @@ class extends Component
             $this->redirectIntended(default: route('student.dashboard', absolute: false), navigate: true);
         }
     }
+
+    /**
+     * One-click demo login with the seeded student account
+     * (DatabaseSeeder: student@plv.edu.ph / Pwd@12345). Exists so
+     * reviewers can try the app without creating an account.
+     */
+    public function demoLogin(): void
+    {
+        $this->form->email = 'student@plv.edu.ph';
+        $this->form->password = 'Pwd@12345';
+
+        $this->login();
+    }
 }; ?>
 
 <div class="relative w-full max-w-2xl mx-auto" x-data="{
@@ -168,6 +181,16 @@ class extends Component
                         Forgot your password?
                     </a>
                 @endif
+            </div>
+
+            <!-- Demo login -->
+            <div class="mb-4 rounded-xl border border-dashed border-[#0046ad]/30 dark:border-sky-400/30 bg-[#0046ad]/5 dark:bg-sky-400/5 p-3">
+                <p class="text-xs text-slate-600 dark:text-slate-300 mb-2">Reviewer demo: signs in with the seeded student account
+                    (<span class="font-mono">student@plv.edu.ph</span>).</p>
+                <button type="button" wire:click="demoLogin" wire:loading.attr="disabled" wire:target="demoLogin"
+                        class="w-full rounded-xl border border-[#0046ad] text-[#0046ad] dark:border-sky-400 dark:text-sky-400 py-2 text-sm font-semibold hover:bg-[#0046ad]/10 dark:hover:bg-sky-400/10 transition-colors">
+                    {{ __('Log in with demo student') }}
+                </button>
             </div>
 
             <!-- Login Button -->

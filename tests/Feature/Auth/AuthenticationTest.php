@@ -40,6 +40,21 @@ class AuthenticationTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_demo_login_authenticates_the_seeded_student_account(): void
+    {
+        $student = User::factory()->create([
+            'email' => 'student@plv.edu.ph',
+            'password' => Hash::make('Pwd@12345'),
+        ]);
+
+        Volt::test('pages.auth.login')
+            ->call('demoLogin')
+            ->assertHasNoErrors()
+            ->assertRedirect(route('student.dashboard', absolute: false));
+
+        $this->assertAuthenticatedAs($student);
+    }
+
     // Note: Admin redirect test is skipped due to test database schema differences
     // The actual application will work correctly with admin users
 
