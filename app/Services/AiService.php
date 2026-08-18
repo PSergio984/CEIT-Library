@@ -35,7 +35,9 @@ class AiService
     {
         return $this->send('POST', '/search', [
             'query' => $query,
-            'filters' => $filters,
+            // Empty arrays serialize as [] — cast to an object so the sidecar
+            // contract ("filters must be an object") holds on every request.
+            'filters' => $filters === [] ? new \stdClass : $filters,
             'corpus' => $corpus,
             'limit' => $limit,
             'k' => self::RRF_CANDIDATES,

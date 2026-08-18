@@ -116,7 +116,7 @@ class SimilarPapersServiceTest extends TestCase
             return str_contains($request->url(), '/search')
                 && $request->hasHeader('X-Sidecar-Token', 'test-token')
                 && $request['query'] === 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps'
-                && $request['filters'] === []
+                && $request['filters'] instanceof \stdClass
                 && $request['corpus'] === 'catalog'
                 && $request['limit'] === 10
                 && $request['k'] === 60
