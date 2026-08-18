@@ -30,7 +30,7 @@ class AvailabilityService
         $checkedAt = now();
 
         $rows = Inventory::whereIn('academic_paper_id', $ids)
-            ->selectRaw('academic_paper_id, COUNT(*) AS total, SUM(CASE WHEN status = "Available" THEN 1 ELSE 0 END) AS available')
+            ->selectRaw("academic_paper_id, COUNT(*) AS total, SUM(CASE WHEN status = 'Available' THEN 1 ELSE 0 END) AS available")
             ->groupBy('academic_paper_id')
             ->get();
 
