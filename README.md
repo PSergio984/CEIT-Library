@@ -11,7 +11,7 @@ and return with QR codes, and ask the in-app assistant questions about
 the catalog and the library rulebook — answered with citations,
 grounded strictly in retrieved library content.
 
-Search runs on a hybrid sidecar (FTS5 BM25 + multilingual semantic
+Search runs on a hybrid sidecar (FTS5 BM25 + English semantic
 embeddings, fused with Reciprocal Rank Fusion), deployed on FastAPI
 Cloud, with the Laravel app as the front door.
 
@@ -25,7 +25,7 @@ Cloud, with the Laravel app as the front door.
   <img src="images/search.png" alt="Hybrid search with live availability">
 </p>
 
-Live sidecar (health + search): `https://<your-sidecar>.fastapi.app`
+Live sidecar (health + search): `https://ceit-ai-sidecar.fastapicloud.dev`
 
 The in-app chat widget is available on every authenticated page.
 
@@ -66,7 +66,8 @@ sidecar.
 - PHP 8.4 and [Composer](https://getcomposer.org/)
 - Node.js and npm (Vite frontend build)
 - Python 3.13 and [uv](https://docs.astral.sh/uv/)
-- SQLite (default; no server database needed)
+- Supabase PostgreSQL (the app database; SQLite is used by CI and the
+  test suite)
 
 ### 1. Laravel app
 
@@ -77,7 +78,7 @@ composer install
 cp .env.example .env        # fill SIDECAR_TOKEN (must match the sidecar)
 php artisan key:generate
 npm ci && npm run build     # required: views render @vite assets
-php artisan migrate --seed
+php artisan migrate --seed    # against Supabase PostgreSQL (see .env DB_* vars)
 php artisan serve
 ```
 
@@ -92,7 +93,7 @@ uv run uvicorn app.main:app --port 8310
 ```
 
 The sidecar binds loopback only when run locally. First start downloads
-the ~470 MB embedding model.
+the compact English embedding model.
 
 ### 3. Export the corpus and build the index
 
@@ -119,7 +120,7 @@ The sidecar can run on FastAPI Cloud instead of loopback:
 
 1. Set env vars in the FastAPI Cloud dashboard: `SIDECAR_TOKEN`,
    `LLM_API_KEY` (OpenRouter), `CORPUS_PATH=corpus`.
-2. Point Laravel at it: `SIDECAR_URL=https://<your-sidecar>.fastapi.app`
+2. Point Laravel at it: `SIDECAR_URL=https://ceit-ai-sidecar.fastapicloud.dev`
    in `.env`.
 3. Corpus freshness is handled automatically: `ai:push-corpus` (scheduled
    hourly) exports and uploads `catalog.json` + `policies.json` to the
@@ -132,10 +133,10 @@ Automated suites exist in both repos:
 
 ```bash
 # Laravel (PHPUnit 13)
-php artisan test                # 600+ tests: auth, borrowing, QR, Livewire, AI chat
+php artisan test                # 604 tests: auth, borrowing, QR, Livewire, AI chat
 
 # Sidecar (pytest)
-uv run pytest                   # 78 tests: ranking, filters, API, agentic loop
+uv run pytest                   # 85 tests: ranking, filters, API, agentic loop
 uv run ruff check .
 ```
 
@@ -148,13 +149,13 @@ migrations, tests, SonarCloud, CodeQL, and a secrets scan on every push.
 
 Golden-set evaluation in the sidecar (`app/eval.py`) against
 [`data/golden_dataset.json`](https://github.com/PSergio984/ceit-ai-sidecar/blob/main/data/golden_dataset.json)
-— 35 cases (catalog + policy, including negative "should return nothing"
+— 27 cases (catalog-only, including negative "should return nothing"
 cases). Current results (k=5):
 
-- Precision@5: **0.60**
-- Recall@5: **0.86**
-- F1@5: **0.63**
-- Top-1 rate: **83%**
+- Precision@5: **0.46**
+- Recall@5: **0.80**
+- F1@5: **0.45**
+- Top-1 rate: **95%**
 - Negative pass rate: **100%** (all 5 out-of-domain queries correctly
   return nothing)
 
@@ -162,11 +163,10 @@ By category:
 
 | Category | n | P@5 | Top-1 |
 |----------|---|-----|-------|
-| taglish (Taglish queries) | 6 | 0.80 | 0.50 |
-| paraphrase | 14 | 0.70 | 1.00 |
-| people (paper by author/adviser) | 4 | 0.50 | 1.00 |
-| catalog_code (exact CEIT codes) | 2 | 0.30 | 0.50 |
-| exact_title | 4 | 0.20 | 0.75 |
+| catalog_code (exact CEIT codes) | 4 | 0.20 | 1.00 |
+| exact_title | 8 | 0.20 | 1.00 |
+| paraphrase | 6 | 0.93 | 1.00 |
+| people (paper by author) | 4 | 0.55 | 0.75 |
 
 Run it yourself:
 
@@ -187,17 +187,17 @@ retrieval sets and negative cases already exist.
 ```mermaid
 flowchart TD
     User["Student / Librarian"]
-    App["Laravel app<br/>Livewire + Eloquent + SQLite"]
+    App["Laravel app<br/>Livewire + Eloquent + Supabase PostgreSQL"]
     Widget["Chat widget<br/>Livewire stream()"]
     AiService["AiService<br/>SSE client"]
     Sidecar["Sidecar (FastAPI)<br/>FastAPI Cloud"]
     Agent["AgenticLoop<br/>bounded tool loop"]
     Hybrid["HybridSearch<br/>BM25 FTS5 + semantic + RRF k=60"]
-    Embedder["Embeddings<br/>paraphrase-multilingual-MiniLM-L12-v2"]
+    Embedder["Embeddings<br/>all-MiniLM-L6-v2"]
     LLM["OpenRouter LLM<br/>meta-llama/llama-3.3-70b-instruct"]
     Corpus["Corpus JSON<br/>catalog.json + policies.json"]
     Exporter["ai:export-corpus / ai:push-corpus"]
-    DB[("SQLite")]
+    DB[("Supabase PostgreSQL")]
 
     User --> Widget
     User --> App
@@ -226,7 +226,7 @@ the search index or the LLM key directly.
 - **Keyword retrieval**: SQLite FTS5 (via `sqlitesearch`) — BM25
   ranking over the full corpus (no candidate pooling).
 - **Semantic retrieval**: whole-document embeddings
-  (`paraphrase-multilingual-MiniLM-L12-v2`), normalized, cosine
+  (`all-MiniLM-L6-v2`), normalized, cosine
   similarity. No TF-IDF is used anywhere; no chunking (whole documents).
 - **Fusion**: Reciprocal Rank Fusion with k=60 —
   `score = 1/(60 + rank)` per list. Metadata filters (paper type,
@@ -261,8 +261,8 @@ refusal ("I don't have enough information") with zero LLM calls.
 ## Decisions and trade-offs
 
 - **Hybrid BM25 + semantic over vector-only**: keyword search nails
-  catalog codes and exact titles; semantic embeddings catch paraphrase
-  and Taglish. RRF k=60 fusion needs no score normalization. Trade-off:
+  catalog codes and exact titles; semantic embeddings catch paraphrase.
+  RRF k=60 fusion needs no score normalization. Trade-off:
   two indexes to keep in sync (solved by the atomic versioned rebuild).
 - **Sidecar as a separate service over an in-app library**: the search
   index and the LLM key live outside the Laravel app; the contract is a
@@ -276,9 +276,10 @@ refusal ("I don't have enough information") with zero LLM calls.
 - **OpenRouter over a direct provider**: one SDK (openai), model
   swap via env (`LLM_MODEL`), no vendor lock-in. Trade-off: an extra
   dependency and an API key to manage (and rotate).
-- **SQLite over PostgreSQL**: zero-ops for a campus-scale app; CI runs
-  in-memory. Trade-off: multi-writer limits — PostgreSQL env vars are
-  already scaffolded if it outgrows SQLite.
+- **Supabase PostgreSQL over SQLite**: a shared cloud database for the
+  real app; SQLite remains the in-memory CI/test database. Trade-off: a
+  network database dependency and pooler-compatible PDO settings
+  (emulated prepares are enabled for the transaction pooler).
 - **Corpus push for the cloud (not shared disk)**: `ai:push-corpus`
   uploads the export to `POST /corpus/upload`, which rebuilds atomically
   — no shared filesystem, corpus stays out of git (it contains author
@@ -312,7 +313,7 @@ ceit-ai-sidecar/              # FastAPI hybrid-search sidecar
     rag.py                    # RAG prompts, SSE framing, citation keys
     agent.py                  # AgenticLoop: bounded tool loop
     eval.py                   # golden-set retrieval evaluation
-  data/golden_dataset.json    # 35 evaluation cases
+  data/golden_dataset.json    # 27 evaluation cases
   tests/                      # pytest: ranking, filters, API, agentic loop
 ```
 
@@ -340,5 +341,5 @@ gitignored and never committed.
   document.
 - No Prometheus/Grafana dashboards yet (Phase 14) — only `/health` and
   `/metrics` counters.
-- SQLite is single-writer; very high concurrency would require the
-  scaffolded PostgreSQL move.
+- The app database is Supabase PostgreSQL; SQLite is used only for CI and
+  the test suite.
