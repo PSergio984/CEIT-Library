@@ -22,11 +22,11 @@ return new class extends Migration
         $studentRoleId = DB::table('roles')->where('name', 'student')->value('id');
 
         DB::table('users')
-            ->where('is_admin', 1)
+            ->where('is_admin', true)
             ->update(['role_id' => $superAdminRoleId]);
 
         DB::table('users')
-            ->where('is_admin', 0)
+            ->where('is_admin', false)
             ->update(['role_id' => $studentRoleId]);
 
         // Remove the old is_admin column
@@ -50,7 +50,7 @@ return new class extends Migration
 
         DB::table('users')
             ->where('role_id', $superAdminRoleId)
-            ->update(['is_admin' => 1]);
+            ->update(['is_admin' => true]);
 
         // Remove role_id column
         Schema::table('users', function (Blueprint $table) {
