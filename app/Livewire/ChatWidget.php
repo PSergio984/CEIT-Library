@@ -23,7 +23,7 @@ class ChatWidget extends Component
     /** @var array<int, Conversation> */
     public array $conversations = [];
 
-    /** @var array<int, array{role: string, content: string, citations?: array|null, failed?: bool, error?: array|null}> */
+    /** @var array<int, array{role: string, content: string, citations?: array|null, failed?: bool, error?: array|null, rating?: string|null, result_ids?: array<int, mixed>|null}> */
     public array $messages = [];
 
     public string $draft = '';

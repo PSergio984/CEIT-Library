@@ -99,8 +99,8 @@ return [
 
     'key' => env('APP_KEY'),
 
-    // Dedicated secret for QR code HMAC
-    'qr_hmac_secret' => env('QR_HMAC_SECRET'),
+    // Dedicated secret for QR code HMAC (falls back to APP_KEY if not explicitly set)
+    'qr_hmac_secret' => env('QR_HMAC_SECRET') ?: env('APP_KEY'),
 
     'previous_keys' => [
         ...array_filter(

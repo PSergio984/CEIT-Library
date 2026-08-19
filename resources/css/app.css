@@ -11,21 +11,17 @@
 @import '@fontsource/outfit/900.css';
 @import 'tailwindcss';
 
-@plugin "daisyui";
-
 @plugin "daisyui" {
   themes:
     light --default,
     dark --prefersdark;
 }
 
-@source "../../vendor/robsontenorio/mary/src/View/Components/**/*.php";
-
-@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php";
-@source "../../storage/framework/views/*.php";
-@source "../**/*.blade.php";
-@source "../**/*.js";
-@source "../**/*.vue";
+@source "../../vendor/robsontenorio/mary";
+@source "../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views";
+@source "../../storage/framework/views";
+@source "../views";
+@source "../js";
 
 /* Dark theme variant support */
 @custom-variant dark (&:where(.dark, .dark *));
