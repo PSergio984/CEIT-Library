@@ -75,6 +75,7 @@ class AiService
             return true;
         } catch (\Throwable $e) {
             $this->logFailure('/feedback', 'best_effort');
+
             return false;
         }
     }
