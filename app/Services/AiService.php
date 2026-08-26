@@ -232,6 +232,17 @@ class AiService
                     continue;
                 }
 
+                if ($line === 'event: usage') {
+                    $dataLine = fgets($stream);
+
+                    if ($dataLine !== false && str_starts_with($dataLine, 'data: ')) {
+                        $payload = json_decode(trim(substr($dataLine, 6)), true);
+                        yield ['type' => 'usage', 'payload' => is_array($payload) ? $payload : null];
+                    }
+
+                    continue;
+                }
+
                 if ($line === 'event: error') {
                     $dataLine = fgets($stream);
 
@@ -315,5 +326,29 @@ class AiService
     private function logFailure(string $path, string $reason): void
     {
         Log::warning('AI sidecar request failed', ['endpoint' => $path, 'reason' => $reason]);
+    }
+
+    public static function estimateTokens(string $text): int
+    {
+        return (int) ceil(strlen($text) / 4);
+    }
+
+    public function logChatCost(string $question, string $answer, float $startedAt, ?int $conversationId, ?array $usage): array
+    {
+        $record = [
+            'event' => 'chat_completion',
+            'conversation_id' => $conversationId,
+            'mode' => 'citations',
+            'query_chars' => strlen($question),
+            'answer_chars' => strlen($answer),
+            'prompt_tokens' => $usage['prompt_tokens'] ?? self::estimateTokens($question),
+            'completion_tokens' => $usage['completion_tokens'] ?? self::estimateTokens($answer),
+            'tokens_estimated' => $usage === null,
+            'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
+        ];
+
+        Log::channel(config('services.ai_sidecar.cost_channel'))->info('llm_usage', $record);
+
+        return $record;
     }
 }

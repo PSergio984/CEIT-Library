@@ -151,7 +151,9 @@ class ChatWidget extends Component
 
         $this->streaming = true;
 
+        $startedAt = microtime(true);
         $accumulated = '';
+        $usage = null;
         $citations = $this->companionCitations($question);
 
         try {
@@ -195,6 +197,12 @@ class ChatWidget extends Component
                     continue;
                 }
 
+                if ($frame['type'] === 'usage') {
+                    $usage = is_array($frame['payload']) ? $frame['payload'] : null;
+
+                    continue;
+                }
+
                 $accumulated .= $frame['payload'];
                 $this->stream($frame['payload'], false, 'ans');
             }
@@ -214,6 +222,8 @@ class ChatWidget extends Component
                 'content' => $accumulated,
                 'citations' => $citations,
             ]);
+
+            $svc->logChatCost($question, $accumulated, $startedAt, $this->activeConversationId, $usage);
 
             $this->refreshConversations();
         } catch (AiServiceException $e) {
