@@ -652,19 +652,21 @@
             closeAllModals() {
                 this.showPaperModal = false;
                 this.showQrModal = false;
+                $wire.clearPaperSelection();
             }
         }"
         @open-paper-modal.window="openModal('paper')"
         @open-qr-modal.window="openModal('qr')"
         @close-qr-modal.window="showQrModal = false"
+        x-init="if ($wire.selectedPaperId) openModal('paper')"
     >
         <!-- Modal for Academic Paper Details - Shared Component -->
         <dialog 
             x-ref="paperModal"
             x-show="showPaperModal"
-            @click.self="showPaperModal = false"
-            @keydown.escape="showPaperModal = false"
-            @close="showPaperModal = false"
+            @click.self="closeAllModals()"
+            @keydown.escape="closeAllModals()"
+            @close="closeAllModals()"
             class="modal backdrop-blur"
             x-transition:enter="transition ease-out duration-300"
             x-transition:enter-start="opacity-0"
@@ -679,13 +681,13 @@
             <div class="modal-box w-11/12 max-w-5xl"
                 @click.stop>
                 <form method="dialog">
-                    <button @click="showPaperModal = false" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+                    <button @click="closeAllModals()" class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
                 </form>
                 
                 <x-academic-paper-detail-modal :selectedPaper="$this->selectedPaper" :isAdmin="false" />
                 
                 <div class="modal-action">
-                    <button @click="showPaperModal = false" class="btn btn-primary">Close</button>
+                    <button @click="closeAllModals()" class="btn btn-primary">Close</button>
                 </div>
             </div>
         </dialog>

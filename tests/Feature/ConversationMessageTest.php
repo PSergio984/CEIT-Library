@@ -85,7 +85,7 @@ class ConversationMessageTest extends TestCase
         $this->assertNull($plain->fresh()->citations);
 
         $payload = [
-            ['n' => 1, 'id' => 'paper-77', 'corpus' => 'catalog', 'title' => 'Water Pump', 'url' => '/academic-papers/77', 'catalog_code' => 'CEIT-CE-15-014'],
+            ['n' => 1, 'id' => 'paper-77', 'corpus' => 'catalog', 'title' => 'Water Pump', 'url' => '/academic-papers?paper=77', 'catalog_code' => 'CEIT-CE-15-014'],
         ];
         $cited = Message::factory()->create(['conversation_id' => $conversation->id, 'citations' => $payload]);
         $this->assertSame($payload, $cited->fresh()->citations);

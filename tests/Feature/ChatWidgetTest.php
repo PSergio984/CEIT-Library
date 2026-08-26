@@ -344,7 +344,7 @@ class ChatWidgetTest extends TestCase
                 'id' => 'paper-77',
                 'corpus' => 'catalog',
                 'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
-                'url' => '/academic-papers/77',
+                'url' => '/academic-papers?paper=77',
                 'catalog_code' => 'CEIT-CE-15-014',
             ],
         ], $message->citations);
@@ -368,7 +368,7 @@ class ChatWidgetTest extends TestCase
             ->call('newConversation')
             ->set('draft', 'water pump')
             ->call('send')
-            ->assertSeeHtml('href="/academic-papers/77"')
+            ->assertSeeHtml('href="/academic-papers?paper=77"')
             ->assertSee('CEIT-CE-15-014')
             ->assertSee('Sources');
     }
@@ -656,7 +656,7 @@ class ChatWidgetTest extends TestCase
             ->call('newConversation')
             ->set('draft', 'papers by juan dela cruz')
             ->call('send')
-            ->assertSeeHtml('href="/academic-papers/77"')
+            ->assertSeeHtml('href="/academic-papers?paper=77"')
             ->assertSee('CEIT-CE-15-014')
             ->assertSee('Sources');
 
@@ -670,7 +670,7 @@ class ChatWidgetTest extends TestCase
                 'id' => 'paper-77',
                 'corpus' => 'catalog',
                 'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
-                'url' => '/academic-papers/77',
+                'url' => '/academic-papers?paper=77',
                 'catalog_code' => 'CEIT-CE-15-014',
             ],
         ], $message->citations);
@@ -771,7 +771,7 @@ class ChatWidgetTest extends TestCase
                 'id' => 'paper-77',
                 'corpus' => 'catalog',
                 'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
-                'url' => '/academic-papers/77',
+                'url' => '/academic-papers?paper=77',
                 'catalog_code' => 'CEIT-CE-15-014',
             ],
         ], $message->citations);
@@ -827,7 +827,7 @@ class ChatWidgetTest extends TestCase
             ->set('draft', 'water pump')
             ->call('send')
             ->assertSet('streaming', false)
-            ->assertSeeHtml('href="/academic-papers/77"')
+            ->assertSeeHtml('href="/academic-papers?paper=77"')
             ->assertSee('CEIT-CE-15-014');
 
         // Malformed frame (non-array payload) → companionCitations() fallback
@@ -840,7 +840,7 @@ class ChatWidgetTest extends TestCase
                 'id' => 'paper-77',
                 'corpus' => 'catalog',
                 'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
-                'url' => '/academic-papers/77',
+                'url' => '/academic-papers?paper=77',
                 'catalog_code' => 'CEIT-CE-15-014',
             ],
         ], $message->citations);
@@ -867,7 +867,7 @@ class ChatWidgetTest extends TestCase
                     'semantic_rank' => 1,
                     'pinned' => false,
                     'metadata' => [
-                        'url' => '/academic-papers/77',
+                        'url' => '/academic-papers?paper=77',
                         'catalog_code' => 'CEIT-CE-15-014',
                     ],
                 ]],
@@ -920,7 +920,7 @@ class ChatWidgetTest extends TestCase
                     'semantic_rank' => 1,
                     'pinned' => false,
                     'metadata' => [
-                        'url' => '/academic-papers/77',
+                        'url' => '/academic-papers?paper=77',
                         'catalog_code' => 'CEIT-CE-15-014',
                     ],
                 ]],

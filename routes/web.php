@@ -19,15 +19,20 @@ use App\Livewire\Pages\Admin\EditAcademicPaper;
 use App\Livewire\Pages\Student\AcademicPaperIndex;
 use App\Livewire\Pages\Student\CreditScoreHistory;
 use App\Livewire\Pages\Student\RuleAndRegulationIndex;
-use App\Livewire\Pages\Student\ShowAcademicPaper;
 use App\Livewire\Pages\Student\StudentDashboard;
 use App\Livewire\Pages\Student\StudentNotifications;
 use App\Livewire\Pages\Student\Transaction;
 use App\Livewire\TestQrScanner;
+use App\Models\AcademicPaper;
+use App\Support\CitationUrl;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome');
+
+Route::get('/policies', function () {
+    return redirect(CitationUrl::policy(), 301);
+})->name('policies.redirect.global');
 
 Route::get('/sitemap.xml', function () {
     $urls = [
@@ -97,9 +102,15 @@ if (config('app.env') === 'local' || config('app.env') === 'testing') {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', StudentDashboard::class)->name('dashboard');
     Route::get('/student/dashboard', StudentDashboard::class)->name('student.dashboard');
-    Route::get('/academic-papers/{academicPaper}', ShowAcademicPaper::class)
-        ->whereNumber('academicPaper')
-        ->name('academic-paper.show');
+    Route::get('/academic-papers/{academicPaper}', function (string $academicPaper) {
+        $paper = AcademicPaper::find($academicPaper);
+
+        if (! $paper) {
+            return redirect()->route('academic-paper.index', [], 301);
+        }
+
+        return redirect(CitationUrl::paper($paper->id), 301);
+    })->whereNumber('academicPaper')->name('academic-paper.show');
     Route::get('/academic-papers', AcademicPaperIndex::class)
         ->middleware('throttle:search')
         ->name('academic-paper.index');

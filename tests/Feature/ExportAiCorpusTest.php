@@ -81,7 +81,7 @@ class ExportAiCorpusTest extends TestCase
         $this->assertSame('Engr. Jose Rizal', $doc['metadata']['research_adviser']);
         $this->assertSame('Engr. Andres Bonifacio', $doc['metadata']['technical_adviser']);
         $this->assertSame('Dr. Emilio Aguinaldo', $doc['metadata']['dean']);
-        $this->assertSame('/academic-papers/'.$paper->id, $doc['metadata']['url']);
+        $this->assertSame('/academic-papers?paper='.$paper->id, $doc['metadata']['url']);
         $this->assertIsInt($doc['metadata']['publication_year']);
 
         $this->assertStringStartsWith($paper->title.'. ', $doc['text']);

@@ -6,5 +6,5 @@ parameters:
     level: 5
     paths:
         - app
-
+    reportUnmatchedIgnoredErrors: false
     tmpDir: storage/framework/cache/phpstan

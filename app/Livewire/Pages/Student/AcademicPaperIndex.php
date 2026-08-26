@@ -18,6 +18,7 @@ use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
+use Livewire\Attributes\Url;
 use Livewire\Attributes\Validate;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -84,7 +85,8 @@ class AcademicPaperIndex extends Component
 
     public array $recommendationsSnapshot = [];
 
-    // Store IDs only (modals controlled by Alpine.js)
+    // Store IDs only (modals controlled by Alpine.js) — synced to ?paper= for canonical citation URLs.
+    #[Url(as: 'paper')]
     public ?int $selectedPaperId = null;
 
     // QR Code properties
@@ -111,7 +113,15 @@ class AcademicPaperIndex extends Component
             ['key' => 'actions', 'label' => ''],
         ];
 
-        // Leave yearFromFilter empty to show "Year From" placeholder by default
+        // Canonical ?paper= param: open the detail modal inline instead of a separate page.
+        // #[Url] hydrates selectedPaperId from ?paper= automatically; we only need to trigger the Alpine modal.
+        $paperId = $this->selectedPaperId ?? request()->query('paper');
+        if ($paperId !== null && ctype_digit((string) $paperId) && AcademicPaper::whereKey((int) $paperId)->exists()) {
+            $this->selectedPaperId = (int) $paperId;
+            $this->dispatch('open-paper-modal');
+        } elseif ($paperId !== null) {
+            $this->selectedPaperId = null;
+        }
     }
 
     /**
@@ -519,6 +529,11 @@ class AcademicPaperIndex extends Component
     {
         $this->selectedPaperId = $paperId;
         $this->dispatch('open-paper-modal');
+    }
+
+    public function clearPaperSelection(): void
+    {
+        $this->selectedPaperId = null;
     }
 
     #[Computed]

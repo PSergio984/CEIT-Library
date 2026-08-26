@@ -254,7 +254,7 @@ class AiServiceChatTest extends TestCase
             '{"text": "Searching papers by author\u2026"}',
             'The papers by ',
             'Juan Dela Cruz are …',
-            '[{"n":1,"id":"paper-77","corpus":"catalog","title":"Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps","url":"/academic-papers/77","catalog_code":"CEIT-CE-15-014"}]',
+            '[{"n":1,"id":"paper-77","corpus":"catalog","title":"Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps","url":"/academic-papers?paper=77","catalog_code":"CEIT-CE-15-014"}]',
         ], $chunks);
     }
 

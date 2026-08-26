@@ -7,6 +7,7 @@ use App\Models\Conversation;
 use App\Models\Message;
 use App\Services\AiService;
 use App\Services\AvailabilityService;
+use App\Support\CitationUrl;
 use Illuminate\Support\Carbon;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -191,7 +192,7 @@ class ChatWidget extends Component
                     // companionCitations() result for both render and
                     // persistence (T-11-19).
                     if ($this->validCitationsPayload($frame['payload'])) {
-                        $citations = $frame['payload'];
+                        $citations = $this->canonicalizeCitationsUrls($frame['payload']);
                     }
 
                     continue;
@@ -338,6 +339,30 @@ class ChatWidget extends Component
     }
 
     /**
+     * Rewrite legacy corpus URLs to the current canonical route.
+     * Old index values '/academic-papers/123' and '/policies' are rewritten
+     * to '/academic-papers?paper=123' and '/rule-and-regulation' so a stale
+     * sidecar index still lands on the correct modern surface without a 301 hop.
+     *
+     * @param  array<int, array{n: int, id: string, corpus: string, title: string, url: ?string, catalog_code: ?string}>  $citations
+     * @return array<int, array{n: int, id: string, corpus: string, title: string, url: ?string, catalog_code: ?string}>
+     */
+    private function canonicalizeCitationsUrls(array $citations): array
+    {
+        foreach ($citations as &$c) {
+            $c['url'] = $this->canonicalizeUrl($c['url'] ?? null);
+        }
+        unset($c);
+
+        return $citations;
+    }
+
+    private function canonicalizeUrl(?string $url): ?string
+    {
+        return CitationUrl::canonicalize($url);
+    }
+
+    /**
      * Companion /search bound to the chat call's retrieval parameters —
      * same query, corpus null (both), and top_k 5 — so the citation rows
      * mirror the exact numbered set the model worked from (D-20). The
@@ -368,12 +393,12 @@ class ChatWidget extends Component
                 'id' => $result['id'],
                 'corpus' => $result['corpus'],
                 'title' => $result['title'],
-                'url' => $result['metadata']['url'] ?? null,
+                'url' => $this->canonicalizeUrl($result['metadata']['url'] ?? null),
                 'catalog_code' => $result['metadata']['catalog_code'] ?? null,
             ];
         }
 
-        return $payload;
+        return $this->canonicalizeCitationsUrls($payload);
     }
 
     private function refreshConversations(): void

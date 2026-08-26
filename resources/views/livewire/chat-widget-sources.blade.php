@@ -5,7 +5,7 @@
             <li class="text-[11px] text-base-content/80">
                 [{{ $c['n'] }}]
                 @if ($c['corpus'] === 'catalog' && $c['url'])
-                    <a href="{{ $c['url'] }}" class="link link-primary">{{ $c['title'] }}
+                    <a href="{{ $c['url'] }}" wire:navigate class="link link-primary">{{ $c['title'] }}
                         <span class="font-mono opacity-60">· {{ $c['catalog_code'] }}</span>
                     </a>
                 @else

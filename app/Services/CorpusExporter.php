@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\AcademicPaper;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
+use App\Support\CitationUrl;
 use Illuminate\Support\Facades\File;
 
 class CorpusExporter
@@ -47,7 +48,7 @@ class CorpusExporter
                         'research_adviser' => $researchAdviser,
                         'technical_adviser' => $technicalAdviser,
                         'dean' => $dean,
-                        'url' => '/academic-papers/'.$paper->id,
+                        'url' => CitationUrl::paper($paper->id),
                     ],
                 ];
             })
@@ -79,7 +80,7 @@ class CorpusExporter
                     'header_id' => (int) $header->id,
                     'header_title' => $headerTitle,
                     'order' => (int) ($header->order ?? 0),
-                    'url' => '/policies',
+                    'url' => CitationUrl::policy(),
                 ],
             ];
 
@@ -96,7 +97,7 @@ class CorpusExporter
                         'header_id' => (int) $header->id,
                         'regulation_id' => (int) $regulation->id,
                         'header_title' => $headerTitle,
-                        'url' => '/policies',
+                        'url' => CitationUrl::policy(),
                     ],
                 ];
             }

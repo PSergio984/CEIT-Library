@@ -86,7 +86,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
                 'publication_year' => 2025,
                 'paper_type' => 'Thesis',
                 'authors' => ['Maria Santos'],
-                'url' => '/academic-papers/78',
+                'url' => '/academic-papers?paper=78',
             ],
         ];
 
