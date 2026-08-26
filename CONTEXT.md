@@ -42,3 +42,11 @@ _Avoid_: Stock, status count from AI
 **Similar books**:
 The deterministic recommendation list for a catalog paper, produced by running the paper's title as a `/search` query through `SimilarPapersService` (title-as-query, no metadata filters, self-excluded by id) — a list, never an LLM answer.
 _Avoid_: Recommendations from the AI, "books like this" via chat
+
+**Operational question**:
+A staff-tier question about physical copies and circulation state — counts, per-copy status, due-back times — answered from library data, never from corpora or LLM guesswork.
+_Avoid_: Ops query, staff mode
+
+**Borrower identity**:
+The binding between a person and a loan — who holds which copy. Never surfaces through the Assistant at any role tier.
+_Avoid_: User data, patron info
