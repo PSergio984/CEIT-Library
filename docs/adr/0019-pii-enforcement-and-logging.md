@@ -1,0 +1,11 @@
+# PII enforcement is structural (capability-scoped API), and logs stop carrying raw queries
+
+Phase 12 success criterion #2 demands no borrower PII in responses, logs, or metrics. Enforcement is **capability-scoped, not pattern-based**: `CopyStatusService` (ADR 0017) exposes only fixed aggregate/row methods whose SELECT column lists are hardcoded whitelists (`user_id`, `session_token` are simply never selectable), and its internal endpoint serializes an explicit response DTO — so borrower identity cannot reach the tool payload, the model, or the rendered answer by construction. Leak assertions in tests check key absence on the wire format, not text patterns.
+
+**Conversation persistence is unchanged**: user Messages continue to persist verbatim (CHAT-02, ADR 0005). A librarian typing a student's name writes it to their *own* owner-scoped conversation row — that is personal data storage with a single authorized reader, not one of the criterion's surfaces (responses / logs / metrics). Assistant answers cannot echo identity because the tool facts never contain it and the request is single-turn (stored history never re-enters the model).
+
+**The one real gap closes in the sidecar**: today `/chat/stream` and `/search` log the full raw query at INFO, which would capture whatever users type. INFO lines now emit **query length plus a short hash**; the full text moves to **DEBUG behind a config flag**, making verbose logging a conscious operator choice rather than a default flow of free text toward disk.
+
+**Metrics stay structural**: counters, durations, and entity identifiers only (paper id / copy id / lookup kind). Neither side adds a metric or access-log field carrying free text; the operations endpoint logs lookup type + entity id, never the model-supplied argument strings verbatim.
+
+_Considered (rejected):_ **query-shape detection / redaction regexes** — reactive, evadable, and wrong at exactly the edge cases that matter (common names, partial ids); **redacting user-typed content before persistence** — breaks CHAT-02 fidelity for the row's only authorized reader while adding a false sense of safety elsewhere; **leaving sidecar logging untouched until Phase 14** — the phase's own success criterion names logs, so deferral would ship Phase 12 failing its gate.

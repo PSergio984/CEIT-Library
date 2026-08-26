@@ -1,0 +1,9 @@
+# Operational answers carry no Citations — one freshness line instead
+
+The citation payload (ADR 0006) binds each numbered `[N]` marker to a retrieved *corpus record* — `{n, id, corpus, title, url, catalog_code}` — and CONTEXT.md defines Citation exactly that way. Copy-level facts arrive through ADR 0017's operations tool, not corpus retrieval, so **operational answers carry no `[N]` markers and no citation chips**; inventing corpus values would corrupt the payload's meaning for every consumer. Grounding is unaffected: the answer is drawn from tool-returned facts.
+
+Instead, when a turn used the operations tool, **one muted freshness line renders under the bubble** ("Copy data as of {time}"). It is answer-type-driven, not role chrome, so it respects the zero-widget-change constraint while answering the staleness question `checked_at` already answers on availability cards. In mixed turns (corpus claim + operational fact), corpus claims keep their normal companion-`/search` citations; only the operational portion goes uncited, and the strip still applies.
+
+**Persistence:** `ai_messages.citations` stays **null** for purely operational turns (the column is nullable per ADR 0005). The freshness timestamp is deliberately ephemeral — recomputed at render time everywhere else in the app (Availability cards), so history shows the textual answer without an aging stamp rather than persisting one that would read as stale immediately.
+
+_Considered (rejected):_ **faking citation entries for inventory rows** — would make `{corpus}` lie and teach consumers to distrust the payload; **persisting the strip into `ai_messages.content`** — bakes a render-time concern into stored prose; **suppressing any indicator** — hides whether numbers came from live rows or stale memory, the exact failure mode SEARCH-02/CHAT-06 guard against.
