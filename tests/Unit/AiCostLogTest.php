@@ -8,6 +8,22 @@ use Tests\TestCase;
 
 class AiCostLogTest extends TestCase
 {
+    private mixed $originalCostChannel = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->originalCostChannel = config('services.ai_sidecar.cost_channel');
+    }
+
+    protected function tearDown(): void
+    {
+        config(['services.ai_sidecar.cost_channel' => $this->originalCostChannel]);
+
+        parent::tearDown();
+    }
+
     #[Test]
     public function estimates_tokens_at_four_characters_per_token(): void
     {
@@ -53,12 +69,5 @@ class AiCostLogTest extends TestCase
         $this->assertFalse($record['tokens_estimated']);
         $this->assertSame(11, $record['prompt_tokens']);
         $this->assertSame(13, $record['completion_tokens']);
-    }
-
-    protected function tearDown(): void
-    {
-        config(['services.ai_sidecar.cost_channel' => 'ai_cost']);
-
-        parent::tearDown();
     }
 }
