@@ -333,6 +333,7 @@ refusal ("I don't have enough information") with zero LLM calls.
 - `POST /feedback` — the chat widget's thumbs up/down forwards the query,
   answer, and retrieved doc ids; the sidecar appends a JSONL line and feeds
   the feedback counters.
+- **LLM cost log** — `storage/logs/ai-cost.log` (`ai_cost` daily channel, 30 days) records per-answer `prompt_tokens`/`completion_tokens`/`duration_ms` via `AiService::logChatCost()`; `tokens_estimated: true` when sidecar omits the `usage` event (heuristic `mb_strlen/4`, see `config/logging.php:79` + `config/services.php:42`).
 - **Prometheus + Grafana** — the sidecar's `docker compose up --build`
   provisions both and a "CEIT AI Sidecar" dashboard (6 charts: retrieval
   traffic, latency p95/average, feedback, indexed docs, rebuilds).

@@ -54,4 +54,11 @@ class AiCostLogTest extends TestCase
         $this->assertSame(11, $record['prompt_tokens']);
         $this->assertSame(13, $record['completion_tokens']);
     }
+
+    protected function tearDown(): void
+    {
+        config(['services.ai_sidecar.cost_channel' => 'ai_cost']);
+
+        parent::tearDown();
+    }
 }

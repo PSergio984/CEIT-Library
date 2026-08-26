@@ -330,7 +330,7 @@ class AiService
 
     public static function estimateTokens(string $text): int
     {
-        return (int) ceil(strlen($text) / 4);
+        return (int) ceil(mb_strlen($text, 'UTF-8') / 4);
     }
 
     public function logChatCost(string $question, string $answer, float $startedAt, ?int $conversationId, ?array $usage): array

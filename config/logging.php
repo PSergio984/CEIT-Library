@@ -82,6 +82,7 @@ return [
             'level' => 'info',
             'days' => 30,
             'replace_placeholders' => true,
+            'processors' => [PiiSanitizerProcessor::class],
         ],
 
         'slack' => [
