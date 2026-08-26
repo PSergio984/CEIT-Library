@@ -347,7 +347,10 @@ class AiService
             'duration_ms' => (int) round((microtime(true) - $startedAt) * 1000),
         ];
 
-        Log::channel(config('services.ai_sidecar.cost_channel'))->info('llm_usage', $record);
+        try {
+            Log::channel(config('services.ai_sidecar.cost_channel') ?: 'ai_cost')->info('llm_usage', $record);
+        } catch (\Throwable) {
+        }
 
         return $record;
     }
