@@ -34,3 +34,7 @@ frankenphp-worker.php
 
 # graphify knowledge graph output
 /graphify-out/
+
+# Data artifacts
+*.xlsx
+*.sqlite

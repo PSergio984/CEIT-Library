@@ -1,0 +1,7 @@
+# Assistant access: auth-only for chat, one purpose-named gate for operational depth
+
+CHAT-03 makes assistant *access and answer depth* role-aware, but the two halves resolve differently. **Basic chat stays exactly where ADR 0007/0008 put it — `['auth', 'verified']`, widget on every authenticated page, no ability check**: all four roles are legitimate Assistant users, so any further gate would be tautological. **Operational answer depth gets its own Gate, `ask-assistant-operational`**, defined alongside the other granular permissions in `AppServiceProvider.php` with the closure body `hasAdminAccess() || isLibrarian()` — deliberately identical to `librarian-or-admin-access` today (the charted Phase 12 tiering), but purpose-named so the call site reads intent and the two can diverge later without editing a shared routes alias.
+
+It is the **sole feeder of ADR 0015's `role` field**: Laravel evaluates `Gate::allows('ask-assistant-operational')` when building the `/chat/stream` request and maps allow→`librarian` / deny→`student`. There is no student-side counterpart — denying the gate simply yields the baseline persona.
+
+_Considered (rejected):_ **reusing `librarian-or-admin-access` verbatim** — semantically correct today but it couples chat depth to a dashboard/routes alias whose meaning may drift; **gating basic chat** — no role exists that shouldn't have the Assistant; **checking roles inline in `ChatWidget`/`AiService`** — bypasses the Gate layer the codebase standardizes on and scatters tier logic.
