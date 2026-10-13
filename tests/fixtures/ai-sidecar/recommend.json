@@ -4,17 +4,17 @@
   "took_ms": 9,
   "results": [
     {
-      "id": "paper-77",
+      "id": "paper-78",
       "corpus": "catalog",
-      "title": "Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps",
+      "title": "Design of a Smart Flood Monitoring System",
       "score": 0.8123,
       "metadata": {
-        "catalog_code": "CEIT-CE-15-014",
-        "department": "Civil Engineering",
-        "publication_year": 2015,
+        "catalog_code": "CEIT-EE-25-01",
+        "department": "Electrical Engineering",
+        "publication_year": 2025,
         "paper_type": "Thesis",
-        "authors": ["ROXAS, Harvey Jeremy C.", "RIVERA, John Patrick G."],
-        "url": "/academic-papers?paper=77"
+        "authors": ["Maria Santos"],
+        "url": "/academic-papers?paper=78"
       }
     }
   ]

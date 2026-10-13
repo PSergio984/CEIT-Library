@@ -16,14 +16,15 @@ class SimilarPapersService
      */
     public bool $unavailable = false;
 
+    /**
+     * The viewed paper is the single seed and is also excluded server-side
+     * (ADR 0027); the reject below stays as defence in depth.
+     */
     public function for(AcademicPaper $paper, int $limit = 10): Collection
     {
         $this->unavailable = false;
 
         try {
-            // The viewed paper is the single seed and is also excluded
-            // server-side (ADR 0027); the reject below stays as defence
-            // in depth.
             $results = (new AiService)->recommend(
                 ["paper-{$paper->id}"],
                 ["paper-{$paper->id}"],

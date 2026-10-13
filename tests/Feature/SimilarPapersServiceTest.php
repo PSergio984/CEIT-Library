@@ -38,7 +38,8 @@ class SimilarPapersServiceTest extends TestCase
         $technicalAdviser = TechnicalAdviser::factory()->create(['name' => 'Engr. Andres Bonifacio']);
         $dean = Dean::factory()->create(['name' => 'Dr. Emilio Aguinaldo']);
 
-        // paper-77 in the fixture is "Analysis of Groundwater Depletion..." CE
+        // paper-77 is the viewed (seed) paper — the real sidecar never
+        // returns it, since the service also sends it in exclude_ids.
         $paper77 = AcademicPaper::create([
             'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
             'publication_year' => 2015,
@@ -49,7 +50,8 @@ class SimilarPapersServiceTest extends TestCase
             'dean_id' => $dean->id,
         ]);
 
-        // paper-78 sorts after 77 in the two-result fixture.
+        // paper-78 is the fixture's single result; paper-79 exists so the
+        // two-result variant can prove sidecar rank order beats DB order.
         $paper78 = AcademicPaper::create([
             'title' => 'Design of a Smart Flood Monitoring System',
             'publication_year' => 2025,
@@ -60,9 +62,20 @@ class SimilarPapersServiceTest extends TestCase
             'dean_id' => $dean->id,
         ]);
 
-        // Fixture says paper-77/paper-78; make the DB match fixture ids exactly.
+        $paper79 = AcademicPaper::create([
+            'title' => 'Development of a Library Management Mobile Application',
+            'publication_year' => 2023,
+            'paper_type' => 'Capstone',
+            'research_adviser_id' => $researchAdviser->id,
+            'technical_adviser_id' => $technicalAdviser->id,
+            'department' => 'Information Technology',
+            'dean_id' => $dean->id,
+        ]);
+
+        // Responses use paper-N ids; make the DB match them exactly.
         $paper77->forceFill(['id' => 77])->save();
         $paper78->forceFill(['id' => 78])->save();
+        $paper79->forceFill(['id' => 79])->save();
 
         $paper77->authors()->attach(Author::factory()->create(['name' => 'ROXAS, Harvey Jeremy C.']));
 
@@ -73,21 +86,23 @@ class SimilarPapersServiceTest extends TestCase
     {
         $fixture = $this->fixtureRecommend();
 
+        // [79, 78] — the sidecar order is NOT id order, so hydration must
+        // preserve it.
         $fixture['total'] = 2;
-        $fixture['results'][] = [
-            'id' => 'paper-78',
+        array_unshift($fixture['results'], [
+            'id' => 'paper-79',
             'corpus' => 'catalog',
-            'title' => 'Design of a Smart Flood Monitoring System',
-            'score' => 0.01,
+            'title' => 'Development of a Library Management Mobile Application',
+            'score' => 0.9,
             'metadata' => [
-                'catalog_code' => 'CEIT-EE-25-01',
-                'department' => 'Electrical Engineering',
-                'publication_year' => 2025,
-                'paper_type' => 'Thesis',
-                'authors' => ['Maria Santos'],
-                'url' => '/academic-papers?paper=78',
+                'catalog_code' => 'CEIT-IT-23-07',
+                'department' => 'Information Technology',
+                'publication_year' => 2023,
+                'paper_type' => 'Capstone',
+                'authors' => ['Pedro Reyes'],
+                'url' => '/academic-papers?paper=79',
             ],
-        ];
+        ]);
 
         return $fixture;
     }
@@ -134,8 +149,35 @@ class SimilarPapersServiceTest extends TestCase
         $service = new SimilarPapersService;
         $result = $service->for($paper77);
 
-        $this->assertSame([78], $result->pluck('id')->all());
+        $this->assertSame([79, 78], $result->pluck('id')->all());
         $this->assertNotContains(77, $result->pluck('id')->all());
+        $this->assertFalse($service->unavailable);
+    }
+
+    #[Test]
+    public function it_drops_the_seed_if_the_sidecar_returns_it_anyway(): void
+    {
+        // Defence in depth: a contract-violating response that still
+        // contains the seed id must not surface the viewed paper.
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        $response = $this->fixtureRecommend();
+        $response['total'] = 2;
+        array_unshift($response['results'], array_merge($response['results'][0], [
+            'id' => 'paper-77',
+            'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+        ]));
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/recommend' => Http::response($response, 200),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertSame([78], $result->pluck('id')->all());
         $this->assertFalse($service->unavailable);
     }
 
@@ -162,9 +204,16 @@ class SimilarPapersServiceTest extends TestCase
         $paper77 = $this->seedPapers();
         config(['services.ai_sidecar.token' => 'test-token']);
 
+        // An all-seed response (contract violation) yields an empty list.
+        $response = $this->fixtureRecommend();
+        $response['results'][0] = array_merge($response['results'][0], [
+            'id' => 'paper-77',
+            'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+        ]);
+
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/recommend' => Http::response($this->fixtureRecommend(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($response, 200),
         ]);
 
         $service = new SimilarPapersService;

@@ -102,19 +102,21 @@ class AcademicPaperIndexSimilarTest extends TestCase
     {
         $fixture = $this->fixtureRecommend();
 
+        // Both seeded non-seed-relative ids: whichever paper is viewed, the
+        // response offers the other — recursion onto a recommended card works.
         $fixture['total'] = 2;
         $fixture['results'][] = [
-            'id' => 'paper-78',
+            'id' => 'paper-77',
             'corpus' => 'catalog',
-            'title' => 'Design of a Smart Flood Monitoring System',
+            'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
             'score' => 0.01,
             'metadata' => [
-                'catalog_code' => 'CEIT-EE-25-01',
-                'department' => 'Electrical Engineering',
-                'publication_year' => 2025,
+                'catalog_code' => 'CEIT-CE-15-014',
+                'department' => 'Civil Engineering',
+                'publication_year' => 2015,
                 'paper_type' => 'Thesis',
-                'authors' => ['Maria Santos'],
-                'url' => '/academic-papers?paper=78',
+                'authors' => ['ROXAS, Harvey Jeremy C.'],
+                'url' => '/academic-papers?paper=77',
             ],
         ];
 
