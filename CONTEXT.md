@@ -43,6 +43,14 @@ _Avoid_: Stock, status count from AI
 The deterministic recommendation list for a catalog paper, produced by `SimilarPapersService` calling the sidecar's `/recommend` (the paper is the single seed and is also excluded) — a list, never an LLM answer.
 _Avoid_: Recommendations from the AI, "books like this" via chat
 
+**Personal recommendations**:
+The deterministic, borrow-seeded "Recommended for you" list for a user, built by `PersonalRecommendationsService` — seeded from the user's recent borrows, falling back to the popular list only on cold start; only paper ids reach the Sidecar.
+_Avoid_: Recommended by the AI, user profile
+
+**Seed**:
+A paper id the Sidecar is asked to find neighbours of — the viewed paper for Similar books, a recent borrow for Personal recommendations.
+_Avoid_: query, anchor user
+
 **Operational question**:
 A staff-tier question about physical copies and circulation state — counts, per-copy status, due-back times — answered from library data, never from corpora or LLM guesswork.
 _Avoid_: Ops query, staff mode

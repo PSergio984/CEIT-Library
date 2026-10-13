@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -124,8 +125,12 @@ class AcademicPaper extends Model
         return $query->where('department', $department);
     }
 
-    // Many-to-many relationship with authors
-    public function authors()
+    /**
+     * Many-to-many relationship with authors.
+     *
+     * @return BelongsToMany<Author, $this, AcademicPaperAuthor, 'pivot'>
+     */
+    public function authors(): BelongsToMany
     {
         return $this->belongsToMany(Author::class, 'academic_paper_authors')
             ->withTimestamps()
