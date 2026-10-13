@@ -199,6 +199,11 @@
         </x-mary-card>
     </div>
 
+    {{-- Recommended for you --}}
+    <div class="mt-6 sm:mt-8">
+        <livewire:pages.student.recommended-for-you lazy />
+    </div>
+
     {{-- Available Papers Section --}}
     <div class="mt-6 sm:mt-8">
         <x-mary-card title="Recently Added Papers" class="shadow-lg">
