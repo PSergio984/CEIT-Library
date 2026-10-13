@@ -25,11 +25,13 @@ class SimilarPapersService
         $this->unavailable = false;
 
         try {
-            $results = (new AiService)->recommend(
+            $response = (new AiService)->recommend(
                 ["paper-{$paper->id}"],
                 ["paper-{$paper->id}"],
                 $limit
-            )['results'];
+            );
+            // A malformed-but-200 body is an empty result, not a failure.
+            $results = $response['results'] ?? [];
         } catch (AiServiceUnavailableException|AiServiceAuthException) {
             $this->unavailable = true;
 
@@ -37,7 +39,7 @@ class SimilarPapersService
         }
 
         $ids = collect($results)
-            ->map(fn ($result) => (int) str_replace('paper-', '', $result['id']))
+            ->map(fn ($result) => (int) str_replace('paper-', '', $result['id'] ?? ''))
             ->filter()
             ->reject(fn ($id) => $id === $paper->id)
             ->values();

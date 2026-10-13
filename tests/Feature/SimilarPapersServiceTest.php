@@ -224,6 +224,44 @@ class SimilarPapersServiceTest extends TestCase
     }
 
     #[Test]
+    public function it_returns_empty_when_the_response_has_no_results_key(): void
+    {
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        // A malformed-but-200 body (empty / non-JSON, or a JSON body without
+        // a results key) is treated as an empty result, not a failure.
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/recommend' => Http::response('', 200),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertTrue($result->isEmpty());
+        $this->assertFalse($service->unavailable);
+    }
+
+    #[Test]
+    public function it_returns_empty_when_the_response_lacks_results_but_is_json(): void
+    {
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/recommend' => Http::response(['seeds_used' => 0], 200),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertTrue($result->isEmpty());
+        $this->assertFalse($service->unavailable);
+    }
+
+    #[Test]
     public function it_returns_empty_collection_for_empty_retrieval(): void
     {
         $paper77 = $this->seedPapers();
