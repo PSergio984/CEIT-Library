@@ -8,7 +8,7 @@
 |------|---------|----------|
 | `app/` | Application code (see Module Boundaries) | scan output, `composer.json` autoload |
 | `app/Console/Commands/` | 16 artisan commands (AI export/sync/reconcile, librarian batches, overdue transactions, VAPID keys, notifications) | `app/Console/Commands/*.php` |
-| `app/Services/` | Domain services: `AiService` (sidecar SSE client), `AvailabilityService` (live copy counts), `SimilarPapersService` (title-as-query), `BorrowService`, `AttendanceService`, `LibrarianStatusService`, `NotificationService`, `CorpusExporter` | `app/Services/` |
+| `app/Services/` | Domain services: `AiService` (sidecar SSE client), `AvailabilityService` (live copy counts), `SimilarPapersService` (sidecar `/recommend`, seed-based), `BorrowService`, `AttendanceService`, `LibrarianStatusService`, `NotificationService`, `CorpusExporter` | `app/Services/` |
 | `app/Livewire/` | Livewire v4 pages/components (Admin, Student areas, chat widget) | `app/Livewire/` |
 | `app/Models/` | 22 Eloquent models (`User`, `Role`, `Librarian`, `AcademicPaper`, `Conversation`, `Message`, `RuleHeader`, `RuleRegulation`, `Inventory`, `BorrowTransaction`, …) | `app/Models/` |
 | `app/Http/` | Controllers + Middleware (`AdminOnly`, `LibrarianOrAdmin`, `CheckAccountStatus`, `CheckCreditScore`) | `app/Http/` |

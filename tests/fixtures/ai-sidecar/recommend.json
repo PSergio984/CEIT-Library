@@ -1,0 +1,21 @@
+{
+  "seeds_used": 1,
+  "total": 1,
+  "took_ms": 9,
+  "results": [
+    {
+      "id": "paper-78",
+      "corpus": "catalog",
+      "title": "Design of a Smart Flood Monitoring System",
+      "score": 0.8123,
+      "metadata": {
+        "catalog_code": "CEIT-EE-25-01",
+        "department": "Electrical Engineering",
+        "publication_year": 2025,
+        "paper_type": "Thesis",
+        "authors": ["Maria Santos"],
+        "url": "/academic-papers?paper=78"
+      }
+    }
+  ]
+}

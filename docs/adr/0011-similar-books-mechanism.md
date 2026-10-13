@@ -1,5 +1,7 @@
 # Similar-books mechanism: title-as-query through the existing deterministic search
 
+_Superseded in part by ADR 0027 (mechanism); fail-closed and list-shape decisions still stand._
+
 SEARCH-06 ("user can ask for 'books similar to X' and get recommendation results") is served by reusing the Phase 9 deterministic `/search` — no new sidecar endpoint, no embeddings math of its own. The catalog corpus is bibliographic-only (the doc embedding derives from title + metadata, `CorpusExporter`'s title-doubled text), so title-as-query carries the same signal cosine similarity would, and ADR 0006's determinism (same query/corpus/top_k → same ranked set) makes the recommendation set stable across renders.
 
 **The mechanism is a Laravel service: `SimilarPapersService::for(AcademicPaper $paper, int $limit = 10): Collection<AcademicPaper>`.** It builds the query from **the paper's title only** — not authors, advisers, or department terms: author terms would bias toward "more by this author", and department/year/paper_type belong to filters, not the query string. It then calls `AiService::search()` **verbatim** — `corpus: 'catalog'`, `limit: 10` (same as the results page), `k` at the 60-candidate RRF pool constant — with **no metadata filters** (neither department nor paper_type): the doc text already carries X's metadata, so ranking self-selects affinity without over-constraining cross-department similarity.

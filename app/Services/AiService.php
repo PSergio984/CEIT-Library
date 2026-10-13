@@ -44,6 +44,26 @@ class AiService
         ], timeout: 10, retries: 2);
     }
 
+    /**
+     * POST /recommend: seed-based catalog recommendations (sidecar ADR 0015).
+     *
+     * Ids are in the sidecar's paper-N form. Payload keys are exactly
+     * seed_ids/exclude_ids/limit in that order — the sidecar rejects
+     * unknown fields.
+     *
+     * @param  list<string>  $seedIds
+     * @param  list<string>  $excludeIds
+     * @return array<string, mixed>
+     */
+    public function recommend(array $seedIds, array $excludeIds = [], int $limit = 10): array
+    {
+        return $this->send('POST', '/recommend', [
+            'seed_ids' => $seedIds,
+            'exclude_ids' => $excludeIds,
+            'limit' => $limit,
+        ], timeout: 10, retries: 2);
+    }
+
     public function rebuildIndex(): array
     {
         return $this->send('POST', '/index/rebuild', [], timeout: 120, retries: 1);

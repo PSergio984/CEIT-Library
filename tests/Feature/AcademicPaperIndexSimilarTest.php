@@ -34,6 +34,11 @@ class AcademicPaperIndexSimilarTest extends TestCase
         return json_decode(file_get_contents(base_path('tests/fixtures/ai-sidecar/search.json')), true);
     }
 
+    private function fixtureRecommend(): array
+    {
+        return json_decode(file_get_contents(base_path('tests/fixtures/ai-sidecar/recommend.json')), true);
+    }
+
     private function seedPapers(): void
     {
         $researchAdviser = ResearchAdviser::factory()->create(['name' => 'Engr. Jose Rizal']);
@@ -93,6 +98,31 @@ class AcademicPaperIndexSimilarTest extends TestCase
         return $fixture;
     }
 
+    private function twoResultRecommend(): array
+    {
+        $fixture = $this->fixtureRecommend();
+
+        // Both seeded non-seed-relative ids: whichever paper is viewed, the
+        // response offers the other — recursion onto a recommended card works.
+        $fixture['total'] = 2;
+        $fixture['results'][] = [
+            'id' => 'paper-77',
+            'corpus' => 'catalog',
+            'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+            'score' => 0.01,
+            'metadata' => [
+                'catalog_code' => 'CEIT-CE-15-014',
+                'department' => 'Civil Engineering',
+                'publication_year' => 2015,
+                'paper_type' => 'Thesis',
+                'authors' => ['ROXAS, Harvey Jeremy C.'],
+                'url' => '/academic-papers?paper=77',
+            ],
+        ];
+
+        return $fixture;
+    }
+
     #[Test]
     public function it_enters_recommendations_mode_with_header_and_cards(): void
     {
@@ -106,6 +136,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         Livewire::test(AcademicPaperIndex::class)
@@ -128,6 +159,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         $test = Livewire::test(AcademicPaperIndex::class)
@@ -161,6 +193,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         Livewire::test(AcademicPaperIndex::class)
@@ -172,7 +205,8 @@ class AcademicPaperIndexSimilarTest extends TestCase
             ->assertSet('recommendedFor', null);
 
         Http::assertSent(function ($request) {
-            return $request['query'] === 'pump';
+            return str_contains($request->url(), '/search')
+                && $request['query'] === 'pump';
         });
     }
 
@@ -185,6 +219,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         Livewire::test(AcademicPaperIndex::class)
@@ -207,6 +242,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         Livewire::test(AcademicPaperIndex::class)
@@ -229,6 +265,7 @@ class AcademicPaperIndexSimilarTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         // The overlay lives OUTSIDE the recommendations-mode guard, so it is
@@ -267,9 +304,10 @@ class AcademicPaperIndexSimilarTest extends TestCase
 
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/search' => Http::response([
-                'query' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
+            'http://127.0.0.1:8310/recommend' => Http::response([
+                'seeds_used' => 1,
                 'total' => 0,
+                'took_ms' => 4,
                 'results' => [],
             ], 200),
         ]);
