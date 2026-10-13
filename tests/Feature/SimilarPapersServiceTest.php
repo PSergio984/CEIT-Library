@@ -62,7 +62,7 @@ class SimilarPapersServiceTest extends TestCase
             'dean_id' => $dean->id,
         ]);
 
-        $paper79 = AcademicPaper::create([
+        $paper79 = AcademicPaper::factory()->create([
             'title' => 'Development of a Library Management Mobile Application',
             'publication_year' => 2023,
             'paper_type' => 'Capstone',
@@ -252,6 +252,63 @@ class SimilarPapersServiceTest extends TestCase
         Http::preventStrayRequests();
         Http::fake([
             'http://127.0.0.1:8310/recommend' => Http::response(['seeds_used' => 0], 200),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertTrue($result->isEmpty());
+        $this->assertFalse($service->unavailable);
+    }
+
+    #[Test]
+    public function it_ignores_malformed_recommendation_ids(): void
+    {
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        // Only strict `paper-<digits>` ids map back — a malformed id like
+        // "paper-78-old" must not be coerced onto paper 78.
+        $response = $this->fixtureRecommend();
+        $entry = $response['results'][0];
+        $response['total'] = 4;
+        $response['results'] = [
+            array_merge($entry, ['id' => 'paper-78-old']),
+            array_merge($entry, ['id' => '78']),
+            array_merge($entry, ['id' => 'paper-abc']),
+            $entry,
+        ];
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/recommend' => Http::response($response, 200),
+        ]);
+
+        $service = new SimilarPapersService;
+        $result = $service->for($paper77);
+
+        $this->assertSame([78], $result->pluck('id')->all());
+        $this->assertFalse($service->unavailable);
+    }
+
+    #[Test]
+    public function it_returns_empty_when_all_recommendation_ids_are_malformed(): void
+    {
+        $paper77 = $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        $response = $this->fixtureRecommend();
+        $entry = $response['results'][0];
+        $response['total'] = 3;
+        $response['results'] = [
+            array_merge($entry, ['id' => 'paper-78-old']),
+            array_merge($entry, ['id' => '78']),
+            array_merge($entry, ['id' => 'paper-abc']),
+        ];
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/recommend' => Http::response($response, 200),
         ]);
 
         $service = new SimilarPapersService;

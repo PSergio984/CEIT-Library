@@ -39,7 +39,11 @@ class SimilarPapersService
         }
 
         $ids = collect($results)
-            ->map(fn ($result) => (int) str_replace('paper-', '', $result['id'] ?? ''))
+            // Strict `paper-<digits>` only — a malformed id like
+            // "paper-78-old" must not be coerced onto paper 78.
+            ->map(fn ($result) => preg_match('/^paper-(\d+)$/', (string) ($result['id'] ?? ''), $m)
+                ? (int) $m[1]
+                : 0)
             ->filter()
             ->reject(fn ($id) => $id === $paper->id)
             ->values();
