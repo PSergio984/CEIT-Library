@@ -86,6 +86,28 @@ class AiServiceTest extends TestCase
     }
 
     #[Test]
+    public function it_posts_recommend_with_token_and_locked_payload(): void
+    {
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'http://127.0.0.1:8310/recommend' => Http::response(json_decode($this->fixture('recommend.json'), true), 200),
+        ]);
+
+        (new AiService)->recommend(['paper-77'], ['paper-77'], 10);
+
+        Http::assertSent(function ($request) {
+            return str_contains($request->url(), '/recommend')
+                && $request->hasHeader('X-Sidecar-Token', 'test-token')
+                && $request['seed_ids'] === ['paper-77']
+                && $request['exclude_ids'] === ['paper-77']
+                && $request['limit'] === 10
+                && array_keys($request->data()) === ['seed_ids', 'exclude_ids', 'limit'];
+        });
+    }
+
+    #[Test]
     public function it_returns_search_results_shape(): void
     {
         Http::fake([

@@ -1,0 +1,21 @@
+{
+  "seeds_used": 1,
+  "total": 1,
+  "took_ms": 9,
+  "results": [
+    {
+      "id": "paper-77",
+      "corpus": "catalog",
+      "title": "Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps",
+      "score": 0.8123,
+      "metadata": {
+        "catalog_code": "CEIT-CE-15-014",
+        "department": "Civil Engineering",
+        "publication_year": 2015,
+        "paper_type": "Thesis",
+        "authors": ["ROXAS, Harvey Jeremy C.", "RIVERA, John Patrick G."],
+        "url": "/academic-papers?paper=77"
+      }
+    }
+  ]
+}

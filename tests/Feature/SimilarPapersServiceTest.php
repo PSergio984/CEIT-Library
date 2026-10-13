@@ -27,9 +27,9 @@ class SimilarPapersServiceTest extends TestCase
         $this->actingAs($user);
     }
 
-    private function fixtureSearch(): array
+    private function fixtureRecommend(): array
     {
-        return json_decode(file_get_contents(base_path('tests/fixtures/ai-sidecar/search.json')), true);
+        return json_decode(file_get_contents(base_path('tests/fixtures/ai-sidecar/recommend.json')), true);
     }
 
     private function seedPapers(): AcademicPaper
@@ -69,9 +69,9 @@ class SimilarPapersServiceTest extends TestCase
         return $paper77;
     }
 
-    private function twoResultSearch(): array
+    private function twoResultRecommend(): array
     {
-        $fixture = $this->fixtureSearch();
+        $fixture = $this->fixtureRecommend();
 
         $fixture['total'] = 2;
         $fixture['results'][] = [
@@ -79,8 +79,6 @@ class SimilarPapersServiceTest extends TestCase
             'corpus' => 'catalog',
             'title' => 'Design of a Smart Flood Monitoring System',
             'score' => 0.01,
-            'bm25_rank' => 2,
-            'semantic_rank' => 1,
             'metadata' => [
                 'catalog_code' => 'CEIT-EE-25-01',
                 'department' => 'Electrical Engineering',
@@ -94,33 +92,31 @@ class SimilarPapersServiceTest extends TestCase
         return $fixture;
     }
 
-    private function emptySearch(): array
+    private function emptyRecommend(): array
     {
-        return ['query' => 'nothing here', 'total' => 0, 'results' => []];
+        return ['seeds_used' => 1, 'total' => 0, 'took_ms' => 4, 'results' => []];
     }
 
     #[Test]
-    public function it_queries_with_title_only_verbatim(): void
+    public function it_posts_recommend_with_seed_and_locked_payload(): void
     {
         $paper77 = $this->seedPapers();
         config(['services.ai_sidecar.token' => 'test-token']);
 
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/search' => Http::response($this->fixtureSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->fixtureRecommend(), 200),
         ]);
 
         (new SimilarPapersService)->for($paper77);
 
         Http::assertSent(function ($request) {
-            return str_contains($request->url(), '/search')
+            return str_contains($request->url(), '/recommend')
                 && $request->hasHeader('X-Sidecar-Token', 'test-token')
-                && $request['query'] === 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps'
-                && $request['filters'] instanceof \stdClass
-                && $request['corpus'] === 'catalog'
+                && $request['seed_ids'] === ['paper-77']
+                && $request['exclude_ids'] === ['paper-77']
                 && $request['limit'] === 10
-                && $request['k'] === 60
-                && array_keys($request->data()) === ['query', 'filters', 'corpus', 'limit', 'k'];
+                && array_keys($request->data()) === ['seed_ids', 'exclude_ids', 'limit'];
         });
     }
 
@@ -132,7 +128,7 @@ class SimilarPapersServiceTest extends TestCase
 
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         $service = new SimilarPapersService;
@@ -151,7 +147,7 @@ class SimilarPapersServiceTest extends TestCase
 
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->twoResultRecommend(), 200),
         ]);
 
         $first = (new SimilarPapersService)->for($paper77);
@@ -168,7 +164,7 @@ class SimilarPapersServiceTest extends TestCase
 
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/search' => Http::response($this->fixtureSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->fixtureRecommend(), 200),
         ]);
 
         $service = new SimilarPapersService;
@@ -186,7 +182,7 @@ class SimilarPapersServiceTest extends TestCase
 
         Http::preventStrayRequests();
         Http::fake([
-            'http://127.0.0.1:8310/search' => Http::response($this->emptySearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->emptyRecommend(), 200),
         ]);
 
         $service = new SimilarPapersService;

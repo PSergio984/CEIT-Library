@@ -40,7 +40,7 @@ Live copy counts (`available`/`total` per catalog id, plus a fetch-time `checked
 _Avoid_: Stock, status count from AI
 
 **Similar books**:
-The deterministic recommendation list for a catalog paper, produced by running the paper's title as a `/search` query through `SimilarPapersService` (title-as-query, no metadata filters, self-excluded by id) — a list, never an LLM answer.
+The deterministic recommendation list for a catalog paper, produced by `SimilarPapersService` calling the sidecar's `/recommend` (the paper is the single seed and is also excluded) — a list, never an LLM answer.
 _Avoid_: Recommendations from the AI, "books like this" via chat
 
 **Operational question**:

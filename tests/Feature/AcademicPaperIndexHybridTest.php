@@ -34,6 +34,11 @@ class AcademicPaperIndexHybridTest extends TestCase
         return json_decode(file_get_contents(base_path('tests/fixtures/ai-sidecar/search.json')), true);
     }
 
+    private function fixtureRecommend(): array
+    {
+        return json_decode(file_get_contents(base_path('tests/fixtures/ai-sidecar/recommend.json')), true);
+    }
+
     private function seedPapers(): void
     {
         $researchAdviser = ResearchAdviser::factory()->create(['name' => 'Engr. Jose Rizal']);
@@ -340,6 +345,7 @@ class AcademicPaperIndexHybridTest extends TestCase
 
         Http::fake([
             'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+            'http://127.0.0.1:8310/recommend' => Http::response($this->fixtureRecommend(), 200),
         ]);
 
         $test = Livewire::test(AcademicPaperIndex::class)

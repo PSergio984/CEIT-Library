@@ -21,7 +21,14 @@ class SimilarPapersService
         $this->unavailable = false;
 
         try {
-            $results = (new AiService)->search($paper->title, [], 'catalog', $limit)['results'];
+            // The viewed paper is the single seed and is also excluded
+            // server-side (ADR 0027); the reject below stays as defence
+            // in depth.
+            $results = (new AiService)->recommend(
+                ["paper-{$paper->id}"],
+                ["paper-{$paper->id}"],
+                $limit
+            )['results'];
         } catch (AiServiceUnavailableException|AiServiceAuthException) {
             $this->unavailable = true;
 
