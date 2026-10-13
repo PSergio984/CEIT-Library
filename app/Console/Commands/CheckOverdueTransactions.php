@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\BorrowTransaction;
+use App\Models\User;
 use App\Notifications\BorrowTransactionOverdue;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -138,6 +139,7 @@ class CheckOverdueTransactions extends Command
         foreach ($overdueTransactions as $transaction) {
             $updateSucceeded = false;
             $notificationSucceeded = false;
+            $userMissing = false;
 
             // Try to update status to overdue
             try {
@@ -164,20 +166,30 @@ class CheckOverdueTransactions extends Command
 
             // If update succeeded, try to send notification
             if ($updateSucceeded) {
-                try {
-                    $transaction->user->notify(new BorrowTransactionOverdue($transaction));
-                    // Only mark as notified if notification succeeds - this allows retry on failure
-                    $transaction->update(['overdue_notified_at' => now()]);
-                    $notificationSucceeded = true;
-                } catch (\Exception $notifyEx) {
-                    // Don't set overdue_notified_at on failure - transaction will be picked up on next run
-                    Log::error('Failed to send overdue notification', [
+                /** @var User|null $notifyUser The FK is cascade-enforced, but the eager-loaded row is stale if the user was deleted mid-run */
+                $notifyUser = $transaction->user;
+                if ($notifyUser) {
+                    try {
+                        $notifyUser->notify(new BorrowTransactionOverdue($transaction));
+                        // Only mark as notified if notification succeeds - this allows retry on failure
+                        $transaction->update(['overdue_notified_at' => now()]);
+                        $notificationSucceeded = true;
+                    } catch (\Exception $notifyEx) {
+                        // Don't set overdue_notified_at on failure - transaction will be picked up on next run
+                        Log::error('Failed to send overdue notification', [
+                            'transaction_id' => $transaction->id,
+                            'user_id' => $transaction->user_id,
+                            'error' => $notifyEx->getMessage(),
+                        ]);
+                        $this->newLine();
+                        $this->error("Failed to notify user for transaction #{$transaction->id}: {$notifyEx->getMessage()}");
+                    }
+                } else {
+                    $userMissing = true;
+                    Log::warning('Cannot notify user - user not found', [
                         'transaction_id' => $transaction->id,
                         'user_id' => $transaction->user_id,
-                        'error' => $notifyEx->getMessage(),
                     ]);
-                    $this->newLine();
-                    $this->error("Failed to notify user for transaction #{$transaction->id}: {$notifyEx->getMessage()}");
                 }
             }
 
@@ -186,6 +198,8 @@ class CheckOverdueTransactions extends Command
                 $failedUpdate++;
             } elseif ($notificationSucceeded) {
                 $successful++;
+            } elseif ($userMissing) {
+                $noUser++;
             } else {
                 $failedNotification++;
             }
