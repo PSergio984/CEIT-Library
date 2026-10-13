@@ -66,6 +66,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-laravel
+        with:
+          coverage: 'true'
       - name: Copy .env
         run: php -r "file_exists('.env') || copy('.env.example', '.env');"
       - name: Generate key
@@ -74,8 +76,15 @@ jobs:
         run: |
           npm ci
           npm run build
-      - name: Test with PHPUnit
-        run: php artisan test
+      - name: Test with PHPUnit (Clover coverage)
+        run: php artisan test --coverage-clover=coverage.xml
+      - name: Upload PHP coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: php-coverage
+          path: coverage.xml
+          if-no-files-found: error
+          retention-days: 1
 
   sonarcloud:
     name: SonarCloud quality gate
@@ -88,6 +97,11 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Download PHP coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: php-coverage
+          path: .
       - name: SonarCloud Scan
         # sonarcloud-github-action is archived; the maintained replacement is
         # sonarqube-scan-action (pinned to the v8.2.1 commit).

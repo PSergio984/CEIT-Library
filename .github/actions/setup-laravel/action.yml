@@ -16,7 +16,7 @@ runs:
       with:
         php-version: '8.4'
         extensions: mb, dom, curl, libxml, sqlite3, pdo_sqlite${{ inputs.coverage == 'true' && ', xdebug' || '' }}
-        coverage: ${{ inputs.coverage }}
+        coverage: ${{ inputs.coverage == 'true' && 'xdebug' || 'none' }}
 
     - name: Get Composer Cache Directory
       id: composer-cache
