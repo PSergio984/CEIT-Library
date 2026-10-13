@@ -45,7 +45,7 @@ The in-app chat widget is available on every authenticated page.
 Each completed answer also lands one structured usage record in
 `storage/logs/ai-cost.log` (tokens + duration — see Capstone concepts).
 
-## Problem
+## Motivation
 
 Library catalog questions are buried in catalog codes, thesis PDFs, and
 a printed rulebook. Students have to know what they're looking for
@@ -84,7 +84,7 @@ Five of the seven program concepts from the capstone brief's first table — zer
 | Background jobs & cron | Schedules in `routes/console.php` (hourly corpus export/push/sync, overdue sweeps); `Docker/supervisord.conf` runs both `queue:work` and `schedule:work`; queued job in `app/Jobs/AiIndexRebuildJob.php` |
 | LLM integration | Grounded streaming chat behind an endpoint: `AiService::chatStream()` + `app/Livewire/ChatWidget.php`; validated sidecar contract; per-answer cost log → `storage/logs/ai-cost.log` |
 
-## Quickstart
+## Quick Start
 
 The full stack is two repos: the Laravel app and the Python search
 sidecar.
@@ -174,6 +174,26 @@ The sidecar can run on FastAPI Cloud instead of loopback:
    hourly) exports and uploads `catalog.json` + `policies.json` to the
    sidecar's `POST /corpus/upload`, which writes them and rebuilds the
    index atomically.
+
+## Usage
+
+Once the stack is up, the app splits into student and librarian/admin
+surfaces (Livewire pages under `resources/views`, routes in
+`routes/web.php`):
+
+- **Students** — the dashboard (`StudentDashboard`), the papers search tab
+  (`AcademicPaperIndex`) with author/year/department/adviser filters and
+  live copy availability, similar-paper recommendations, the rulebook
+  (`RuleAndRegulationIndex`), borrowing transactions (`Transaction`),
+  notifications, and credit-score history. The AI chat widget floats on
+  every authenticated page: natural-language questions get streamed,
+  citation-grounded answers; thumbs up/down is recorded as feedback.
+- **Librarians / admins** — catalog CRUD (`CreateAcademicPaper`,
+  `EditAcademicPaper`, `AdminShowAcademicPaper`), adviser/dean
+  management, borrow transactions, attendance and violation logs, QR
+  scanning for borrow/return, librarian batch scheduling
+  (`AdminAssignLibrarians`), roles, and notifications. Access is gated by
+  role middleware (`AdminOnly`, `LibrarianOrAdmin`, `CheckCreditScore`).
 
 ## Testing
 
@@ -410,6 +430,24 @@ The corpus is exported from the database by `ai:export-corpus`:
 The sidecar validates the export envelope (`schema_version: 1`) and
 fails closed on malformed input. Exports contain author names — they are
 gitignored and never committed.
+
+## Contributing
+
+Issues and PRs are tracked on GitHub (`PSergio984/CEIT-Library`).
+
+- **Setup** — follow [Quick Start](#quick-start); `composer install`,
+  `npm install`, `php artisan migrate --seed` give you the seeded demo
+  student. The Python sidecar lives in the companion repo
+  (`PSergio984/ceit-ai-sidecar`) — same contribution rules apply there.
+- **Before opening a PR** — `php artisan test` must pass locally (or rely
+  on CI, which runs it plus PHPStan level 5, lint, SonarCloud, CodeQL,
+  and a secrets scan on every push). Keep changes scoped; don't commit
+  `.env` or real credentials — exports under `storage/app/ai-corpus`
+  contain author names and stay gitignored.
+- **Conventions** — `AGENTS.md` documents the issue tracker, triage
+  labels, and agent workflow; `docs/` holds the architecture, ADRs, and
+  codebase docs. Changing the corpus export shape? Update the sidecar's
+  ingest contract in the same change.
 
 ## Limitations
 
