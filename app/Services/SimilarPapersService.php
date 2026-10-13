@@ -18,7 +18,10 @@ class SimilarPapersService
 
     /**
      * The viewed paper is the single seed and is also excluded server-side
-     * (ADR 0027); the reject below stays as defence in depth.
+     * (ADR 0027); the reject below stays as defence in depth. A
+     * malformed-but-200 body is an empty result, not a failure, and only
+     * strict `paper-<digits>` ids map back — "paper-78-old" must not be
+     * coerced onto paper 78.
      */
     public function for(AcademicPaper $paper, int $limit = 10): Collection
     {
@@ -30,7 +33,6 @@ class SimilarPapersService
                 ["paper-{$paper->id}"],
                 $limit
             );
-            // A malformed-but-200 body is an empty result, not a failure.
             $results = $response['results'] ?? [];
         } catch (AiServiceUnavailableException|AiServiceAuthException) {
             $this->unavailable = true;
@@ -39,10 +41,8 @@ class SimilarPapersService
         }
 
         $ids = collect($results)
-            // Strict `paper-<digits>` only — a malformed id like
-            // "paper-78-old" must not be coerced onto paper 78.
-            ->map(fn ($result) => preg_match('/^paper-(\d+)$/', (string) ($result['id'] ?? ''), $m)
-                ? (int) $m[1]
+            ->map(fn ($result) => preg_match('/^paper-(\d+)$/', (string) ($result['id'] ?? ''), $match)
+                ? (int) $match[1]
                 : 0)
             ->filter()
             ->reject(fn ($id) => $id === $paper->id)

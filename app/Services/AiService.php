@@ -50,6 +50,10 @@ class AiService
      * Ids are in the sidecar's paper-N form. Payload keys are exactly
      * seed_ids/exclude_ids/limit in that order — the sidecar rejects
      * unknown fields.
+     *
+     * @param  list<string>  $seedIds
+     * @param  list<string>  $excludeIds
+     * @return array<string, mixed>
      */
     public function recommend(array $seedIds, array $excludeIds = [], int $limit = 10): array
     {

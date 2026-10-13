@@ -40,7 +40,7 @@ class SimilarPapersServiceTest extends TestCase
 
         // paper-77 is the viewed (seed) paper — the real sidecar never
         // returns it, since the service also sends it in exclude_ids.
-        $paper77 = AcademicPaper::create([
+        $paper77 = AcademicPaper::factory()->create([
             'title' => 'Analysis of Groundwater Depletion Caused By Excessive Use of Water Pumps',
             'publication_year' => 2015,
             'paper_type' => 'Thesis',
@@ -52,7 +52,7 @@ class SimilarPapersServiceTest extends TestCase
 
         // paper-78 is the fixture's single result; paper-79 exists so the
         // two-result variant can prove sidecar rank order beats DB order.
-        $paper78 = AcademicPaper::create([
+        $paper78 = AcademicPaper::factory()->create([
             'title' => 'Design of a Smart Flood Monitoring System',
             'publication_year' => 2025,
             'paper_type' => 'Thesis',

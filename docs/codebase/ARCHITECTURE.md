@@ -34,7 +34,7 @@ Flow in steps (AI chat):
 
 Flow in steps (search + availability):
 1. `HybridSearch`-backed search page calls the sidecar `/search` through `AiService::search()` (filters: paper_type/department/year/author/adviser; corpus catalog|policy).
-2. Results are enriched with live copy counts by `AvailabilityService` (grouped `inventory` query + `checked_at`), and `SimilarPapersService` produces the "similar books" list by running the paper title as a query (ADR 0011, self-excluded by id).
+2. Results are enriched with live copy counts by `AvailabilityService` (grouped `inventory` query + `checked_at`), and `SimilarPapersService` produces the "similar books" list by calling the sidecar `/recommend` with the viewed paper as the single seed, also excluded (ADR 0027, superseding the mechanism part of ADR 0011).
 
 ### 3) Layer/Module Responsibilities
 
