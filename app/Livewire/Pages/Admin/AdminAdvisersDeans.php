@@ -180,6 +180,7 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showDeleteModal = false;
         $this->resetValidation(); // Clear any lingering validation errors
 
+        /** @var object{name: string}|null $entry */
         $entry = DB::table($this->getTableName())->find($id);
 
         if (! $entry) {
@@ -332,7 +333,7 @@ class AdminAdvisersDeans extends AdminComponent
     #[Computed]
     public function isFormValid(): bool
     {
-        $name = trim($this->name ?? '');
+        $name = trim($this->name);
 
         // Check if name is filled and valid
         // Must be 2-255 characters AND contain at least 2 letters (matching ProperName rule)

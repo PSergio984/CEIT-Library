@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -44,13 +46,13 @@ class Violation extends Model
     ];
 
     // Relationship with user violations
-    public function userViolations()
+    public function userViolations(): HasMany
     {
         return $this->hasMany(ViolationTransaction::class);
     }
 
     // Get users who have this violation
-    public function users()
+    public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'violation_transactions')
             ->withPivot(['date_occurred', 'remarks'])

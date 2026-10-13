@@ -43,7 +43,7 @@ class SendPushNotification extends Command
         }
 
         $subscriptionCount = $user->pushSubscriptions()->count();
-        $this->info("User: {$user->name} ({$user->email})");
+        $this->info("User: {$user->first_name} {$user->last_name} ({$user->email})");
         $this->info("Active push subscriptions: {$subscriptionCount}");
 
         if ($subscriptionCount === 0) {

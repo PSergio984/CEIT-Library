@@ -3,9 +3,10 @@
 namespace App\Models;
 
 use App\Services\NotificationService;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
 /**
@@ -13,16 +14,16 @@ use Illuminate\Support\Str;
  * @property int $user_id
  * @property int $academic_paper_id
  * @property int $inventory_id
- * @property \Illuminate\Support\Carbon|null $time_in
- * @property \Illuminate\Support\Carbon|null $time_out
+ * @property Carbon|null $time_in
+ * @property Carbon|null $time_out
  * @property string $status
- * @property \Illuminate\Support\Carbon $expires_at
+ * @property Carbon $expires_at
  * @property string $session_token
  * @property string|null $notes
  * @property int|null $duration_minutes
- * @property \Illuminate\Support\Carbon|null $overdue_notified_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $overdue_notified_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read AcademicPaper $academicPaper
  * @property-read Inventory $inventory
  * @property-read User $user
@@ -230,19 +231,19 @@ class BorrowTransaction extends Model
     }
 
     // Relationship with user
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Relationship with academic paper
-    public function academicPaper()
+    public function academicPaper(): BelongsTo
     {
         return $this->belongsTo(AcademicPaper::class);
     }
 
     // Relationship with inventory copy
-    public function inventory()
+    public function inventory(): BelongsTo
     {
         return $this->belongsTo(Inventory::class);
     }
@@ -284,7 +285,8 @@ class BorrowTransaction extends Model
     public function calculateDuration()
     {
         if ($this->time_in && $this->time_out) {
-            $this->duration_minutes = $this->time_in->diffInMinutes($this->time_out);
+            // Cast to int to avoid decimal precision issues in notifications
+            $this->duration_minutes = (int) $this->time_in->diffInMinutes($this->time_out);
 
             return $this->duration_minutes;
         }
@@ -295,11 +297,6 @@ class BorrowTransaction extends Model
     // Check if session is expired (overdue)
     public function isExpired(): bool
     {
-        // Guard against null or invalid expires_at
-        if (! $this->expires_at || ! ($this->expires_at instanceof Carbon)) {
-            return false;
-        }
-
         return $this->expires_at->isPast();
     }
 
@@ -331,10 +328,6 @@ class BorrowTransaction extends Model
      */
     public function getDaysRemainingAttribute(): int
     {
-        if (! $this->expires_at) {
-            return 0;
-        }
-
         if ($this->status === 'completed') {
             return 0; // Not applicable for completed transactions
         }
@@ -354,7 +347,6 @@ class BorrowTransaction extends Model
     {
         if (
             $this->status !== 'started' ||
-            ! $this->expires_at ||
             $this->expires_at->lessThanOrEqualTo(now())
         ) {
             return null;
@@ -369,11 +361,6 @@ class BorrowTransaction extends Model
     {
 
         if (! ($this->status === 'overdue' || $this->isOverdue())) {
-            return null;
-        }
-
-        // Guard against null or invalid expires_at (legacy rows)
-        if (! $this->expires_at || ! ($this->expires_at instanceof Carbon)) {
             return null;
         }
 

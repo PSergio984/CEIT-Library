@@ -7,7 +7,9 @@ use App\Models\Role;
 use App\Models\User;
 use App\Services\NotificationService;
 use Auth;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
@@ -15,6 +17,10 @@ use Livewire\Attributes\Validate;
 use Livewire\WithPagination;
 use Mary\Traits\Toast;
 
+/**
+ * @property-read LengthAwarePaginator $users
+ * @property-read Collection<int, Role> $roles
+ */
 #[Lazy]
 #[Title('User Role Management')]
 class AdminManageRoles extends AdminComponent
@@ -165,8 +171,10 @@ class AdminManageRoles extends AdminComponent
         // Create notification for admin who made the change
         $adminMessage = "You successfully changed {$user->first_name} {$user->last_name}'s role from {$oldRole} to {$newRole->display_name}.";
 
+        /** @var User $admin */
+        $admin = Auth::user();
         app(NotificationService::class)->notify(
-            Auth::user(),
+            $admin,
             'user_activity',
             'Role Change Completed',
             $adminMessage,

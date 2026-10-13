@@ -35,10 +35,6 @@ class QrCodeDownloadController extends Controller
 
         $paper = $copy->academicPaper;
 
-        if (! $paper) {
-            abort(404, 'Academic paper not found for this inventory item.');
-        }
-
         // Build encrypted payload with TTL
         $payload = [
             'inventory_id' => $copy->id,
@@ -46,7 +42,7 @@ class QrCodeDownloadController extends Controller
             'catalog_code' => $paper->catalog_code,
             'title' => $paper->title,
             'requested_by' => Auth::id(),
-            'requested_by_email' => Auth::user()?->email ?? null,
+            'requested_by_email' => Auth::user()->email,
             'iat' => now()->timestamp,
             'exp' => now()->addMinutes(5)->timestamp,
         ];

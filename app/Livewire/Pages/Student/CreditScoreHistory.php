@@ -7,6 +7,7 @@ use App\Models\ViolationTransaction;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -28,7 +29,11 @@ class CreditScoreHistory extends Component
     #[Computed]
     public function creditScore()
     {
-        return Auth::user()?->credit_score ?? 0;
+        if (! Auth::check()) {
+            return 0;
+        }
+
+        return Auth::user()->credit_score;
     }
 
     #[Computed]
@@ -64,9 +69,9 @@ class CreditScoreHistory extends Component
             ->map(function ($v) {
                 return [
                     'id' => 'penalty-'.$v->id,
-                    'action' => $v->violation?->name ?? 'Violation',
+                    'action' => $v->violation->name,
                     'description' => $v->remarks,
-                    'points' => -($v->violation?->penalty_score ?? 0),
+                    'points' => -$v->violation->penalty_score,
                     'type' => 'penalty',
                     'occurred_at' => $v->date_occurred,
                 ];

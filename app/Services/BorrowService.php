@@ -45,7 +45,7 @@ class BorrowService
 
             // --- REPLAY ATTACK PROTECTION ---
 
-            if (! is_array($data) || ! isset($data['hash'], $data['nonce'], $data['timestamp'])) {
+            if (! isset($data['hash'], $data['nonce'], $data['timestamp'])) {
                 Log::warning('Borrow QR code missing required security fields (hash, nonce, or timestamp)');
 
                 return ['success' => false, 'message' => 'Security verification failed. Missing required security fields.'];
@@ -75,7 +75,7 @@ class BorrowService
                 return ['success' => false, 'message' => 'This QR code has already been used.'];
             }
 
-            if (! $data || ! isset($data['p'])) {
+            if (! isset($data['p'])) {
                 Log::error('Invalid QR format - missing p key');
 
                 return ['success' => false, 'message' => 'Invalid QR code format!'];

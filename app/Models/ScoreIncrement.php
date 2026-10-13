@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -111,19 +112,19 @@ class ScoreIncrement extends Model
     }
 
     // Relationship with user
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Relationship with attendance (for attendance-based rewards)
-    public function attendance()
+    public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class, 'related_attendance_id');
     }
 
     // Relationship with borrow transaction (for on-time return rewards)
-    public function borrowTransaction()
+    public function borrowTransaction(): BelongsTo
     {
         return $this->belongsTo(BorrowTransaction::class, 'related_borrow_transaction_id');
     }

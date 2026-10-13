@@ -9,13 +9,16 @@ use App\Models\Author;
 use App\Models\Inventory;
 use App\Models\ResearchAdviser;
 use App\Models\TechnicalAdviser;
+use App\Models\User;
 use App\Services\AiService;
 use App\Services\AvailabilityService;
 use App\Services\SimilarPapersService;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Url;
@@ -24,6 +27,11 @@ use Livewire\Component;
 use Livewire\WithPagination;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
+/**
+ * @property-read LengthAwarePaginator $academicPapers
+ * @property-read AcademicPaper|null $selectedPaper
+ * @property-read Inventory|null $selectedCopy
+ */
 #[Title('Academic Paper List')]
 #[Layout('components.layouts.app')]
 #[Lazy]
@@ -129,7 +137,10 @@ class AcademicPaperIndex extends Component
      */
     public function getCanBorrowProperty(): bool
     {
-        return Auth::check() && Auth::user()->credit_score > 0;
+        /** @var User $user */
+        $user = Auth::user();
+
+        return Auth::check() && $user->credit_score > 0;
     }
 
     #[Computed]
@@ -588,13 +599,15 @@ class AcademicPaperIndex extends Component
         // 3) Build encrypted payload with TTL (e.g., 5 minutes)
         $issuedAt = now();
         $expiresAt = $issuedAt->copy()->addMinutes(5);
+        /** @var User $user */
+        $user = Auth::user();
         $payload = [
             'inventory_id' => $copy->id,
             'paper_id' => $copy->academic_paper_id,
             'catalog_code' => $copy->academicPaper->catalog_code,
             'title' => $copy->academicPaper->title,
             'requested_by' => Auth::id(),
-            'lat' => Auth::user()->email, // Add email for compatibility
+            'lat' => $user->email, // Add email for compatibility
             'iat' => $issuedAt->timestamp,
             'exp' => $expiresAt->timestamp,
         ];

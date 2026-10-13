@@ -23,7 +23,7 @@ class AdminNotifications extends AdminComponent
 
     public function getNotificationsProperty()
     {
-        $query = Auth::user()->userNotifications()
+        $query = Notification::where('user_id', Auth::id())
             ->when($this->filterType, fn ($q) => $q->where('type', $this->filterType))
             ->when($this->filterRead === 'read', fn ($q) => $q->read())
             ->when($this->filterRead === 'unread', fn ($q) => $q->unread())
@@ -60,7 +60,7 @@ class AdminNotifications extends AdminComponent
 
     public function markAllAsRead()
     {
-        Auth::user()->userNotifications()->unread()->update([
+        Notification::where('user_id', Auth::id())->unread()->update([
             'is_read' => true,
             'read_at' => now(),
         ]);

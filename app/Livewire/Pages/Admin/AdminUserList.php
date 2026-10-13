@@ -224,8 +224,8 @@ class AdminUserList extends AdminComponent
             'transactions' => $student->borrowTransactions->map(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'title' => $transaction->inventory?->academicPaper?->title ?? 'Unknown Title',
-                    'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
+                    'title' => $transaction->inventory->academicPaper->title,
+                    'paper_type' => $transaction->inventory->academicPaper->paper_type,
                     'time_in' => $transaction->time_in?->toIso8601String(),
                 ];
             })->toArray(),

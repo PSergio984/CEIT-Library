@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -69,7 +71,7 @@ class AcademicPaper extends Model
     ];
 
     // Relationship with academic paper copies
-    public function copies()
+    public function copies(): HasMany
     {
         return $this->hasMany(Inventory::class);
     }
@@ -140,7 +142,7 @@ class AcademicPaper extends Model
     /**
      * Get the research adviser for this academic paper.
      */
-    public function researchAdviser()
+    public function researchAdviser(): BelongsTo
     {
         return $this->belongsTo(ResearchAdviser::class);
     }
@@ -148,7 +150,7 @@ class AcademicPaper extends Model
     /**
      * Get the technical adviser for this academic paper.
      */
-    public function technicalAdviser()
+    public function technicalAdviser(): BelongsTo
     {
         return $this->belongsTo(TechnicalAdviser::class);
     }
@@ -156,7 +158,7 @@ class AcademicPaper extends Model
     /**
      * Get the dean for this academic paper.
      */
-    public function dean()
+    public function dean(): BelongsTo
     {
         return $this->belongsTo(Dean::class);
     }
@@ -299,7 +301,7 @@ class AcademicPaper extends Model
 
             // Use flexible padding: minimum 2 digits, but can grow beyond 99
             // Examples: 01, 02, ..., 99, 100, 101, etc.
-            return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
+            return str_pad((string) $sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
         } else {
             // MySQL: Use INSERT ... ON DUPLICATE KEY UPDATE with LAST_INSERT_ID() for atomic sequence generation
             // LAST_INSERT_ID() is connection-specific, so each concurrent request gets its own unique value
@@ -324,7 +326,7 @@ class AcademicPaper extends Model
 
             // Use flexible padding: minimum 2 digits, but can grow beyond 99
             // Examples: 01, 02, ..., 99, 100, 101, etc.
-            return str_pad($sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
+            return str_pad((string) $sequence, max(2, strlen((string) $sequence)), '0', STR_PAD_LEFT);
         }
     }
 }

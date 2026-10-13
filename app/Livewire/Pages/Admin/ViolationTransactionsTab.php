@@ -91,7 +91,7 @@ class ViolationTransactionsTab extends AdminComponent
             $transaction = ViolationTransaction::findOrFail($this->editingId);
             $transaction->delete();
             $this->dispatch('refreshActiveUsers');
-            $this->success("Violation for {$transaction->user->name} undone.");
+            $this->success("Violation for {$transaction->user->first_name} {$transaction->user->last_name} undone.");
         } catch (ModelNotFoundException $e) {
             $this->error('Violation transaction not found or already undone.');
         } finally {

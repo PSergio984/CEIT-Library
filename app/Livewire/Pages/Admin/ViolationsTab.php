@@ -133,7 +133,7 @@ class ViolationsTab extends AdminComponent
         $descValid = ! empty($description) && strlen($description) >= 10 && strlen($description) <= 1000;
 
         // Strictly enforce 1-100 range (null means not set, which is invalid)
-        $penaltyValid = $penaltyScore !== null && is_numeric($penaltyScore) && $penaltyScore >= 1 && $penaltyScore <= 100;
+        $penaltyValid = $penaltyScore !== null && $penaltyScore >= 1 && $penaltyScore <= 100;
 
         // Check for validation errors from Livewire
         $hasErrors = $this->getErrorBag()->hasAny(['form.name', 'form.description', 'form.penalty_score']);

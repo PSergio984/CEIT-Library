@@ -10,7 +10,6 @@ use App\Models\Inventory;
 use App\Models\ResearchAdviser;
 use App\Models\TechnicalAdviser;
 use App\Traits\CreatesQrCanonicalMessage;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
@@ -24,6 +23,9 @@ use Livewire\WithPagination;
 use Mary\Traits\Toast;
 use SimpleSoftwareIO\QrCode\Generator;
 
+/**
+ * @property-read AcademicPaper|null $selectedPaper
+ */
 #[Title('Academic Paper List')]
 #[Lazy]
 class AdminAcademicPaperIndex extends AdminComponent
@@ -192,7 +194,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         $hasResearchAdviser = ! empty($this->form->research_adviser_id);
         $hasTechnicalAdviser = ! empty($this->form->technical_adviser_id);
         $hasDean = ! empty($this->form->dean_id);
-        $hasAuthors = ! empty($this->form->author_ids) && count($this->form->author_ids) > 0;
+        $hasAuthors = ! empty($this->form->author_ids);
         $hasCopies = ! empty($this->form->number_of_copies) && $this->form->number_of_copies >= 1;
 
         // Check for validation errors
@@ -700,9 +702,6 @@ class AdminAcademicPaperIndex extends AdminComponent
             } else {
                 // Get search results from database
                 $advisers = ResearchAdviser::query()
-                    ->when($value !== '', function ($query) use ($value) {
-                        $query->where('name', 'like', "%{$value}%");
-                    })
                     ->select('id', 'name')
                     ->orderBy('name')
                     ->take(10)
@@ -712,16 +711,12 @@ class AdminAcademicPaperIndex extends AdminComponent
                     });
 
                 // Cache empty search results for 5 minutes
-                if ($value === '') {
-                    Cache::put($cacheKey, $advisers->toArray(), 300);
-                }
+                Cache::put($cacheKey, $advisers->toArray(), 300);
             }
         } else {
             // Get search results from database for non-empty searches
             $advisers = ResearchAdviser::query()
-                ->when($value !== '', function ($query) use ($value) {
-                    $query->where('name', 'like', "%{$value}%");
-                })
+                ->where('name', 'like', "%{$value}%")
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->take(10)
@@ -787,9 +782,6 @@ class AdminAcademicPaperIndex extends AdminComponent
             } else {
                 // Get search results from database
                 $advisers = TechnicalAdviser::query()
-                    ->when($value !== '', function ($query) use ($value) {
-                        $query->where('name', 'like', "%{$value}%");
-                    })
                     ->select('id', 'name')
                     ->orderBy('name')
                     ->take(10)
@@ -799,16 +791,12 @@ class AdminAcademicPaperIndex extends AdminComponent
                     });
 
                 // Cache empty search results for 5 minutes
-                if ($value === '') {
-                    Cache::put($cacheKey, $advisers->toArray(), 300);
-                }
+                Cache::put($cacheKey, $advisers->toArray(), 300);
             }
         } else {
             // Get search results from database for non-empty searches
             $advisers = TechnicalAdviser::query()
-                ->when($value !== '', function ($query) use ($value) {
-                    $query->where('name', 'like', "%{$value}%");
-                })
+                ->where('name', 'like', "%{$value}%")
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->take(10)
@@ -816,11 +804,6 @@ class AdminAcademicPaperIndex extends AdminComponent
                 ->map(function ($adviser) {
                     return ['id' => $adviser->id, 'name' => $adviser->name];
                 });
-        }
-
-        // Ensure $advisers is always a collection
-        if (! $advisers instanceof Collection) {
-            $advisers = collect($advisers ?? []);
         }
 
         // Include selected option if it exists and is not in search results
@@ -935,9 +918,6 @@ class AdminAcademicPaperIndex extends AdminComponent
             } else {
                 // Get search results from database - now from Dean model
                 $deans = Dean::query()
-                    ->when($value !== '', function ($query) use ($value) {
-                        $query->where('name', 'like', "%{$value}%");
-                    })
                     ->select('id', 'name')
                     ->orderBy('name')
                     ->take(10)
@@ -947,16 +927,12 @@ class AdminAcademicPaperIndex extends AdminComponent
                     });
 
                 // Cache empty search results for 5 minutes
-                if ($value === '') {
-                    Cache::put($cacheKey, $deans->toArray(), 300);
-                }
+                Cache::put($cacheKey, $deans->toArray(), 300);
             }
         } else {
             // Get search results from database for non-empty searches
             $deans = Dean::query()
-                ->when($value !== '', function ($query) use ($value) {
-                    $query->where('name', 'like', "%{$value}%");
-                })
+                ->where('name', 'like', "%{$value}%")
                 ->select('id', 'name')
                 ->orderBy('name')
                 ->take(10)

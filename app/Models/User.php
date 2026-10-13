@@ -8,7 +8,9 @@ use Database\Factories\UserFactory;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
@@ -31,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property-read int|null $borrow_transactions_count
  * @property-read ScoreIncrement|null $creditScore
  * @property-read Librarian|null $librarianDuty
+ * @property-read Role|null $role
  * @property-read Collection<int, Attendance> $librarySessions
  * @property-read int|null $library_sessions_count
  * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
@@ -123,13 +126,13 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Relationship with role
-    public function role()
+    public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }
 
     // Relationship with librarian duties
-    public function librarianDuty()
+    public function librarianDuty(): HasOne
     {
         return $this->hasOne(Librarian::class);
     }
@@ -211,22 +214,25 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     // Relationships for library usage tracking
-    public function librarySessions()
+    public function librarySessions(): HasMany
     {
         return $this->hasMany(Attendance::class);
     }
 
-    public function borrowTransactions()
+    public function borrowTransactions(): HasMany
     {
         return $this->hasMany(BorrowTransaction::class);
     }
 
-    public function violations()
+    public function violations(): HasMany
     {
         return $this->hasMany(ViolationTransaction::class);
     }
 
-    public function userNotifications()
+    /**
+     * @return HasMany<Notification, $this>
+     */
+    public function userNotifications(): HasMany
     {
         return $this->hasMany(Notification::class)->orderBy('created_at', 'desc');
     }
@@ -241,6 +247,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(PushSubscription::class);
     }
 
+    /**
+     * @return HasMany<NotificationPreference, $this>
+     */
     public function notificationPreferences(): HasMany
     {
         return $this->hasMany(NotificationPreference::class);
@@ -250,7 +259,7 @@ class User extends Authenticatable implements MustVerifyEmail
      * Alias for librarySessions().
      * Use attendances() for general attendance queries.
      */
-    public function attendances()
+    public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
     }
