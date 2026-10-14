@@ -137,10 +137,10 @@ class AcademicPaperIndex extends Component
      */
     public function getCanBorrowProperty(): bool
     {
-        /** @var User $user */
+        /** @var User|null $user */
         $user = Auth::user();
 
-        return Auth::check() && $user->credit_score > 0;
+        return $user !== null && $user->credit_score > 0;
     }
 
     #[Computed]
@@ -599,8 +599,11 @@ class AcademicPaperIndex extends Component
         // 3) Build encrypted payload with TTL (e.g., 5 minutes)
         $issuedAt = now();
         $expiresAt = $issuedAt->copy()->addMinutes(5);
-        /** @var User $user */
+        /** @var User|null $user */
         $user = Auth::user();
+        if (! $user) {
+            abort(401);
+        }
         $payload = [
             'inventory_id' => $copy->id,
             'paper_id' => $copy->academic_paper_id,

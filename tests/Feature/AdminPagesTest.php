@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
+use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
 use App\Livewire\Pages\Admin\AdminDashboard;
@@ -13,6 +14,7 @@ use App\Livewire\Pages\Admin\ViolationsTab;
 use App\Livewire\Pages\Admin\ViolationTransactionsTab;
 use App\Models\AcademicPaper;
 use App\Models\Attendance;
+use App\Models\Author;
 use App\Models\Inventory;
 use App\Models\Librarian;
 use App\Models\Notification;
@@ -80,6 +82,31 @@ class AdminPagesTest extends TestCase
             ->call('searchDeans', 'Lee');
 
         $this->assertFalse($component->get('isFormValid'));
+    }
+
+    public function test_author_rename_busts_selector_search_cache(): void
+    {
+        $author = Author::factory()->create(['name' => 'Gertrude Oldname']);
+
+        Livewire::actingAs($this->admin)
+            ->test(AdminAcademicPaperIndex::class)
+            ->call('searchAuthors', 'Gertrude');
+
+        Livewire::actingAs($this->admin)
+            ->test(AdminAdvisersDeans::class)
+            ->set('activeTab', 'authors')
+            ->call('openEditModal', $author->id)
+            ->set('name', 'Gertrude Newname')
+            ->call('save');
+
+        $results = Livewire::actingAs($this->admin)
+            ->test(AdminAcademicPaperIndex::class)
+            ->instance()
+            ->searchAuthors('Gertrude');
+
+        $names = collect($results)->pluck('name')->implode(',');
+        $this->assertStringContainsString('Gertrude Newname', $names);
+        $this->assertStringNotContainsString('Gertrude Oldname', $names);
     }
 
     public function test_admin_user_list_transaction_details_include_paper_fields(): void

@@ -694,7 +694,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         // Use cache for common searches (empty or very short searches)
-        $cacheKey = $value === '' ? 'research_advisers_all' : null;
+        $cacheKey = $value === '' ? $this->selectorCacheKey('research_advisers_all') : null;
         if ($cacheKey) {
             $cachedData = Cache::get($cacheKey);
             if ($cachedData !== null) {
@@ -774,7 +774,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         // Use cache for common searches (empty or very short searches)
-        $cacheKey = $value === '' ? 'technical_advisers_all' : null;
+        $cacheKey = $value === '' ? $this->selectorCacheKey('technical_advisers_all') : null;
         if ($cacheKey) {
             $cachedData = Cache::get($cacheKey);
             if ($cachedData !== null) {
@@ -847,7 +847,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         $this->lastAuthorSearch = $value;
 
         // Use persistent cache with short TTL for search results
-        $cacheKey = 'author_search_'.md5(strtolower(trim($value)));
+        $cacheKey = $this->selectorCacheKey('author_search_'.md5(strtolower(trim($value))));
 
         $results = Cache::remember($cacheKey, 300, function () use ($value) {
             $query = Author::query()
@@ -910,7 +910,7 @@ class AdminAcademicPaperIndex extends AdminComponent
         }
 
         // Use cache for common searches (empty or very short searches)
-        $cacheKey = $value === '' ? 'deans_all' : null;
+        $cacheKey = $value === '' ? $this->selectorCacheKey('deans_all') : null;
         if ($cacheKey) {
             $cachedData = Cache::get($cacheKey);
             if ($cachedData !== null) {
@@ -975,11 +975,7 @@ class AdminAcademicPaperIndex extends AdminComponent
      */
     private function invalidateSearchCaches(): void
     {
-        // Clear individual cache keys
-        Cache::forget('research_advisers_all');
-        Cache::forget('technical_advisers_all');
-        Cache::forget('deans_all');
-        Cache::forget('authors_all');
+        $this->incrementSelectorCacheVersion();
         $this->cachedAuthors = null;
 
         // Increment version token to invalidate all academic papers caches
@@ -1020,6 +1016,25 @@ class AdminAcademicPaperIndex extends AdminComponent
     {
         $currentVersion = $this->getAcademicPapersVersion();
         Cache::put('academic_papers_version', $currentVersion + 1, 86400); // 24 hours
+    }
+
+    /**
+     * Version-tagged selector cache key; author/adviser/dean mutations bump the
+     * shared token in AdminAdvisersDeans::clearCaches so every selector key goes stale.
+     */
+    private function selectorCacheKey(string $key): string
+    {
+        return $key.'_v'.Cache::get('academic_paper_selectors_version', 1);
+    }
+
+    /**
+     * Increment version token to invalidate all selector caches (md5-suffixed
+     * author_search_* keys cannot be enumerated, so a version bump is used)
+     */
+    private function incrementSelectorCacheVersion(): void
+    {
+        $currentVersion = (int) Cache::get('academic_paper_selectors_version', 1);
+        Cache::put('academic_paper_selectors_version', $currentVersion + 1, 86400); // 24 hours
     }
 
     /**

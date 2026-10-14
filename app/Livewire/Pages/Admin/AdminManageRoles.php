@@ -171,23 +171,25 @@ class AdminManageRoles extends AdminComponent
         // Create notification for admin who made the change
         $adminMessage = "You successfully changed {$user->first_name} {$user->last_name}'s role from {$oldRole} to {$newRole->display_name}.";
 
-        /** @var User $admin */
+        /** @var User|null $admin */
         $admin = Auth::user();
-        app(NotificationService::class)->notify(
-            $admin,
-            'user_activity',
-            'Role Change Completed',
-            $adminMessage,
-            [
-                'target_user_id' => $user->id,
-                'target_user_name' => $user->first_name.' '.$user->last_name,
-                'old_role_id' => $oldRoleId,
-                'old_role_name' => $oldRole,
-                'new_role_id' => $this->selectedRoleId,
-                'new_role_name' => $newRole->display_name,
-                'action' => 'role_change',
-            ]
-        );
+        if ($admin !== null) {
+            app(NotificationService::class)->notify(
+                $admin,
+                'user_activity',
+                'Role Change Completed',
+                $adminMessage,
+                [
+                    'target_user_id' => $user->id,
+                    'target_user_name' => $user->first_name.' '.$user->last_name,
+                    'old_role_id' => $oldRoleId,
+                    'old_role_name' => $oldRole,
+                    'new_role_id' => $this->selectedRoleId,
+                    'new_role_name' => $newRole->display_name,
+                    'action' => 'role_change',
+                ]
+            );
+        }
 
         $this->success("Role updated: {$user->first_name} {$user->last_name} is now a {$newRole->display_name}");
         $this->showAssignRoleModal = false;

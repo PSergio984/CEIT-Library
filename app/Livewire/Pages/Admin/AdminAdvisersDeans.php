@@ -372,11 +372,10 @@ class AdminAdvisersDeans extends AdminComponent
 
     private function clearCaches(): void
     {
-        Cache::forget("advisers_deans_total_{$this->activeTab}");
-        Cache::forget('research_advisers_all');
-        Cache::forget('technical_advisers_all');
-        Cache::forget('deans_all');
-        Cache::forget('authors_all');
+        // Bump the shared selector-cache version so every versioned key in
+        // AdminAcademicPaperIndex (incl. md5-keyed author_search_* entries) goes stale
+        $version = (int) Cache::get('academic_paper_selectors_version', 1);
+        Cache::put('academic_paper_selectors_version', $version + 1, 86400);
         unset($this->entries);
         unset($this->totalCount);
     }
