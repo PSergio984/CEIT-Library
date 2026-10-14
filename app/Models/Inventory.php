@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
@@ -47,7 +48,7 @@ class Inventory extends Model
     /**
      * Get the academic paper that owns this copy
      */
-    public function academicPaper()
+    public function academicPaper(): BelongsTo
     {
         return $this->belongsTo(AcademicPaper::class);
     }

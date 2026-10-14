@@ -2,10 +2,13 @@
 
 namespace App\Livewire\Pages\Student;
 
+use App\Models\AcademicPaper;
 use App\Models\BorrowTransaction;
 use App\Traits\CreatesQrCanonicalMessage;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Attributes\Title;
 use Livewire\Component;
 use Livewire\WithPagination;
@@ -75,6 +78,7 @@ class Transaction extends Component
 
         if ($this->search) {
             $query->whereHas('inventory.academicPaper', function ($q) {
+                /** @var Builder<AcademicPaper> $q */
                 $q->search($this->search);
             });
         }
@@ -262,11 +266,6 @@ class Transaction extends Component
         }
 
         $inventory = $transaction->inventory;
-        if (! $inventory) {
-            $this->error('Inventory not found.');
-
-            return;
-        }
 
         // Build the borrow data payload (same format as original borrow QR)
         $borrowData = [
@@ -285,7 +284,7 @@ class Transaction extends Component
             ->generate($qrContent);
 
         $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
-        $this->returnQrPaperTitle = $inventory->academicPaper?->title ?? 'Unknown Paper';
+        $this->returnQrPaperTitle = $inventory->academicPaper->title;
         $this->returnQrTransactionId = $transaction->id;
         $this->returnQrInventoryId = $inventory->id;
         $this->isReturnQrModalOpen = true;
@@ -338,11 +337,6 @@ class Transaction extends Component
         }
 
         $inventory = $transaction->inventory;
-        if (! $inventory) {
-            $this->error('Inventory not found.');
-
-            return null;
-        }
 
         // Build the borrow data payload (same format as original borrow QR)
         $borrowData = [

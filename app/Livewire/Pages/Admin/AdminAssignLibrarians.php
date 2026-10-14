@@ -10,11 +10,22 @@ use App\Services\NotificationService;
 use Auth;
 use DB;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Support\Collection;
 use Livewire\Attributes\Lazy;
 use Livewire\Attributes\Title;
 use Livewire\Attributes\Validate;
 use Mary\Traits\Toast;
 
+/**
+ * @property-read Collection $groupedLibrarians
+ * @property-read Collection $availableBatches
+ * @property-read Collection $assignedBatches
+ * @property-read Collection $allBatches
+ * @property-read Collection $availableStudents
+ * @property-read Collection $studentBatchAssignments
+ * @property-read Librarian|null $conflictingBatch
+ * @property-read bool $isDateChanging
+ */
 #[Title('Librarian Batch Management')]
 #[Lazy]
 class AdminAssignLibrarians extends AdminComponent
@@ -301,14 +312,14 @@ class AdminAssignLibrarians extends AdminComponent
 
         if ($latestBatch) {
             // Extract the sequence number and increment
-            $sequenceNumber = (int) substr($latestBatch->batch_no, 4) + 1;
+            $sequenceNumber = (int) substr((string) $latestBatch->batch_no, 4) + 1;
         } else {
             // First batch of the year
             $sequenceNumber = 1;
         }
 
         // Format: YYYY0001, YYYY0002, etc.
-        return $yearPrefix.str_pad($sequenceNumber, 4, '0', STR_PAD_LEFT);
+        return $yearPrefix.str_pad((string) $sequenceNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function openCreateModal()

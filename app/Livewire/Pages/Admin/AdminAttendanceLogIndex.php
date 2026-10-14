@@ -132,9 +132,9 @@ class AdminAttendanceLogIndex extends AdminComponent
 
                 return [
                     'id' => $attendance->id,
-                    'user_name' => trim(($attendance->user?->first_name ?? '').' '.($attendance->user?->last_name ?? '')) ?: 'N/A',
-                    'role_name' => $attendance->role?->name ?? 'N/A',
-                    'role_badge_color' => match (strtolower($attendance->role?->name ?? '')) {
+                    'user_name' => trim($attendance->user->first_name.' '.$attendance->user->last_name) ?: 'N/A',
+                    'role_name' => $attendance->role->name ?? 'N/A',
+                    'role_badge_color' => match (strtolower($attendance->role->name ?? '')) {
                         'student' => 'badge-success',
                         'librarian' => 'badge-info',
                         'admin', 'super_admin', 'super admin' => 'badge-error',
@@ -304,8 +304,8 @@ class AdminAttendanceLogIndex extends AdminComponent
         $attendances = $query->get()->map(function ($attendance) {
             return [
                 'id' => $attendance->id,
-                'user_name' => trim(($attendance->user?->first_name ?? '').' '.($attendance->user?->last_name ?? '')) ?: 'N/A',
-                'role_name' => $attendance->role?->name ?? 'N/A',
+                'user_name' => trim($attendance->user->first_name.' '.$attendance->user->last_name) ?: 'N/A',
+                'role_name' => $attendance->role->name ?? 'N/A',
                 'scanned_by_name' => $attendance->scanned_by_name,
                 'time_in' => $attendance->time_in,
                 'time_out' => $attendance->time_out,
@@ -325,7 +325,7 @@ class AdminAttendanceLogIndex extends AdminComponent
         }
         if ($this->roleFilter) {
             $role = Role::find($this->roleFilter);
-            $filterDescription[] = 'Role: '.($role?->name ?? 'Unknown');
+            $filterDescription[] = 'Role: '.($role->name ?? 'Unknown');
         }
         if ($this->selectedDate) {
             $filterDescription[] = 'Date: '.date('M d, Y', strtotime($this->selectedDate));

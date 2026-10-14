@@ -180,6 +180,7 @@ class AdminAdvisersDeans extends AdminComponent
         $this->showDeleteModal = false;
         $this->resetValidation(); // Clear any lingering validation errors
 
+        /** @var object{name: string}|null $entry */
         $entry = DB::table($this->getTableName())->find($id);
 
         if (! $entry) {
@@ -332,7 +333,7 @@ class AdminAdvisersDeans extends AdminComponent
     #[Computed]
     public function isFormValid(): bool
     {
-        $name = trim($this->name ?? '');
+        $name = trim($this->name);
 
         // Check if name is filled and valid
         // Must be 2-255 characters AND contain at least 2 letters (matching ProperName rule)
@@ -369,9 +370,12 @@ class AdminAdvisersDeans extends AdminComponent
         return trim($this->name) !== $this->originalName;
     }
 
-    private function clearCaches()
+    private function clearCaches(): void
     {
-        Cache::forget("advisers_deans_total_{$this->activeTab}");
+        // Bump the shared selector-cache version so every versioned key in
+        // AdminAcademicPaperIndex (incl. md5-keyed author_search_* entries) goes stale
+        $version = (int) Cache::get('academic_paper_selectors_version', 1);
+        Cache::put('academic_paper_selectors_version', $version + 1, 86400);
         unset($this->entries);
         unset($this->totalCount);
     }

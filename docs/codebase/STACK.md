@@ -34,7 +34,7 @@
 | Tool | Purpose | Evidence |
 |------|---------|----------|
 | Laravel Pint | Formatting (PSR-12) — enforced in CI (`vendor/bin/pint --test`) | `.github/workflows/ci.yml` |
-| PHPStan + Larastan | Static analysis, level 5 + `phpstan-baseline.neon` (202 baseline errors) | `phpstan.neon`, `phpstan-baseline.neon` |
+| PHPStan + Larastan | Static analysis, level 5, zero-error gate | `phpstan.neon` |
 | PHPUnit | Tests (^13.0) via `php artisan test` | `composer.json`, `phpunit.xml` |
 | Mockery | Mocking in tests | `composer.json` |
 | Laravel Breeze / Sail / Pail / Debugbar / IDE-Helper / Boost | Auth scaffold, Docker dev, logs, debugging | `composer.json` require-dev |

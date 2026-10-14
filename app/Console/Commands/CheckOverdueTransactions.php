@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\BorrowTransaction;
+use App\Models\User;
 use App\Notifications\BorrowTransactionOverdue;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
@@ -96,9 +97,12 @@ class CheckOverdueTransactions extends Command
         $this->table(
             ['ID', 'User', 'Paper', 'Due Date', 'Overdue By'],
             $overdueTransactions->map(function ($transaction) {
+                /** @var User|null $user */
+                $user = $transaction->user;
+
                 return [
                     $transaction->id,
-                    $transaction->user->full_name ?? 'N/A',
+                    $user ? trim($user->first_name.' '.$user->last_name) : 'N/A',
                     Str::limit($transaction->inventory->academicPaper->title ?? 'N/A', 40),
                     $transaction->expires_at->format('Y-m-d H:i'),
                     $transaction->expires_at->diffForHumans(),
@@ -165,9 +169,11 @@ class CheckOverdueTransactions extends Command
 
             // If update succeeded, try to send notification
             if ($updateSucceeded) {
-                if ($transaction->user) {
+                /** @var User|null $notifyUser The FK is cascade-enforced, but the eager-loaded row is stale if the user was deleted mid-run */
+                $notifyUser = $transaction->user;
+                if ($notifyUser) {
                     try {
-                        $transaction->user->notify(new BorrowTransactionOverdue($transaction));
+                        $notifyUser->notify(new BorrowTransactionOverdue($transaction));
                         // Only mark as notified if notification succeeds - this allows retry on failure
                         $transaction->update(['overdue_notified_at' => now()]);
                         $notificationSucceeded = true;
@@ -193,10 +199,10 @@ class CheckOverdueTransactions extends Command
             // Increment mutually exclusive counters based on final outcome
             if (! $updateSucceeded) {
                 $failedUpdate++;
-            } elseif ($userMissing) {
-                $noUser++;
             } elseif ($notificationSucceeded) {
                 $successful++;
+            } elseif ($userMissing) {
+                $noUser++;
             } else {
                 $failedNotification++;
             }

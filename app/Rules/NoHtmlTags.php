@@ -4,6 +4,7 @@ namespace App\Rules;
 
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Translation\PotentiallyTranslatedString;
 
 /**
  * Validates that a value does not contain HTML tags or script injections.
@@ -13,7 +14,7 @@ class NoHtmlTags implements ValidationRule
     /**
      * Run the validation rule.
      *
-     * @param  \Closure(string $message, ?string $attribute = null): void  $fail
+     * @param  Closure(string, ?string=): PotentiallyTranslatedString  $fail
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {

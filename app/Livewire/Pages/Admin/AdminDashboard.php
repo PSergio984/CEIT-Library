@@ -52,9 +52,9 @@ class AdminDashboard extends AdminComponent
         return AcademicPaper::select('department', DB::raw('count(*) as count'))
             ->groupBy('department')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn (AcademicPaper $item) => [
                 'name' => $item->department,
-                'value' => $item->count,
+                'value' => $item['count'],
             ]);
     }
 
@@ -64,9 +64,9 @@ class AdminDashboard extends AdminComponent
         return AcademicPaper::select('paper_type', DB::raw('count(*) as count'))
             ->groupBy('paper_type')
             ->get()
-            ->map(fn ($item) => [
+            ->map(fn (AcademicPaper $item) => [
                 'name' => $item->paper_type,
-                'value' => $item->count,
+                'value' => $item['count'],
             ]);
     }
 

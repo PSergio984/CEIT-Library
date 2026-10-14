@@ -3,21 +3,23 @@
 namespace App\Models;
 
 use App\Services\NotificationService;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int $user_id
- * @property \Illuminate\Support\Carbon|null $time_in
- * @property \Illuminate\Support\Carbon|null $time_out
+ * @property Carbon|null $time_in
+ * @property Carbon|null $time_out
  * @property string $status
  * @property int|null $scanned_by
  * @property int|null $duration_minutes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Librarian|null $scannedByLibrarian
+ * @property-read User|null $scannedByAdmin
  * @property-read User $user
  *
  * @method static \Database\Factories\AttendanceFactory factory($count = null, $state = [])
@@ -146,19 +148,19 @@ class Attendance extends Model
     }
 
     // Relationship with user
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Relationship with librarian who scanned
-    public function scannedByLibrarian()
+    public function scannedByLibrarian(): BelongsTo
     {
         return $this->belongsTo(Librarian::class, 'scanned_by');
     }
 
     // Relationship with admin who scanned (when no librarian duty)
-    public function scannedByAdmin()
+    public function scannedByAdmin(): BelongsTo
     {
         return $this->belongsTo(User::class, 'scanned_by_admin_id');
     }
@@ -171,7 +173,7 @@ class Attendance extends Model
     public function getScannedByNameAttribute(): string
     {
         // First check librarian
-        if ($this->scannedByLibrarian && $this->scannedByLibrarian->user) {
+        if ($this->scannedByLibrarian) {
             $user = $this->scannedByLibrarian->user;
 
             return trim($user->first_name.' '.$user->last_name) ?: 'N/A';
@@ -192,7 +194,7 @@ class Attendance extends Model
     }
 
     // Relationship with role (snapshot at check-in time)
-    public function role()
+    public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }

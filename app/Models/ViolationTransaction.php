@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * @property int $id
@@ -158,13 +159,13 @@ class ViolationTransaction extends Model
     }
 
     // Relationship with user
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     // Relationship with violation
-    public function violation()
+    public function violation(): BelongsTo
     {
         return $this->belongsTo(Violation::class);
     }
@@ -205,7 +206,7 @@ class ViolationTransaction extends Model
         return $query->where('date_occurred', '>=', Carbon::now()->subDays($days));
     }
 
-    public function attendance()
+    public function attendance(): BelongsTo
     {
         return $this->belongsTo(Attendance::class);
     }

@@ -8,6 +8,7 @@ use App\Models\Inventory;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Layout;
 use Livewire\Component;
 use Livewire\WithPagination;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -97,6 +98,7 @@ class ShowAcademicPaper extends Component
             ->get();
 
         return $copies->map(function ($copy) {
+            /** @var Inventory $copy */
             return [
                 'id' => $copy->id,
                 'status' => $copy->status,
@@ -146,7 +148,7 @@ class ShowAcademicPaper extends Component
 
         $this->qrCodeDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
         $this->selectedInventoryId = $inventory->id;
-        $this->selectedPaperTitle = $inventory->academicPaper?->title ?? 'Unknown Paper';
+        $this->selectedPaperTitle = $inventory->academicPaper->title;
         $this->isQrModalOpen = true;
     }
 
@@ -224,7 +226,7 @@ class ShowAcademicPaper extends Component
             ->generate($qrContent);
 
         $this->returnQrCodeDataUri = 'data:image/svg+xml;base64,'.base64_encode($svg);
-        $this->returnQrPaperTitle = $transaction->inventory->academicPaper?->title ?? 'Unknown Paper';
+        $this->returnQrPaperTitle = $transaction->inventory->academicPaper->title;
         $this->returnQrTransactionId = $transaction->id;
         $this->returnQrInventoryId = $transaction->inventory_id;
         $this->isReturnQrModalOpen = true;

@@ -95,7 +95,7 @@ class QrScanner extends Component
         } catch (\Exception $e) {
             Log::error('QR Scanner Error: '.$e->getMessage(), [
                 'exception' => $e,
-                'data_length' => strlen($data ?? ''),
+                'data_length' => strlen($data),
             ]);
 
             $this->hasError = true;
@@ -185,7 +185,7 @@ class QrScanner extends Component
         } catch (\Exception $e) {
             Log::error('QR File Upload Scanner Error: '.$e->getMessage(), [
                 'exception' => $e,
-                'data_length' => strlen($data ?? ''),
+                'data_length' => strlen($data),
             ]);
 
             $this->hasError = true;

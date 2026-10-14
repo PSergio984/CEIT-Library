@@ -182,10 +182,10 @@ class AdminBorrowTransactions extends AdminComponent
             ->through(function ($transaction) {
                 return [
                     'id' => $transaction->id,
-                    'user_name' => trim(($transaction->user?->first_name ?? '').' '.($transaction->user?->last_name ?? '')) ?: 'N/A',
+                    'user_name' => trim($transaction->user->first_name.' '.$transaction->user->last_name) ?: 'N/A',
                     'user' => $transaction->user,
-                    'title' => $transaction->inventory?->academicPaper?->title ?? 'No Title',
-                    'paper_type' => $transaction->inventory?->academicPaper?->paper_type ?? 'N/A',
+                    'title' => $transaction->inventory->academicPaper->title,
+                    'paper_type' => $transaction->inventory->academicPaper->paper_type,
                     'time_in' => $transaction->time_in,
                     'time_out' => $transaction->time_out,
                     'status' => $transaction->status ?? 'active',
