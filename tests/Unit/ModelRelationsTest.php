@@ -4,9 +4,7 @@ namespace Tests\Unit;
 
 use App\Models\AcademicPaper;
 use App\Models\Attendance;
-use App\Models\BorrowTransaction;
 use App\Models\Dean;
-use App\Models\Inventory;
 use App\Models\ResearchAdviser;
 use App\Models\Role;
 use App\Models\ScoreIncrement;
@@ -18,9 +16,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class ModelRelationsTest extends TestCase
 {
+    use TestHelper;
+
     public function test_violation_transaction_relations(): void
     {
         $attendance = Attendance::factory()->create();
@@ -35,20 +36,6 @@ class ModelRelationsTest extends TestCase
         $this->assertInstanceOf(User::class, $transaction->user);
         $this->assertInstanceOf(Violation::class, $transaction->violation);
         $this->assertTrue($transaction->attendance->is($attendance));
-    }
-
-    private function makeBorrowTransaction(array $overrides = []): BorrowTransaction
-    {
-        $paper = AcademicPaper::factory()->create();
-
-        return BorrowTransaction::factory()->create(array_merge([
-            'user_id' => User::factory()->create()->id,
-            'academic_paper_id' => $paper->id,
-            'inventory_id' => Inventory::factory()->create([
-                'academic_paper_id' => $paper->id,
-                'copy_number' => 1,
-            ])->id,
-        ], $overrides));
     }
 
     public function test_score_increment_relations(): void

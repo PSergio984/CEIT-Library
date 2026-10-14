@@ -13,7 +13,6 @@ use App\Livewire\Pages\Admin\ViolationsTab;
 use App\Livewire\Pages\Admin\ViolationTransactionsTab;
 use App\Models\AcademicPaper;
 use App\Models\Attendance;
-use App\Models\BorrowTransaction;
 use App\Models\Inventory;
 use App\Models\Librarian;
 use App\Models\Notification;
@@ -23,9 +22,12 @@ use App\Models\Violation;
 use App\Models\ViolationTransaction;
 use Livewire\Livewire;
 use Tests\TestCase;
+use Tests\Traits\TestHelper;
 
 class AdminPagesTest extends TestCase
 {
+    use TestHelper;
+
     protected bool $disableLivewireLazyLoading = true;
 
     protected User $admin;
@@ -40,20 +42,6 @@ class AdminPagesTest extends TestCase
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin', 'description' => 'Super Admin']);
 
         $this->admin = User::factory()->create(['role_id' => $superAdminRole->id]);
-    }
-
-    private function makeBorrowTransaction(array $overrides = []): BorrowTransaction
-    {
-        $paper = AcademicPaper::factory()->create();
-
-        return BorrowTransaction::factory()->create(array_merge([
-            'user_id' => User::factory()->create()->id,
-            'academic_paper_id' => $paper->id,
-            'inventory_id' => Inventory::factory()->create([
-                'academic_paper_id' => $paper->id,
-                'copy_number' => 1,
-            ])->id,
-        ], $overrides));
     }
 
     public function test_dashboard_stats_computeds_return_aggregates(): void
@@ -79,7 +67,8 @@ class AdminPagesTest extends TestCase
             ->test(AdminAttendanceLogIndex::class)
             ->assertSee($attendance->user->first_name)
             ->set('roleFilter', $studentRole->id)
-            ->call('exportPdf');
+            ->call('exportPdf')
+            ->assertFileDownloaded();
     }
 
     public function test_academic_paper_index_searches_and_form_validation(): void
@@ -90,7 +79,7 @@ class AdminPagesTest extends TestCase
             ->call('searchTechnicalAdvisers', 'Jones')
             ->call('searchDeans', 'Lee');
 
-        $this->assertIsBool($component->get('isFormValid'));
+        $this->assertFalse($component->get('isFormValid'));
     }
 
     public function test_admin_user_list_transaction_details_include_paper_fields(): void

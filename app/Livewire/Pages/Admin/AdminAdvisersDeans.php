@@ -370,7 +370,7 @@ class AdminAdvisersDeans extends AdminComponent
         return trim($this->name) !== $this->originalName;
     }
 
-    private function clearCaches()
+    private function clearCaches(): void
     {
         Cache::forget("advisers_deans_total_{$this->activeTab}");
         Cache::forget('research_advisers_all');

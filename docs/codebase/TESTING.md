@@ -54,7 +54,7 @@ php artisan test tests/Feature
 
 ### CI pipeline (GitHub Actions)
 
-- `ci.yml`: lint (Pint) → typecheck (PHPStan level 5 + baseline) → migration sanity → test (phpunit, ~85s + npm build) → SonarCloud quality gate (needs test) → Docker build (needs lint/typecheck/migrations/test)
+- `ci.yml`: lint (Pint) → typecheck (PHPStan level 5) → migration sanity → test (phpunit, ~85s + npm build) → SonarCloud quality gate (needs test) → Docker build (needs lint/typecheck/migrations/test)
 - `codeql.yml`: CodeQL Advanced on push (weekly schedule)
 - `sonar-secrets.yml`: SonarQube CLI secrets scan (offline, every push)
 - Local parity: suite passes 600 + 3 skipped (Sunday) after CI fixes; ruff/sidecar see sidecar docs

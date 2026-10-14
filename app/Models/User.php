@@ -31,7 +31,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Collection<int, BorrowTransaction> $borrowTransactions
  * @property-read int|null $borrow_transactions_count
- * @property-read ScoreIncrement|null $creditScore
  * @property-read Librarian|null $librarianDuty
  * @property-read Role|null $role
  * @property-read Collection<int, Attendance> $librarySessions

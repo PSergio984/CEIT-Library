@@ -97,9 +97,12 @@ class CheckOverdueTransactions extends Command
         $this->table(
             ['ID', 'User', 'Paper', 'Due Date', 'Overdue By'],
             $overdueTransactions->map(function ($transaction) {
+                /** @var \App\Models\User|null $user */
+                $user = $transaction->user;
+
                 return [
                     $transaction->id,
-                    $transaction->user->full_name ?? 'N/A',
+                    $user ? trim($user->first_name.' '.$user->last_name) : 'N/A',
                     Str::limit($transaction->inventory->academicPaper->title ?? 'N/A', 40),
                     $transaction->expires_at->format('Y-m-d H:i'),
                     $transaction->expires_at->diffForHumans(),

@@ -208,7 +208,7 @@ uv run pytest                   # 144 tests, 1 skipped: ranking, filters, API, a
 uv run ruff check .
 ```
 
-CI (GitHub Actions) runs lint, typecheck (PHPStan level 5 + baseline),
+CI (GitHub Actions) runs lint, typecheck (PHPStan level 5),
 migrations, tests, SonarCloud, CodeQL, and a secrets scan on every push.
 
 ## Evaluation

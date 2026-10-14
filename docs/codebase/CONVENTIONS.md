@@ -17,7 +17,7 @@
 ### 2) Formatting and Linting
 
 - Formatter: Laravel Pint (PSR-12); config defaults + `pint.json` if present
-- Linter: PHPStan + Larastan (level 5) with `phpstan-baseline.neon` (202 baseline entries)
+- Linter: PHPStan + Larastan (level 5), zero-error gate — no baseline
 - Enforced rules: PSR-12 style, `no_extra_blank_lines`, `ordered_imports` (observed in CI fixes)
 - Run commands:
 ```bash
@@ -48,7 +48,7 @@ vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
 ### 6) Evidence
 
-- `phpstan.neon`, `phpstan-baseline.neon`
+- `phpstan.neon`
 - `phpunit.xml`
 - `app/Services/LibrarianStatusService.php`, `app/Logging/PiiSanitizerProcessor.php`
 - git log (commit style), `docs/adr/` (decision style)
@@ -59,5 +59,5 @@ vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
 - Domain terminology enforced via `CONTEXT.md` glossary (Assistant, Conversation, Citation, Grounding, Sidecar, Availability, Similar books — with explicit "Avoid" words)
 - New AI features crystallize as ADRs before implementation (0013/0014 pattern from `.planning/phases/11-*`)
-- CI gates: Pint, PHPStan (level 5 + baseline), migrations, PHPUnit, SonarCloud, CodeQL, secrets scan — see `docs/codebase/TESTING.md`
-- Larastan 3.10 + Laravel 13 cannot resolve Eloquent relations (systematic false positive) — the accepted mechanism is docblock `@property-read` annotations for new code, baseline regeneration as fallback
+- CI gates: Pint, PHPStan (level 5), migrations, PHPUnit, SonarCloud, CodeQL, secrets scan — see `docs/codebase/TESTING.md`
+- Eloquent relation methods carry explicit return types (`BelongsTo`, `HasMany`, …) so Larastan resolves them; model docblocks use `@property`/`@property-read` for columns and relations

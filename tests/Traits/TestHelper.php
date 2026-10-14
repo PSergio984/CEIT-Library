@@ -2,6 +2,11 @@
 
 namespace Tests\Traits;
 
+use App\Models\AcademicPaper;
+use App\Models\BorrowTransaction;
+use App\Models\Inventory;
+use App\Models\User;
+
 trait TestHelper
 {
     /**
@@ -30,5 +35,22 @@ trait TestHelper
         }
 
         return $tokens;
+    }
+
+    /**
+     * Create a borrow transaction with all required FK rows.
+     */
+    protected function makeBorrowTransaction(array $overrides = []): BorrowTransaction
+    {
+        $paper = AcademicPaper::factory()->create();
+
+        return BorrowTransaction::factory()->create(array_merge([
+            'user_id' => User::factory()->create()->id,
+            'academic_paper_id' => $paper->id,
+            'inventory_id' => Inventory::factory()->create([
+                'academic_paper_id' => $paper->id,
+                'copy_number' => 1,
+            ])->id,
+        ], $overrides));
     }
 }

@@ -92,7 +92,7 @@ class BorrowTransaction extends Model
             $wasCompleted = $transaction->getOriginal('status') === 'completed';
             $isNowCompleted = $transaction->status === 'completed';
 
-            if (! $wasCompleted && $isNowCompleted && $transaction->time_out && $transaction->expires_at) {
+            if (! $wasCompleted && $isNowCompleted && $transaction->time_in && $transaction->time_out && $transaction->expires_at) {
                 // Check if returned on time
                 $isOnTime = $transaction->time_out <= $transaction->expires_at;
 
