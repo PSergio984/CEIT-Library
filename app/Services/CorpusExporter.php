@@ -30,10 +30,10 @@ class CorpusExporter
                 $segments[] = 'research_adviser: '.($researchAdviser ?? '');
                 $segments[] = 'technical_adviser: '.($technicalAdviser ?? '');
                 $segments[] = 'dean: '.($dean ?? '');
-                $segments[] = 'department: '.CorpusNormalizer::text($paper->department, 200);
+                $segments[] = 'department: '.CorpusNormalizer::text($paper->department, CorpusNormalizer::FIELD_CAP);
                 $segments[] = 'publication_year: '.$paper->publication_year;
                 $segments[] = 'paper_type: '.CorpusNormalizer::paperType($paper->paper_type);
-                $segments[] = 'catalog_code: '.CorpusNormalizer::text($paper->catalog_code, 200);
+                $segments[] = 'catalog_code: '.CorpusNormalizer::text($paper->catalog_code, CorpusNormalizer::FIELD_CAP);
 
                 return [
                     'id' => 'paper-'.$paper->id,
@@ -41,8 +41,8 @@ class CorpusExporter
                     'title' => $title,
                     'text' => implode(' ', $segments),
                     'metadata' => [
-                        'catalog_code' => CorpusNormalizer::text($paper->catalog_code, 200),
-                        'department' => CorpusNormalizer::text($paper->department, 200),
+                        'catalog_code' => CorpusNormalizer::text($paper->catalog_code, CorpusNormalizer::FIELD_CAP),
+                        'department' => CorpusNormalizer::text($paper->department, CorpusNormalizer::FIELD_CAP),
                         'publication_year' => (int) $paper->publication_year,
                         'paper_type' => CorpusNormalizer::paperType($paper->paper_type),
                         'authors' => $authors,

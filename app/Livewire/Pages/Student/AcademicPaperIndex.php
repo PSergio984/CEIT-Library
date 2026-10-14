@@ -386,7 +386,7 @@ class AcademicPaperIndex extends Component
             // Review nit 3: the name-as-query fallback is a paper-tab-only
             // behaviour — browse mode must keep the pre-S-4 verbatim payload,
             // so the trim above is only applied to the tab-mode query below.
-            $query = $this->authorFilter ?: $this->adviserFilter;
+            $query = CorpusNormalizer::personName($this->authorFilter ?: $this->adviserFilter);
         }
 
         if (strlen((string) $query) < 3 || $this->statusFilter !== '') {
@@ -404,16 +404,16 @@ class AcademicPaperIndex extends Component
         // Filter options are raw DB values, but the sidecar matches against
         // the normalized export vocabulary — translate them at the seam.
         $filters = [
-            'paper_type' => $this->paperTypeFilter ? CorpusNormalizer::paperType($this->paperTypeFilter) : null,
-            'department' => $this->departmentFilter ?: null,
+            'paper_type' => CorpusNormalizer::paperType($this->paperTypeFilter) ?: null,
+            'department' => CorpusNormalizer::text($this->departmentFilter, CorpusNormalizer::FIELD_CAP) ?: null,
             'publication_year' => $this->yearFilter ?: null,
             'year_from' => $this->yearFromFilter ?: null,
             'year_to' => $this->yearToFilter ?: null,
         ];
 
         if ($this->paperTabActive) {
-            $filters['author'] = $this->authorFilter ? CorpusNormalizer::personName($this->authorFilter) : null;
-            $filters['adviser'] = $this->adviserFilter ? CorpusNormalizer::personName($this->adviserFilter) : null;
+            $filters['author'] = CorpusNormalizer::personName($this->authorFilter) ?: null;
+            $filters['adviser'] = CorpusNormalizer::personName($this->adviserFilter) ?: null;
         }
 
         try {

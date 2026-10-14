@@ -221,7 +221,7 @@ class ExportAiCorpusTest extends TestCase
         $technicalAdviser = TechnicalAdviser::factory()->create(['name' => 'Engr. Ms. Leonor Jast V']);
         $dean = Dean::factory()->create(['name' => 'Dr. Dr. Creola Reilly V']);
 
-        $paper = AcademicPaper::create([
+        $paper = AcademicPaper::factory()->create([
             'title' => 'Design of a Smart Flood Monitoring System',
             'publication_year' => 2025,
             'paper_type' => 'Thesis',
@@ -230,7 +230,7 @@ class ExportAiCorpusTest extends TestCase
             'department' => 'Electrical Engineering',
             'dean_id' => $dean->id,
         ]);
-        $paper->authors()->attach([$author->id]);
+        $paper->authors()->syncWithoutDetaching([$author->id]);
 
         $this->artisan('ai:export-corpus')->assertExitCode(0);
 
@@ -254,7 +254,7 @@ class ExportAiCorpusTest extends TestCase
         $technicalAdviser = TechnicalAdviser::factory()->create(['name' => 'Engr. Rudy Muller']);
         $dean = Dean::factory()->create(['name' => 'Dr. Ellis Kutch']);
 
-        $paper = AcademicPaper::create([
+        $paper = AcademicPaper::factory()->create([
             'title' => 'Design of a Smart Flood Monitoring System',
             'publication_year' => 2025,
             'paper_type' => 'Thesis',

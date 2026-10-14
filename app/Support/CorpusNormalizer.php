@@ -9,6 +9,8 @@ namespace App\Support;
  */
 class CorpusNormalizer
 {
+    public const FIELD_CAP = 200;
+
     public static function text(?string $value, int $maxLen): string
     {
         $value = $value ?? '';
@@ -26,8 +28,9 @@ class CorpusNormalizer
 
     public static function personName(?string $value): string
     {
-        $name = self::text($value, 200);
+        $name = self::text($value, self::FIELD_CAP);
 
+        // Known upstream placeholder value — treated as "no name".
         if (mb_strtolower($name) === 'asdasd') {
             return '';
         }
@@ -43,7 +46,7 @@ class CorpusNormalizer
 
     public static function paperType(?string $value): string
     {
-        $type = self::text($value, 200);
+        $type = self::text($value, self::FIELD_CAP);
 
         return mb_strtolower($type) === 'feasib' ? 'Feasibility' : $type;
     }
