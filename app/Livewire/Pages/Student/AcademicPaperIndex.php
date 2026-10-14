@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\AiService;
 use App\Services\AvailabilityService;
 use App\Services\SimilarPapersService;
+use App\Support\CorpusNormalizer;
 use App\Traits\CreatesQrCanonicalMessage;
 use Auth;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -400,8 +401,10 @@ class AcademicPaperIndex extends Component
             $query = $this->search;
         }
 
+        // Filter options are raw DB values, but the sidecar matches against
+        // the normalized export vocabulary — translate them at the seam.
         $filters = [
-            'paper_type' => $this->paperTypeFilter ?: null,
+            'paper_type' => $this->paperTypeFilter ? CorpusNormalizer::paperType($this->paperTypeFilter) : null,
             'department' => $this->departmentFilter ?: null,
             'publication_year' => $this->yearFilter ?: null,
             'year_from' => $this->yearFromFilter ?: null,
@@ -409,8 +412,8 @@ class AcademicPaperIndex extends Component
         ];
 
         if ($this->paperTabActive) {
-            $filters['author'] = $this->authorFilter ?: null;
-            $filters['adviser'] = $this->adviserFilter ?: null;
+            $filters['author'] = $this->authorFilter ? CorpusNormalizer::personName($this->authorFilter) : null;
+            $filters['adviser'] = $this->adviserFilter ? CorpusNormalizer::personName($this->adviserFilter) : null;
         }
 
         try {

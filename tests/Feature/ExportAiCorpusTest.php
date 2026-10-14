@@ -212,4 +212,81 @@ class ExportAiCorpusTest extends TestCase
         $this->assertFileDoesNotExist(storage_path('app/ai-corpus/catalog.json'));
         $this->assertFileDoesNotExist(storage_path('app/ai-corpus/policies.json'));
     }
+
+    #[Test]
+    public function it_drops_injected_leading_honorifics_from_person_names(): void
+    {
+        $author = Author::factory()->create(['name' => 'Engr. Mr. Clinton Vandervort V']);
+        $researchAdviser = ResearchAdviser::factory()->create(['name' => 'Dr. Prof. Adelle Haag']);
+        $technicalAdviser = TechnicalAdviser::factory()->create(['name' => 'Engr. Ms. Leonor Jast V']);
+        $dean = Dean::factory()->create(['name' => 'Dr. Dr. Creola Reilly V']);
+
+        $paper = AcademicPaper::create([
+            'title' => 'Design of a Smart Flood Monitoring System',
+            'publication_year' => 2025,
+            'paper_type' => 'Thesis',
+            'research_adviser_id' => $researchAdviser->id,
+            'technical_adviser_id' => $technicalAdviser->id,
+            'department' => 'Electrical Engineering',
+            'dean_id' => $dean->id,
+        ]);
+        $paper->authors()->attach([$author->id]);
+
+        $this->artisan('ai:export-corpus')->assertExitCode(0);
+
+        $catalog = $this->readExport('catalog.json');
+        $doc = collect($catalog['documents'])->firstWhere('id', 'paper-'.$paper->id);
+
+        $this->assertContains('Mr. Clinton Vandervort V', $doc['metadata']['authors']);
+        $this->assertSame('Prof. Adelle Haag', $doc['metadata']['research_adviser']);
+        $this->assertSame('Ms. Leonor Jast V', $doc['metadata']['technical_adviser']);
+        $this->assertSame('Dr. Creola Reilly V', $doc['metadata']['dean']);
+
+        $this->assertStringContainsString('research_adviser: Prof. Adelle Haag', $doc['text']);
+        $this->assertStringContainsString('technical_adviser: Ms. Leonor Jast V', $doc['text']);
+        $this->assertStringContainsString('dean: Dr. Creola Reilly V', $doc['text']);
+    }
+
+    #[Test]
+    public function it_empties_placeholder_person_names(): void
+    {
+        $researchAdviser = ResearchAdviser::factory()->create(['name' => 'asdasd']);
+        $technicalAdviser = TechnicalAdviser::factory()->create(['name' => 'Engr. Rudy Muller']);
+        $dean = Dean::factory()->create(['name' => 'Dr. Ellis Kutch']);
+
+        $paper = AcademicPaper::create([
+            'title' => 'Design of a Smart Flood Monitoring System',
+            'publication_year' => 2025,
+            'paper_type' => 'Thesis',
+            'research_adviser_id' => $researchAdviser->id,
+            'technical_adviser_id' => $technicalAdviser->id,
+            'department' => 'Electrical Engineering',
+            'dean_id' => $dean->id,
+        ]);
+
+        $this->artisan('ai:export-corpus')->assertExitCode(0);
+
+        $catalog = $this->readExport('catalog.json');
+        $doc = collect($catalog['documents'])->firstWhere('id', 'paper-'.$paper->id);
+
+        $this->assertSame('', $doc['metadata']['research_adviser']);
+        $this->assertStringContainsString('research_adviser:  technical_adviser:', $doc['text']);
+        $this->assertStringNotContainsString('asdasd', $doc['text']);
+    }
+
+    #[Test]
+    public function it_normalizes_truncated_feasib_paper_type(): void
+    {
+        $paper = $this->seedPaper();
+        $paper->update(['paper_type' => 'Feasib']);
+
+        $this->artisan('ai:export-corpus')->assertExitCode(0);
+
+        $catalog = $this->readExport('catalog.json');
+        $doc = collect($catalog['documents'])->firstWhere('id', 'paper-'.$paper->id);
+
+        $this->assertSame('Feasibility', $doc['metadata']['paper_type']);
+        $this->assertStringContainsString('paper_type: Feasibility', $doc['text']);
+        $this->assertStringNotContainsString('paper_type: Feasib ', $doc['text']);
+    }
 }

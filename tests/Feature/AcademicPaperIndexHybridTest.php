@@ -184,6 +184,29 @@ class AcademicPaperIndexHybridTest extends TestCase
     }
 
     #[Test]
+    public function it_normalizes_filter_values_to_exported_corpus_vocabulary(): void
+    {
+        $this->seedPapers();
+        config(['services.ai_sidecar.token' => 'test-token']);
+
+        Http::fake([
+            'http://127.0.0.1:8310/search' => Http::response($this->twoResultSearch(), 200),
+        ]);
+
+        Livewire::test(AcademicPaperIndex::class)
+            ->set('paperTabActive', true)
+            ->set('search', 'water pump')
+            ->set('paperTypeFilter', 'Feasib')
+            ->set('adviserFilter', 'Engr. Mr. Clinton Vandervort V')
+            ->call('runHybridSearch');
+
+        Http::assertSent(function ($request) {
+            return $request['filters']['paper_type'] === 'Feasibility'
+                && $request['filters']['adviser'] === 'Mr. Clinton Vandervort V';
+        });
+    }
+
+    #[Test]
     public function it_does_not_send_author_adviser_keys_outside_paper_tab(): void
     {
         $this->seedPapers();

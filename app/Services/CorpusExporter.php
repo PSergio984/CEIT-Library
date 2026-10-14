@@ -6,6 +6,7 @@ use App\Models\AcademicPaper;
 use App\Models\RuleHeader;
 use App\Models\RuleRegulation;
 use App\Support\CitationUrl;
+use App\Support\CorpusNormalizer;
 use Illuminate\Support\Facades\File;
 
 class CorpusExporter
@@ -15,24 +16,24 @@ class CorpusExporter
         return AcademicPaper::with(['authors', 'researchAdviser', 'technicalAdviser', 'dean'])
             ->get()
             ->map(function (AcademicPaper $paper) {
-                $title = $this->sanitize($paper->title, 500);
+                $title = CorpusNormalizer::text($paper->title, 500);
                 $authors = $paper->authors->pluck('name')
-                    ->map(fn ($name) => $this->sanitize($name, 200))
+                    ->map(fn ($name) => CorpusNormalizer::personName($name))
                     ->all();
 
-                $researchAdviser = $paper->researchAdviser ? $this->sanitize($paper->researchAdviser->name, 200) : null;
-                $technicalAdviser = $paper->technicalAdviser ? $this->sanitize($paper->technicalAdviser->name, 200) : null;
-                $dean = $paper->dean ? $this->sanitize($paper->dean->name, 200) : null;
+                $researchAdviser = $paper->researchAdviser ? CorpusNormalizer::personName($paper->researchAdviser->name) : null;
+                $technicalAdviser = $paper->technicalAdviser ? CorpusNormalizer::personName($paper->technicalAdviser->name) : null;
+                $dean = $paper->dean ? CorpusNormalizer::personName($paper->dean->name) : null;
 
                 $segments = [$title.'.'];
                 $segments[] = 'authors: '.implode('; ', $authors);
                 $segments[] = 'research_adviser: '.($researchAdviser ?? '');
                 $segments[] = 'technical_adviser: '.($technicalAdviser ?? '');
                 $segments[] = 'dean: '.($dean ?? '');
-                $segments[] = 'department: '.$this->sanitize($paper->department, 200);
+                $segments[] = 'department: '.CorpusNormalizer::text($paper->department, 200);
                 $segments[] = 'publication_year: '.$paper->publication_year;
-                $segments[] = 'paper_type: '.$this->sanitize($paper->paper_type, 200);
-                $segments[] = 'catalog_code: '.$this->sanitize($paper->catalog_code, 200);
+                $segments[] = 'paper_type: '.CorpusNormalizer::paperType($paper->paper_type);
+                $segments[] = 'catalog_code: '.CorpusNormalizer::text($paper->catalog_code, 200);
 
                 return [
                     'id' => 'paper-'.$paper->id,
@@ -40,10 +41,10 @@ class CorpusExporter
                     'title' => $title,
                     'text' => implode(' ', $segments),
                     'metadata' => [
-                        'catalog_code' => $this->sanitize($paper->catalog_code, 200),
-                        'department' => $this->sanitize($paper->department, 200),
+                        'catalog_code' => CorpusNormalizer::text($paper->catalog_code, 200),
+                        'department' => CorpusNormalizer::text($paper->department, 200),
                         'publication_year' => (int) $paper->publication_year,
-                        'paper_type' => $this->sanitize($paper->paper_type, 200),
+                        'paper_type' => CorpusNormalizer::paperType($paper->paper_type),
                         'authors' => $authors,
                         'research_adviser' => $researchAdviser,
                         'technical_adviser' => $technicalAdviser,
@@ -68,7 +69,7 @@ class CorpusExporter
         $headers = RuleHeader::orderBy('id')->get();
 
         foreach ($headers as $header) {
-            $headerTitle = $this->sanitize($header->title, 500);
+            $headerTitle = CorpusNormalizer::text($header->title, 500);
 
             $documents[] = [
                 'id' => 'policy-h'.$header->id,
@@ -85,7 +86,7 @@ class CorpusExporter
             ];
 
             foreach ($regulationsByHeader->get($header->id, collect()) as $regulation) {
-                $content = $this->sanitize($regulation->content, 20000);
+                $content = CorpusNormalizer::text($regulation->content, 20000);
 
                 $documents[] = [
                     'id' => 'policy-h'.$header->id.'-r'.$regulation->id,
@@ -137,20 +138,5 @@ class CorpusExporter
         File::put($path.'/'.$filename, json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
 
         return count($documents);
-    }
-
-    private function sanitize(?string $value, int $maxLen): string
-    {
-        $value = $value ?? '';
-
-        $value = preg_replace('/[\x00-\x1F\x7F]/', '', $value) ?? '';
-        $value = preg_replace('/\s+/', ' ', $value) ?? '';
-        $value = trim($value);
-
-        if (mb_strlen($value) > $maxLen) {
-            $value = mb_substr($value, 0, $maxLen);
-        }
-
-        return $value;
     }
 }
