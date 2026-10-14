@@ -40,8 +40,6 @@ abstract class TestCase extends BaseTestCase
 
     protected bool $disableLivewireLazyLoading = false;
 
-    private static bool $flushStateListenerRegistered = false;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -49,14 +47,14 @@ abstract class TestCase extends BaseTestCase
         if ($this->disableLivewireLazyLoading) {
             if (class_exists(Livewire::class)) {
                 Livewire::withoutLazyLoading();
-                if (! self::$flushStateListenerRegistered) {
-                    Livewire::listen('flush-state', function () {
-                        if (class_exists(SupportLazyLoading::class)) {
-                            SupportLazyLoading::$disableWhileTesting = true;
-                        }
-                    });
-                    self::$flushStateListenerRegistered = true;
-                }
+                // The listener registry lives on the Livewire manager, which is
+                // rebuilt per test — re-register every time or Livewire's own
+                // flush-state reset wins after the first request in each test.
+                Livewire::listen('flush-state', function () {
+                    if (class_exists(SupportLazyLoading::class)) {
+                        SupportLazyLoading::$disableWhileTesting = true;
+                    }
+                });
             }
             if (class_exists(SupportLazyLoading::class)) {
                 SupportLazyLoading::$disableWhileTesting = true;
