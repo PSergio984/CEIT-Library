@@ -97,7 +97,7 @@ class CheckOverdueTransactions extends Command
         $this->table(
             ['ID', 'User', 'Paper', 'Due Date', 'Overdue By'],
             $overdueTransactions->map(function ($transaction) {
-                /** @var \App\Models\User|null $user */
+                /** @var User|null $user */
                 $user = $transaction->user;
 
                 return [
