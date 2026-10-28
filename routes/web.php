@@ -225,3 +225,10 @@ Route::post('/logout', function () {
 })->name('logout');
 
 require __DIR__.'/auth.php';
+
+// PROTOTYPE — throwaway UI for "Prototype the counter deposit/claim flow" (#69). Local only.
+if (app()->environment('local')) {
+    Route::middleware(['auth', 'verified', 'librarian.or.admin'])
+        ->get('/admin/prototype/bag-counter', \App\Livewire\Prototype\BagCounter::class)
+        ->name('admin.prototype.bag-counter');
+}
