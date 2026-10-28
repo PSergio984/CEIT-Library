@@ -9,6 +9,7 @@ use App\Models\ResearchAdviser;
 use App\Models\TechnicalAdviser;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Concerns\ToArray;
 
 /**
@@ -54,8 +55,9 @@ class CatalogSheetImport implements ToArray
 
     /**
      * @param  array<string, true>  $catalogCodes  codes already in the
-     *                                             database, shared by reference across all sheet imports so codes
-     *                                             imported or generated earlier in the run register as duplicates
+     *                                             database (keys lowercased), shared by reference across all sheet
+     *                                             imports so codes imported or generated earlier in the run register
+     *                                             as duplicates
      */
     public function __construct(
         private readonly string $department,
@@ -203,7 +205,7 @@ class CatalogSheetImport implements ToArray
         }
 
         $catalog = self::clean($this->cellAt($row, $columns['catalog']));
-        if ($catalog !== '' && isset($this->catalogCodes[$catalog])) {
+        if ($catalog !== '' && isset($this->catalogCodes[mb_strtolower($catalog)])) {
             $this->report['duplicates']++;
             $this->message($rowNumber, 'duplicate', "Catalog code '{$catalog}' already exists");
 
@@ -246,14 +248,19 @@ class CatalogSheetImport implements ToArray
                     ]);
                 }
 
-                $this->catalogCodes[$paper->catalog_code] = true;
+                $this->catalogCodes[mb_strtolower($paper->catalog_code)] = true;
                 $this->report['imported']++;
                 if ($catalog === '') {
                     $this->report['generated_codes']++;
                 }
             });
         } catch (\Throwable $e) {
-            $this->fail($rowNumber, $e->getMessage());
+            Log::warning('Catalog import row failed', [
+                'sheet' => $this->department,
+                'row' => $rowNumber,
+                'error' => $e->getMessage(),
+            ]);
+            $this->fail($rowNumber, 'Database error while importing row');
         }
     }
 

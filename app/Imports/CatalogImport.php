@@ -18,7 +18,8 @@ use Maatwebsite\Excel\Facades\Excel;
  * Usage: `$report = (new CatalogImport)($pathToXlsx);`
  *
  * All writes run in one transaction with AI index dispatches suppressed;
- * exactly one AiIndexRebuildJob is dispatched after the import commits.
+ * one AiIndexRebuildJob is dispatched after the import commits when at
+ * least one row was imported.
  * Returns a per-sheet report:
  * `{sheets: {<sheet name>: {imported, errors, duplicates, generated_codes,
  * error, messages: [{row, type: error|duplicate|warning, message}]}}}`.
@@ -32,7 +33,7 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
         'Information Technology',
     ];
 
-    /** @var array<string, true> catalog codes taken, in the DB or this run */
+    /** @var array<string, true> lowercased catalog codes taken, in the DB or this run */
     private array $catalogCodes = [];
 
     /** @var array<string, CatalogSheetImport> */
@@ -46,18 +47,26 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
      */
     public function __invoke(string $path): array
     {
-        $this->catalogCodes = array_fill_keys(
-            AcademicPaper::query()->pluck('catalog_code')->all(),
-            true,
-        );
-
         AiIndexSync::withoutDispatches(function () use ($path): void {
-            DB::transaction(fn () => Excel::import($this, $path));
+            DB::transaction(function () use ($path): void {
+                $this->catalogCodes = array_fill_keys(
+                    AcademicPaper::query()->pluck('catalog_code')
+                        ->map(fn ($code) => mb_strtolower((string) $code))
+                        ->all(),
+                    true,
+                );
+
+                Excel::import($this, $path);
+            });
         });
 
-        AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
+        $report = $this->report();
 
-        return $this->report();
+        if (collect($report['sheets'])->sum('imported') > 0) {
+            AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
+        }
+
+        return $report;
     }
 
     /**

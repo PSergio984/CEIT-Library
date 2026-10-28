@@ -8,8 +8,11 @@ use App\Jobs\AiIndexRebuildJob;
 use App\Models\AcademicPaper;
 use App\Models\Inventory;
 use App\Models\TechnicalAdviser;
+use App\Support\AiIndexSync;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Schema;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PHPUnit\Framework\Attributes\Test;
@@ -309,5 +312,106 @@ class CatalogImportTest extends TestCase
             $report['sheets']['Information Technology']['error']
         );
         $this->assertDatabaseCount('academic_papers', 1);
+    }
+
+    #[Test]
+    public function a_case_variant_of_an_existing_catalog_code_is_reported_as_duplicate(): void
+    {
+        AcademicPaper::factory()->create(['catalog_code' => 'CEIT-EE-24-01']);
+
+        $report = (new CatalogImport)($this->writeWorkbook([
+            'Electrical Engineering' => [
+                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG NUMBER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
+                [2024, 'THESIS', 'ceit-ee-24-01', 'Lowercase Code Variant', 1, 'Dela Cruz, Juan'],
+            ],
+        ]));
+
+        $ee = $report['sheets']['Electrical Engineering'];
+        $this->assertSame(0, $ee['imported']);
+        $this->assertSame(1, $ee['duplicates']);
+        $this->assertStringContainsString('ceit-ee-24-01', $ee['messages'][0]['message']);
+        $this->assertDatabaseCount('academic_papers', 1);
+
+        // Nothing imported: the only rebuild dispatch is the one the
+        // factory create above already triggered.
+        Bus::assertDispatched(AiIndexRebuildJob::class, 1);
+    }
+
+    #[Test]
+    public function index_sync_suppression_is_restored_when_the_workbook_cannot_be_read(): void
+    {
+        $thrown = false;
+        try {
+            (new CatalogImport)(sys_get_temp_dir().'/catalog-import-missing-'.uniqid().'.xlsx');
+        } catch (\Throwable) {
+            $thrown = true;
+        }
+        $this->assertTrue($thrown);
+
+        $this->assertFalse(AiIndexSync::suppressed());
+
+        // A subsequent paper create still schedules an index rebuild.
+        AcademicPaper::factory()->create();
+        Bus::assertDispatched(AiIndexRebuildJob::class);
+    }
+
+    #[Test]
+    public function a_blank_copies_cell_imports_the_paper_with_no_inventory_rows(): void
+    {
+        $report = (new CatalogImport)($this->writeWorkbook([
+            'Electrical Engineering' => [
+                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG NUMBER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
+                [2024, 'THESIS', 'CEIT-EE-24-01', 'No Copies Paper', null, 'Dela Cruz, Juan'],
+            ],
+        ]));
+
+        $this->assertSame(1, $report['sheets']['Electrical Engineering']['imported']);
+
+        $paper = AcademicPaper::where('catalog_code', 'CEIT-EE-24-01')->firstOrFail();
+        $this->assertSame(0, $paper->copies()->count());
+    }
+
+    #[Test]
+    public function a_sheet_without_a_catalog_column_warns_and_generates_codes_for_every_row(): void
+    {
+        $report = (new CatalogImport)($this->writeWorkbook([
+            'Electrical Engineering' => [
+                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
+                [2024, 'THESIS', 'Paper One', 1, 'Dela Cruz, Juan'],
+                [2024, 'CAPSTONE', 'Paper Two', 1, 'Garcia, Ana'],
+            ],
+        ]));
+
+        $ee = $report['sheets']['Electrical Engineering'];
+        $this->assertSame(2, $ee['imported']);
+        $this->assertSame(2, $ee['generated_codes']);
+        $this->assertSame('warning', $ee['messages'][0]['type']);
+        $this->assertNull($ee['messages'][0]['row']);
+        $this->assertStringContainsString('No catalog column', $ee['messages'][0]['message']);
+
+        $this->assertNotNull(AcademicPaper::where('title', 'Paper One')->value('catalog_code'));
+        $this->assertNotNull(AcademicPaper::where('title', 'Paper Two')->value('catalog_code'));
+    }
+
+    #[Test]
+    public function a_row_level_database_failure_is_reported_without_leaking_details(): void
+    {
+        AcademicPaper::factory()->create(['title' => 'Existing Title']);
+        Schema::table('academic_papers', function (Blueprint $table) {
+            $table->unique('title');
+        });
+
+        $report = (new CatalogImport)($this->writeWorkbook([
+            'Electrical Engineering' => [
+                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG NUMBER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
+                [2024, 'THESIS', 'CEIT-EE-24-77', 'Existing Title', 1, 'Dela Cruz, Juan'],
+            ],
+        ]));
+
+        $ee = $report['sheets']['Electrical Engineering'];
+        $this->assertSame(0, $ee['imported']);
+        $this->assertSame(1, $ee['errors']);
+        $this->assertSame('Database error while importing row', $ee['messages'][0]['message']);
+        $this->assertStringNotContainsString('Existing Title', $ee['messages'][0]['message']);
     }
 }
