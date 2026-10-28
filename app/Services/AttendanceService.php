@@ -22,7 +22,7 @@ class AttendanceService
         try {
             // Timestamp skew is intentionally not enforced (Offline Accessibility - Phase 7):
             // downloaded/screenshot QR codes must keep working offline.
-            $data = app(QrPayloadValidator::class)->validate($qrData, enforceTimestampSkew: false);
+            $data = app(QrPayloadValidator::class)->validate($qrData, enforceTimestampSkew: false, consumeNonce: false);
 
             if ($data === QrPayloadValidator::INVALID) {
                 return self::VALIDATION_INVALID;
@@ -42,6 +42,17 @@ class AttendanceService
             if ($recentScans >= 60) {
                 Log::warning('Rate limit exceeded for user', [
                     'user_id' => $data['user_id'],
+                ]);
+
+                return self::VALIDATION_INVALID;
+            }
+
+            // 2. Nonce Replay Prevention (One-time use check)
+            $nonceKey = 'qr_nonce:'.$data['nonce'];
+            if (! Cache::add($nonceKey, true, 150)) {
+                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
+                    'user_id' => $data['user_id'],
+                    'nonce' => $data['nonce'],
                 ]);
 
                 return self::VALIDATION_INVALID;

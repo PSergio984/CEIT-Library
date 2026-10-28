@@ -22,7 +22,7 @@ class QrPayloadValidator
      *
      * @return array|string 'invalid' for validation failures, decrypted payload array for valid data
      */
-    public function validate(string $qrData, bool $enforceTimestampSkew = true): array|string
+    public function validate(string $qrData, bool $enforceTimestampSkew = true, bool $consumeNonce = true): array|string
     {
         try {
             // Basic validation
@@ -34,7 +34,7 @@ class QrPayloadValidator
             // Standardized format: QR codes use a {"encrypted": "..."} wrapper
             $json = json_decode($qrData, true);
             if (! $json || ! isset($json['encrypted'])) {
-                Log::warning('QR code missing encrypted wrapper');
+                Log::warning('Attendance QR code missing encrypted wrapper');
 
                 return self::INVALID;
             }
@@ -90,14 +90,16 @@ class QrPayloadValidator
             }
 
             // Nonce Replay Prevention (One-time use check)
-            $nonceKey = 'qr_nonce:'.$data['nonce'];
-            if (! Cache::add($nonceKey, true, 150)) {
-                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
-                    'user_id' => $data['user_id'],
-                    'nonce' => $data['nonce'],
-                ]);
+            if ($consumeNonce) {
+                $nonceKey = 'qr_nonce:'.$data['nonce'];
+                if (! Cache::add($nonceKey, true, 150)) {
+                    Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
+                        'user_id' => $data['user_id'],
+                        'nonce' => $data['nonce'],
+                    ]);
 
-                return self::INVALID;
+                    return self::INVALID;
+                }
             }
 
             return $data;

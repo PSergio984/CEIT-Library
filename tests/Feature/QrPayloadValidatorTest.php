@@ -2,9 +2,11 @@
 
 namespace Tests\Feature;
 
+use App\Services\AttendanceService;
 use App\Services\QrPayloadValidator;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -56,5 +58,38 @@ class QrPayloadValidatorTest extends TestCase
 
         $this->assertSame(QrPayloadValidator::INVALID, $validator->validate($stale));
         $this->assertIsArray($validator->validate($stale, enforceTimestampSkew: false));
+    }
+
+    public function test_rejects_missing_field_garbage_ciphertext_and_weak_secret(): void
+    {
+        $validator = app(QrPayloadValidator::class);
+
+        // Missing required field
+        $data = json_decode(Crypt::decryptString(json_decode($this->makeQr(), true)['encrypted']), true);
+        unset($data['nonce']);
+        $this->assertSame(QrPayloadValidator::INVALID, $validator->validate(json_encode(['encrypted' => Crypt::encryptString(json_encode($data))])));
+
+        // Undecryptable ciphertext
+        $this->assertSame(QrPayloadValidator::INVALID, $validator->validate(json_encode(['encrypted' => 'garbage'])));
+
+        // Missing or too-short HMAC secret (checked before hash verification)
+        $qr = $this->makeQr();
+        config(['app.qr_hmac_secret' => 'too-short']);
+        $this->assertSame(QrPayloadValidator::INVALID, $validator->validate($qr));
+        config(['app.qr_hmac_secret' => null]);
+        $this->assertSame(QrPayloadValidator::INVALID, $validator->validate($qr));
+    }
+
+    public function test_service_scan_for_missing_user_leaves_nonce_unspent(): void
+    {
+        $qr = $this->makeQr(['user_id' => 999999, 'nonce' => 'unspent-nonce']);
+
+        // User lookup and rate limit run before the nonce is burned, so a scan
+        // that fails at user lookup must not consume it.
+        $this->assertSame('invalid', app(AttendanceService::class)->decryptAndValidateAttendanceData($qr));
+        $this->assertFalse(Cache::has('qr_nonce:unspent-nonce'));
+
+        // The nonce is still spendable by the real validation path.
+        $this->assertIsArray(app(QrPayloadValidator::class)->validate($qr));
     }
 }
