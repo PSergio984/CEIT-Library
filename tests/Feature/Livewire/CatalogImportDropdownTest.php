@@ -14,19 +14,16 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Traits\WritesStaffWorkbook;
 
 class CatalogImportDropdownTest extends TestCase
 {
     use RefreshDatabase;
+    use WritesStaffWorkbook;
 
     protected User $admin;
-
-    /** @var list<string> */
-    private array $tempFiles = [];
 
     protected function setUp(): void
     {
@@ -36,15 +33,6 @@ class CatalogImportDropdownTest extends TestCase
 
         $this->admin = User::factory()->create(['role_id' => 3]);
         $this->actingAs($this->admin);
-    }
-
-    protected function tearDown(): void
-    {
-        foreach ($this->tempFiles as $file) {
-            @unlink($file);
-        }
-
-        parent::tearDown();
     }
 
     #[Test]
@@ -165,67 +153,32 @@ class CatalogImportDropdownTest extends TestCase
             ->assertSet('preview', null);
     }
 
-    /**
-     * A real .xlsx upload carrying the staff workbook fixture.
-     */
-    private function workbookUpload(): UploadedFile
+    #[Test]
+    public function a_failed_reupload_clears_the_previous_preview(): void
     {
-        return UploadedFile::fake()->createWithContent(
-            'catalog.xlsx',
-            file_get_contents($this->staffWorkbook()),
-        );
+        Livewire::test(CatalogImportDropdown::class)
+            ->call('openImport')
+            ->set('importFile', $this->workbookUpload())
+            ->assertSet('preview.sheets.Electrical Engineering.imported', 2)
+            ->set('importFile', UploadedFile::fake()->create('notes.txt', 10, 'text/plain'))
+            ->assertHasErrors('importFile')
+            ->assertSet('preview', null);
     }
 
-    /**
-     * Write a workbook shaped like the staff catalog file.
-     *
-     * @param  array<string, list<list<mixed>>>  $sheets
-     */
-    private function writeWorkbook(array $sheets): string
+    #[Test]
+    public function a_killed_import_job_still_deletes_the_upload_and_notifies_failure(): void
     {
-        $spreadsheet = new Spreadsheet;
-        $first = true;
+        $path = 'catalog-imports/test-workbook.xlsx';
+        Storage::disk('local')->put($path, file_get_contents($this->staffWorkbook()));
 
-        foreach ($sheets as $name => $rows) {
-            $sheet = $first ? $spreadsheet->getActiveSheet() : $spreadsheet->createSheet();
-            $first = false;
-            $sheet->setTitle($name);
+        (new ImportCatalogJob($path, $this->admin->id))->failed(new \RuntimeException('worker timed out'));
 
-            foreach ($rows as $r => $row) {
-                foreach ($row as $c => $value) {
-                    if ($value !== null) {
-                        $sheet->setCellValue([$c + 1, $r + 1], $value);
-                    }
-                }
-            }
-        }
+        $this->assertFalse(Storage::disk('local')->exists($path));
 
-        $path = sys_get_temp_dir().'/catalog-import-ux-'.uniqid().'.xlsx';
-        (new Xlsx($spreadsheet))->save($path);
-        $this->tempFiles[] = $path;
+        $notification = Notification::where('user_id', $this->admin->id)
+            ->where('type', 'catalog_import')
+            ->firstOrFail();
 
-        return $path;
-    }
-
-    private function staffWorkbook(): string
-    {
-        return $this->writeWorkbook([
-            'Electrical Engineering' => [
-                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG NUMBER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
-                [2024, 'THESIS', 'CEIT-EE-24-01', 'Smart Grid Monitoring', 2, 'Dela Cruz, Juan'],
-                [2024, 'CAPSTONE', 'CEIT-EE-24-02', 'IoT Power Meter', 0, 'Garcia, Ana'],
-            ],
-            'Civil Engineering' => [
-                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG NUMBER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
-                [2023, 'RESEARCH', 'CEIT-CE-23-01', 'Concrete Mix Study', 1, 'Torres, Jose'],
-            ],
-            'Information Technology' => [
-                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG CODE', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
-                [2025, 'THESIS', 'CEIT-IT-25-01', 'Library Kiosk System', 1, 'Engr. Santos'],
-                [2026, 'CAPSTONE', null, 'Capstone No Code', 2, 'Lee, Kevin'],
-                [2025, 'WIDGETS', 'CEIT-IT-25-99', 'Bad Type Row', 1, 'Xx, Yy'],
-                [2025, 'THESIS', 'CEIT-EE-24-01', 'Duplicate Code Paper', 1, 'Ng, Pat'],
-            ],
-        ]);
+        $this->assertStringContainsString('failed', mb_strtolower($notification->title));
     }
 }
