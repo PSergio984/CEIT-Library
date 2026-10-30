@@ -697,6 +697,9 @@ class DatabaseSeeder extends Seeder
             }
         }
 
+        // Provision numbered slots for the bag counter (idempotent)
+        $this->call(BagSlotSeeder::class);
+
         $this->command->info('PLV eLib database seeded successfully!');
         $this->command->info('Created:');
         $this->command->info('- 52 users (1 Super Admin, 51 students)');
