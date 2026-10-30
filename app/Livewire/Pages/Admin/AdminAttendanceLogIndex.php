@@ -4,7 +4,6 @@ namespace App\Livewire\Pages\Admin;
 
 use App\Models\Attendance;
 use App\Models\Role;
-use App\Traits\CreatesQrCanonicalMessage;
 use App\Traits\ProcessesAttendanceQr;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Log;
@@ -17,7 +16,7 @@ use Mary\Traits\Toast;
 #[Lazy]
 class AdminAttendanceLogIndex extends AdminComponent
 {
-    use CreatesQrCanonicalMessage, ProcessesAttendanceQr, Toast, WithPagination;
+    use ProcessesAttendanceQr, Toast, WithPagination;
 
     public function mount()
     {

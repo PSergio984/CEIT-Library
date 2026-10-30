@@ -4,19 +4,14 @@ namespace App\Services;
 
 use App\Models\Attendance;
 use App\Models\User;
-use App\Traits\CreatesQrCanonicalMessage;
 use Carbon\Carbon;
-use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class AttendanceService
 {
-    use CreatesQrCanonicalMessage;
-
     private const VALIDATION_INVALID = 'invalid';
 
     /**
@@ -25,58 +20,13 @@ class AttendanceService
     public function decryptAndValidateAttendanceData(string $qrData): array|string
     {
         try {
-            // Basic validation
-            $qrData = trim($qrData);
-            if (empty($qrData)) {
+            // Timestamp skew is intentionally not enforced (Offline Accessibility - Phase 7):
+            // downloaded/screenshot QR codes must keep working offline.
+            $data = app(QrPayloadValidator::class)->validate($qrData, enforceTimestampSkew: false, consumeNonce: false);
+
+            if ($data === QrPayloadValidator::INVALID) {
                 return self::VALIDATION_INVALID;
             }
-
-            // Standardize format: Attendance QR now uses {"encrypted": "..."} just like Borrow QR
-            $json = json_decode($qrData, true);
-            if (! $json || ! isset($json['encrypted'])) {
-                Log::warning('Attendance QR code missing encrypted wrapper');
-
-                return self::VALIDATION_INVALID;
-            }
-
-            // Decrypt the data
-            $decryptedJson = Crypt::decryptString($json['encrypted']);
-            $data = json_decode($decryptedJson, true);
-
-            // Validate HMAC secret
-            $secret = config('app.qr_hmac_secret');
-            if (! is_string($secret) || strlen($secret) < 16) {
-                Log::error('QR HMAC secret missing or insecure');
-
-                return self::VALIDATION_INVALID;
-            }
-
-            // Validate JSON structure (v7 required: user_id, hash, nonce, timestamp)
-            if (! is_array($data) || ! isset($data['user_id'], $data['hash'], $data['nonce'], $data['timestamp'])) {
-                Log::warning('Invalid QR code structure: Missing required fields', [
-                    'data_keys' => array_keys($data ?? []),
-                    'v' => $data['v'] ?? 'unknown',
-                ]);
-
-                return self::VALIDATION_INVALID;
-            }
-
-            // Verify hash for tamper protection covering entire payload
-            $dataForCanonical = $data;
-            unset($dataForCanonical['hash']);
-            $canonicalMessage = $this->createCanonicalMessage($dataForCanonical);
-            $expectedHash = hash_hmac('sha256', $canonicalMessage, $secret);
-
-            if (! hash_equals($expectedHash, $data['hash'])) {
-                Log::warning('QR code hash mismatch - possible tampering detected', [
-                    'user_id' => $data['user_id'],
-                ]);
-
-                return self::VALIDATION_INVALID;
-            }
-
-            // 1. Timestamp validation (Removed for Offline Accessibility - Phase 7)
-            // We intentionally ignore the timestamp difference to allow downloaded/screenshot QR codes to work offline.
 
             $user = User::find($data['user_id']);
             if (! $user) {
@@ -118,10 +68,6 @@ class AttendanceService
                 'user_id' => $data['user_id'],
                 'user' => $user,
             ];
-        } catch (DecryptException $e) {
-            Log::warning('QR code decryption failed', ['error' => $e->getMessage()]);
-
-            return self::VALIDATION_INVALID;
         } catch (\Exception $e) {
             Log::error('Unexpected error during QR validation', ['error' => $e->getMessage()]);
 
