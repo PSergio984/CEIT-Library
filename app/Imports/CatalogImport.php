@@ -47,6 +47,39 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
      */
     public function __invoke(string $path): array
     {
+        $report = $this->run($path);
+
+        if (collect($report['sheets'])->sum('imported') > 0) {
+            AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
+        }
+
+        return $report;
+    }
+
+    /**
+     * Dry run for the preview step: the identical pipeline inside an
+     * outer transaction that always rolls back, so the report is the
+     * real thing but nothing commits — and no index rebuild is
+     * dispatched since nothing was written.
+     *
+     * @return array{sheets: array<string, array{imported: int, errors: int, duplicates: int, generated_codes: int, error: ?string, messages: list<array{row: int|null, type: string, message: string}>}>}
+     */
+    public function preview(string $path): array
+    {
+        DB::beginTransaction();
+
+        try {
+            return $this->run($path);
+        } finally {
+            DB::rollBack();
+        }
+    }
+
+    /**
+     * @return array{sheets: array<string, array{imported: int, errors: int, duplicates: int, generated_codes: int, error: ?string, messages: list<array{row: int|null, type: string, message: string}>}>}
+     */
+    private function run(string $path): array
+    {
         AiIndexSync::withoutDispatches(function () use ($path): void {
             DB::transaction(function () use ($path): void {
                 $this->catalogCodes = array_fill_keys(
@@ -60,13 +93,7 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
             });
         });
 
-        $report = $this->report();
-
-        if (collect($report['sheets'])->sum('imported') > 0) {
-            AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
-        }
-
-        return $report;
+        return $this->report();
     }
 
     /**
