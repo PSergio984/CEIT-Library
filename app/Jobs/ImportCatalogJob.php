@@ -6,6 +6,7 @@ use App\Exports\CatalogFailureExport;
 use App\Imports\CatalogImport;
 use App\Models\User;
 use App\Services\NotificationService;
+use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -18,9 +19,16 @@ use Maatwebsite\Excel\Facades\Excel;
  * never depends on one HTTP request, then notifies the uploader with
  * the ok/skipped/error summary and deletes the workbook.
  */
-class ImportCatalogJob implements ShouldQueue
+class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
+
+    // A killed run must not be retried silently: the engine is additive,
+    // so a partial commit would resurface as duplicates on re-run.
+    public int $tries = 1;
+
+    // The ~3k-row staff workbook far outruns the 60s worker default.
+    public int $timeout = 600;
 
     /**
      * @param  string  $path  workbook path on the private `local` disk
@@ -30,6 +38,11 @@ class ImportCatalogJob implements ShouldQueue
         public string $path,
         public int $userId,
     ) {}
+
+    public function uniqueId(): string
+    {
+        return $this->userId.':'.$this->path;
+    }
 
     public function handle(): void
     {
@@ -89,6 +102,21 @@ class ImportCatalogJob implements ShouldQueue
         Excel::store(new CatalogFailureExport($failures), $path, 'local');
 
         return $path;
+    }
+
+    /**
+     * Reached when the worker kills the job (timeout, crash) — handle()
+     * never got to clean up or report, so do both here.
+     */
+    public function failed(?\Throwable $e): void
+    {
+        Storage::disk('local')->delete($this->path);
+
+        $this->notifyUploader(
+            'Catalog import failed',
+            'The import was interrupted before it finished. Upload the workbook again to retry.',
+            ['failure_report_path' => null],
+        );
     }
 
     private function notifyUploader(string $title, string $message, array $data): void
