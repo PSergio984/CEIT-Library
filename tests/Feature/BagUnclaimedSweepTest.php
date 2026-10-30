@@ -180,6 +180,10 @@ class BagUnclaimedSweepTest extends TestCase
         // Opened today -> not unclaimed yet.
         $today = $this->deposit($todayUser);
 
+        // Opened today but already pinged by the sweep -> unclaimed now.
+        $sweptUser = User::factory()->create(['role_id' => 1]);
+        $sweptToday = $this->deposit($sweptUser, ['unclaimed_notified_at' => now()]);
+
         // Claimed yesterday -> never unclaimed.
         $claimed = $this->deposit($claimedUser, [
             'created_at' => now()->subDay(),
@@ -195,6 +199,7 @@ class BagUnclaimedSweepTest extends TestCase
         // ledger (which also lists open deposits) can't produce false hits.
         Livewire::test(AdminBagCounter::class)
             ->assertSee('unclaimed-'.$overnight->id, false)
+            ->assertSee('unclaimed-'.$sweptToday->id, false)
             ->assertDontSee('unclaimed-'.$today->id, false)
             ->assertDontSee('unclaimed-'.$claimed->id, false);
     }

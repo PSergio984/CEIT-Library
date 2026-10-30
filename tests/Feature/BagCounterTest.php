@@ -8,11 +8,16 @@ use App\Models\BagDepositEvent;
 use App\Models\BagSlot;
 use App\Models\Librarian;
 use App\Models\User;
+use App\Services\BagDepositService;
 use App\Traits\CreatesQrCanonicalMessage;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
+use Livewire\Features\SupportLockedProperties\CannotUpdateLockedPropertyException;
 use Livewire\Livewire;
+use RuntimeException;
 use Tests\TestCase;
 
 class BagCounterTest extends TestCase
@@ -396,5 +401,237 @@ class BagCounterTest extends TestCase
 
         Livewire::test(AdminBagCounter::class)
             ->assertRedirect(route('student.dashboard'));
+    }
+
+    public function test_numeric_search_matches_slot_number_exactly(): void
+    {
+        $studentA = User::factory()->create(['role_id' => 1]);
+        $studentB = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $this->makeSlots(12);
+
+        BagDeposit::create([
+            'user_id' => $studentA->id,
+            'bag_slot_id' => BagSlot::where('number', 1)->first()->id,
+            'item_count' => 1,
+            'description' => 'Alpha zephyr',
+            'claim_code' => '111111',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+        BagDeposit::create([
+            'user_id' => $studentB->id,
+            'bag_slot_id' => BagSlot::where('number', 12)->first()->id,
+            'item_count' => 1,
+            'description' => 'Beta quasar',
+            'claim_code' => '222222',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        $this->actingAs($librarian);
+
+        // '1' must hit slot 1 only — a prefix LIKE would also surface slot 12.
+        Livewire::test(AdminBagCounter::class)
+            ->set('depositSearch', '1')
+            ->assertSee('Alpha zephyr')
+            ->assertDontSee('Beta quasar');
+    }
+
+    public function test_partial_numeric_search_still_matches_description(): void
+    {
+        $student = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $this->makeSlots(4);
+
+        BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => BagSlot::where('number', 3)->first()->id,
+            'item_count' => 1,
+            'description' => 'Box 112 fragile',
+            'claim_code' => '333333',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+        BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => BagSlot::where('number', 4)->first()->id,
+            'item_count' => 1,
+            'description' => 'Plain duffel',
+            'claim_code' => '444444',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        $this->actingAs($librarian);
+
+        // No slot 112 exists — the hit has to come through the description LIKE.
+        Livewire::test(AdminBagCounter::class)
+            ->set('depositSearch', '112')
+            ->assertSee('Box 112 fragile')
+            ->assertDontSee('Plain duffel');
+    }
+
+    public function test_claim_authorization_props_are_locked_against_client_writes(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $slot = BagSlot::create(['number' => 1, 'is_active' => true]);
+        $deposit = BagDeposit::create([
+            'user_id' => $depositor->id,
+            'bag_slot_id' => $slot->id,
+            'item_count' => 1,
+            'claim_code' => '555555',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        $this->actingAs($librarian);
+
+        foreach ([
+            'scannedUserId' => $depositor->id,
+            'scannedUserName' => 'Forged Name',
+            'issuedCode' => '555555',
+            'codeEntitledIds' => [$deposit->id],
+        ] as $prop => $forged) {
+            try {
+                Livewire::test(AdminBagCounter::class)->set($prop, $forged);
+                $this->fail("Locked prop {$prop} accepted a client write");
+            } catch (CannotUpdateLockedPropertyException) {
+                // locked — the client write is refused
+            }
+        }
+
+        // No forged entitlement, so the deposit is untouched.
+        $this->assertSame(BagDeposit::STATUS_OPEN, $deposit->fresh()->status);
+    }
+
+    public function test_bag_scan_uses_its_own_nonce_keyspace(): void
+    {
+        $student = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $this->actingAs($librarian);
+
+        // A QR whose nonce was already burned by an attendance/borrow scan
+        // must still resolve at the bag counter.
+        $nonce = 'shared-nonce-abc123';
+        $data = [
+            'v' => 7,
+            'user_id' => $student->id,
+            'nonce' => $nonce,
+            'timestamp' => time(),
+        ];
+        $canonicalMessage = $this->createCanonicalMessage($data);
+        $data['hash'] = hash_hmac('sha256', $canonicalMessage, config('app.qr_hmac_secret'));
+        $qr = json_encode(['encrypted' => Crypt::encryptString(json_encode($data))]);
+
+        Cache::put('qr_nonce:'.$nonce, true, 150);
+
+        Livewire::test(AdminBagCounter::class)
+            ->call('handleScan', $qr)
+            ->assertSet('scannedUserId', $student->id);
+
+        // The bag flow consumed its own key, not the shared one.
+        $this->assertTrue(Cache::has('bag_qr_nonce:'.$nonce));
+
+        // ...but a replay of the same QR at the counter is rejected.
+        Livewire::test(AdminBagCounter::class)
+            ->call('handleScan', $qr)
+            ->assertSet('scannedUserId', null);
+    }
+
+    public function test_scanner_without_duty_or_admin_access_is_rejected(): void
+    {
+        $student = User::factory()->create(['role_id' => 1]);
+        // Librarian role but no active Librarian duty record — cannot write events.
+        $offDutyLibrarian = User::factory()->create(['role_id' => 2]);
+        $slot = BagSlot::create(['number' => 1, 'is_active' => true]);
+
+        try {
+            app(BagDepositService::class)->openDeposit($student, $slot, 1, null, $offDutyLibrarian);
+            $this->fail('Off-duty librarian opened a deposit');
+        } catch (RuntimeException $e) {
+            $this->assertSame('You are not authorized to process bag scans.', $e->getMessage());
+        }
+
+        $this->assertSame(0, BagDeposit::count());
+        $this->assertSame(0, BagDepositEvent::count());
+    }
+
+    public function test_open_claim_code_unique_index_rejects_duplicates(): void
+    {
+        $student = User::factory()->create(['role_id' => 1]);
+        $this->makeSlots(2);
+
+        BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => BagSlot::where('number', 1)->first()->id,
+            'item_count' => 1,
+            'claim_code' => '424242',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        // Same code on another open deposit must fail at the database, not
+        // just at the existence pre-check.
+        try {
+            BagDeposit::create([
+                'user_id' => $student->id,
+                'bag_slot_id' => BagSlot::where('number', 2)->first()->id,
+                'item_count' => 1,
+                'claim_code' => '424242',
+                'status' => BagDeposit::STATUS_OPEN,
+            ]);
+            $this->fail('Duplicate open claim code was accepted');
+        } catch (QueryException) {
+            // partial unique index refused it
+        }
+
+        // The same code on a claimed deposit is still allowed.
+        BagDeposit::open()->first()->update(['status' => BagDeposit::STATUS_CLAIMED]);
+        BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => BagSlot::where('number', 2)->first()->id,
+            'item_count' => 1,
+            'claim_code' => '424242',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        $this->assertDatabaseCount('bag_deposits', 2);
+    }
+
+    public function test_open_slot_unique_index_rejects_double_occupancy(): void
+    {
+        $student = User::factory()->create(['role_id' => 1]);
+        $slot = BagSlot::create(['number' => 1, 'is_active' => true]);
+
+        BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => $slot->id,
+            'item_count' => 1,
+            'claim_code' => '101010',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        // A second open deposit on the same slot must fail at the database —
+        // the row lock that guards this is a no-op on SQLite.
+        try {
+            BagDeposit::create([
+                'user_id' => $student->id,
+                'bag_slot_id' => $slot->id,
+                'item_count' => 1,
+                'claim_code' => '202020',
+                'status' => BagDeposit::STATUS_OPEN,
+            ]);
+            $this->fail('Second open deposit on one slot was accepted');
+        } catch (QueryException) {
+            // partial unique index refused it
+        }
+
+        // Once claimed, the slot accepts a fresh deposit.
+        BagDeposit::sole()->update(['status' => BagDeposit::STATUS_CLAIMED]);
+        BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => $slot->id,
+            'item_count' => 1,
+            'claim_code' => '202020',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+
+        $this->assertDatabaseCount('bag_deposits', 2);
     }
 }

@@ -159,6 +159,12 @@ class BagClaimFlowsTest extends TestCase
         $notification = Notification::where('user_id', $depositor->id)->sole();
         $this->assertSame($deposit->id, $notification->data['bag_deposit_id']);
         $this->assertSame(BagDeposit::METHOD_CLAIM_CODE, $notification->data['claim_method']);
+        // The message names the person who collected, not just the method.
+        $this->assertStringContainsString('claim code', $notification->message);
+        $this->assertStringContainsString(
+            $claimant->first_name.' '.$claimant->last_name,
+            $notification->message
+        );
     }
 
     public function test_owner_claim_sends_no_notification(): void
@@ -200,6 +206,7 @@ class BagClaimFlowsTest extends TestCase
             'bag_deposit_id' => $deposit->id,
             'type' => BagDepositEvent::TYPE_TEMP_ACCESS,
             'actor_user_id' => $depositor->id,
+            'method' => BagDeposit::METHOD_OWNER_SCAN,
         ]);
 
         // Owner access — no notification.
@@ -226,6 +233,7 @@ class BagClaimFlowsTest extends TestCase
             'bag_deposit_id' => $deposit->id,
             'type' => BagDepositEvent::TYPE_TEMP_ACCESS,
             'actor_user_id' => $accessor->id,
+            'method' => BagDeposit::METHOD_CLAIM_CODE,
         ]);
         $this->assertDatabaseHas('notifications', [
             'user_id' => $depositor->id,
@@ -332,6 +340,50 @@ class BagClaimFlowsTest extends TestCase
             ->set('depositSearch', 'Marisol')
             ->assertSee('Grey backpack')
             ->assertDontSee('Red duffel');
+    }
+
+    public function test_wrong_claim_codes_lock_out_further_lookups(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1]);
+        $claimant = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $deposit = $this->openDeposit($depositor, '123456');
+
+        $this->actingAs($librarian);
+
+        $component = Livewire::test(AdminBagCounter::class)
+            ->call('handleScan', $this->makeQr($claimant));
+
+        // Five wrong codes trip the per-operator limiter.
+        for ($i = 0; $i < 5; $i++) {
+            $component->set('claimCodeInput', '999999')->call('lookupClaimCode');
+        }
+
+        // The next lookup is refused before it runs — even the right code
+        // can't grant an entitlement while locked out.
+        $component->set('claimCodeInput', '123456')
+            ->call('lookupClaimCode')
+            ->assertSet('codeEntitledIds', []);
+
+        $component->call('claimDeposit', $deposit->id);
+        $this->assertSame(BagDeposit::STATUS_OPEN, $deposit->fresh()->status);
+    }
+
+    public function test_rescue_modal_context_survives_an_active_search(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1, 'first_name' => 'Marisol']);
+        $librarian = $this->librarianOnDuty();
+        $deposit = $this->openDeposit($depositor);
+
+        $this->actingAs($librarian);
+
+        // A non-matching search empties the ledger — the modal must still
+        // resolve the deposit by id, not from the filtered list.
+        Livewire::test(AdminBagCounter::class)
+            ->set('depositSearch', 'zzzz-no-match')
+            ->call('openRescue', $deposit->id)
+            ->assertSee('Grey backpack')
+            ->assertSee('Marisol');
     }
 
     public function test_deposit_photo_stores_on_local_disk_and_is_served_staff_only(): void
