@@ -452,6 +452,20 @@ class AdminBagCounter extends AdminComponent
     }
 
     /**
+     * Open deposits carried over from a previous day — the morning's
+     * unclaimed list for next-day pickups.
+     */
+    #[Computed]
+    public function unclaimedDeposits()
+    {
+        return BagDeposit::with('user', 'slot')
+            ->open()
+            ->whereDate('created_at', '<', today())
+            ->oldest()
+            ->get();
+    }
+
+    /**
      * Deposits the scanned courier may act on: their own plus any unlocked
      * by a claim code they presented.
      */

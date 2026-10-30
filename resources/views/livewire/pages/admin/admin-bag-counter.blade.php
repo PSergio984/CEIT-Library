@@ -110,6 +110,26 @@
         </div>
 
         <div class="lg:col-span-2 space-y-4">
+            {{-- Unclaimed overnight deposits --}}
+            <x-mary-card title="Unclaimed deposits" subtitle="Still open from a previous day — resolve on next-day pickup">
+                @forelse ($this->unclaimedDeposits as $d)
+                    <div wire:key="unclaimed-{{ $d->id }}" class="flex items-center justify-between rounded-lg bg-base-200 px-3 py-2 mb-2">
+                        <div class="text-sm">
+                            <b>Slot {{ str_pad($d->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $d->user->first_name }} {{ $d->user->last_name }}
+                            <div class="text-xs opacity-60">
+                                {{ $d->item_count }} item{{ $d->item_count > 1 ? 's' : '' }} · {{ $d->description ?: 'Bag' }} · deposited {{ $d->created_at->format('M j, g:i A') }}
+                                @if ($d->unclaimed_notified_at)
+                                    · notified {{ $d->unclaimed_notified_at->format('M j, g:i A') }}
+                                @endif
+                            </div>
+                        </div>
+                        <x-mary-button wire:click="openRescue({{ $d->id }})" label="Rescue" class="btn-warning btn-xs" />
+                    </div>
+                @empty
+                    <div class="text-sm opacity-60">No unclaimed deposits.</div>
+                @endforelse
+            </x-mary-card>
+
             {{-- Slot board --}}
             <x-mary-card title="Slots" subtitle="Free slot: click to take out of service — out of service: click to restore">
                 <div class="grid grid-cols-4 gap-2">
