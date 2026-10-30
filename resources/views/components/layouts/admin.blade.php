@@ -109,7 +109,9 @@
                     <x-mary-menu-item title="Attendance" icon="o-user-group" link="{{ route('admin.attendance-logs') }}" wire:navigate.hover />
                 @endcan
 
-                <x-mary-menu-item title="Bag Counter" icon="o-archive-box" link="{{ route('admin.bag-counter') }}" wire:navigate.hover />
+                @can('librarian-or-admin-access')
+                    <x-mary-menu-item title="Bag Counter" icon="o-archive-box" link="{{ route('admin.bag-counter') }}" wire:navigate.hover />
+                @endcan
  
                 @can('view-violation-logs')
                     <x-mary-menu-item title="Violations" icon="o-exclamation-triangle" link="{{ route('admin.violation-logs') }}" wire:navigate.hover />

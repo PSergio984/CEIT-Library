@@ -65,6 +65,12 @@ class NotifyUnclaimedBagDeposits extends Command
         $notified = 0;
 
         foreach ($deposits as $deposit) {
+            // A claim landing between the query and this notification must
+            // not be told their bag is still at the counter.
+            if (! $deposit->refresh()->isOpen()) {
+                continue;
+            }
+
             try {
                 $service->notify(
                     $deposit->user,

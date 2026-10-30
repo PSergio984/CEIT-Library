@@ -136,15 +136,15 @@
                     @foreach ($this->bagSlots as $slot)
                         @php $state = $slot->state(); @endphp
                         <button wire:key="slot-{{ $slot->id }}"
-                                @if ($state === 'free')
+                                @if ($state === \App\Models\BagSlot::STATE_FREE)
                                     wire:click="toggleSlotService({{ $slot->id }})" wire:confirm="Mark slot {{ $slot->number }} out of service?"
-                                @elseif ($state === 'out_of_service')
+                                @elseif ($state === \App\Models\BagSlot::STATE_OUT_OF_SERVICE)
                                     wire:click="toggleSlotService({{ $slot->id }})" wire:confirm="Put slot {{ $slot->number }} back in service?"
                                 @endif
                                 class="rounded-md px-2 py-3 text-center text-xs font-mono transition
-                                    {{ $state === 'free' ? 'border border-dashed border-base-300 hover:border-error/60 hover:bg-error/5' : '' }}
-                                    {{ $state === 'occupied' ? 'bg-primary/15 text-primary' : '' }}
-                                    {{ $state === 'out_of_service' ? 'bg-base-300/50 line-through opacity-50 hover:opacity-80' : '' }}">
+                                    {{ $state === \App\Models\BagSlot::STATE_FREE ? 'border border-dashed border-base-300 hover:border-error/60 hover:bg-error/5' : '' }}
+                                    {{ $state === \App\Models\BagSlot::STATE_OCCUPIED ? 'bg-primary/15 text-primary' : '' }}
+                                    {{ $state === \App\Models\BagSlot::STATE_OUT_OF_SERVICE ? 'bg-base-300/50 line-through opacity-50 hover:opacity-80' : '' }}">
                             {{ str_pad($slot->number, 2, '0', STR_PAD_LEFT) }}
                         </button>
                     @endforeach
@@ -186,7 +186,7 @@
 
     {{-- ============================ RESCUE MODAL ============================ --}}
     <x-mary-modal wire:model="rescueModal" title="Rescue release — no QR, no code" class="backdrop-blur">
-        @php $rescueDeposit = $this->openDeposits->firstWhere('id', $rescueDepositId); @endphp
+        @php $rescueDeposit = $this->rescueDeposit; @endphp
         <div class="p-4 space-y-4">
             @if ($rescueDeposit)
                 <div class="rounded-lg bg-base-200 p-3 text-sm">

@@ -14,8 +14,6 @@ use RuntimeException;
 
 class BagDepositService
 {
-    public const INVALID = QrPayloadValidator::INVALID;
-
     private const CLAIM_CODE_MAX_ATTEMPTS = 5;
 
     /**

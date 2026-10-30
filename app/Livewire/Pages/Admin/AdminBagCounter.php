@@ -7,10 +7,13 @@ use App\Models\BagDepositEvent;
 use App\Models\BagSlot;
 use App\Models\User;
 use App\Services\BagDepositService;
+use App\Services\QrPayloadValidator;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Computed;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Title;
 use Livewire\WithFileUploads;
 use Mary\Traits\Toast;
@@ -22,8 +25,12 @@ class AdminBagCounter extends AdminComponent
     use Toast;
     use WithFileUploads;
 
+    // Locked: these props carry claim authorization state — the client must
+    // never write them directly (a forged scan/entitlement records a clean claim).
+    #[Locked]
     public ?int $scannedUserId = null;
 
+    #[Locked]
     public ?string $scannedUserName = null;
 
     // QR scanner modal
@@ -42,12 +49,14 @@ class AdminBagCounter extends AdminComponent
 
     public $formPhoto = null;
 
+    #[Locked]
     public ?string $issuedCode = null;
 
     // Third-party claim: six-digit codes scanned couriers may present
     public string $claimCodeInput = '';
 
     /** @var array<int> */
+    #[Locked]
     public array $codeEntitledIds = [];
 
     // Ledger search + staff rescue lookup
@@ -106,7 +115,7 @@ class AdminBagCounter extends AdminComponent
 
             $user = $service->resolveScannedUser($data);
 
-            if ($user === BagDepositService::INVALID) {
+            if ($user === QrPayloadValidator::INVALID) {
                 $this->error('Invalid QR code. This could be due to tampering, incorrect format, or a replayed scan.', 'Invalid QR Code');
 
                 return;
@@ -120,7 +129,7 @@ class AdminBagCounter extends AdminComponent
 
             $this->success("{$this->scannedUserName} verified by QR", 'Courier scanned');
             $this->closeQrModal();
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             Log::error('Bag counter QR scan error: '.$e->getMessage(), ['exception' => $e]);
             $this->error('An error occurred while processing the QR code', 'System Error');
         } finally {
@@ -193,6 +202,13 @@ class AdminBagCounter extends AdminComponent
             $this->error($e->getMessage(), 'Deposit failed');
 
             return;
+        } catch (\Throwable $e) {
+            // Never leave a stored photo behind on a failed deposit.
+            if ($photoPath) {
+                Storage::disk('local')->delete($photoPath);
+            }
+
+            throw $e;
         }
 
         $this->issuedCode = $deposit->claim_code;
@@ -218,6 +234,14 @@ class AdminBagCounter extends AdminComponent
             return;
         }
 
+        // Six digits is a small space — cap wrong-code attempts per operator.
+        $rateKey = 'bag-claim-code:'.auth()->id();
+        if (RateLimiter::tooManyAttempts($rateKey, 5)) {
+            $this->error('Too many wrong codes — try again in a minute', 'Bad code');
+
+            return;
+        }
+
         $code = trim($this->claimCodeInput);
 
         if (! preg_match('/^\d{6}$/', $code)) {
@@ -229,10 +253,13 @@ class AdminBagCounter extends AdminComponent
         $deposit = app(BagDepositService::class)->findOpenDepositByCode($code);
 
         if (! $deposit) {
+            RateLimiter::hit($rateKey, 60);
             $this->error('No open deposit matches that code', 'Bad code');
 
             return;
         }
+
+        RateLimiter::clear($rateKey);
 
         if (! in_array($deposit->id, $this->codeEntitledIds)) {
             $this->codeEntitledIds[] = $deposit->id;
@@ -305,7 +332,7 @@ class AdminBagCounter extends AdminComponent
             return;
         }
 
-        [, $error] = $this->claimAuthorization($deposit);
+        [$method, $error] = $this->claimAuthorization($deposit);
 
         if ($error) {
             $this->error($error, 'Wrong courier');
@@ -314,7 +341,7 @@ class AdminBagCounter extends AdminComponent
         }
 
         try {
-            app(BagDepositService::class)->tempAccess($deposit, User::findOrFail($this->scannedUserId), auth()->user());
+            app(BagDepositService::class)->tempAccess($deposit, User::findOrFail($this->scannedUserId), auth()->user(), $method);
         } catch (RuntimeException $e) {
             $this->error($e->getMessage(), 'Access failed');
 
@@ -436,15 +463,22 @@ class AdminBagCounter extends AdminComponent
     public function openDeposits()
     {
         $search = trim($this->depositSearch);
+        $numeric = $search !== '' && ctype_digit($search);
 
         return BagDeposit::with('user', 'slot')
             ->open()
-            ->when($search !== '', function ($query) use ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('description', 'like', "%{$search}%")
-                        ->orWhereHas('slot', fn ($s) => $s->where('number', 'like', "%{$search}%"))
-                        ->orWhereHas('user', fn ($u) => $u->where('first_name', 'like', "%{$search}%")
-                            ->orWhere('last_name', 'like', "%{$search}%"));
+            ->when($search !== '', function ($query) use ($search, $numeric) {
+                $query->where(function ($q) use ($search, $numeric) {
+                    $q->where('description', 'like', "%{$search}%");
+
+                    // Postgres can't LIKE an integer column — an all-digit
+                    // search matches the slot number exactly instead.
+                    if ($numeric) {
+                        $q->orWhereHas('slot', fn ($s) => $s->where('number', (int) $search));
+                    }
+
+                    $q->orWhereHas('user', fn ($u) => $u->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%"));
                 });
             })
             ->latest()
@@ -452,15 +486,16 @@ class AdminBagCounter extends AdminComponent
     }
 
     /**
-     * Open deposits carried over from a previous day — the morning's
-     * unclaimed list for next-day pickups.
+     * Open deposits carried over from a previous day, plus any the sweep has
+     * already pinged — the morning's unclaimed list for next-day pickups.
      */
     #[Computed]
     public function unclaimedDeposits()
     {
         return BagDeposit::with('user', 'slot')
             ->open()
-            ->whereDate('created_at', '<', today())
+            ->where(fn ($q) => $q->whereDate('created_at', '<', today())
+                ->orWhereNotNull('unclaimed_notified_at'))
             ->oldest()
             ->get();
     }
@@ -501,6 +536,16 @@ class AdminBagCounter extends AdminComponent
     public function auditDeposit()
     {
         return $this->auditDepositId ? BagDeposit::with('user', 'slot')->find($this->auditDepositId) : null;
+    }
+
+    /**
+     * The deposit shown in the rescue modal — looked up by id so an active
+     * ledger search can't hide it.
+     */
+    #[Computed]
+    public function rescueDeposit()
+    {
+        return $this->rescueDepositId ? BagDeposit::with('user', 'slot')->find($this->rescueDepositId) : null;
     }
 
     #[Computed]
