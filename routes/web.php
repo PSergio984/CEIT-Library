@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BagDepositPhotoController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\QrCodeDownloadController;
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
@@ -193,6 +194,8 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/bag-counter', AdminBagCounter::class)
             ->middleware('throttle:qr-scanning')
             ->name('bag-counter');
+        Route::get('/bag-deposits/{bagDeposit}/photo', BagDepositPhotoController::class)
+            ->name('bag-deposits.photo');
 
         // Violation logs (Librarian and Admin can view)
         Route::get('/violations', AdminViolationLogIndex::class)

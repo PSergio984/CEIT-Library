@@ -28,17 +28,46 @@
                         </div>
                     </div>
 
+                    {{-- Third-party claim code: courier presents a code shared by the depositor --}}
+                    <div class="mt-3 flex items-end gap-2">
+                        <div class="grow">
+                            <x-mary-input label="Claim code (for someone else's deposit)" wire:model="claimCodeInput"
+                                          placeholder="6-digit code" maxlength="6" inputmode="numeric" class="font-mono" />
+                        </div>
+                        <x-mary-button wire:click="lookupClaimCode" label="Apply code" class="btn-outline btn-sm" />
+                    </div>
+
                     <div class="mt-4 space-y-2">
-                        @forelse ($this->scannedUserDeposits as $d)
-                            <div wire:key="scanned-deposit-{{ $d->id }}" class="flex items-center justify-between rounded-lg bg-base-200 px-3 py-2">
-                                <div class="text-sm">
-                                    <b>Slot {{ str_pad($d->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $d->description ?: 'Bag' }}
-                                    <div class="text-xs opacity-60">
-                                        {{ $d->item_count }} item{{ $d->item_count > 1 ? 's' : '' }} · code <span class="font-mono">{{ $d->claim_code }}</span> · {{ $d->created_at->format('g:i A') }}
+                        @forelse ($this->claimableDeposits as $d)
+                            @php $isOwn = $d->user_id === $scannedUserId; @endphp
+                            <div wire:key="scanned-deposit-{{ $d->id }}" class="flex items-center justify-between gap-3 rounded-lg bg-base-200 px-3 py-2">
+                                <div class="flex items-center gap-3 text-sm">
+                                    @if ($d->photo_path)
+                                        <img src="{{ route('admin.bag-deposits.photo', $d) }}" alt="Deposit item photo"
+                                             class="h-12 w-12 rounded object-cover" />
+                                    @endif
+                                    <div>
+                                        <b>Slot {{ str_pad($d->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $d->description ?: 'Bag' }}
+                                        @unless ($isOwn)
+                                            <x-mary-badge value="delegated" class="badge-warning badge-xs" />
+                                        @endunless
+                                        <div class="text-xs opacity-60">
+                                            {{ $d->item_count }} item{{ $d->item_count > 1 ? 's' : '' }}
+                                            @if ($isOwn)
+                                                · code <span class="font-mono">{{ $d->claim_code }}</span>
+                                            @else
+                                                · {{ $d->user->first_name }} {{ $d->user->last_name }}'s deposit
+                                            @endif
+                                            · {{ $d->created_at->format('g:i A') }}
+                                        </div>
                                     </div>
                                 </div>
-                                <x-mary-button wire:click="claimDeposit({{ $d->id }})" label="Claim" class="btn-primary btn-xs"
-                                               wire:confirm="Release this deposit to {{ $scannedUserName }}?" />
+                                <div class="flex items-center gap-1">
+                                    <x-mary-button wire:click="tempAccess({{ $d->id }})" label="Temp" class="btn-ghost btn-xs"
+                                                   tooltip="Open the slot without claiming" />
+                                    <x-mary-button wire:click="claimDeposit({{ $d->id }})" label="Claim" class="btn-primary btn-xs"
+                                                   wire:confirm="Release this deposit to {{ $scannedUserName }}?" />
+                                </div>
                             </div>
                         @empty
                             <div class="text-sm opacity-60">No open deposits for this user.</div>
@@ -52,13 +81,16 @@
             </x-mary-card>
 
             {{-- Open deposits ledger --}}
-            <x-mary-card title="Open deposits" subtitle="Every bag still on the counter">
+            <x-mary-card title="Open deposits" subtitle="Every bag still on the counter — rescue lookup searches here">
+                <x-mary-input wire:model.live.debounce.300ms="depositSearch" placeholder="Search depositor, slot, or description…"
+                              icon="o-magnifying-glass" clearable class="mb-3" />
                 @php
                     $headers = [
                         ['key' => 'slot', 'label' => 'Slot'],
                         ['key' => 'depositor', 'label' => 'Depositor'],
                         ['key' => 'items', 'label' => 'Items'],
                         ['key' => 'since', 'label' => 'Since'],
+                        ['key' => 'actions', 'label' => ''],
                     ];
                 @endphp
                 <x-mary-table :headers="$headers" :rows="$this->openDeposits" striped
@@ -67,6 +99,12 @@
                     @scope('cell_depositor', $d) {{ $d->user->first_name }} {{ $d->user->last_name }} @endscope
                     @scope('cell_items', $d) {{ $d->item_count }} — {{ $d->description ?: 'Bag' }} @endscope
                     @scope('cell_since', $d) {{ $d->created_at->format('g:i A') }} @endscope
+                    @scope('cell_actions', $d)
+                        <div class="flex items-center justify-end gap-1">
+                            <x-mary-button wire:click="openAudit({{ $d->id }})" icon="o-clipboard-document-list" class="btn-ghost btn-xs" tooltip="Audit trail" />
+                            <x-mary-button wire:click="openRescue({{ $d->id }})" label="Rescue" class="btn-warning btn-xs" />
+                        </div>
+                    @endscope
                 </x-mary-table>
             </x-mary-card>
         </div>
@@ -116,12 +154,112 @@
                                placeholder="Pick a free slot" />
                 <x-mary-input label="Item count" type="number" min="1" wire:model="formItemCount" />
                 <x-mary-textarea label="Description (optional)" wire:model="formDescription" placeholder="e.g. 2 boxes, 1 backpack" rows="2" />
+                <x-mary-file label="Item photo (optional)" wire:model="formPhoto" accept="image/*"
+                             hint="Staff-only — helps identify ambiguous or valuable bags" />
             </div>
             <div class="flex justify-end gap-2 px-4 pb-4">
                 <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.depositModal = false" />
                 <x-mary-button wire:click="submitDeposit" label="Record deposit" class="btn-primary" />
             </div>
         @endif
+    </x-mary-modal>
+
+    {{-- ============================ RESCUE MODAL ============================ --}}
+    <x-mary-modal wire:model="rescueModal" title="Rescue release — no QR, no code" class="backdrop-blur">
+        @php $rescueDeposit = $this->openDeposits->firstWhere('id', $rescueDepositId); @endphp
+        <div class="p-4 space-y-4">
+            @if ($rescueDeposit)
+                <div class="rounded-lg bg-base-200 p-3 text-sm">
+                    <div class="flex items-center gap-3">
+                        @if ($rescueDeposit->photo_path)
+                            <img src="{{ route('admin.bag-deposits.photo', $rescueDeposit) }}" alt="Deposit item photo"
+                                 class="h-16 w-16 rounded object-cover" />
+                        @endif
+                        <div>
+                            <b>Slot {{ str_pad($rescueDeposit->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $rescueDeposit->description ?: 'Bag' }}
+                            <div class="text-xs opacity-60">
+                                {{ $rescueDeposit->item_count }} item{{ $rescueDeposit->item_count > 1 ? 's' : '' }} ·
+                                {{ $rescueDeposit->user->first_name }} {{ $rescueDeposit->user->last_name }} ·
+                                deposited {{ $rescueDeposit->created_at->format('g:i A') }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <div class="alert alert-warning">
+                <x-mary-icon name="o-exclamation-triangle" class="w-6 h-6 shrink-0" />
+                <span class="text-sm">Releasing without QR or claim code. Verify the claimant's physical ID and record why — this release is flagged in the audit trail.</span>
+            </div>
+
+            <x-mary-textarea label="Written note (required)" wire:model="rescueNote" rows="3"
+                             placeholder="Who claimed, which ID was shown, why there is no QR/code…" />
+            <x-mary-checkbox label="I verified the claimant's physical ID" wire:model="rescueIdVerified" class="checkbox-warning" />
+        </div>
+        <x-slot:actions>
+            <x-mary-button label="Cancel" class="btn-ghost" @click="$wire.rescueModal = false" />
+            <x-mary-button wire:click="submitRescue" label="Release (flagged)" class="btn-warning" />
+        </x-slot:actions>
+    </x-mary-modal>
+
+    {{-- ============================ AUDIT TRAIL MODAL ============================ --}}
+    <x-mary-modal wire:model="auditModal" title="Deposit audit trail" class="backdrop-blur" box-class="max-w-xl">
+        @php $ad = $this->auditDeposit; @endphp
+        <div class="p-4 space-y-3">
+            @if ($ad)
+                <div class="flex items-center gap-3 rounded-lg bg-base-200 p-3 text-sm">
+                    @if ($ad->photo_path)
+                        <img src="{{ route('admin.bag-deposits.photo', $ad) }}" alt="Deposit item photo"
+                             class="h-16 w-16 rounded object-cover" />
+                    @endif
+                    <div>
+                        <b>Slot {{ str_pad($ad->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $ad->description ?: 'Bag' }}
+                        <div class="text-xs opacity-60">
+                            {{ $ad->user->first_name }} {{ $ad->user->last_name }} ·
+                            <span class="badge badge-xs {{ $ad->status === 'open' ? 'badge-info' : 'badge-ghost' }}">{{ $ad->status }}</span>
+                            @if ($ad->claim_method) · via {{ $ad->claim_method }} @endif
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <ul class="space-y-2">
+                @forelse ($this->auditEvents as $event)
+                    @php $isRescue = $event->method === 'rescue_lookup'; @endphp
+                    <li wire:key="audit-event-{{ $event->id }}"
+                        class="rounded-lg px-3 py-2 text-sm {{ $isRescue ? 'border border-warning bg-warning/10' : 'bg-base-200' }}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                @if ($isRescue)
+                                    <x-mary-badge value="RESCUE" class="badge-warning badge-xs" />
+                                @endif
+                                <span class="font-semibold capitalize">{{ str_replace('_', ' ', $event->type) }}</span>
+                                @if ($event->method)
+                                    <span class="font-mono text-xs opacity-70">{{ $event->method }}</span>
+                                @endif
+                                @if ($event->id_verified)
+                                    <x-mary-badge value="ID verified" class="badge-success badge-xs" />
+                                @endif
+                            </div>
+                            <span class="text-xs opacity-60">{{ $event->created_at->format('M j, g:i A') }}</span>
+                        </div>
+                        <div class="mt-1 text-xs opacity-70">
+                            Actor: {{ $event->actor ? $event->actor->first_name.' '.$event->actor->last_name : '—' }}
+                            · By: {{ $event->scannedByLibrarian?->user?->first_name ?? $event->scannedByAdmin?->first_name ?? '—' }}
+                            {{ $event->scannedByLibrarian?->user?->last_name ?? $event->scannedByAdmin?->last_name ?? '' }}
+                        </div>
+                        @if ($event->note)
+                            <div class="mt-1 text-xs italic">“{{ $event->note }}”</div>
+                        @endif
+                    </li>
+                @empty
+                    <li class="text-sm opacity-60">No events recorded.</li>
+                @endforelse
+            </ul>
+        </div>
+        <x-slot:actions>
+            <x-mary-button label="Close" @click="$wire.auditModal = false" />
+        </x-slot:actions>
     </x-mary-modal>
 
     {{-- ============================ QR SCANNER MODAL ============================ --}}
