@@ -60,8 +60,10 @@ class CatalogImportDropdown extends AdminComponent
     {
         Gate::authorize('manage-academic-papers');
 
-        $this->validate();
+        // Clear first: a failed upload must not leave the previous
+        // file's preview in place to be committed instead.
         $this->preview = null;
+        $this->validate();
 
         try {
             $this->preview = (new CatalogImport)->preview($this->importFile->getRealPath());
@@ -94,12 +96,16 @@ class CatalogImportDropdown extends AdminComponent
 
         $path = $this->importFile->store('catalog-imports', 'local');
 
+        // The stored copy is deleted by the job; drop the Livewire temp
+        // original now rather than waiting on framework cleanup.
+        $this->importFile->delete();
+
         ImportCatalogJob::dispatch($path, (int) Auth::id());
 
         $this->resetImport();
         $this->showImportModal = false;
 
-        $this->success('The import is running in the background — you will be notified when it finishes.', 'Import Queued');
+        $this->success('Import Queued', 'The import is running in the background — you will be notified when it finishes.');
     }
 
     /**
@@ -137,7 +143,15 @@ class CatalogImportDropdown extends AdminComponent
         }
 
         $import = new CatalogImport;
-        $import->preview($this->importFile->getRealPath());
+
+        try {
+            $import->preview($this->importFile->getRealPath());
+        } catch (\Throwable) {
+            $this->error('The workbook could not be read. Upload a valid .xlsx catalog file.');
+
+            return null;
+        }
+
         $failures = $import->failures();
 
         if (array_sum(array_map('count', $failures)) === 0) {
