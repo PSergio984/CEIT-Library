@@ -37,6 +37,7 @@
                     ['id' => 'user_activity', 'name' => 'User Activity'],
                     ['id' => 'violation', 'name' => 'Violations'],
                     ['id' => 'role_changed', 'name' => 'Role Changed'],
+                    ['id' => 'catalog_import', 'name' => 'Catalog Import'],
                 ]" option-value="id" option-label="name" />
             </div>
 
