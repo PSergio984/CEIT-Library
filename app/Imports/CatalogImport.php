@@ -66,12 +66,20 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
      */
     public function preview(string $path): array
     {
+        // A ~3k-row dry run inside one request can outrun the default
+        // execution cap; the held write transaction (a DB-wide writer
+        // lock under SQLite) for that window is an accepted admin-only
+        // cost.
+        set_time_limit(300);
+
         DB::beginTransaction();
 
         try {
             return $this->run($path);
         } finally {
-            DB::rollBack();
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
         }
     }
 
