@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Exports\CatalogFailureExport;
 use App\Imports\CatalogImport;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -9,6 +10,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
 
 /**
  * Queued catalog import: re-parses the stored upload so a large file
@@ -31,7 +34,8 @@ class ImportCatalogJob implements ShouldQueue
     public function handle(): void
     {
         try {
-            $report = (new CatalogImport)(Storage::disk('local')->path($this->path));
+            $import = new CatalogImport;
+            $report = $import(Storage::disk('local')->path($this->path));
 
             $sheets = collect($report['sheets']);
             $imported = (int) $sheets->sum('imported');
@@ -49,8 +53,7 @@ class ImportCatalogJob implements ShouldQueue
                         'generated_codes' => $s['generated_codes'],
                         'error' => $s['error'],
                     ])->all(),
-                    // stub: the failure-report file lands here in #81
-                    'failure_report_path' => null,
+                    'failure_report_path' => $this->storeFailureReport($import),
                 ],
             );
         } catch (\Throwable $e) {
@@ -67,6 +70,25 @@ class ImportCatalogJob implements ShouldQueue
         } finally {
             Storage::disk('local')->delete($this->path);
         }
+    }
+
+    /**
+     * Persist the failed rows as a downloadable catalog-format workbook
+     * on the private disk; null when nothing failed. The file stays
+     * under catalog-imports/failures for the admin-gated download route.
+     */
+    private function storeFailureReport(CatalogImport $import): ?string
+    {
+        $failures = $import->failures();
+
+        if (array_sum(array_map('count', $failures)) === 0) {
+            return null;
+        }
+
+        $path = 'catalog-imports/failures/'.Str::uuid().'.xlsx';
+        Excel::store(new CatalogFailureExport($failures), $path, 'local');
+
+        return $path;
     }
 
     private function notifyUploader(string $title, string $message, array $data): void

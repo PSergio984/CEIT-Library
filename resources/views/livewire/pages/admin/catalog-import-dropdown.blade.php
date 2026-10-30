@@ -3,7 +3,10 @@
     <x-mary-dropdown label="Import / Export" icon="o-chevron-down" class="btn-outline" no-x-anchor right>
         <x-mary-menu-item title="Import from Excel" icon="o-arrow-up-tray" wire:click="openImport"
             x-on:click="open = false" />
-        {{-- #81: "Download blank template" and "Export catalog" menu items go here --}}
+        <x-mary-menu-item title="Download blank template" icon="o-document-arrow-down"
+            wire:click="downloadTemplate" x-on:click="open = false" />
+        <x-mary-menu-item title="Export catalog" icon="o-arrow-down-tray" wire:click="exportCatalog"
+            x-on:click="open = false" />
     </x-mary-dropdown>
 
     <x-mary-modal wire:model="showImportModal" title="Import Catalog from Excel" class="backdrop-blur-sm"
@@ -111,9 +114,11 @@
         </div>
 
         <x-slot:actions>
-            {{-- stub: #81 wires this to the failure-report export --}}
-            <button class="btn btn-ghost btn-sm" disabled title="Available in a later update">Download failure
-                report</button>
+            <button wire:click="downloadFailureReport" class="btn btn-ghost btn-sm"
+                @disabled(! $preview || $sheets->sum('errors') === 0)
+                wire:loading.attr="disabled" wire:target="downloadFailureReport">
+                Download failure report
+            </button>
             <div class="flex-1"></div>
             <button wire:click="closeImportModal" class="btn btn-ghost">Cancel</button>
             <button wire:click="confirmImport" class="btn btn-primary gap-2" @disabled(! $preview)

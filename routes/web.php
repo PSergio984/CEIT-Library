@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CatalogImportFailureReportController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\QrCodeDownloadController;
 use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
@@ -173,6 +174,9 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::middleware('can:manage-academic-papers')->group(function () {
             Route::get('/academic-papers/create', CreateAcademicPaper::class)->name('academic-paper.create');
             Route::get('/academic-papers/{academicPaper}/edit', EditAcademicPaper::class)->name('academic-paper.edit');
+            Route::get('/academic-papers/catalog/failure-report/{file}', [CatalogImportFailureReportController::class, 'download'])
+                ->where('file', '[A-Za-z0-9_-]+\.xlsx')
+                ->name('catalog-import.failure-report');
         });
 
         // Advisers & Deans management (Super Admin only)

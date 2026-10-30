@@ -2,6 +2,9 @@
 
 namespace App\Livewire\Pages\Admin;
 
+use App\Exports\CatalogExport;
+use App\Exports\CatalogFailureExport;
+use App\Exports\CatalogTemplateExport;
 use App\Imports\CatalogImport;
 use App\Jobs\ImportCatalogJob;
 use Illuminate\Support\Facades\Auth;
@@ -9,7 +12,9 @@ use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
+use Maatwebsite\Excel\Facades\Excel;
 use Mary\Traits\Toast;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Import/Export dropdown on the Academic Papers page. Import runs two
@@ -95,6 +100,53 @@ class CatalogImportDropdown extends AdminComponent
         $this->showImportModal = false;
 
         $this->success('The import is running in the background — you will be notified when it finishes.', 'Import Queued');
+    }
+
+    /**
+     * Blank staff workbook: three department sheets, headers only.
+     */
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        Gate::authorize('manage-academic-papers');
+
+        return Excel::download(new CatalogTemplateExport, 'ceit-catalog-template.xlsx');
+    }
+
+    /**
+     * Full catalog in the staff workbook format; a freshly exported
+     * file re-imports cleanly (every row is a known duplicate).
+     */
+    public function exportCatalog(): BinaryFileResponse
+    {
+        Gate::authorize('manage-academic-papers');
+
+        return Excel::download(new CatalogExport, 'ceit-catalog-export.xlsx');
+    }
+
+    /**
+     * Failed rows of the previewed upload, re-run as a dry run and
+     * written back in the catalog format so they can be fixed and
+     * re-imported directly.
+     */
+    public function downloadFailureReport(): ?BinaryFileResponse
+    {
+        Gate::authorize('manage-academic-papers');
+
+        if (! $this->importFile) {
+            return null;
+        }
+
+        $import = new CatalogImport;
+        $import->preview($this->importFile->getRealPath());
+        $failures = $import->failures();
+
+        if (array_sum(array_map('count', $failures)) === 0) {
+            $this->info('No failed rows to report.');
+
+            return null;
+        }
+
+        return Excel::download(new CatalogFailureExport($failures), 'catalog-import-failures.xlsx');
     }
 
     public function closeImportModal(): void

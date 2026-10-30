@@ -27,7 +27,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
 {
     /** Department sheets of the staff workbook, keyed to app department names. */
-    private const DEPARTMENT_SHEETS = [
+    public const DEPARTMENT_SHEETS = [
         'Electrical Engineering',
         'Civil Engineering',
         'Information Technology',
@@ -113,6 +113,25 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
     public function onUnknownSheet(string|int $sheetName): void
     {
         $this->missingSheets[] = (string) $sheetName;
+    }
+
+    /**
+     * Rows that failed validation, keyed by department sheet, in the
+     * canonical shape CatalogFailureExport writes back out (#81).
+     *
+     * @return array<string, list<array{row: int, reason: string, values: array<string, mixed>}>>
+     */
+    public function failures(): array
+    {
+        $failures = [];
+
+        foreach (self::DEPARTMENT_SHEETS as $name) {
+            $failures[$name] = isset($this->sheetImports[$name]) && ! in_array($name, $this->missingSheets)
+                ? $this->sheetImports[$name]->failures()
+                : [];
+        }
+
+        return $failures;
     }
 
     /**

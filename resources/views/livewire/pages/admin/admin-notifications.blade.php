@@ -117,6 +117,14 @@
                                         New
                                     </div>
                                 @endif
+
+                                @if($notification->type === 'catalog_import' && ($notification->data['failure_report_path'] ?? null))
+                                    <a href="{{ route('admin.catalog-import.failure-report', basename($notification->data['failure_report_path'])) }}"
+                                        class="btn btn-ghost btn-xs text-info gap-1">
+                                        <x-mary-icon name="o-arrow-down-tray" class="w-3.5 h-3.5" />
+                                        Download failure report
+                                    </a>
+                                @endif
                             </div>
                         </div>
 
