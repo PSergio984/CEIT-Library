@@ -7,7 +7,6 @@ use App\Models\BagDepositEvent;
 use App\Models\BagSlot;
 use App\Models\User;
 use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
@@ -15,7 +14,7 @@ use RuntimeException;
 
 class BagDepositService
 {
-    public const INVALID = 'invalid';
+    public const INVALID = QrPayloadValidator::INVALID;
 
     private const CLAIM_CODE_MAX_ATTEMPTS = 5;
 
@@ -31,40 +30,12 @@ class BagDepositService
         $data = app(QrPayloadValidator::class)->validate($qrData, enforceTimestampSkew: false, consumeNonce: false);
 
         if ($data === QrPayloadValidator::INVALID) {
-            return self::INVALID;
+            return QrPayloadValidator::INVALID;
         }
 
-        $user = User::find($data['user_id']);
-        if (! $user) {
-            Log::warning('User not found during bag counter QR scan', ['user_id' => $data['user_id']]);
-
-            return self::INVALID;
-        }
-
-        // Check rate limiting per user
-        $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
-        $recentScans = Cache::get($rateLimitKey, 0);
-
-        if ($recentScans >= 60) {
-            Log::warning('Rate limit exceeded for user', ['user_id' => $data['user_id']]);
-
-            return self::INVALID;
-        }
-
-        // Nonce Replay Prevention (One-time use check)
-        $nonceKey = 'qr_nonce:'.$data['nonce'];
-        if (! Cache::add($nonceKey, true, 150)) {
-            Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
-                'user_id' => $data['user_id'],
-                'nonce' => $data['nonce'],
-            ]);
-
-            return self::INVALID;
-        }
-
-        Cache::put($rateLimitKey, $recentScans + 1, 60);
-
-        return $user;
+        // Flow-scoped nonce key: a QR consumed by attendance or borrow scans
+        // must not be rejected here as a replay.
+        return app(QrPayloadValidator::class)->resolveUser($data, 'bag_qr_nonce:');
     }
 
     /**
@@ -110,6 +81,12 @@ class BagDepositService
                     return $deposit;
                 });
             } catch (QueryException $e) {
+                // Another deposit won this slot's open-deposit index between
+                // the availability check and the insert.
+                if ($this->isSlotOccupiedCollision($e)) {
+                    throw new RuntimeException('That slot can no longer receive deposits.', 0, $e);
+                }
+
                 if (! $this->isClaimCodeCollision($e) || $attempt === self::CLAIM_CODE_MAX_ATTEMPTS - 1) {
                     throw $e;
                 }
@@ -141,18 +118,23 @@ class BagDepositService
         [$scannedBy, $scannedByAdminId] = $this->scannerIdentity($scanner);
 
         $deposit = DB::transaction(function () use ($deposit, $claimant, $method, $note, $idVerified, $scannedBy, $scannedByAdminId) {
-            $deposit = BagDeposit::lockForUpdate()->find($deposit->id);
+            // Conditional update, not read-then-save: the status predicate is
+            // evaluated inside the UPDATE itself, so a second claim can never
+            // win even where row locking is unavailable (SQLite).
+            $updated = BagDeposit::where('id', $deposit->id)
+                ->where('status', BagDeposit::STATUS_OPEN)
+                ->update([
+                    'status' => BagDeposit::STATUS_CLAIMED,
+                    'claimed_by' => $claimant->id,
+                    'claimed_at' => now(),
+                    'claim_method' => $method,
+                ]);
 
-            if (! $deposit || ! $deposit->isOpen()) {
+            if ($updated === 0) {
                 throw new RuntimeException('That deposit is no longer open.');
             }
 
-            $deposit->fill([
-                'status' => BagDeposit::STATUS_CLAIMED,
-                'claimed_by' => $claimant->id,
-                'claimed_at' => now(),
-                'claim_method' => $method,
-            ])->save();
+            $deposit = BagDeposit::findOrFail($deposit->id);
 
             $this->recordEvent(
                 $deposit,
@@ -169,11 +151,15 @@ class BagDepositService
         });
 
         if ($claimant->id !== $deposit->user_id || $method === BagDeposit::METHOD_RESCUE_LOOKUP) {
+            $via = $method === BagDeposit::METHOD_CLAIM_CODE
+                ? "claim code to {$claimant->first_name} {$claimant->last_name}"
+                : $this->claimMethodLabel($method);
+
             $this->notifyDepositor(
                 $deposit,
                 'bag_claim',
                 'Bag deposit claimed',
-                "Your bag deposit in slot {$deposit->slot->number} was released via {$this->claimMethodLabel($method)}.",
+                "Your bag deposit in slot {$deposit->slot->number} was released via {$via}.",
                 ['bag_deposit_id' => $deposit->id, 'claim_method' => $method],
             );
         }
@@ -186,21 +172,28 @@ class BagDepositService
      * closing the deposit. The depositor is notified when the accessor is
      * someone else.
      */
-    public function tempAccess(BagDeposit $deposit, User $accessor, User $scanner): BagDepositEvent
+    public function tempAccess(BagDeposit $deposit, User $accessor, User $scanner, ?string $method = null): BagDepositEvent
     {
-        if (! $deposit->isOpen()) {
-            throw new RuntimeException('That deposit is no longer open.');
-        }
-
         [$scannedBy, $scannedByAdminId] = $this->scannerIdentity($scanner);
 
-        $event = $this->recordEvent(
-            $deposit,
-            BagDepositEvent::TYPE_TEMP_ACCESS,
-            $accessor->id,
-            $scannedBy,
-            $scannedByAdminId,
-        );
+        [$deposit, $event] = DB::transaction(function () use ($deposit, $accessor, $method, $scannedBy, $scannedByAdminId) {
+            $deposit = BagDeposit::lockForUpdate()->find($deposit->id);
+
+            if (! $deposit || ! $deposit->isOpen()) {
+                throw new RuntimeException('That deposit is no longer open.');
+            }
+
+            $event = $this->recordEvent(
+                $deposit,
+                BagDepositEvent::TYPE_TEMP_ACCESS,
+                $accessor->id,
+                $scannedBy,
+                $scannedByAdminId,
+                $method,
+            );
+
+            return [$deposit, $event];
+        });
 
         if ($accessor->id !== $deposit->user_id) {
             $this->notifyDepositor(
@@ -268,6 +261,8 @@ class BagDepositService
     /**
      * Identify the counter operator the same way attendance does: the
      * active librarian-duty record when there is one, else the admin user.
+     * A scanner with neither (e.g. a librarian-role user off duty) is
+     * refused — events must never lose their operator attribution.
      *
      * @return array{0: int|null, 1: int|null}
      */
@@ -278,6 +273,14 @@ class BagDepositService
         $scannedByAdminId = null;
         if (! $scannedBy && $scanner->hasAdminAccess()) {
             $scannedByAdminId = $scanner->id;
+        }
+
+        if (! $scannedBy && ! $scannedByAdminId) {
+            Log::warning('Unauthorized bag scan attempt', [
+                'user_id' => $scanner->id,
+            ]);
+
+            throw new RuntimeException('You are not authorized to process bag scans.');
         }
 
         return [$scannedBy, $scannedByAdminId];
@@ -323,5 +326,11 @@ class BagDepositService
     {
         return str_contains($e->getMessage(), 'bag_deposits_open_claim_code_unique')
             || str_contains($e->getMessage(), 'UNIQUE constraint failed: bag_deposits.claim_code');
+    }
+
+    private function isSlotOccupiedCollision(QueryException $e): bool
+    {
+        return str_contains($e->getMessage(), 'bag_deposits_open_slot_unique')
+            || str_contains($e->getMessage(), 'UNIQUE constraint failed: bag_deposits.bag_slot_id');
     }
 }

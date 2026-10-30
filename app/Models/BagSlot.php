@@ -56,12 +56,12 @@ class BagSlot extends Model
             return self::STATE_OUT_OF_SERVICE;
         }
 
-        return $this->openDeposit()->exists() ? self::STATE_OCCUPIED : self::STATE_FREE;
+        return $this->openDeposit !== null ? self::STATE_OCCUPIED : self::STATE_FREE;
     }
 
     public function isAvailable(): bool
     {
-        return $this->is_active && ! $this->openDeposit()->exists();
+        return $this->is_active && $this->openDeposit === null;
     }
 
     public function scopeAvailable($query)
