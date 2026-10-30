@@ -30,7 +30,7 @@ COPY --from=vendor /app/vendor ./vendor
 RUN npm run build
 
 # Stage 3: Production runtime
-FROM php:8.4-fpm-alpine
+FROM php:8.4.27-fpm-alpine
 
 # Install nginx, supervisor, and system dependencies
 RUN apk add --no-cache \
