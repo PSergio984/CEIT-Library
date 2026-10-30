@@ -112,6 +112,9 @@ Schedule::command('librarian:check-assignments')->dailyAt('09:00');
 // Send daily reminders for borrow transactions (due soon and overdue)
 Schedule::command('library:send-reminders')->dailyAt('08:00');
 
+// Closing-time sweep: notify depositors of bags still open; re-pings nightly until claimed
+Schedule::command('bag:notify-unclaimed')->dailyAt('21:30');
+
 // AI sidecar index freshness (SEARCH-07):
 // hourly export at :05, then index sync at :10 (after the export lands)
 Schedule::command('ai:export-corpus')->hourlyAt(5);
