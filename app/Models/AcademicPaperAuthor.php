@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Jobs\AiIndexRebuildImmediateJob;
 use App\Jobs\AiIndexRebuildJob;
+use App\Support\AiIndexSync;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
@@ -17,10 +18,18 @@ class AcademicPaperAuthor extends Pivot
     protected static function booted(): void
     {
         static::created(function () {
+            if (AiIndexSync::suppressed()) {
+                return;
+            }
+
             AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
         });
 
         static::deleted(function () {
+            if (AiIndexSync::suppressed()) {
+                return;
+            }
+
             AiIndexRebuildImmediateJob::dispatch();
         });
     }
