@@ -234,10 +234,13 @@ class AdminBagCounter extends AdminComponent
             return;
         }
 
-        // Six digits is a small space — cap wrong-code attempts per operator.
+        // Six digits is a small space — cap wrong-code attempts per operator:
+        // ten misses inside a rolling ten-minute window, not a fresh five
+        // every minute.
         $rateKey = 'bag-claim-code:'.auth()->id();
-        if (RateLimiter::tooManyAttempts($rateKey, 5)) {
-            $this->error('Too many wrong codes — try again in a minute', 'Bad code');
+        if (RateLimiter::tooManyAttempts($rateKey, 10)) {
+            $retryIn = (int) ceil(RateLimiter::availableIn($rateKey) / 60);
+            $this->error("Too many wrong codes — try again in {$retryIn} minutes", 'Bad code');
 
             return;
         }
@@ -253,7 +256,7 @@ class AdminBagCounter extends AdminComponent
         $deposit = app(BagDepositService::class)->findOpenDepositByCode($code);
 
         if (! $deposit) {
-            RateLimiter::hit($rateKey, 60);
+            RateLimiter::hit($rateKey, 600);
             $this->error('No open deposit matches that code', 'Bad code');
 
             return;

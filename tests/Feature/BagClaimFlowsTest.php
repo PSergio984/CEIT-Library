@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -354,8 +355,8 @@ class BagClaimFlowsTest extends TestCase
         $component = Livewire::test(AdminBagCounter::class)
             ->call('handleScan', $this->makeQr($claimant));
 
-        // Five wrong codes trip the per-operator limiter.
-        for ($i = 0; $i < 5; $i++) {
+        // Ten wrong codes trip the per-operator limiter.
+        for ($i = 0; $i < 10; $i++) {
             $component->set('claimCodeInput', '999999')->call('lookupClaimCode');
         }
 
@@ -367,6 +368,22 @@ class BagClaimFlowsTest extends TestCase
 
         $component->call('claimDeposit', $deposit->id);
         $this->assertSame(BagDeposit::STATUS_OPEN, $deposit->fresh()->status);
+
+        // The lockout spans ten minutes, not one — still held nine minutes in.
+        Carbon::setTestNow(now()->addMinutes(9));
+        $component->set('claimCodeInput', '123456')
+            ->call('lookupClaimCode')
+            ->assertSet('codeEntitledIds', []);
+
+        // Past the window the correct code is honoured again.
+        Carbon::setTestNow(now()->addMinutes(2));
+        try {
+            $component->set('claimCodeInput', '123456')
+                ->call('lookupClaimCode')
+                ->assertSet('codeEntitledIds', [$deposit->id]);
+        } finally {
+            Carbon::setTestNow();
+        }
     }
 
     public function test_rescue_modal_context_survives_an_active_search(): void
