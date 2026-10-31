@@ -121,9 +121,12 @@ class QrPayloadValidator
      * attendance, borrow and bag flows after validate(); each flow passes its
      * own nonce key prefix so a scan in one flow never burns another flow's QR.
      *
+     * Flows that already consumed the nonce inside validate() pass
+     * consumeNonce: false to keep their original consume-then-lookup order.
+     *
      * @return User|string 'invalid' on lookup/rate-limit/replay failure
      */
-    public function resolveUser(array $data, string $noncePrefix = 'qr_nonce:'): User|string
+    public function resolveUser(array $data, string $noncePrefix = 'qr_nonce:', bool $consumeNonce = true): User|string
     {
         $user = User::find($data['user_id']);
         if (! $user) {
@@ -143,14 +146,16 @@ class QrPayloadValidator
         }
 
         // Nonce Replay Prevention (One-time use check)
-        $nonceKey = $noncePrefix.$data['nonce'];
-        if (! Cache::add($nonceKey, true, 150)) {
-            Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
-                'user_id' => $data['user_id'],
-                'nonce' => $data['nonce'],
-            ]);
+        if ($consumeNonce) {
+            $nonceKey = $noncePrefix.$data['nonce'];
+            if (! Cache::add($nonceKey, true, 150)) {
+                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
+                    'user_id' => $data['user_id'],
+                    'nonce' => $data['nonce'],
+                ]);
 
-            return self::INVALID;
+                return self::INVALID;
+            }
         }
 
         Cache::put($rateLimitKey, $recentScans + 1, 60);
