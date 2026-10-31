@@ -45,7 +45,26 @@ class CatalogSheetExport implements FromArray, WithTitle
 
     public function array(): array
     {
-        return [[...self::HEADERS, ...$this->trailingHeaders], ...$this->rows];
+        return [
+            [...self::HEADERS, ...$this->trailingHeaders],
+            ...array_map(
+                fn (array $row) => array_map(self::escapeCell(...), $row),
+                $this->rows,
+            ),
+        ];
+    }
+
+    /**
+     * A stored value beginning with =, +, - or @ opens as a live
+     * formula in spreadsheet apps; a leading quote keeps it inert text.
+     */
+    private static function escapeCell(mixed $value): mixed
+    {
+        if (is_string($value) && in_array(mb_substr($value, 0, 1), ['=', '+', '-', '@'], true)) {
+            return "'{$value}";
+        }
+
+        return $value;
     }
 
     public function title(): string

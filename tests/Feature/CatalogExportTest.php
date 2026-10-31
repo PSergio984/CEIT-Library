@@ -9,6 +9,7 @@ use App\Exports\CatalogTemplateExport;
 use App\Imports\CatalogImport;
 use App\Jobs\ImportCatalogJob;
 use App\Livewire\Pages\Admin\CatalogImportDropdown;
+use App\Models\AcademicPaper;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -120,6 +121,26 @@ class CatalogExportTest extends TestCase
             ['A One', 'A Two', 'A Three', 'A Four', 'A Five', 'A Six', 'A Seven'],
             array_slice($rows[1], 5, 7),
         );
+    }
+
+    #[Test]
+    public function a_stored_title_leading_with_a_formula_character_is_escaped_on_export(): void
+    {
+        AcademicPaper::create([
+            'catalog_code' => 'CEIT-IT-25-77',
+            'title' => '=HYPERLINK("https://example.com")',
+            'publication_year' => 2025,
+            'paper_type' => 'Thesis',
+            'department' => 'Information Technology',
+        ]);
+
+        Excel::store(new CatalogExport, 'export.xlsx', 'local');
+
+        $rows = IOFactory::load(Storage::disk('local')->path('export.xlsx'))
+            ->getSheetByName('Information Technology')
+            ->toArray();
+
+        $this->assertSame('\'=HYPERLINK("https://example.com")', $rows[1][3]);
     }
 
     #[Test]
