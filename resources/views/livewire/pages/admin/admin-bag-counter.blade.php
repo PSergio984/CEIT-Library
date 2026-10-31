@@ -284,7 +284,7 @@
 
     {{-- ============================ QR SCANNER MODAL ============================ --}}
     <x-mary-modal wire:model="showQrModal" title="Scan courier QR" class="backdrop-blur" box-class="max-w-2xl">
-        <div class="space-y-4" x-data="bagQrScanner()" x-init="init()">
+        <div class="space-y-4" x-data="bagQrScanner()">
             @if ($isProcessingQr)
                 <div class="bg-primary/10 border border-primary rounded-lg p-6 text-center">
                     <div class="flex flex-col items-center gap-4">
