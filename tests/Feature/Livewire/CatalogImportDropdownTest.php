@@ -145,6 +145,31 @@ class CatalogImportDropdownTest extends TestCase
     }
 
     #[Test]
+    public function sheets_rejected_by_the_import_are_named_in_the_notification(): void
+    {
+        Bus::fake();
+
+        $path = 'catalog-imports/test-workbook.xlsx';
+        Storage::disk('local')->put($path, file_get_contents($this->writeWorkbook([
+            'Electrical Engineering' => [
+                ['YEAR', 'TYPE OF ACADEMIC PAPER', 'CATALOG NUMBER', 'APPROVED OFFICIAL LONG TITLE', 'COPIES', 'MEMBER 1'],
+                [2024, 'THESIS', 'CEIT-EE-24-01', 'Smart Grid Monitoring', 1, 'Dela Cruz, Juan'],
+            ],
+        ])));
+
+        (new ImportCatalogJob($path, $this->admin->id))->handle();
+
+        $notification = Notification::where('user_id', $this->admin->id)
+            ->where('type', 'catalog_import')
+            ->firstOrFail();
+
+        $this->assertSame('Catalog import complete', $notification->title);
+        $this->assertStringContainsString('2 sheets rejected', $notification->message);
+        $this->assertStringContainsString('Civil Engineering', $notification->message);
+        $this->assertStringContainsString('Information Technology', $notification->message);
+    }
+
+    #[Test]
     public function a_workbook_the_engine_cannot_read_reports_a_failed_notification(): void
     {
         $path = 'catalog-imports/broken-workbook.xlsx';

@@ -73,6 +73,13 @@ class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
 
             $message = "{$imported} imported, {$skipped} skipped, {$errors} errors.";
 
+            // Sheet-level rejections (missing sheet or required headers)
+            // never reach the row counters, so name them explicitly.
+            $rejected = $sheets->filter(fn (array $s) => $s['error'] !== null);
+            if ($rejected->isNotEmpty()) {
+                $message .= " {$rejected->count()} sheets rejected: ".$rejected->pluck('error')->implode('; ').'.';
+            }
+
             if ($failureReportFailed) {
                 $message .= ' The row-level failure report could not be stored — check the application log.';
             }
