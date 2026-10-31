@@ -61,6 +61,11 @@ class BagDeposit extends Model
         'unclaimed_notified_at' => 'datetime',
     ];
 
+    // Bearer credential — anyone holding it can collect the bag.
+    protected $hidden = [
+        'claim_code',
+    ];
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
