@@ -56,6 +56,19 @@ class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
             $skipped = (int) $sheets->sum('duplicates');
             $errors = (int) $sheets->sum('errors');
 
+            $failureReportPath = null;
+
+            try {
+                $failureReportPath = $this->storeFailureReport($import);
+            } catch (\Throwable $e) {
+                // The import already committed; a failed report write
+                // must not be reported as an import failure.
+                Log::warning('Catalog failure report could not be stored', [
+                    'path' => $this->path,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+
             $this->notifyUploader(
                 'Catalog import complete',
                 "{$imported} imported, {$skipped} skipped, {$errors} errors.",
@@ -67,7 +80,7 @@ class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
                         'generated_codes' => $s['generated_codes'],
                         'error' => $s['error'],
                     ])->all(),
-                    'failure_report_path' => $this->storeFailureReport($import),
+                    'failure_report_path' => $failureReportPath,
                 ],
             );
         } catch (\Throwable $e) {
