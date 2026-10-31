@@ -20,19 +20,19 @@
                         loading = true;
                         $wire.create().finally(() => loading = false)
                     "
-                        :disabled="loading" 
+                        :disabled="loading"
                         class="btn btn-primary gap-2"
                         wire:loading.attr="disabled"
                         wire:target="create">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="w-5 h-5" 
+                            stroke="currentColor" class="w-5 h-5"
                             x-show="!loading"
                             wire:loading.remove
                             wire:target="create">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                         </svg>
                         <span x-show="!loading" wire:loading.remove wire:target="create">Create Academic Paper</span>
-                        <span class="loading loading-spinner loading-sm" 
+                        <span class="loading loading-spinner loading-sm"
                             x-show="loading"
                             wire:loading
                             wire:target="create"></span>
