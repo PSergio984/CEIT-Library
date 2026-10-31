@@ -263,8 +263,8 @@ class AdminBagCounter extends AdminComponent
             return;
         }
 
-        RateLimiter::clear($rateKey);
-
+        // A correct code doesn't reset the budget — misses decay with the
+        // window, so knowing one code can't buy unlimited fresh attempts.
         if (! in_array($deposit->id, $this->codeEntitledIds)) {
             $this->codeEntitledIds[] = $deposit->id;
         }

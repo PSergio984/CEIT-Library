@@ -386,6 +386,38 @@ class BagClaimFlowsTest extends TestCase
         }
     }
 
+    public function test_correct_claim_code_does_not_reset_the_miss_budget(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1]);
+        $claimant = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $depositA = $this->openDeposit($depositor, '123456');
+        $depositB = $this->openDeposit($depositor, '654321');
+
+        $this->actingAs($librarian);
+
+        $component = Livewire::test(AdminBagCounter::class)
+            ->call('handleScan', $this->makeQr($claimant));
+
+        // Nine misses leave a single attempt of budget.
+        for ($i = 0; $i < 9; $i++) {
+            $component->set('claimCodeInput', '999999')->call('lookupClaimCode');
+        }
+
+        // A good code unlocks its deposit but must not buy fresh attempts.
+        $component->set('claimCodeInput', '123456')
+            ->call('lookupClaimCode')
+            ->assertSet('codeEntitledIds', [$depositA->id]);
+
+        // One more miss reaches ten — the limiter trips.
+        $component->set('claimCodeInput', '999999')->call('lookupClaimCode');
+
+        // The next lookup is refused outright — even the other known code.
+        $component->set('claimCodeInput', '654321')
+            ->call('lookupClaimCode')
+            ->assertSet('codeEntitledIds', [$depositA->id]);
+    }
+
     public function test_rescue_modal_context_survives_an_active_search(): void
     {
         $depositor = User::factory()->create(['role_id' => 1, 'first_name' => 'Marisol']);
