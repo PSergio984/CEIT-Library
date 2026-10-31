@@ -17,6 +17,13 @@ new class extends Component
             'password' => ['required', 'string', 'current_password'],
         ]);
 
+        // An open bag deposit would be orphaned — same guard as admin deletion.
+        if (Auth::user()->bagDeposits()->open()->exists()) {
+            $this->addError('password', 'You cannot delete your account while you have an unclaimed bag deposit at the counter.');
+
+            return;
+        }
+
         tap(Auth::user(), $logout(...))->delete();
 
         $this->redirect('/', navigate: true);
