@@ -12,7 +12,7 @@
     <x-mary-modal wire:model="showImportModal" title="Import Catalog from Excel" class="backdrop-blur-sm"
         box-class="max-w-4xl">
         <div class="space-y-4">
-            <x-mary-file wire:model="importFile" label="Staff catalog workbook" hint=".xlsx — one sheet per department"
+            <x-mary-file wire:model="importFile" label="Staff catalog workbook" hint=".xlsx or .xls — one sheet per department"
                 accept=".xlsx,.xls" />
 
             <div wire:loading wire:target="importFile" class="flex items-center gap-2 text-sm text-base-content/70">
