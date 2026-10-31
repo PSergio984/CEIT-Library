@@ -8,6 +8,7 @@ use App\Models\BagSlot;
 use App\Models\Librarian;
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Livewire\Livewire;
@@ -152,6 +153,53 @@ class BagUnclaimedSweepTest extends TestCase
         }
 
         $this->assertSame(1, Notification::count());
+    }
+
+    public function test_sweep_skips_deposit_claimed_mid_run(): void
+    {
+        $depositorA = User::factory()->create(['role_id' => 1]);
+        $depositorB = User::factory()->create(['role_id' => 1]);
+        $depositA = $this->deposit($depositorA);
+        $depositB = $this->deposit($depositorB);
+
+        // B is claimed between the sweep's query and its turn in the loop —
+        // during A's notification send.
+        $this->mock(NotificationService::class)
+            ->shouldReceive('notify')
+            ->once()
+            ->andReturnUsing(function () use ($depositB) {
+                $depositB->update([
+                    'status' => BagDeposit::STATUS_CLAIMED,
+                    'claimed_by' => $depositB->user_id,
+                    'claimed_at' => now(),
+                    'claim_method' => BagDeposit::METHOD_CLAIM_CODE,
+                ]);
+            });
+
+        $this->artisan('bag:notify-unclaimed')->assertExitCode(0);
+
+        // B's guarded stamp hit 0 rows — no ping went out for it, no stamp.
+        $this->assertNotNull($depositA->fresh()->unclaimed_notified_at);
+        $this->assertNull($depositB->fresh()->unclaimed_notified_at);
+    }
+
+    public function test_sweep_skips_deposit_deleted_mid_run(): void
+    {
+        $depositorA = User::factory()->create(['role_id' => 1]);
+        $depositorB = User::factory()->create(['role_id' => 1]);
+        $depositA = $this->deposit($depositorA);
+        $depositB = $this->deposit($depositorB);
+
+        // A hard delete landing mid-run must not abort the sweep.
+        $this->mock(NotificationService::class)
+            ->shouldReceive('notify')
+            ->once()
+            ->andReturnUsing(function () use ($depositB) {
+                $depositB->delete();
+            });
+
+        $this->artisan('bag:notify-unclaimed')->assertExitCode(0);
+        $this->assertNotNull($depositA->fresh()->unclaimed_notified_at);
     }
 
     public function test_dry_run_lists_without_notifying_or_stamping(): void

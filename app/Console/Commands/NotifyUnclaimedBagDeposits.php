@@ -65,9 +65,15 @@ class NotifyUnclaimedBagDeposits extends Command
         $notified = 0;
 
         foreach ($deposits as $deposit) {
-            // A claim landing between the query and this notification must
-            // not be told their bag is still at the counter.
-            if (! $deposit->refresh()->isOpen()) {
+            // Stamp + re-check open in one conditional UPDATE: a claim (or
+            // delete) landing between the query and this line yields 0 rows
+            // and is skipped — it must not be pinged, stamped, or abort the
+            // rest of the sweep.
+            $stamped = BagDeposit::where('id', $deposit->id)
+                ->where('status', BagDeposit::STATUS_OPEN)
+                ->update(['unclaimed_notified_at' => now()]);
+
+            if ($stamped === 0) {
                 continue;
             }
 
@@ -84,7 +90,6 @@ class NotifyUnclaimedBagDeposits extends Command
                     ]
                 );
 
-                $deposit->update(['unclaimed_notified_at' => now()]);
                 $notified++;
             } catch (\Throwable $e) {
                 \Log::error("Failed to notify unclaimed bag deposit {$deposit->id}: ".$e->getMessage());
