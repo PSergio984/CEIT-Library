@@ -67,7 +67,8 @@ class CatalogImportDropdown extends AdminComponent
 
         try {
             $this->preview = (new CatalogImport)->preview($this->importFile->getRealPath());
-        } catch (\Throwable) {
+        } catch (\Throwable $e) {
+            report($e);
             $this->reset('importFile');
             $this->error('The workbook could not be read. Upload a valid .xlsx catalog file.');
 
@@ -146,8 +147,9 @@ class CatalogImportDropdown extends AdminComponent
 
         try {
             $import->preview($this->importFile->getRealPath());
-        } catch (\Throwable) {
-            $this->error('The workbook could not be read. Upload a valid .xlsx catalog file.');
+        } catch (\Throwable $e) {
+            report($e);
+            $this->error('The failure report could not be generated.');
 
             return null;
         }
