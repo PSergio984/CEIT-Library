@@ -117,6 +117,34 @@ class CatalogImportDropdownTest extends TestCase
     }
 
     #[Test]
+    public function a_failure_report_that_cannot_be_stored_warns_in_the_notification(): void
+    {
+        Bus::fake();
+
+        // Fail only the failure-report write; everything else on the
+        // fake disk proxies through to the real adapter.
+        $disk = \Mockery::mock(Storage::disk('local'))->makePartial();
+        $disk->shouldReceive('put')
+            ->withArgs(fn ($path) => str_starts_with((string) $path, 'catalog-imports/failures/'))
+            ->andThrow(new \RuntimeException('disk full'));
+        Storage::set('local', $disk);
+
+        $path = 'catalog-imports/test-workbook.xlsx';
+        Storage::disk('local')->put($path, file_get_contents($this->staffWorkbook()));
+
+        (new ImportCatalogJob($path, $this->admin->id))->handle();
+
+        $notification = Notification::where('user_id', $this->admin->id)
+            ->where('type', 'catalog_import')
+            ->firstOrFail();
+
+        $this->assertSame('Catalog import complete', $notification->title);
+        $this->assertNull($notification->data['failure_report_path']);
+        $this->assertTrue($notification->data['failure_report_failed']);
+        $this->assertStringContainsString('failure report could not be stored', $notification->message);
+    }
+
+    #[Test]
     public function a_workbook_the_engine_cannot_read_reports_a_failed_notification(): void
     {
         $path = 'catalog-imports/broken-workbook.xlsx';

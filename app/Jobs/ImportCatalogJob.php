@@ -57,21 +57,29 @@ class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
             $errors = (int) $sheets->sum('errors');
 
             $failureReportPath = null;
+            $failureReportFailed = false;
 
             try {
                 $failureReportPath = $this->storeFailureReport($import);
             } catch (\Throwable $e) {
                 // The import already committed; a failed report write
                 // must not be reported as an import failure.
+                $failureReportFailed = true;
                 Log::warning('Catalog failure report could not be stored', [
                     'path' => $this->path,
                     'error' => $e->getMessage(),
                 ]);
             }
 
+            $message = "{$imported} imported, {$skipped} skipped, {$errors} errors.";
+
+            if ($failureReportFailed) {
+                $message .= ' The row-level failure report could not be stored — check the application log.';
+            }
+
             $this->notifyUploader(
                 'Catalog import complete',
-                "{$imported} imported, {$skipped} skipped, {$errors} errors.",
+                $message,
                 [
                     'sheets' => $sheets->map(fn (array $s) => [
                         'imported' => $s['imported'],
@@ -81,6 +89,7 @@ class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
                         'error' => $s['error'],
                     ])->all(),
                     'failure_report_path' => $failureReportPath,
+                    'failure_report_failed' => $failureReportFailed,
                 ],
             );
         } catch (\Throwable $e) {
