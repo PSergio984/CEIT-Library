@@ -94,6 +94,12 @@ class NotifyUnclaimedBagDeposits extends Command
                 $notified++;
             } catch (\Throwable $e) {
                 $failed++;
+                // Roll the stamp back to what the run loaded so a failed
+                // ping is retried by the next sweep instead of counted as
+                // sent. The open-status guard matches the stamp's own.
+                BagDeposit::where('id', $deposit->id)
+                    ->where('status', BagDeposit::STATUS_OPEN)
+                    ->update(['unclaimed_notified_at' => $deposit->unclaimed_notified_at]);
                 \Log::error("Failed to notify unclaimed bag deposit {$deposit->id}: ".$e->getMessage());
             }
         }

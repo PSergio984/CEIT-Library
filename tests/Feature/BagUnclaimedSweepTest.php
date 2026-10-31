@@ -166,8 +166,32 @@ class BagUnclaimedSweepTest extends TestCase
 
         $this->artisan('bag:notify-unclaimed')->assertExitCode(1);
 
-        // Stamped before the failed send — the stamp ages past midnight, so
-        // the next night's sweep still re-pings it.
+        // The stamp rolls back with the failed send so the next run picks
+        // the deposit up again instead of treating it as already pinged.
+        $this->assertNull($deposit->fresh()->unclaimed_notified_at);
+    }
+
+    public function test_failed_sweep_ping_is_retried_on_the_next_run(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1]);
+        $deposit = $this->deposit($depositor);
+
+        // First send throws; the second run must pick the deposit up again.
+        $attempts = 0;
+        $this->mock(NotificationService::class)
+            ->shouldReceive('notify')
+            ->twice()
+            ->andReturnUsing(function () use (&$attempts) {
+                if (++$attempts === 1) {
+                    throw new \RuntimeException('notification backend down');
+                }
+            });
+
+        $this->artisan('bag:notify-unclaimed')->assertExitCode(1);
+        $this->assertNull($deposit->fresh()->unclaimed_notified_at);
+
+        // No stamp left behind — a same-day retry still finds it unpinged.
+        $this->artisan('bag:notify-unclaimed')->assertExitCode(0);
         $this->assertNotNull($deposit->fresh()->unclaimed_notified_at);
     }
 
