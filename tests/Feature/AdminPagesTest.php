@@ -15,6 +15,9 @@ use App\Livewire\Pages\Admin\ViolationTransactionsTab;
 use App\Models\AcademicPaper;
 use App\Models\Attendance;
 use App\Models\Author;
+use App\Models\BagDeposit;
+use App\Models\BagDepositEvent;
+use App\Models\BagSlot;
 use App\Models\Inventory;
 use App\Models\Librarian;
 use App\Models\Notification;
@@ -128,6 +131,68 @@ class AdminPagesTest extends TestCase
             ->test(AdminUserList::class)
             ->call('showTransactionDetails', $student->id)
             ->assertSet('selectedStudentData.transactions.0.title', $paper->title);
+    }
+
+    public function test_student_with_open_bag_deposit_cannot_be_deleted(): void
+    {
+        $student = User::factory()->create();
+        $slot = BagSlot::create(['number' => 1, 'is_active' => true]);
+        $deposit = BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => $slot->id,
+            'item_count' => 1,
+            'claim_code' => '123456',
+            'status' => BagDeposit::STATUS_OPEN,
+        ]);
+        BagDepositEvent::create([
+            'bag_deposit_id' => $deposit->id,
+            'type' => BagDepositEvent::TYPE_DEPOSIT,
+            'actor_user_id' => $student->id,
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(AdminUserList::class)
+            ->call('confirmDelete', $student->id)
+            ->call('deleteUser');
+
+        // Deletion refused — the deposit and its audit trail stay intact.
+        $this->assertNotNull($student->fresh());
+        $this->assertDatabaseHas('bag_deposits', ['id' => $deposit->id, 'status' => 'open']);
+        $this->assertDatabaseCount('bag_deposit_events', 1);
+    }
+
+    public function test_student_with_only_claimed_bag_deposits_can_be_deleted_and_audit_survives(): void
+    {
+        $student = User::factory()->create();
+        $slot = BagSlot::create(['number' => 1, 'is_active' => true]);
+        $deposit = BagDeposit::create([
+            'user_id' => $student->id,
+            'bag_slot_id' => $slot->id,
+            'item_count' => 1,
+            'claim_code' => '654321',
+            'status' => BagDeposit::STATUS_CLAIMED,
+            'claimed_by' => $student->id,
+            'claimed_at' => now(),
+            'claim_method' => BagDeposit::METHOD_OWNER_SCAN,
+        ]);
+        BagDepositEvent::create([
+            'bag_deposit_id' => $deposit->id,
+            'type' => BagDepositEvent::TYPE_DEPOSIT,
+            'actor_user_id' => $student->id,
+        ]);
+
+        Livewire::actingAs($this->admin)
+            ->test(AdminUserList::class)
+            ->call('confirmDelete', $student->id)
+            ->call('deleteUser');
+
+        $this->assertNull($student->fresh());
+
+        // The claimed deposit and its audit trail outlive the user, de-linked.
+        $deposit->refresh();
+        $this->assertNull($deposit->user_id);
+        $this->assertNull($deposit->claimed_by);
+        $this->assertNull($deposit->events()->sole()->actor_user_id);
     }
 
     public function test_admin_notifications_render_and_mark_all_as_read(): void

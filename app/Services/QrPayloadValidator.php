@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use App\Traits\CreatesQrCanonicalMessage;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Cache;
@@ -112,5 +113,53 @@ class QrPayloadValidator
 
             return self::INVALID;
         }
+    }
+
+    /**
+     * Resolve a validated payload to its registered user: user lookup, per-user
+     * scan rate limit, and nonce replay consumption. Shared tail used by
+     * attendance, borrow and bag flows after validate(); each flow passes its
+     * own nonce key prefix so a scan in one flow never burns another flow's QR.
+     *
+     * Flows that already consumed the nonce inside validate() pass
+     * consumeNonce: false to keep their original consume-then-lookup order.
+     *
+     * @return User|string 'invalid' on lookup/rate-limit/replay failure
+     */
+    public function resolveUser(array $data, string $noncePrefix = 'qr_nonce:', bool $consumeNonce = true): User|string
+    {
+        $user = User::find($data['user_id']);
+        if (! $user) {
+            Log::warning('User not found during QR scan', ['user_id' => $data['user_id']]);
+
+            return self::INVALID;
+        }
+
+        // Check rate limiting per user
+        $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
+        $recentScans = Cache::get($rateLimitKey, 0);
+
+        if ($recentScans >= 60) {
+            Log::warning('Rate limit exceeded for user', ['user_id' => $data['user_id']]);
+
+            return self::INVALID;
+        }
+
+        // Nonce Replay Prevention (One-time use check)
+        if ($consumeNonce) {
+            $nonceKey = $noncePrefix.$data['nonce'];
+            if (! Cache::add($nonceKey, true, 150)) {
+                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
+                    'user_id' => $data['user_id'],
+                    'nonce' => $data['nonce'],
+                ]);
+
+                return self::INVALID;
+            }
+        }
+
+        Cache::put($rateLimitKey, $recentScans + 1, 60);
+
+        return $user;
     }
 }

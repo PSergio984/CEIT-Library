@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\BagDepositPhotoController;
 use App\Http\Controllers\CatalogImportFailureReportController;
 use App\Http\Controllers\PushSubscriptionController;
 use App\Http\Controllers\QrCodeDownloadController;
@@ -7,6 +8,7 @@ use App\Livewire\Pages\Admin\AdminAcademicPaperIndex;
 use App\Livewire\Pages\Admin\AdminAdvisersDeans;
 use App\Livewire\Pages\Admin\AdminAssignLibrarians;
 use App\Livewire\Pages\Admin\AdminAttendanceLogIndex;
+use App\Livewire\Pages\Admin\AdminBagCounter;
 use App\Livewire\Pages\Admin\AdminBorrowTransactions;
 use App\Livewire\Pages\Admin\AdminDashboard;
 use App\Livewire\Pages\Admin\AdminManageRoles;
@@ -191,6 +193,13 @@ Route::middleware(['auth', 'verified', 'librarian.or.admin'])
         Route::get('/attendance-logs', AdminAttendanceLogIndex::class)
             ->middleware(['can:view-attendance-logs', 'throttle:qr-scanning'])
             ->name('attendance');
+
+        // Bag counter - same gate as attendance scanning
+        Route::get('/bag-counter', AdminBagCounter::class)
+            ->middleware('throttle:qr-scanning')
+            ->name('bag-counter');
+        Route::get('/bag-deposits/{bagDeposit}/photo', BagDepositPhotoController::class)
+            ->name('bag-deposits.photo');
 
         // Violation logs (Librarian and Admin can view)
         Route::get('/violations', AdminViolationLogIndex::class)

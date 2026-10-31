@@ -8,6 +8,7 @@ use App\Rules\PlvEmailDomain;
 use App\Rules\ProperName;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Attributes\Computed;
 use Livewire\Attributes\Lazy;
@@ -341,7 +342,7 @@ class AdminUserList extends AdminComponent
         $this->skipRender();
     }
 
-    public function deleteUser()
+    public function deleteUser(): void
     {
         if (! Gate::allows('manage-students')) {
             $this->redirect(route('student.dashboard'));
@@ -350,23 +351,40 @@ class AdminUserList extends AdminComponent
         }
 
         if ($this->selectedStudentId) {
-            $student = User::findOrFail($this->selectedStudentId);
+            // Lock the student row across the checks and the delete — a
+            // deposit opening right now holds the same lock (openDeposit)
+            // and can no longer slip in between the guard and the delete.
+            $error = DB::transaction(function () {
+                $student = User::lockForUpdate()->findOrFail($this->selectedStudentId);
 
-            // Check for active borrow transactions
-            $hasActiveBorrows = $student->borrowTransactions()
-                ->where(function ($q) {
-                    $q->where('status', 'started')
-                        ->orWhereNull('time_out');
-                })
-                ->exists();
+                // Check for active borrow transactions
+                $hasActiveBorrows = $student->borrowTransactions()
+                    ->where(function ($q) {
+                        $q->where('status', 'started')
+                            ->orWhereNull('time_out');
+                    })
+                    ->exists();
 
-            if ($hasActiveBorrows) {
-                $this->error('Cannot delete student: active borrow transactions exist.');
+                if ($hasActiveBorrows) {
+                    return 'Cannot delete student: active borrow transactions exist.';
+                }
+
+                // Same guard as borrows: deleting would cascade the deposit row
+                // and its audit events out from under the counter.
+                if ($student->bagDeposits()->open()->exists()) {
+                    return 'Cannot delete student: open bag deposits exist.';
+                }
+
+                $student->delete();
+
+                return null;
+            });
+
+            if ($error) {
+                $this->error($error);
 
                 return;
             }
-
-            $student->delete();
 
             // Clear cache after deletion
             Cache::forget('admin_user_list_total_borrowers');

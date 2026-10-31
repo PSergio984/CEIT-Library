@@ -34,6 +34,10 @@
                     ['id' => 'attendance_checkout', 'name' => 'Attendance Check-Out'],
                     ['id' => 'librarian_assigned', 'name' => 'Librarian Assigned'],
                     ['id' => 'librarian_activated', 'name' => 'Librarian Activated'],
+                    ['id' => 'bag_deposited', 'name' => 'Bag Deposited'],
+                    ['id' => 'bag_claim', 'name' => 'Bag Claimed'],
+                    ['id' => 'bag_temp_access', 'name' => 'Bag Temp Access'],
+                    ['id' => 'bag_unclaimed', 'name' => 'Bag Unclaimed'],
                     ['id' => 'role_changed', 'name' => 'Role Changed'],
                 ]" option-value="id" option-label="name" />
             </div>
