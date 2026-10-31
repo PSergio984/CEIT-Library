@@ -97,7 +97,10 @@ class BagDepositService
                     throw new RuntimeException('That slot can no longer receive deposits.', 0, $e);
                 }
 
-                if (! $this->isClaimCodeCollision($e) || $attempt === self::CLAIM_CODE_MAX_ATTEMPTS - 1) {
+                // Only a claim-code collision retries; anything else is a
+                // real database error. Run out of attempts and the loop
+                // exits into the RuntimeException below.
+                if (! $this->isClaimCodeCollision($e)) {
                     throw $e;
                 }
             }
