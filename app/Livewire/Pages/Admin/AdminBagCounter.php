@@ -8,6 +8,7 @@ use App\Models\BagSlot;
 use App\Models\User;
 use App\Services\BagDepositService;
 use App\Services\QrPayloadValidator;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -436,19 +437,33 @@ class AdminBagCounter extends AdminComponent
             return;
         }
 
-        $slot = BagSlot::find($slotId);
+        try {
+            $slot = DB::transaction(function () use ($slotId) {
+                // Lock the row so the occupancy check and the toggle can't
+                // race a deposit being opened on this slot.
+                $slot = BagSlot::lockForUpdate()->find($slotId);
+
+                if (! $slot) {
+                    return null;
+                }
+
+                if ($slot->openDeposit()->exists()) {
+                    throw new RuntimeException('An occupied slot cannot be taken out of service');
+                }
+
+                $slot->update(['is_active' => ! $slot->is_active]);
+
+                return $slot;
+            });
+        } catch (RuntimeException $e) {
+            $this->error($e->getMessage(), 'Slot occupied');
+
+            return;
+        }
 
         if (! $slot) {
             return;
         }
-
-        if ($slot->openDeposit()->exists()) {
-            $this->error('An occupied slot cannot be taken out of service', 'Slot occupied');
-
-            return;
-        }
-
-        $slot->update(['is_active' => ! $slot->is_active]);
 
         $this->success(
             $slot->is_active ? "Slot {$slot->number} back in service" : "Slot {$slot->number} marked out of service",
