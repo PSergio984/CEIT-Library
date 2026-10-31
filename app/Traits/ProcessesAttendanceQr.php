@@ -4,12 +4,10 @@ namespace App\Traits;
 
 use App\Models\Attendance;
 use App\Models\Notification;
-use App\Models\User;
 use App\Services\NotificationService;
 use App\Services\QrPayloadValidator;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -30,26 +28,14 @@ trait ProcessesAttendanceQr
                 return 'invalid';
             }
 
-            $user = User::find($data['user_id']);
-            if (! $user) {
-                Log::warning('User not found during QR scan', ['user_id' => $data['user_id']]);
+            // validate() already consumed the qr_nonce: key — resolveUser
+            // runs the same lookup + rate limit without burning it twice,
+            // preserving this flow's consume-then-lookup order.
+            $user = app(QrPayloadValidator::class)->resolveUser($data, consumeNonce: false);
 
+            if ($user === QrPayloadValidator::INVALID) {
                 return 'invalid';
             }
-
-            // Check rate limiting per user
-            $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
-            $recentScans = Cache::get($rateLimitKey, 0);
-
-            if ($recentScans >= 60) {
-                Log::warning('Rate limit exceeded for user', [
-                    'user_id' => $data['user_id'],
-                ]);
-
-                return 'invalid';
-            }
-
-            Cache::put($rateLimitKey, $recentScans + 1, 60);
 
             Log::info('QR code validated successfully (v7)', [
                 'user_id' => $user->id,

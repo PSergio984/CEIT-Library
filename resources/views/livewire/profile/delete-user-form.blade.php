@@ -1,7 +1,9 @@
 <?php
 
 use App\Livewire\Actions\Logout;
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Volt\Component;
 
 new class extends Component
@@ -17,7 +19,29 @@ new class extends Component
             'password' => ['required', 'string', 'current_password'],
         ]);
 
-        tap(Auth::user(), $logout(...))->delete();
+        // Lock the user row across the guard and the delete — same pairing
+        // as admin deletion and openDeposit, so a deposit opening right now
+        // can't slip in between the check and the delete.
+        $deleted = DB::transaction(function () {
+            $user = User::lockForUpdate()->find(Auth::id());
+
+            // An open bag deposit would be orphaned — same guard as admin deletion.
+            if ($user->bagDeposits()->open()->exists()) {
+                return false;
+            }
+
+            $user->delete();
+
+            return true;
+        });
+
+        if (! $deleted) {
+            $this->addError('password', 'You cannot delete your account while you have an unclaimed bag deposit at the counter.');
+
+            return;
+        }
+
+        $logout();
 
         $this->redirect('/', navigate: true);
     }

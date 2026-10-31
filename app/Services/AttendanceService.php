@@ -3,10 +3,8 @@
 namespace App\Services;
 
 use App\Models\Attendance;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -28,37 +26,11 @@ class AttendanceService
                 return self::VALIDATION_INVALID;
             }
 
-            $user = User::find($data['user_id']);
-            if (! $user) {
-                Log::warning('User not found during QR scan', ['user_id' => $data['user_id']]);
+            $user = app(QrPayloadValidator::class)->resolveUser($data);
 
+            if ($user === QrPayloadValidator::INVALID) {
                 return self::VALIDATION_INVALID;
             }
-
-            // Check rate limiting per user
-            $rateLimitKey = 'qr_rate_limit:'.$data['user_id'];
-            $recentScans = Cache::get($rateLimitKey, 0);
-
-            if ($recentScans >= 60) {
-                Log::warning('Rate limit exceeded for user', [
-                    'user_id' => $data['user_id'],
-                ]);
-
-                return self::VALIDATION_INVALID;
-            }
-
-            // 2. Nonce Replay Prevention (One-time use check)
-            $nonceKey = 'qr_nonce:'.$data['nonce'];
-            if (! Cache::add($nonceKey, true, 150)) {
-                Log::warning('QR code rejected: Replay attack detected (nonce reuse)', [
-                    'user_id' => $data['user_id'],
-                    'nonce' => $data['nonce'],
-                ]);
-
-                return self::VALIDATION_INVALID;
-            }
-
-            Cache::put($rateLimitKey, $recentScans + 1, 60);
 
             Log::info('QR code validated successfully (v7)', [
                 'user_id' => $user->id,
