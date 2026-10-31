@@ -235,7 +235,7 @@
                     <div>
                         <b>Slot {{ str_pad($ad->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $ad->description ?: 'Bag' }}
                         <div class="text-xs opacity-60">
-                            {{ $ad->user->first_name }} {{ $ad->user->last_name }} ·
+                            {{ $ad->user?->first_name ?? 'Deleted user' }} {{ $ad->user?->last_name }} ·
                             <span class="badge badge-xs {{ $ad->status === 'open' ? 'badge-info' : 'badge-ghost' }}">{{ $ad->status }}</span>
                             @if ($ad->claim_method) · via {{ $ad->claim_method }} @endif
                         </div>

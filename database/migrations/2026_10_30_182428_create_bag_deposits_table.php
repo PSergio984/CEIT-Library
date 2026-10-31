@@ -14,7 +14,10 @@ return new class extends Migration
     {
         Schema::create('bag_deposits', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            // Claimed deposits (and their audit events) outlive a deleted
+            // user as null-user rows; open deposits block deletion in
+            // AdminUserList::deleteUser, so a live depositor is never lost.
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
             $table->foreignId('bag_slot_id')->constrained()->onDelete('restrict');
             $table->unsignedSmallInteger('item_count')->default(1);
             $table->string('description')->nullable();

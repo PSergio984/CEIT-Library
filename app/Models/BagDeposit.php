@@ -10,7 +10,7 @@ use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
- * @property int $user_id
+ * @property int|null $user_id
  * @property int $bag_slot_id
  * @property int $item_count
  * @property string|null $description
@@ -23,7 +23,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $unclaimed_notified_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read User $user
+ * @property-read User|null $user
  * @property-read BagSlot $slot
  * @property-read User|null $claimedBy
  * @property-read Collection<int, BagDepositEvent> $events

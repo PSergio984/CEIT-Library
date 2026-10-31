@@ -366,6 +366,14 @@ class AdminUserList extends AdminComponent
                 return;
             }
 
+            // Same guard as borrows: deleting would cascade the deposit row
+            // and its audit events out from under the counter.
+            if ($student->bagDeposits()->open()->exists()) {
+                $this->error('Cannot delete student: open bag deposits exist.');
+
+                return;
+            }
+
             $student->delete();
 
             // Clear cache after deletion
