@@ -353,7 +353,12 @@
                             const scanner = new Html5Qrcode('bag-qr-file-reader');
                             const qrText = await scanner.scanFile(file, true);
                             await scanner.clear();
-                            await $wire.call('handleScan', qrText);
+                            try {
+                                await $wire.call('handleScan', qrText);
+                            } catch (callError) {
+                                console.log('handleScan call failed:', callError);
+                                this.uploadError = 'QR decoded but the scan could not be sent — try again.';
+                            }
                         } catch (e) {
                             console.log('QR file scan failed:', e);
                             this.uploadError = 'No QR code found in that image — try a clearer photo.';
