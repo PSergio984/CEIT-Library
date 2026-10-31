@@ -54,11 +54,11 @@
                         </a>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class="overflow-hidden transition-all duration-300" x-show="!collapsed">
+                        <div class="mary-hideable overflow-hidden transition-all duration-300">
                             <div class="font-bold text-xl text-base-content whitespace-nowrap">CEIT Library</div>
                         </div>
                         {{-- Theme Toggle beside Library text --}}
-                        <div x-show="!collapsed">
+                        <div class="mary-hideable">
                             <x-mary-theme-toggle class="btn btn-sm btn-circle btn-ghost" />
                         </div>
                     </div>
@@ -67,7 +67,7 @@
 
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" ::class="collapsed ? '[&_.mary-menu-item]:!justify-center' : ''">
 
                 <x-mary-menu-item title="Dashboard" icon="o-home" link="{{ route('admin.dashboard') }}" tooltip="Dashboard" wire:navigate.hover />
  

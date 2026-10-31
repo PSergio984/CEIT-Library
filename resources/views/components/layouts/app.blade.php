@@ -153,11 +153,11 @@
                         </a>
                     </div>
                     <div class="flex items-center gap-3">
-                        <div class=" transition-all duration-300" x-show="!collapsed">
+                        <div class="mary-hideable transition-all duration-300">
                             <div class="font-bold text-xl text-base-content whitespace-nowrap">PLV CEIT Library</div>
                         </div>
                         {{-- Theme Toggle beside Library text --}}
-                        <div x-show="!collapsed">
+                        <div class="mary-hideable">
                             <x-mary-theme-toggle class="btn btn-sm btn-circle btn-ghost" />
                         </div>
                     </div>
@@ -166,7 +166,7 @@
 
 
             {{-- MENU --}}
-            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0">
+            <x-mary-menu activate-by-route class="[&_.mary-menu-sub]:!pl-0 [&_.mary-menu-item]:!pl-0" ::class="collapsed ? '[&_.mary-menu-item]:!justify-center' : ''">
                 <x-mary-menu-item title="Dashboard" tooltip="Dashboard" icon="o-home" link="/dashboard" wire:navigate.hover />
                 <x-mary-menu-item title="Academic Papers" tooltip="Academic Papers" icon="o-book-open" link="/academic-papers" wire:navigate.hover />
                 <x-mary-menu-item title="Rules & Regulations" tooltip="Rules & Regulations" icon="o-clipboard-document-list"
