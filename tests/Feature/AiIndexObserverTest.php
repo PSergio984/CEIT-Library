@@ -8,6 +8,7 @@ use App\Models\AcademicPaper;
 use App\Models\Author;
 use App\Models\ResearchAdviser;
 use App\Models\RuleRegulation;
+use App\Support\AiIndexSync;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Cache;
@@ -90,6 +91,19 @@ class AiIndexObserverTest extends TestCase
         $regulation->delete();
 
         Bus::assertDispatched(AiIndexRebuildImmediateJob::class);
+    }
+
+    #[Test]
+    public function rulebook_writes_are_suppressed_during_bulk_operations(): void
+    {
+        AiIndexSync::withoutDispatches(function () {
+            $regulation = RuleRegulation::factory()->create();
+            $regulation->update(['description' => 'updated']);
+            $regulation->delete();
+        });
+
+        Bus::assertNotDispatched(AiIndexRebuildJob::class);
+        Bus::assertNotDispatched(AiIndexRebuildImmediateJob::class);
     }
 
     #[Test]
