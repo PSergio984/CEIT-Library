@@ -519,6 +519,20 @@ class AdminBagCounter extends AdminComponent
     }
 
     /**
+     * Recently closed deposits — a claimed bag drops out of every open
+     * list, so the last few stay reachable here for their audit trails.
+     */
+    #[Computed]
+    public function claimedDeposits()
+    {
+        return BagDeposit::with('user', 'slot')
+            ->where('status', BagDeposit::STATUS_CLAIMED)
+            ->latest('claimed_at')
+            ->limit(10)
+            ->get();
+    }
+
+    /**
      * Deposits the scanned courier may act on: their own plus any unlocked
      * by a claim code they presented.
      */

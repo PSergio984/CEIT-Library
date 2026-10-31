@@ -130,6 +130,27 @@
                 @endforelse
             </x-mary-card>
 
+            {{-- Recently claimed deposits — audit trail stays reachable --}}
+            <x-mary-card title="Recently claimed" subtitle="Last 10 closed deposits — audit stays available">
+                @forelse ($this->claimedDeposits as $d)
+                    <div wire:key="history-deposit-{{ $d->id }}" class="flex items-center justify-between rounded-lg bg-base-200 px-3 py-2 mb-2">
+                        <div class="text-sm">
+                            <b>Slot {{ str_pad($d->slot->number, 2, '0', STR_PAD_LEFT) }}</b> — {{ $d->user?->first_name ?? 'Deleted user' }} {{ $d->user?->last_name }}
+                            <div class="text-xs opacity-60">
+                                {{ $d->item_count }} item{{ $d->item_count > 1 ? 's' : '' }} · {{ $d->description ?: 'Bag' }}
+                                · claimed {{ $d->claimed_at?->format('M j, g:i A') }}
+                                @if ($d->claim_method)
+                                    · via {{ str_replace('_', ' ', $d->claim_method) }}
+                                @endif
+                            </div>
+                        </div>
+                        <x-mary-button wire:click="openAudit({{ $d->id }})" icon="o-clipboard-document-list" class="btn-ghost btn-xs" tooltip="Audit trail" />
+                    </div>
+                @empty
+                    <div class="text-sm opacity-60">No claimed deposits yet.</div>
+                @endforelse
+            </x-mary-card>
+
             {{-- Slot board --}}
             <x-mary-card title="Slots" subtitle="Free slot: click to take out of service — out of service: click to restore">
                 <div class="grid grid-cols-4 gap-2">

@@ -472,6 +472,38 @@ class BagClaimFlowsTest extends TestCase
         }
     }
 
+    public function test_claimed_deposits_stay_reachable_in_history_with_audit(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $claimed = $this->openDeposit($depositor, '123456', [
+            'status' => BagDeposit::STATUS_CLAIMED,
+            'claimed_by' => $depositor->id,
+            'claimed_at' => now(),
+            'claim_method' => BagDeposit::METHOD_OWNER_SCAN,
+        ]);
+        $open = $this->openDeposit($depositor, '654321');
+        BagDepositEvent::create([
+            'bag_deposit_id' => $claimed->id,
+            'type' => BagDepositEvent::TYPE_CLAIM,
+            'actor_user_id' => $depositor->id,
+            'method' => BagDeposit::METHOD_OWNER_SCAN,
+            'note' => 'history-audit-note',
+        ]);
+
+        $this->actingAs($librarian);
+
+        // Claimed deposits are listed in history; open ones are not. The
+        // same audit modal used by the open ledger must open from here.
+        Livewire::test(AdminBagCounter::class)
+            ->assertSee('history-deposit-'.$claimed->id, false)
+            ->assertDontSee('history-deposit-'.$open->id, false)
+            ->call('openAudit', $claimed->id)
+            ->assertSet('auditModal', true)
+            ->assertSet('auditDepositId', $claimed->id)
+            ->assertSee('history-audit-note');
+    }
+
     public function test_audit_trail_shows_deposit_claim_and_temp_events(): void
     {
         $depositor = User::factory()->create(['role_id' => 1]);
