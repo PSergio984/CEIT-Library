@@ -168,7 +168,7 @@ class BagCounterTest extends TestCase
             'claim_code' => '123456',
             'status' => BagDeposit::STATUS_OPEN,
         ]);
-        BagDeposit::create([
+        $otherDeposit = BagDeposit::create([
             'user_id' => $other->id,
             'bag_slot_id' => BagSlot::where('number', 2)->first()->id,
             'item_count' => 1,
@@ -181,9 +181,11 @@ class BagCounterTest extends TestCase
         Livewire::test(AdminBagCounter::class)
             ->call('handleScan', $this->makeQr($student))
             ->assertSet('scannedUserId', $student->id)
-            // Owner's open deposit is listed; the other user's is not.
-            ->assertSee('Tuba case')
-            ->assertDontSee('654321')
+            // Owner's deposit is in the claimable list; the other user's is
+            // not — asserted on the list's wire keys so the open-deposits
+            // ledger (which shows every open deposit to staff) can't mask it.
+            ->assertSee('scanned-deposit-'.$ownDeposit->id, false)
+            ->assertDontSee('scanned-deposit-'.$otherDeposit->id, false)
             ->call('claimDeposit', $ownDeposit->id);
 
         $ownDeposit->refresh();

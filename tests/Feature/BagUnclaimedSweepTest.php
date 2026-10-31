@@ -225,6 +225,15 @@ class BagUnclaimedSweepTest extends TestCase
 
         $this->artisan('bag:notify-unclaimed', ['--dry-run' => true])
             ->expectsOutputToContain('Dry run')
+            ->expectsTable(
+                ['Deposit', 'Depositor', 'Slot', 'Deposited at'],
+                [[
+                    $deposit->id,
+                    $depositor->first_name.' '.$depositor->last_name,
+                    $deposit->slot->number,
+                    $deposit->created_at->format('M d, Y g:i A'),
+                ]]
+            )
             ->assertExitCode(0);
 
         $this->assertSame(0, Notification::count());
