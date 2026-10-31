@@ -27,7 +27,7 @@ use Maatwebsite\Excel\Facades\Excel;
 class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
 {
     /** Department sheets of the staff workbook, keyed to app department names. */
-    private const DEPARTMENT_SHEETS = [
+    public const DEPARTMENT_SHEETS = [
         'Electrical Engineering',
         'Civil Engineering',
         'Information Technology',
@@ -47,6 +47,47 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
      */
     public function __invoke(string $path): array
     {
+        $report = $this->run($path);
+
+        if (collect($report['sheets'])->sum('imported') > 0) {
+            AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
+        }
+
+        return $report;
+    }
+
+    /**
+     * Dry run for the preview step: the identical pipeline inside an
+     * outer transaction that always rolls back, so the report is the
+     * real thing but nothing commits — and no index rebuild is
+     * dispatched since nothing was written.
+     *
+     * @return array{sheets: array<string, array{imported: int, errors: int, duplicates: int, generated_codes: int, error: ?string, messages: list<array{row: int|null, type: string, message: string}>}>}
+     */
+    public function preview(string $path): array
+    {
+        // A ~3k-row dry run inside one request can outrun the default
+        // execution cap; the held write transaction (a DB-wide writer
+        // lock under SQLite) for that window is an accepted admin-only
+        // cost.
+        set_time_limit(300);
+
+        DB::beginTransaction();
+
+        try {
+            return $this->run($path);
+        } finally {
+            if (DB::transactionLevel() > 0) {
+                DB::rollBack();
+            }
+        }
+    }
+
+    /**
+     * @return array{sheets: array<string, array{imported: int, errors: int, duplicates: int, generated_codes: int, error: ?string, messages: list<array{row: int|null, type: string, message: string}>}>}
+     */
+    private function run(string $path): array
+    {
         AiIndexSync::withoutDispatches(function () use ($path): void {
             DB::transaction(function () use ($path): void {
                 $this->catalogCodes = array_fill_keys(
@@ -60,13 +101,7 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
             });
         });
 
-        $report = $this->report();
-
-        if (collect($report['sheets'])->sum('imported') > 0) {
-            AiIndexRebuildJob::dispatch()->delay(now()->addSeconds(60));
-        }
-
-        return $report;
+        return $this->report();
     }
 
     /**
@@ -86,6 +121,25 @@ class CatalogImport implements Import, SkipsUnknownSheets, WithMultipleSheets
     public function onUnknownSheet(string|int $sheetName): void
     {
         $this->missingSheets[] = (string) $sheetName;
+    }
+
+    /**
+     * Rows that failed validation, keyed by department sheet, in the
+     * canonical shape CatalogFailureExport writes back out (#81).
+     *
+     * @return array<string, list<array{row: int, reason: string, values: array<string, mixed>}>>
+     */
+    public function failures(): array
+    {
+        $failures = [];
+
+        foreach (self::DEPARTMENT_SHEETS as $name) {
+            $failures[$name] = isset($this->sheetImports[$name]) && ! in_array($name, $this->missingSheets)
+                ? $this->sheetImports[$name]->failures()
+                : [];
+        }
+
+        return $failures;
     }
 
     /**

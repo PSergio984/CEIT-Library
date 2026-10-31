@@ -53,6 +53,9 @@ class CatalogSheetImport implements ToArray
         'messages' => [],
     ];
 
+    /** @var list<array{row: int, reason: string, values: array<string, mixed>}> */
+    private array $failures = [];
+
     /**
      * @param  array<string, true>  $catalogCodes  codes already in the
      *                                             database (keys lowercased), shared by reference across all sheet
@@ -72,6 +75,18 @@ class CatalogSheetImport implements ToArray
     public function report(): array
     {
         return $this->report;
+    }
+
+    /**
+     * Rows that failed validation, captured with their cleaned cell
+     * values so the failure report can rewrite them in the export
+     * format (#81).
+     *
+     * @return list<array{row: int, reason: string, values: array<string, mixed>}>
+     */
+    public function failures(): array
+    {
+        return $this->failures;
     }
 
     /**
@@ -176,7 +191,7 @@ class CatalogSheetImport implements ToArray
 
         $title = self::clean($this->cellAt($row, $columns['title']));
         if ($title === '') {
-            $this->fail($rowNumber, 'Missing title');
+            $this->fail($rowNumber, 'Missing title', $row, $columns);
 
             return;
         }
@@ -184,14 +199,14 @@ class CatalogSheetImport implements ToArray
         $typeRaw = self::clean($this->cellAt($row, $columns['paper_type']));
         $paperType = self::PAPER_TYPES[mb_strtolower($typeRaw)] ?? null;
         if ($paperType === null) {
-            $this->fail($rowNumber, "Unknown paper type '{$typeRaw}'");
+            $this->fail($rowNumber, "Unknown paper type '{$typeRaw}'", $row, $columns);
 
             return;
         }
 
         $year = self::clean($this->cellAt($row, $columns['year']));
         if (! ctype_digit($year) || (int) $year < 1900 || (int) $year > 2100) {
-            $this->fail($rowNumber, "Missing or invalid publication year '{$year}'");
+            $this->fail($rowNumber, "Missing or invalid publication year '{$year}'", $row, $columns);
 
             return;
         }
@@ -199,7 +214,7 @@ class CatalogSheetImport implements ToArray
         $copiesRaw = $this->cellAt($row, $columns['copies']);
         $copies = self::clean($copiesRaw);
         if ($copies !== '' && ! ctype_digit($copies)) {
-            $this->fail($rowNumber, "Invalid copies value '{$copies}'");
+            $this->fail($rowNumber, "Invalid copies value '{$copies}'", $row, $columns);
 
             return;
         }
@@ -260,7 +275,7 @@ class CatalogSheetImport implements ToArray
                 'row' => $rowNumber,
                 'error' => $e->getMessage(),
             ]);
-            $this->fail($rowNumber, 'Database error while importing row');
+            $this->fail($rowNumber, 'Database error while importing row', $row, $columns);
         }
     }
 
@@ -292,10 +307,33 @@ class CatalogSheetImport implements ToArray
         return is_int($column) ? ($row[$column] ?? null) : null;
     }
 
-    private function fail(int $row, string $reason): void
+    /**
+     * @param  array<array-key, mixed>  $row
+     * @param  array<string, int|list<int>|null>  $columns
+     */
+    private function fail(int $rowNumber, string $reason, array $row, array $columns): void
     {
         $this->report['errors']++;
-        $this->message($row, 'error', $reason);
+        $this->message($rowNumber, 'error', $reason);
+        $this->failures[] = [
+            'row' => $rowNumber,
+            'reason' => $reason,
+            'values' => [
+                'year' => self::clean($this->cellAt($row, $columns['year'])),
+                'paper_type' => self::clean($this->cellAt($row, $columns['paper_type'])),
+                'catalog' => self::clean($this->cellAt($row, $columns['catalog'])),
+                'title' => self::clean($this->cellAt($row, $columns['title'])),
+                'copies' => self::clean($this->cellAt($row, $columns['copies'])),
+                'members' => array_map(
+                    fn ($i) => self::clean($this->cellAt($row, $i)),
+                    $columns['members'],
+                ),
+                'technical_adviser' => self::clean($this->cellAt($row, $columns['technical_adviser'])),
+                'research_adviser' => self::clean($this->cellAt($row, $columns['research_adviser'])),
+                'department' => self::clean($this->cellAt($row, $columns['department'])),
+                'dean' => self::clean($this->cellAt($row, $columns['dean'])),
+            ],
+        ];
     }
 
     private function warn(?int $row, string $message): void

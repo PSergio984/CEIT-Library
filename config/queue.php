@@ -39,7 +39,11 @@ return [
             'connection' => env('DB_QUEUE_CONNECTION'),
             'table' => env('DB_QUEUE_TABLE', 'jobs'),
             'queue' => env('DB_QUEUE', 'default'),
-            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 90),
+            // Covers the 600s ImportCatalogJob timeout; this is the
+            // redelivery window for every job on the database connection.
+            // DB_QUEUE_RETRY_AFTER is env-overridable for deployments
+            // that isolate the import on its own connection.
+            'retry_after' => (int) env('DB_QUEUE_RETRY_AFTER', 660),
             'after_commit' => false,
         ],
 

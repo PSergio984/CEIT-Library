@@ -13,17 +13,14 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Schema;
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
+use Tests\Traits\WritesStaffWorkbook;
 
 class CatalogImportTest extends TestCase
 {
     use RefreshDatabase;
-
-    /** @var list<string> */
-    private array $tempFiles = [];
+    use WritesStaffWorkbook;
 
     protected function setUp(): void
     {
@@ -32,50 +29,10 @@ class CatalogImportTest extends TestCase
         Bus::fake();
     }
 
-    protected function tearDown(): void
-    {
-        foreach ($this->tempFiles as $file) {
-            @unlink($file);
-        }
-
-        parent::tearDown();
-    }
-
-    /**
-     * Write a workbook shaped like the staff catalog file. Keys are sheet
-     * names; each row is a 0-indexed list of cell values (row 0 = headers).
-     *
-     * @param  array<string, list<list<mixed>>>  $sheets
-     */
-    private function writeWorkbook(array $sheets): string
-    {
-        $spreadsheet = new Spreadsheet;
-        $first = true;
-
-        foreach ($sheets as $name => $rows) {
-            $sheet = $first ? $spreadsheet->getActiveSheet() : $spreadsheet->createSheet();
-            $first = false;
-            $sheet->setTitle($name);
-
-            foreach ($rows as $r => $row) {
-                foreach ($row as $c => $value) {
-                    if ($value !== null) {
-                        $sheet->setCellValue([$c + 1, $r + 1], $value);
-                    }
-                }
-            }
-        }
-
-        $path = sys_get_temp_dir().'/catalog-import-'.uniqid().'.xlsx';
-        (new Xlsx($spreadsheet))->save($path);
-        $this->tempFiles[] = $path;
-
-        return $path;
-    }
-
     /**
      * The staff workbook format: per-department sheets with drifting
-     * headers plus a `Documents` sheet that must be ignored.
+     * headers plus a `Documents` sheet that must be ignored. Overrides
+     * the trait's compact fixture with the fuller drift variant.
      */
     private function staffWorkbook(): string
     {

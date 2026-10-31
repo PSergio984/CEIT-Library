@@ -1,0 +1,196 @@
+<?php
+
+namespace App\Livewire\Pages\Admin;
+
+use App\Exports\CatalogExport;
+use App\Exports\CatalogFailureExport;
+use App\Exports\CatalogTemplateExport;
+use App\Imports\CatalogImport;
+use App\Jobs\ImportCatalogJob;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Attributes\Locked;
+use Livewire\Attributes\Validate;
+use Livewire\WithFileUploads;
+use Maatwebsite\Excel\Facades\Excel;
+use Mary\Traits\Toast;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
+
+/**
+ * Import/Export dropdown on the Academic Papers page. Import runs two
+ * phases: a zero-write dry-run preview (per-sheet counts + row errors)
+ * shown synchronously, then a queued commit that re-parses the stored
+ * upload and notifies the uploader on completion.
+ *
+ * #81 adds the export/template items to this same dropdown and wires
+ * the failure-report download slot left in the preview modal.
+ */
+class CatalogImportDropdown extends AdminComponent
+{
+    use Toast;
+    use WithFileUploads;
+
+    public bool $showImportModal = false;
+
+    #[Validate('required|mimes:xlsx,xls|max:10240')]
+    public $importFile = null;
+
+    /** @var array{sheets: array<string, mixed>}|null */
+    #[Locked]
+    public ?array $preview = null;
+
+    public function mount(): void
+    {
+        Gate::authorize('manage-academic-papers');
+    }
+
+    public function openImport(): void
+    {
+        Gate::authorize('manage-academic-papers');
+
+        $this->resetImport();
+        $this->showImportModal = true;
+    }
+
+    /**
+     * Runs automatically once the workbook finishes uploading: validate
+     * and dry-run it, then hold the report for the preview table.
+     */
+    public function updatedImportFile(): void
+    {
+        Gate::authorize('manage-academic-papers');
+
+        // Clear first: a failed upload must not leave the previous
+        // file's preview in place to be committed instead.
+        $this->preview = null;
+        $this->validate();
+
+        try {
+            $this->preview = (new CatalogImport)->preview($this->importFile->getRealPath());
+        } catch (\Throwable $e) {
+            report($e);
+            $this->reset('importFile');
+            $this->error('The workbook could not be read. Upload a valid .xlsx catalog file.');
+
+            return;
+        }
+
+        // Bound the payload: only the first issues per sheet are rendered.
+        foreach ($this->preview['sheets'] as &$sheet) {
+            $sheet['message_count'] = count($sheet['messages']);
+            $sheet['messages'] = array_slice($sheet['messages'], 0, 150);
+        }
+    }
+
+    /**
+     * Commit phase: hand the stored upload to the queued job, which
+     * re-parses it rather than trusting preview state held in the
+     * component.
+     */
+    public function confirmImport(): void
+    {
+        Gate::authorize('manage-academic-papers');
+
+        if (! $this->importFile || ! $this->preview) {
+            return;
+        }
+
+        $path = $this->importFile->store('catalog-imports', 'local');
+
+        try {
+            ImportCatalogJob::dispatch($path, (int) Auth::id());
+        } catch (\Throwable $e) {
+            // A dispatch failure leaves the stored copy with no job to
+            // delete it; remove it and keep the upload + preview so the
+            // admin can retry.
+            Storage::disk('local')->delete($path);
+            report($e);
+            $this->error('The import could not be queued. Please try again.');
+
+            return;
+        }
+
+        // The stored copy is deleted by the job; drop the Livewire temp
+        // original now rather than waiting on framework cleanup.
+        $this->importFile->delete();
+
+        $this->resetImport();
+        $this->showImportModal = false;
+
+        $this->success('Import Queued', 'The import is running in the background — you will be notified when it finishes.');
+    }
+
+    /**
+     * Blank staff workbook: three department sheets, headers only.
+     */
+    public function downloadTemplate(): BinaryFileResponse
+    {
+        Gate::authorize('manage-academic-papers');
+
+        return Excel::download(new CatalogTemplateExport, 'ceit-catalog-template.xlsx');
+    }
+
+    /**
+     * Full catalog in the staff workbook format; a freshly exported
+     * file re-imports cleanly (every row is a known duplicate).
+     */
+    public function exportCatalog(): BinaryFileResponse
+    {
+        Gate::authorize('manage-academic-papers');
+
+        return Excel::download(new CatalogExport, 'ceit-catalog-export.xlsx');
+    }
+
+    /**
+     * Failed rows of the previewed upload, re-run as a dry run and
+     * written back in the catalog format so they can be fixed and
+     * re-imported directly.
+     */
+    public function downloadFailureReport(): ?BinaryFileResponse
+    {
+        Gate::authorize('manage-academic-papers');
+
+        if (! $this->importFile) {
+            return null;
+        }
+
+        $import = new CatalogImport;
+
+        try {
+            $import->preview($this->importFile->getRealPath());
+        } catch (\Throwable $e) {
+            report($e);
+            $this->error('The failure report could not be generated.');
+
+            return null;
+        }
+
+        $failures = $import->failures();
+
+        if (array_sum(array_map('count', $failures)) === 0) {
+            $this->info('No failed rows to report.');
+
+            return null;
+        }
+
+        return Excel::download(new CatalogFailureExport($failures), 'catalog-import-failures.xlsx');
+    }
+
+    public function closeImportModal(): void
+    {
+        $this->resetImport();
+        $this->showImportModal = false;
+    }
+
+    private function resetImport(): void
+    {
+        $this->reset(['importFile', 'preview']);
+        $this->resetErrorBag();
+    }
+
+    public function render()
+    {
+        return view('livewire.pages.admin.catalog-import-dropdown');
+    }
+}
