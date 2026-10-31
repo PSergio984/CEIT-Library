@@ -107,6 +107,7 @@ class CatalogImportDropdownTest extends TestCase
             ->where('type', 'catalog_import')
             ->firstOrFail();
 
+        $this->assertSame('Catalog import complete', $notification->title);
         $this->assertStringContainsString('5 imported', $notification->message);
         $this->assertStringContainsString('1 skipped', $notification->message);
         $this->assertStringContainsString('1 errors', $notification->message);

@@ -56,7 +56,7 @@ class CatalogExportTest extends TestCase
             $rows = $document->getSheetByName($name)->toArray();
 
             $this->assertCount(1, $rows);
-            $this->assertSame(CatalogSheetExport::HEADERS, array_slice($rows[0], 0, count(CatalogSheetExport::HEADERS)));
+            $this->assertSame(CatalogSheetExport::HEADERS, $rows[0]);
         }
     }
 
@@ -121,6 +121,10 @@ class CatalogExportTest extends TestCase
             ['A One', 'A Two', 'A Three', 'A Four', 'A Five', 'A Six', 'A Seven'],
             array_slice($rows[1], 5, 7),
         );
+
+        // The format stops at MEMBER 7 — MEMBER 8/9 have no columns past DEAN.
+        $this->assertCount(count(CatalogSheetExport::HEADERS), $rows[1]);
+        $this->assertNull($rows[1][16] ?? null);
     }
 
     #[Test]
@@ -179,9 +183,15 @@ class CatalogExportTest extends TestCase
         $this->actingAs(User::factory()->create(['role_id' => 2]));
 
         $this->withoutExceptionHandling();
-        $this->expectException(AuthorizationException::class);
 
-        Livewire::test(CatalogImportDropdown::class)->call('downloadTemplate');
+        foreach (['downloadTemplate', 'exportCatalog'] as $action) {
+            try {
+                Livewire::test(CatalogImportDropdown::class)->call($action);
+                $this->fail("{$action} did not throw for a non-admin");
+            } catch (AuthorizationException) {
+                $this->addToAssertionCount(1);
+            }
+        }
     }
 
     #[Test]
