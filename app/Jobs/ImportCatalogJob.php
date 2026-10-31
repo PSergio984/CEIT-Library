@@ -23,8 +23,9 @@ class ImportCatalogJob implements ShouldBeUnique, ShouldQueue
 {
     use Queueable;
 
-    // A killed run must not be retried silently: the engine is additive,
-    // so a partial commit would resurface as duplicates on re-run.
+    // A killed run must not be retried silently: the importer commits
+    // in a single transaction, so a retry would re-import every row
+    // as a reported duplicate.
     public int $tries = 1;
 
     // The ~3k-row staff workbook far outruns the 60s worker default.
