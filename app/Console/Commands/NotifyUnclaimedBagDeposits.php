@@ -63,6 +63,7 @@ class NotifyUnclaimedBagDeposits extends Command
         }
 
         $notified = 0;
+        $failed = 0;
 
         foreach ($deposits as $deposit) {
             // Stamp + re-check open in one conditional UPDATE: a claim (or
@@ -92,12 +93,19 @@ class NotifyUnclaimedBagDeposits extends Command
 
                 $notified++;
             } catch (\Throwable $e) {
+                $failed++;
                 \Log::error("Failed to notify unclaimed bag deposit {$deposit->id}: ".$e->getMessage());
             }
         }
 
         $this->info("Sent {$notified} unclaimed-deposit notification(s).");
 
-        return 0;
+        if ($failed > 0) {
+            $this->error("{$failed} notification(s) failed.");
+
+            return self::FAILURE;
+        }
+
+        return self::SUCCESS;
     }
 }

@@ -155,6 +155,22 @@ class BagUnclaimedSweepTest extends TestCase
         $this->assertSame(1, Notification::count());
     }
 
+    public function test_sweep_exits_failure_when_a_notification_throws(): void
+    {
+        $depositor = User::factory()->create(['role_id' => 1]);
+        $deposit = $this->deposit($depositor);
+
+        $this->mock(NotificationService::class)
+            ->shouldReceive('notify')
+            ->andThrow(new \RuntimeException('notification backend down'));
+
+        $this->artisan('bag:notify-unclaimed')->assertExitCode(1);
+
+        // Stamped before the failed send — the stamp ages past midnight, so
+        // the next night's sweep still re-pings it.
+        $this->assertNotNull($deposit->fresh()->unclaimed_notified_at);
+    }
+
     public function test_sweep_skips_deposit_claimed_mid_run(): void
     {
         $depositorA = User::factory()->create(['role_id' => 1]);
