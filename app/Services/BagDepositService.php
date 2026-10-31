@@ -49,6 +49,13 @@ class BagDepositService
         for ($attempt = 0; $attempt < self::CLAIM_CODE_MAX_ATTEMPTS; $attempt++) {
             try {
                 $deposit = DB::transaction(function () use ($depositor, $slot, $itemCount, $description, $photoPath, $scannedBy, $scannedByAdminId) {
+                    // Lock the depositor's row — the user-delete paths hold
+                    // this same lock across their open-deposit check, so a
+                    // delete can't commit between the check and this insert.
+                    if (! User::lockForUpdate()->find($depositor->id)) {
+                        throw new RuntimeException('That user can no longer receive deposits.');
+                    }
+
                     // Re-check inside the transaction: the slot may have been
                     // filled or taken out of service since it was picked.
                     $slot = BagSlot::lockForUpdate()->find($slot->id);
