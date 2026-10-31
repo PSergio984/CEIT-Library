@@ -223,6 +223,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(BorrowTransaction::class);
     }
 
+    /**
+     * @return HasMany<BagDeposit, $this>
+     */
     public function bagDeposits(): HasMany
     {
         return $this->hasMany(BagDeposit::class);
