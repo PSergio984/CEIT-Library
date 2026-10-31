@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BagDeposit;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class BagDepositPhotoController extends Controller
 {
@@ -12,7 +13,7 @@ class BagDepositPhotoController extends Controller
      * lives inside the librarian.or.admin group, so only counter staff can
      * reach it — the file itself has no public URL.
      */
-    public function __invoke(BagDeposit $bagDeposit)
+    public function __invoke(BagDeposit $bagDeposit): StreamedResponse
     {
         $disk = Storage::disk('local');
 

@@ -8,6 +8,8 @@ use App\Models\BagSlot;
 use App\Models\User;
 use App\Services\BagDepositService;
 use App\Services\QrPayloadValidator;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -76,25 +78,25 @@ class AdminBagCounter extends AdminComponent
 
     public ?int $auditDepositId = null;
 
-    public function mount()
+    public function mount(): void
     {
         $this->authorizeAccess();
     }
 
-    public function openScanner()
+    public function openScanner(): void
     {
         $this->showQrModal = true;
         $this->dispatch('qr-modal-opened');
     }
 
-    public function closeQrModal()
+    public function closeQrModal(): void
     {
         $this->showQrModal = false;
         $this->isProcessingQr = false;
         $this->dispatch('qr-modal-closed');
     }
 
-    public function handleScan(string $data)
+    public function handleScan(string $data): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -138,7 +140,7 @@ class AdminBagCounter extends AdminComponent
         }
     }
 
-    public function clearScan()
+    public function clearScan(): void
     {
         $this->scannedUserId = null;
         $this->scannedUserName = null;
@@ -147,7 +149,7 @@ class AdminBagCounter extends AdminComponent
         $this->claimCodeInput = '';
     }
 
-    public function openDepositModal()
+    public function openDepositModal(): void
     {
         if (! $this->scannedUserId) {
             $this->error('Scan a user QR first', 'No scan');
@@ -163,7 +165,7 @@ class AdminBagCounter extends AdminComponent
         $this->depositModal = true;
     }
 
-    public function submitDeposit()
+    public function submitDeposit(): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -221,7 +223,7 @@ class AdminBagCounter extends AdminComponent
      * code — the third-party (delegated) claim path. A wrong code grants
      * nothing.
      */
-    public function lookupClaimCode()
+    public function lookupClaimCode(): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -278,7 +280,7 @@ class AdminBagCounter extends AdminComponent
      * deposited it, claim_code when they presented the deposit's code.
      * Frees the slot.
      */
-    public function claimDeposit(int $depositId)
+    public function claimDeposit(int $depositId): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -320,7 +322,7 @@ class AdminBagCounter extends AdminComponent
      * Temporary access: open the slot without closing the deposit. Same
      * entitlement as a claim — own scan or the deposit's claim code.
      */
-    public function tempAccess(int $depositId)
+    public function tempAccess(int $depositId): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -378,7 +380,7 @@ class AdminBagCounter extends AdminComponent
         return [null, 'Claims require the depositor\'s own QR or the deposit\'s claim code'];
     }
 
-    public function openRescue(int $depositId)
+    public function openRescue(int $depositId): void
     {
         $this->rescueDepositId = $depositId;
         $this->rescueNote = '';
@@ -390,7 +392,7 @@ class AdminBagCounter extends AdminComponent
      * Rescue release: no QR, no code — staff verify the claimant's physical
      * ID and write a note. Flagged as rescue_lookup on the audit event.
      */
-    public function submitRescue()
+    public function submitRescue(): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -423,13 +425,13 @@ class AdminBagCounter extends AdminComponent
         $this->success("Slot {$deposit->slot->number} freed — rescue release logged", 'Rescue claim');
     }
 
-    public function openAudit(int $depositId)
+    public function openAudit(int $depositId): void
     {
         $this->auditDepositId = $depositId;
         $this->auditModal = true;
     }
 
-    public function toggleSlotService(int $slotId)
+    public function toggleSlotService(int $slotId): void
     {
         if (! Gate::allows('librarian-or-admin-access')) {
             $this->redirect(route('student.dashboard'));
@@ -472,13 +474,13 @@ class AdminBagCounter extends AdminComponent
     }
 
     #[Computed]
-    public function bagSlots()
+    public function bagSlots(): Collection
     {
         return BagSlot::with('openDeposit.user')->orderBy('number')->get();
     }
 
     #[Computed]
-    public function openDeposits()
+    public function openDeposits(): Collection
     {
         $search = trim($this->depositSearch);
         $numeric = $search !== '' && ctype_digit($search);
@@ -508,7 +510,7 @@ class AdminBagCounter extends AdminComponent
      * already pinged — the morning's unclaimed list for next-day pickups.
      */
     #[Computed]
-    public function unclaimedDeposits()
+    public function unclaimedDeposits(): Collection
     {
         return BagDeposit::with('user', 'slot')
             ->open()
@@ -523,7 +525,7 @@ class AdminBagCounter extends AdminComponent
      * list, so the last few stay reachable here for their audit trails.
      */
     #[Computed]
-    public function claimedDeposits()
+    public function claimedDeposits(): Collection
     {
         return BagDeposit::with('user', 'slot')
             ->where('status', BagDeposit::STATUS_CLAIMED)
@@ -537,7 +539,7 @@ class AdminBagCounter extends AdminComponent
      * by a claim code they presented.
      */
     #[Computed]
-    public function claimableDeposits()
+    public function claimableDeposits(): Collection
     {
         if (! $this->scannedUserId) {
             return collect();
@@ -552,7 +554,7 @@ class AdminBagCounter extends AdminComponent
     }
 
     #[Computed]
-    public function auditEvents()
+    public function auditEvents(): Collection
     {
         if (! $this->auditDepositId) {
             return collect();
@@ -565,7 +567,7 @@ class AdminBagCounter extends AdminComponent
     }
 
     #[Computed]
-    public function auditDeposit()
+    public function auditDeposit(): ?BagDeposit
     {
         return $this->auditDepositId ? BagDeposit::with('user', 'slot')->find($this->auditDepositId) : null;
     }
@@ -575,18 +577,18 @@ class AdminBagCounter extends AdminComponent
      * ledger search can't hide it.
      */
     #[Computed]
-    public function rescueDeposit()
+    public function rescueDeposit(): ?BagDeposit
     {
         return $this->rescueDepositId ? BagDeposit::with('user', 'slot')->find($this->rescueDepositId) : null;
     }
 
     #[Computed]
-    public function availableSlots()
+    public function availableSlots(): Collection
     {
         return BagSlot::available()->orderBy('number')->get();
     }
 
-    public function render()
+    public function render(): View
     {
         return view('livewire.pages.admin.admin-bag-counter');
     }

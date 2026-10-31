@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -64,7 +65,11 @@ class BagSlot extends Model
         return $this->is_active && $this->openDeposit === null;
     }
 
-    public function scopeAvailable($query)
+    /**
+     * @param  Builder<BagSlot>  $query
+     * @return Builder<BagSlot>
+     */
+    public function scopeAvailable(Builder $query): Builder
     {
         return $query->where('is_active', true)
             ->whereDoesntHave('openDeposit');

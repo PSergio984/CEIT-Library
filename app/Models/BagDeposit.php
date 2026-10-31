@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -86,7 +87,11 @@ class BagDeposit extends Model
         return $this->hasMany(BagDepositEvent::class);
     }
 
-    public function scopeOpen($query)
+    /**
+     * @param  Builder<BagDeposit>  $query
+     * @return Builder<BagDeposit>
+     */
+    public function scopeOpen(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_OPEN);
     }
