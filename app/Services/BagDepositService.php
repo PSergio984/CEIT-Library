@@ -48,7 +48,7 @@ class BagDepositService
 
         for ($attempt = 0; $attempt < self::CLAIM_CODE_MAX_ATTEMPTS; $attempt++) {
             try {
-                return DB::transaction(function () use ($depositor, $slot, $itemCount, $description, $photoPath, $scannedBy, $scannedByAdminId) {
+                $deposit = DB::transaction(function () use ($depositor, $slot, $itemCount, $description, $photoPath, $scannedBy, $scannedByAdminId) {
                     // Re-check inside the transaction: the slot may have been
                     // filled or taken out of service since it was picked.
                     $slot = BagSlot::lockForUpdate()->find($slot->id);
@@ -78,6 +78,18 @@ class BagDepositService
 
                     return $deposit;
                 });
+
+                // The claim code "lives in the account" — notify the depositor
+                // so it can never be lost between the counter and the walk away.
+                $this->notifyDepositor(
+                    $deposit,
+                    'bag_deposited',
+                    'Bag deposit recorded',
+                    "Your bag deposit was recorded in slot {$deposit->slot->number}. Claim code: {$deposit->claim_code}. Share it only with someone you trust to collect your bag.",
+                    ['bag_deposit_id' => $deposit->id, 'slot_number' => $deposit->slot->number, 'claim_code' => $deposit->claim_code],
+                );
+
+                return $deposit;
             } catch (QueryException $e) {
                 // Another deposit won this slot's open-deposit index between
                 // the availability check and the insert.

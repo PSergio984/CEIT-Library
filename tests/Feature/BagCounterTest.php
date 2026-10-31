@@ -7,6 +7,7 @@ use App\Models\BagDeposit;
 use App\Models\BagDepositEvent;
 use App\Models\BagSlot;
 use App\Models\Librarian;
+use App\Models\Notification;
 use App\Models\User;
 use App\Services\BagDepositService;
 use App\Traits\CreatesQrCanonicalMessage;
@@ -88,6 +89,28 @@ class BagCounterTest extends TestCase
         $this->assertSame(BagDeposit::STATUS_OPEN, $deposit->status);
         $this->assertMatchesRegularExpression('/^\d{6}$/', $deposit->claim_code);
         $this->assertSame(BagSlot::STATE_OCCUPIED, $deposit->slot->state());
+    }
+
+    public function test_deposit_notifies_depositor_with_their_claim_code(): void
+    {
+        $student = User::factory()->create(['role_id' => 1]);
+        $librarian = $this->librarianOnDuty();
+        $this->makeSlots(2);
+
+        $this->actingAs($librarian);
+
+        Livewire::test(AdminBagCounter::class)
+            ->call('handleScan', $this->makeQr($student))
+            ->call('openDepositModal')
+            ->call('submitDeposit');
+
+        $deposit = BagDeposit::sole();
+
+        $notification = Notification::where('user_id', $student->id)->sole();
+
+        $this->assertSame('bag_deposited', $notification->type);
+        $this->assertStringContainsString($deposit->claim_code, $notification->message);
+        $this->assertSame($deposit->claim_code, $notification->data['claim_code']);
     }
 
     public function test_claim_codes_are_unique_among_open_deposits(): void
