@@ -7,6 +7,7 @@ use App\Livewire\Pages\Admin\CatalogImportDropdown;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Contracts\Bus\Dispatcher;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Bus;
@@ -89,6 +90,25 @@ class CatalogImportDropdownTest extends TestCase
         Queue::assertPushed(ImportCatalogJob::class, fn ($job) => $job->userId === $this->admin->id);
 
         $this->assertDatabaseCount('academic_papers', 0);
+    }
+
+    #[Test]
+    public function a_dispatch_failure_removes_the_stored_copy_and_keeps_the_upload_retryable(): void
+    {
+        $this->mock(Dispatcher::class, fn ($mock) => $mock
+            ->shouldReceive('dispatch')
+            ->andThrow(new \RuntimeException('queue connection down')));
+
+        Livewire::test(CatalogImportDropdown::class)
+            ->call('openImport')
+            ->set('importFile', $this->workbookUpload())
+            ->call('confirmImport')
+            ->assertSet('showImportModal', true)
+            ->assertNotSet('importFile', null)
+            ->assertNotSet('preview', null);
+
+        // The undispatched stored copy must not be orphaned.
+        $this->assertSame([], Storage::disk('local')->allFiles('catalog-imports'));
     }
 
     #[Test]

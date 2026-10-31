@@ -9,6 +9,7 @@ use App\Imports\CatalogImport;
 use App\Jobs\ImportCatalogJob;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\Locked;
 use Livewire\Attributes\Validate;
 use Livewire\WithFileUploads;
@@ -97,11 +98,22 @@ class CatalogImportDropdown extends AdminComponent
 
         $path = $this->importFile->store('catalog-imports', 'local');
 
+        try {
+            ImportCatalogJob::dispatch($path, (int) Auth::id());
+        } catch (\Throwable $e) {
+            // A dispatch failure leaves the stored copy with no job to
+            // delete it; remove it and keep the upload + preview so the
+            // admin can retry.
+            Storage::disk('local')->delete($path);
+            report($e);
+            $this->error('The import could not be queued. Please try again.');
+
+            return;
+        }
+
         // The stored copy is deleted by the job; drop the Livewire temp
         // original now rather than waiting on framework cleanup.
         $this->importFile->delete();
-
-        ImportCatalogJob::dispatch($path, (int) Auth::id());
 
         $this->resetImport();
         $this->showImportModal = false;
