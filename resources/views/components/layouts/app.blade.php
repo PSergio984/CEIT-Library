@@ -38,7 +38,17 @@
                     .then(reg => {
                         console.log('Service Worker registered successfully.', reg);
                         @auth
-                            requestPushPermission(reg);
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                subscribePush(reg);
+                            }
+                            window.enablePushNotifications = async () => {
+                                const permission = await Notification.requestPermission();
+                                if (permission !== 'granted') {
+                                    return false;
+                                }
+                                await subscribePush(reg);
+                                return true;
+                            };
                         @endauth
 
                         // Check if there is already a waiting worker on page load
@@ -69,14 +79,8 @@
             });
         }
 
-        async function requestPushPermission(reg) {
+        async function subscribePush(reg) {
             try {
-                const permission = await Notification.requestPermission();
-                if (permission !== 'granted') {
-                    console.log('Notification permission denied.');
-                    return;
-                }
-
                 const response = await fetch('/api/push/vapid-key');
                 const data = await response.json();
                 if (!data.publicKey) {
