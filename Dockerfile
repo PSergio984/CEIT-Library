@@ -21,7 +21,7 @@ FROM node:20-alpine AS frontend
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci
+RUN npm ci --ignore-scripts
 
 # Copy full application and vendor so Tailwind can scan MaryUI and Blade components
 COPY . .

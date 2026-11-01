@@ -1,6 +1,4 @@
 <div class="p-4 sm:p-6 pb-24">
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-
     <x-mary-header title="Bag Counter" subtitle="Scan first — deposits and claims follow the courier" separator>
         <x-slot:actions>
             <x-mary-button wire:click="openScanner" icon="o-qr-code" label="Scan QR" class="btn-primary" />
