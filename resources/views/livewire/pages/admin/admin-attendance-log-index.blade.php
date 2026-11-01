@@ -16,10 +16,6 @@
         </x-mary-header>
     </div>
 
-    {{-- Load QR libraries first --}}
-    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-
     {{-- Statistics Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <x-mary-stat
