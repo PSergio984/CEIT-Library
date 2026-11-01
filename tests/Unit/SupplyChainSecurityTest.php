@@ -15,8 +15,14 @@ class SupplyChainSecurityTest extends TestCase
     // http(s)://, protocol-relative //, quoted or unquoted
     private const REMOTE_SRC_PATTERN = '#<script[^>]+\bsrc\s*=\s*["\']?(?:https?:)?//#i';
 
-    // dynamic src is only acceptable through a local asset helper
-    private const DYNAMIC_SRC_PATTERN = '#<script[^>]+\bsrc\s*=\s*["\']?\s*(?:\{\{|\{!!)(?!\s*(?:(?:secure_)?asset|mix|url|route)\s*\(|\s*Vite::)#i';
+    // dynamic src must be a single local-asset helper call (url()/route() can emit remote URLs; helper args may not contain ))
+    private const DYNAMIC_SRC_PATTERN = '#<script[^>]+\bsrc\s*=\s*["\']?\s*(?:\{\{|\{!!)(?!\s*(?:(?:secure_)?asset|mix|Vite::\w+)\s*\([^)]*\)\s*(?:\}\}|!!\}))#i';
+
+    // top-level permissions block may contain only `contents: read`
+    private const PERMISSIONS_BLOCK_PATTERN = '/^permissions:\R[ \t]+contents:[ \t]*read[ \t]*(?:\R(?=\R*\S)|\z)/m';
+
+    // no job-level permissions overrides
+    private const JOB_PERMISSIONS_PATTERN = '/^[ \t]+permissions:/m';
 
     /** @test */
     #[Test]
@@ -63,14 +69,22 @@ class SupplyChainSecurityTest extends TestCase
             $this->assertMatchesRegularExpression(self::REMOTE_SRC_PATTERN, $tag);
         }
 
-        $this->assertMatchesRegularExpression(
-            self::DYNAMIC_SRC_PATTERN,
-            '<script src="{{ $cdnUrl }}/x.js"></script>'
-        );
-        $this->assertDoesNotMatchRegularExpression(
-            self::DYNAMIC_SRC_PATTERN,
-            '<script src="{{ asset(\'js/scanner.js\') }}"></script>'
-        );
+        foreach ([
+            '<script src="{{ $cdnUrl }}/x.js"></script>',
+            '<script src="{{ url(\'https://unpkg.com/x.js\') }}"></script>',
+            '<script src="{{ asset(\'\') . $cdnUrl }}"></script>',
+            '<script src="{{ route(\'x\') }}{{ $remote }}"></script>',
+        ] as $tag) {
+            $this->assertMatchesRegularExpression(self::DYNAMIC_SRC_PATTERN, $tag);
+        }
+
+        foreach ([
+            '<script src="{{ asset(\'js/scanner.js\') }}"></script>',
+            '<script src="{{ mix(\'js/app.js\') }}"></script>',
+            '<script src="{{ Vite::asset(\'resources/js/app.js\') }}"></script>',
+        ] as $tag) {
+            $this->assertDoesNotMatchRegularExpression(self::DYNAMIC_SRC_PATTERN, $tag);
+        }
     }
 
     /** @test */
@@ -105,6 +119,7 @@ class SupplyChainSecurityTest extends TestCase
         $this->assertNotEmpty($this->npmInstallsWithoutIgnoreScripts('RUN npm install'));
         $this->assertNotEmpty($this->npmInstallsWithoutIgnoreScripts('RUN npm i'));
         $this->assertNotEmpty($this->npmInstallsWithoutIgnoreScripts('RUN npm ci --omit=dev'));
+        $this->assertNotEmpty($this->npmInstallsWithoutIgnoreScripts('RUN npm ci --ignore-scripts=false'));
         $this->assertEmpty($this->npmInstallsWithoutIgnoreScripts('RUN npm ci --omit=dev --ignore-scripts'));
         $this->assertEmpty($this->npmInstallsWithoutIgnoreScripts("RUN npm ci \\\n    --ignore-scripts"));
     }
@@ -116,9 +131,32 @@ class SupplyChainSecurityTest extends TestCase
         $workflow = file_get_contents(self::ROOT.'/.github/workflows/sonar-secrets.yml');
 
         $this->assertMatchesRegularExpression(
-            '/^permissions:\s*\R\s+contents:\s*read\s*$/m',
+            self::PERMISSIONS_BLOCK_PATTERN,
             $workflow,
-            'Workflow must declare a least-privilege permissions block'
+            'Workflow must declare only contents: read permissions'
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            self::JOB_PERMISSIONS_PATTERN,
+            $workflow,
+            'Job-level permissions must not override workflow permissions'
+        );
+    }
+
+    /** @test */
+    #[Test]
+    public function test_workflow_permission_escalations_are_flagged(): void
+    {
+        $this->assertDoesNotMatchRegularExpression(
+            self::PERMISSIONS_BLOCK_PATTERN,
+            "permissions:\n  contents: read\n  pull-requests: write\njobs:"
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            self::PERMISSIONS_BLOCK_PATTERN,
+            "permissions: write-all\njobs:"
+        );
+        $this->assertMatchesRegularExpression(
+            self::JOB_PERMISSIONS_PATTERN,
+            "permissions:\n  contents: read\n\njobs:\n  scan:\n    permissions: write-all"
         );
     }
 
@@ -138,7 +176,7 @@ class SupplyChainSecurityTest extends TestCase
 
         return array_values(array_filter(
             $matches[0],
-            fn ($command) => ! str_contains($command, '--ignore-scripts'),
+            fn ($command) => ! preg_match('/(?:^|\s)--ignore-scripts(?:\s|$)/', $command),
         ));
     }
 }
