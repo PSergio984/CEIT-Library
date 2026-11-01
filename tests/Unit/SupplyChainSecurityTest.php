@@ -144,6 +144,30 @@ class SupplyChainSecurityTest extends TestCase
 
     /** @test */
     #[Test]
+    public function test_vite_plugin_pwa_stays_on_the_2_x_line(): void
+    {
+        $deps = $this->packageDeps();
+
+        $this->assertMatchesRegularExpression(
+            '/^\D*2\./',
+            $deps['vite-plugin-pwa'] ?? '',
+            'vite-plugin-pwa must stay on the 2.x line (Node >=20.19 required)'
+        );
+    }
+
+    /** @test */
+    #[Test]
+    public function test_fontaine_is_not_a_direct_dependency(): void
+    {
+        $this->assertArrayNotHasKey(
+            'fontaine',
+            $this->packageDeps(),
+            'laravel-vite-plugin pins its own fontaine — do not re-add it as a direct dep'
+        );
+    }
+
+    /** @test */
+    #[Test]
     public function test_workflow_permission_escalations_are_flagged(): void
     {
         $this->assertDoesNotMatchRegularExpression(
@@ -157,6 +181,17 @@ class SupplyChainSecurityTest extends TestCase
         $this->assertMatchesRegularExpression(
             self::JOB_PERMISSIONS_PATTERN,
             "permissions:\n  contents: read\n\njobs:\n  scan:\n    permissions: write-all"
+        );
+    }
+
+    /** @return array<string, string> */
+    private function packageDeps(): array
+    {
+        $package = json_decode(file_get_contents(self::ROOT.'/package.json'), true);
+
+        return array_merge(
+            $package['dependencies'] ?? [],
+            $package['devDependencies'] ?? [],
         );
     }
 
