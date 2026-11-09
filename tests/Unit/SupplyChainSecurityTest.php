@@ -24,6 +24,9 @@ class SupplyChainSecurityTest extends TestCase
     // no job-level permissions overrides
     private const JOB_PERMISSIONS_PATTERN = '/^[ \t]+permissions:/m';
 
+    // optional ^/~ prefix, major 2, optional .rest — no >=, <, or || compounds
+    private const PWA_RANGE_PATTERN = '/^[\^~]?2(?:\.\S*)?$/';
+
     /** @test */
     #[Test]
     public function test_no_blade_view_loads_remote_scripts(): void
@@ -144,6 +147,43 @@ class SupplyChainSecurityTest extends TestCase
 
     /** @test */
     #[Test]
+    public function test_vite_plugin_pwa_stays_on_the_2_x_line(): void
+    {
+        $deps = $this->packageDeps();
+
+        $this->assertMatchesRegularExpression(
+            self::PWA_RANGE_PATTERN,
+            $deps['vite-plugin-pwa'] ?? '',
+            'vite-plugin-pwa must stay on the 2.x line (Node >=20.19 required)'
+        );
+    }
+
+    /** @test */
+    #[Test]
+    public function test_vite_plugin_pwa_range_must_resolve_to_2_x(): void
+    {
+        foreach (['^2.0.0', '~2.0.0', '2.0.0', '^2', '2.x'] as $ok) {
+            $this->assertMatchesRegularExpression(self::PWA_RANGE_PATTERN, $ok);
+        }
+
+        foreach (['>=2.0.0', '<2.0.0', '^1.3.0', '^3.0.0', '2.0.0 || ^3.0.0'] as $bad) {
+            $this->assertDoesNotMatchRegularExpression(self::PWA_RANGE_PATTERN, $bad);
+        }
+    }
+
+    /** @test */
+    #[Test]
+    public function test_fontaine_is_not_a_direct_dependency(): void
+    {
+        $this->assertArrayNotHasKey(
+            'fontaine',
+            $this->packageDeps(),
+            'laravel-vite-plugin pins its own fontaine — do not re-add it as a direct dep'
+        );
+    }
+
+    /** @test */
+    #[Test]
     public function test_workflow_permission_escalations_are_flagged(): void
     {
         $this->assertDoesNotMatchRegularExpression(
@@ -157,6 +197,17 @@ class SupplyChainSecurityTest extends TestCase
         $this->assertMatchesRegularExpression(
             self::JOB_PERMISSIONS_PATTERN,
             "permissions:\n  contents: read\n\njobs:\n  scan:\n    permissions: write-all"
+        );
+    }
+
+    /** @return array<string, string> */
+    private function packageDeps(): array
+    {
+        $package = json_decode(file_get_contents(self::ROOT.'/package.json'), true);
+
+        return array_merge(
+            $package['dependencies'] ?? [],
+            $package['devDependencies'] ?? [],
         );
     }
 
