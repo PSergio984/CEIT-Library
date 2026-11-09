@@ -24,6 +24,9 @@ class SupplyChainSecurityTest extends TestCase
     // no job-level permissions overrides
     private const JOB_PERMISSIONS_PATTERN = '/^[ \t]+permissions:/m';
 
+    // optional ^/~ prefix, major 2, optional .rest — no >=, <, or || compounds
+    private const PWA_RANGE_PATTERN = '/^[\^~]?2(?:\.\S*)?$/';
+
     /** @test */
     #[Test]
     public function test_no_blade_view_loads_remote_scripts(): void
@@ -149,10 +152,23 @@ class SupplyChainSecurityTest extends TestCase
         $deps = $this->packageDeps();
 
         $this->assertMatchesRegularExpression(
-            '/^\D*2\./',
+            self::PWA_RANGE_PATTERN,
             $deps['vite-plugin-pwa'] ?? '',
             'vite-plugin-pwa must stay on the 2.x line (Node >=20.19 required)'
         );
+    }
+
+    /** @test */
+    #[Test]
+    public function test_vite_plugin_pwa_range_must_resolve_to_2_x(): void
+    {
+        foreach (['^2.0.0', '~2.0.0', '2.0.0', '^2', '2.x'] as $ok) {
+            $this->assertMatchesRegularExpression(self::PWA_RANGE_PATTERN, $ok);
+        }
+
+        foreach (['>=2.0.0', '<2.0.0', '^1.3.0', '^3.0.0', '2.0.0 || ^3.0.0'] as $bad) {
+            $this->assertDoesNotMatchRegularExpression(self::PWA_RANGE_PATTERN, $bad);
+        }
     }
 
     /** @test */
